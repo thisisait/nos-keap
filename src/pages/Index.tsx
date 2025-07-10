@@ -7,11 +7,72 @@ import { RecentPagesTile } from "@/components/homepage/RecentPagesTitle";
 import { RecentCitiesTile } from "@/components/homepage/RecentCitiesTile";
 import { CustomTodoTile } from "@/components/homepage/CustomTodoTile";
 import { ProgressStatsTile } from "@/components/homepage/ProgressStatsTile";
-import { Settings, Play, Globe } from 'lucide-react';
+import { Settings, Play, Globe, Satellite } from 'lucide-react';
+import { useToast } from "@/hooks/use-toast";
 
 const Index = () => {
-  const { isInitialized } = useDatabase();
+  const { isInitialized, saveTaxonomyMetadata } = useDatabase();
+  const { toast } = useToast();
+  const [companionConnected, setCompanionConnected] = useState(false);
   
+  // Companion panel komunikace
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.type === 'DH_SAVE_METADATA') {
+        const metadata = event.data.data;
+        
+        // Konverze companion dat do taxonomie formátu
+        const taxonomyMetadata = {
+          id: `companion_${metadata.id}`,
+          name: metadata.title,
+          description: metadata.description,
+          icon: getCategoryIcon(metadata.category),
+          links: JSON.stringify({
+            url: metadata.url,
+            domain: metadata.domain,
+            priority: metadata.priority,
+            tags: metadata.tags,
+            savedAt: metadata.savedAt
+          }),
+          translations: JSON.stringify({})
+        };
+
+        saveTaxonomyMetadata(taxonomyMetadata);
+        
+        toast({
+          title: "✅ Data přijata z Companion panelu",
+          description: `Uloženo: ${metadata.title}`,
+        });
+        
+        setCompanionConnected(true);
+        setTimeout(() => setCompanionConnected(false), 3000);
+      }
+      
+      if (event.data.type === 'DH_COMPANION_DATA') {
+        toast({
+          title: "🔗 Companion panel připojen",
+          description: `Nalezeno ${event.data.data.length} záznamů`,
+        });
+        setCompanionConnected(true);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [saveTaxonomyMetadata, toast]);
+
+  const getCategoryIcon = (category: string) => {
+    const icons: { [key: string]: string } = {
+      '01_natural_sciences': '🔬',
+      '02_formal_sciences': '📊', 
+      '03_social_sciences': '👥',
+      '04_humanities': '📚',
+      '05_technology': '💻',
+      '06_arts': '🎨'
+    };
+    return icons[category] || '📄';
+  };
+
   // Mock homepage tiles configuration - would come from database
   const enabledTiles = [
     { id: '1', type: 'progress-stats', title: 'Statistiky pokroku', enabled: true },
@@ -61,6 +122,12 @@ const Index = () => {
           </div>
           
           <div className="flex items-center gap-2">
+            {companionConnected && (
+              <div className="flex items-center gap-1 text-sm text-green-600 font-medium">
+                <Satellite className="w-4 h-4" />
+                Companion připojen
+              </div>
+            )}
             <Link to="/game">
               <Button className="flex items-center gap-2">
                 <Play className="w-4 h-4" />
