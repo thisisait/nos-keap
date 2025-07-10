@@ -1,6 +1,17 @@
+// ==UserScript==
+// @name         Data Hoarding Companion
+// @namespace    http://tampermonkey.net/
+// @version      1.0
+// @description  Plovoucí panel pro ukládání metadat stránek do data-hoarding aplikace
+// @author       You
+// @match        *://*/*
+// @grant        none
+// @run-at       document-end
+// ==/UserScript==
+
 /**
  * Data Hoarding Companion Panel
- * Miniaturní JavaScript pro vložení do jakékoli stránky
+ * Userscript kompatibilní s Tampermonkey/Greasemonkey
  * Komunikuje s vaší data-hoarding aplikací
  */
 
