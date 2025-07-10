@@ -8,7 +8,7 @@ import { APP_PORT } from "./src/config/port";
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
-    port: 8080,
+    port: APP_PORT,
     middlewareMode: false
   },
   plugins: [
@@ -40,4 +40,5 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  assetsInclude: ['**/*.wasm'],
 }));
