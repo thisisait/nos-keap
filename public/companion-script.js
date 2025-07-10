@@ -57,32 +57,38 @@ const CONFIG = {
     }
 
     async request(method, path, data = null) {
-      const requestId = ++this.requestId;
+      const url = `${this.baseUrl}${path}`;
       
-      return new Promise((resolve) => {
-        const timeout = setTimeout(() => {
-          resolve({ success: false, error: 'Request timeout' });
-        }, 10000);
-
-        const handleResponse = (event) => {
-          if (event.data.type === 'API_RESPONSE' && event.data.requestId === requestId) {
-            clearTimeout(timeout);
-            window.removeEventListener('message', handleResponse);
-            resolve(event.data.data);
-          }
+      try {
+        const options = {
+          method,
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          mode: 'cors'
         };
 
-        window.addEventListener('message', handleResponse);
+        if (data && (method === 'POST' || method === 'PUT' || method === 'PATCH')) {
+          options.body = JSON.stringify(data);
+        }
 
-        // Send API request via postMessage (for development with React app)
-        window.postMessage({
-          type: 'API_REQUEST',
-          requestId,
-          method,
-          path,
-          data
-        }, '*');
-      });
+        const response = await fetch(url, options);
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const result = await response.json();
+        return { success: true, data: result };
+        
+      } catch (error) {
+        console.error('API Request failed:', error);
+        return { 
+          success: false, 
+          error: `Připojení selhalo: ${error.message}` 
+        };
+      }
     }
 
     async getMetadataByDomain(domain) {
@@ -211,7 +217,16 @@ const CONFIG = {
               <input type="text" id="dh-custom-server" placeholder="http://example.com:8080">
             </div>
             <div class="dh-form-group">
-              <button id="dh-test-connection" class="dh-btn">Test připojení</button>
+              <div class="dh-button-group">
+                <button id="dh-save-settings" class="dh-btn dh-btn-save">
+                  <span class="dh-btn-text">Uložit</span>
+                  <span class="dh-spinner" style="display: none;">⏳</span>
+                </button>
+                <button id="dh-test-connection" class="dh-btn dh-btn-test">
+                  <span class="dh-btn-text">Test</span>
+                  <span class="dh-spinner" style="display: none;">⏳</span>
+                </button>
+              </div>
             </div>
             <div class="dh-api-stats" id="dh-api-stats">
               <div class="dh-loading">Načítám statistiky...</div>
@@ -272,27 +287,76 @@ const CONFIG = {
         customGroup.style.display = 'block';
       } else {
         customGroup.style.display = 'none';
-        api.setBaseUrl(selectedValue);
-        updateConnectionStatus();
       }
     });
 
-    // Custom server input
-    document.getElementById('dh-custom-server').addEventListener('blur', (e) => {
-      const customUrl = e.target.value.trim();
-      if (customUrl) {
-        api.setBaseUrl(customUrl);
-        updateConnectionStatus();
+    // Save settings button
+    document.getElementById('dh-save-settings').addEventListener('click', async () => {
+      const btn = document.getElementById('dh-save-settings');
+      const btnText = btn.querySelector('.dh-btn-text');
+      const spinner = btn.querySelector('.dh-spinner');
+      
+      // Show spinner
+      btnText.style.display = 'none';
+      spinner.style.display = 'inline';
+      btn.disabled = true;
+      
+      // Get selected or custom server URL
+      const serverSelect = document.getElementById('dh-server-select');
+      const customServer = document.getElementById('dh-custom-server');
+      
+      let newUrl;
+      if (serverSelect.value === '') {
+        newUrl = customServer.value.trim();
+        if (!newUrl) {
+          showMessage('❌ Zadejte URL serveru!', 'error');
+          btnText.style.display = 'inline';
+          spinner.style.display = 'none';
+          btn.disabled = false;
+          return;
+        }
+      } else {
+        newUrl = serverSelect.value;
+      }
+      
+      // Update API base URL
+      api.setBaseUrl(newUrl);
+      
+      // Test connection to new server
+      const result = await api.healthCheck();
+      
+      // Hide spinner
+      btnText.style.display = 'inline';
+      spinner.style.display = 'none';
+      btn.disabled = false;
+      
+      if (result.success) {
+        showMessage('✅ Nastavení uloženo a připojení úspěšné!', 'success');
+        updateConnectionStatus(true);
+        loadApiStats(); // Refresh stats
+      } else {
+        showMessage('⚠️ Nastavení uloženo, ale připojení selhalo: ' + result.error, 'warning');
+        updateConnectionStatus(false);
       }
     });
 
     // Test connection button
     document.getElementById('dh-test-connection').addEventListener('click', async () => {
       const btn = document.getElementById('dh-test-connection');
-      btn.textContent = 'Testování...';
+      const btnText = btn.querySelector('.dh-btn-text');
+      const spinner = btn.querySelector('.dh-spinner');
+      
+      // Show spinner
+      btnText.style.display = 'none';
+      spinner.style.display = 'inline';
       btn.disabled = true;
       
       const result = await api.healthCheck();
+      
+      // Hide spinner
+      btnText.style.display = 'inline';
+      spinner.style.display = 'none';
+      btn.disabled = false;
       
       if (result.success) {
         showMessage('✅ Připojení úspěšné!', 'success');
@@ -301,9 +365,6 @@ const CONFIG = {
         showMessage('❌ Připojení selhalo: ' + result.error, 'error');
         updateConnectionStatus(false);
       }
-      
-      btn.textContent = 'Test připojení';
-      btn.disabled = false;
     });
 
     // Taxonomy search functionality
@@ -461,6 +522,10 @@ const CONFIG = {
       return;
     }
     
+    // Show loading state
+    indicator.textContent = '🟡';
+    text.textContent = 'Testování...';
+    
     const result = await api.healthCheck();
     
     if (result.success) {
@@ -469,6 +534,7 @@ const CONFIG = {
     } else {
       indicator.textContent = '🔴';
       text.textContent = 'Offline';
+      console.log('Connection test failed:', result.error);
     }
   }
 
@@ -1079,6 +1145,63 @@ const CONFIG = {
 
     .dh-record-link:hover {
       color: #0d47a1;
+    }
+
+    /* Button group styles */
+    .dh-button-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .dh-button-group .dh-btn {
+      flex: 1;
+      background: #f8f9fa;
+      color: #3c4043;
+      border: 1px solid #dadce0;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      min-height: 40px;
+    }
+
+    .dh-btn-save {
+      background: linear-gradient(135deg, #1a73e8, #4285f4) !important;
+      color: white !important;
+      border-color: #1a73e8 !important;
+    }
+
+    .dh-btn-save:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+    }
+
+    .dh-btn-test:hover {
+      background: #e8f0fe;
+      border-color: #1a73e8;
+      color: #1a73e8;
+    }
+
+    .dh-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+      box-shadow: none !important;
+    }
+
+    .dh-spinner {
+      font-size: 14px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
     }
   `;
 
