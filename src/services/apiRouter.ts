@@ -3,6 +3,8 @@
  * Poskytuje skutečné API endpointy pro companion panel
  */
 
+import { ApiTaxonomyMetadata } from './database';
+
 export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;

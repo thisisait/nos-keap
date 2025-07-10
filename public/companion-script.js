@@ -310,14 +310,9 @@ const CONFIG = {
       const result = await api.saveMetadata(metadata);
       
       if (result.success) {
-        showMessage('✅ Metadata uložena přes API!', 'success');
+        showMessage('✅ Metadata úspěšně uložena!', 'success');
       } else {
-        // Fallback to localStorage
-        const stored = JSON.parse(localStorage.getItem('dh_metadata') || '[]');
-        stored.push({ id: Date.now(), ...metadata });
-        localStorage.setItem('dh_metadata', JSON.stringify(stored));
-        
-        showMessage('⚠️ Uloženo lokálně (API nedostupné)', 'warning');
+        showMessage('❌ Chyba ukládání: ' + result.error, 'error');
       }
 
       // Reset form
@@ -434,29 +429,7 @@ const CONFIG = {
         </div>
       `).join('');
     } else {
-      // Fallback to localStorage
-      const stored = JSON.parse(localStorage.getItem('dh_metadata') || '[]');
-      const domainRecords = stored.filter(record => record.domain === currentDomain);
-      
-      if (domainRecords.length === 0) {
-        recordsList.innerHTML = '<div class="dh-no-records">Žádné záznamy pro tuto doménu</div>';
-        return;
-      }
-      
-      recordsList.innerHTML = domainRecords.map(record => `
-        <div class="dh-record">
-          <div class="dh-record-title">${record.title}</div>
-          <div class="dh-record-description">${record.description}</div>
-          <div class="dh-record-meta">
-            <span class="dh-record-category">${record.category}</span>
-            <span class="dh-record-priority priority-${record.priority}">${record.priority}</span>
-            <span class="dh-record-date">${new Date(record.savedAt).toLocaleDateString()}</span>
-          </div>
-          <div class="dh-record-tags">
-            ${record.tags.map(tag => `<span class="dh-tag">${tag}</span>`).join('')}
-          </div>
-        </div>
-      `).join('');
+      recordsList.innerHTML = '<div class="dh-no-records">Žádné záznamy pro tuto doménu</div>';
     }
   }
 
@@ -497,34 +470,7 @@ const CONFIG = {
         </div>
       `).join('');
     } else {
-      // Fallback to localStorage search
-      const stored = JSON.parse(localStorage.getItem('dh_metadata') || '[]');
-      const filtered = stored.filter(record => 
-        record.title.toLowerCase().includes(query) ||
-        record.description.toLowerCase().includes(query) ||
-        record.tags.some(tag => tag.toLowerCase().includes(query))
-      );
-      
-      if (filtered.length === 0) {
-        recordsList.innerHTML = '<div class="dh-no-records">Žádné výsledky pro hledání</div>';
-        return;
-      }
-      
-      recordsList.innerHTML = filtered.map(record => `
-        <div class="dh-record">
-          <div class="dh-record-title">${record.title}</div>
-          <div class="dh-record-description">${record.description}</div>
-          <div class="dh-record-meta">
-            <span class="dh-record-domain">${record.domain}</span>
-            <span class="dh-record-category">${record.category}</span>
-            <span class="dh-record-priority priority-${record.priority}">${record.priority}</span>
-            <span class="dh-record-date">${new Date(record.savedAt).toLocaleDateString()}</span>
-          </div>
-          <div class="dh-record-tags">
-            ${record.tags.map(tag => `<span class="dh-tag">${tag}</span>`).join('')}
-          </div>
-        </div>
-      `).join('');
+      recordsList.innerHTML = '<div class="dh-no-records">Chyba vyhledávání</div>';
     }
   }
 
