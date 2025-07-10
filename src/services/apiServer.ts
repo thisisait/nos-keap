@@ -4,26 +4,7 @@
 
 import { IncomingMessage, ServerResponse } from 'http';
 import { databaseService } from './database';
-// Import taxonomy data statically to avoid build issues
-const taxonomyData = {
-  "natural_sciences": {
-    "name": "Natural Sciences",
-    "subcategories": {
-      "mathematics": { "name": "Mathematics" },
-      "physics": { "name": "Physics" },
-      "chemistry": { "name": "Chemistry" },
-      "biology": { "name": "Biology" }
-    }
-  },
-  "computer_science": {
-    "name": "Computer Science", 
-    "subcategories": {
-      "programming": { "name": "Programming" },
-      "algorithms": { "name": "Algorithms" },
-      "databases": { "name": "Databases" }
-    }
-  }
-};
+import { taxonomyData } from '../game/data/taxonomy';
 
 interface ApiResponse<T = any> {
   success: boolean;
@@ -72,7 +53,7 @@ function sendResponse(res: ServerResponse, status: number, data: any) {
   res.end(JSON.stringify(data));
 }
 
-// Generate taxonomy options
+// Generate taxonomy options from game data
 function generateTaxonomyOptions() {
   const options: any[] = [];
   let categoryIndex = 1;
@@ -87,17 +68,19 @@ function generateTaxonomyOptions() {
     });
 
     let subcategoryIndex = 1;
-    Object.entries(category.subcategories || {}).forEach(([subcatKey, subcat]: [string, any]) => {
-      const subcatId = `${categoryId}.${String(subcategoryIndex).padStart(2, '0')}`;
-      
-      options.push({
-        value: subcatId,
-        label: `${subcatId} - ${subcat.name}`,
-        level: 1
-      });
+    if (category.children) {
+      Object.entries(category.children).forEach(([subcatKey, subcat]: [string, any]) => {
+        const subcatId = `${categoryId}.${String(subcategoryIndex).padStart(2, '0')}`;
+        
+        options.push({
+          value: subcatId,
+          label: `${subcatId} - ${subcat.name}`,
+          level: 1
+        });
 
-      subcategoryIndex++;
-    });
+        subcategoryIndex++;
+      });
+    }
 
     categoryIndex++;
   });

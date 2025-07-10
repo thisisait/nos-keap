@@ -2,13 +2,12 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
-import { APP_PORT } from "./src/config/port";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
-    port: APP_PORT,
+    port: 8080,
     middlewareMode: false
   },
   plugins: [
@@ -18,6 +17,7 @@ export default defineConfig(({ mode }) => ({
       name: 'api-middleware',
       configureServer(server: any) {
         server.middlewares.use('/api', async (req: any, res: any, next: any) => {
+          console.log('API Middleware called:', req.method, req.url);
           try {
             // Import here to avoid circular deps
             const { handleApiRequest } = await import('./src/services/apiServer');
