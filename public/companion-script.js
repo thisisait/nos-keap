@@ -19,12 +19,12 @@
 const CONFIG = {
   // Default API servers
   servers: [
-    { name: 'Local Development', url: 'http://localhost:8080', default: true },
-    { name: 'Local Network', url: 'http://box.local:8080', default: false },
+    { name: 'Local Development', url: 'http://localhost:8081', default: true },
+    { name: 'Local Network', url: 'http://192.168.1.131:8081', default: false },
     { name: 'Custom', url: '', default: false }
   ],
   // Current API target
-  currentServer: localStorage.getItem('dh_api_server') || 'http://localhost:8080',
+  currentServer: localStorage.getItem('dh_api_server') || 'http://localhost:8081',
   // Storage keys
   storageKeys: {
     server: 'dh_api_server',
