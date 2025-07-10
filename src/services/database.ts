@@ -25,6 +25,17 @@ export interface TaxonomyMetadata {
   translations: string;
 }
 
+export interface ApiTaxonomyMetadata {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  links: any;
+  translations: any;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface HomepageTile {
   id: string;
   type: string;
@@ -465,6 +476,48 @@ class DatabaseService {
     
     this.db.exec('DELETE FROM taxonomy_metadata WHERE id = ?', [id]);
     this.save();
+  }
+
+  // API-compatible methods
+  getAllMetadataApi(): ApiTaxonomyMetadata[] {
+    const metadata = this.getTaxonomyMetadata() as any[];
+    return metadata.map(item => ({
+      ...item,
+      links: typeof item.links === 'string' ? JSON.parse(item.links || '{}') : item.links,
+      translations: typeof item.translations === 'string' ? JSON.parse(item.translations || '{}') : item.translations,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    }));
+  }
+
+  getMetadataByDomainApi(domain: string): ApiTaxonomyMetadata[] {
+    const allMetadata = this.getAllMetadataApi();
+    return allMetadata.filter(item => {
+      const links = item.links || {};
+      return links.domain === domain || (links.url && new URL(links.url).hostname === domain);
+    });
+  }
+
+  saveMetadataApi(metadata: Omit<ApiTaxonomyMetadata, 'id' | 'createdAt' | 'updatedAt'>): ApiTaxonomyMetadata {
+    const id = `api_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const newMetadata = {
+      id,
+      name: metadata.name,
+      description: metadata.description,
+      icon: metadata.icon,
+      links: JSON.stringify(metadata.links || {}),
+      translations: JSON.stringify(metadata.translations || {})
+    };
+    
+    this.saveTaxonomyMetadata(newMetadata);
+    
+    return {
+      ...newMetadata,
+      links: metadata.links || {},
+      translations: metadata.translations || {},
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
   }
 
   // Homepage tiles methods
