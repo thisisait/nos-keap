@@ -16,21 +16,31 @@ export default defineConfig(({ mode }) => ({
     {
       name: 'api-middleware',
       configureServer(server: any) {
-        server.middlewares.use('/api', async (req: any, res: any, next: any) => {
-          console.log('API Middleware called:', req.method, req.url);
-          try {
-            // Import here to avoid circular deps
-            const { handleApiRequest } = await import('./src/services/apiServer');
-            await handleApiRequest(req, res);
-          } catch (error) {
-            console.error('API Error:', error);
-            res.statusCode = 500;
-            res.setHeader('Content-Type', 'application/json');
-            res.setHeader('Access-Control-Allow-Origin', '*');
-            res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-            res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-            res.end(JSON.stringify({ success: false, error: 'Internal Server Error' }));
+        server.middlewares.use('/api', (req: any, res: any, next: any) => {
+          console.log('=== API Middleware called ===', req.method, req.url);
+          
+          // Set CORS headers first
+          res.setHeader('Access-Control-Allow-Origin', '*');
+          res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+          res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+          
+          if (req.method === 'OPTIONS') {
+            res.statusCode = 200;
+            res.end();
+            return;
           }
+
+          (async () => {
+            try {
+              const { handleApiRequest } = await import('./src/services/apiServer');
+              await handleApiRequest(req, res);
+            } catch (error) {
+              console.error('API Error:', error);
+              res.statusCode = 500;
+              res.setHeader('Content-Type', 'application/json');
+              res.end(JSON.stringify({ success: false, error: 'Internal Server Error' }));
+            }
+          })();
         });
       }
     }

@@ -68,8 +68,8 @@ function generateTaxonomyOptions() {
     });
 
     let subcategoryIndex = 1;
-    if (category.children) {
-      Object.entries(category.children).forEach(([subcatKey, subcat]: [string, any]) => {
+    if (category.subcategories) {
+      Object.entries(category.subcategories).forEach(([subcatKey, subcat]: [string, any]) => {
         const subcatId = `${categoryId}.${String(subcategoryIndex).padStart(2, '0')}`;
         
         options.push({
