@@ -97,6 +97,10 @@ const CONFIG = {
       return this.request('GET', `/api/metadata/search?q=${encodeURIComponent(query)}`);
     }
 
+    async getTaxonomy() {
+      return this.request('GET', '/api/taxonomy');
+    }
+
     async healthCheck() {
       return this.request('GET', '/api/health');
     }
@@ -138,22 +142,23 @@ const CONFIG = {
           <div class="dh-tab-content" id="dh-add-tab">
             <form class="dh-form" id="dh-metadata-form">
               <div class="dh-form-group">
-                <label>Název</label>
-                <input type="text" id="dh-title" required>
+                <label>Taxonomie *</label>
+                <div class="dh-taxonomy-container">
+                  <select id="dh-taxonomy" required>
+                    <option value="">Načítám taxonomii...</option>
+                  </select>
+                  <div class="dh-taxonomy-search">
+                    <input type="text" id="dh-taxonomy-search" placeholder="Hledat v taxonomii...">
+                  </div>
+                </div>
+              </div>
+              <div class="dh-form-group">
+                <label>Název (volitelné)</label>
+                <input type="text" id="dh-title" placeholder="Ponechte prázdné pro automatické pojmenování">
               </div>
               <div class="dh-form-group">
                 <label>Popis</label>
-                <textarea id="dh-description" rows="3"></textarea>
-              </div>
-              <div class="dh-form-group">
-                <label>Kategorie</label>
-                <select id="dh-category">
-                  <option value="article">Článek</option>
-                  <option value="video">Video</option>
-                  <option value="tool">Nástroj</option>
-                  <option value="documentation">Dokumentace</option>
-                  <option value="other">Ostatní</option>
-                </select>
+                <textarea id="dh-description" rows="3" placeholder="Stručný popis obsahu stránky"></textarea>
               </div>
               <div class="dh-form-group">
                 <label>Priorita</label>
@@ -167,14 +172,23 @@ const CONFIG = {
                 <label>Tagy (oddělené čárkou)</label>
                 <input type="text" id="dh-tags" placeholder="web, development, tutorial">
               </div>
+              <div class="dh-form-group">
+                <label>URL</label>
+                <input type="url" id="dh-url" readonly>
+              </div>
               <button type="submit" class="dh-btn dh-btn-primary">Uložit metadata</button>
             </form>
           </div>
           
           <div class="dh-tab-content" id="dh-browse-tab" style="display: none;">
-            <div class="dh-search">
-              <input type="text" id="dh-search" placeholder="Hledat záznamy...">
-              <button id="dh-search-btn" class="dh-btn">🔍</button>
+            <div class="dh-browse-header">
+              <div class="dh-stats" id="dh-browse-stats">
+                <span class="dh-stats-text">Načítám statistiky...</span>
+              </div>
+              <div class="dh-search">
+                <input type="text" id="dh-search" placeholder="Hledat záznamy...">
+                <button id="dh-search-btn" class="dh-btn">🔍</button>
+              </div>
             </div>
             <div class="dh-records" id="dh-records-list">
               <div class="dh-loading">Načítám záznamy...</div>
@@ -221,8 +235,12 @@ const CONFIG = {
     const currentDomain = window.location.hostname;
     const currentTitle = document.title || 'Untitled Page';
 
-    document.getElementById('dh-title').value = currentTitle;
+    document.getElementById('dh-url').value = currentUrl;
+    document.getElementById('dh-title').placeholder = currentTitle;
     document.getElementById('dh-description').value = getPageDescription();
+    
+    // Load taxonomy data
+    loadTaxonomyData();
 
     // Tab switching
     const tabs = panel.querySelectorAll('.dh-tab');
@@ -288,14 +306,28 @@ const CONFIG = {
       btn.disabled = false;
     });
 
+    // Taxonomy search functionality
+    document.getElementById('dh-taxonomy-search').addEventListener('input', (e) => {
+      filterTaxonomyOptions(e.target.value);
+    });
+
     // Form submission
     document.getElementById('dh-metadata-form').addEventListener('submit', async (e) => {
       e.preventDefault();
       
+      const taxonomyId = document.getElementById('dh-taxonomy').value;
+      if (!taxonomyId) {
+        showMessage('❌ Vyberte taxonomii!', 'error');
+        return;
+      }
+
+      const titleValue = document.getElementById('dh-title').value.trim();
+      
       const metadata = {
-        name: document.getElementById('dh-title').value,
+        name: titleValue || currentTitle,
         description: document.getElementById('dh-description').value,
-        icon: getCategoryIcon(document.getElementById('dh-category').value),
+        taxonomyId: taxonomyId,
+        icon: getTaxonomyIcon(taxonomyId),
         links: {
           url: currentUrl,
           domain: currentDomain,
@@ -311,13 +343,15 @@ const CONFIG = {
       
       if (result.success) {
         showMessage('✅ Metadata úspěšně uložena!', 'success');
+        // Reset form
+        document.getElementById('dh-metadata-form').reset();
+        document.getElementById('dh-taxonomy').selectedIndex = 0;
+        document.getElementById('dh-url').value = currentUrl;
+        document.getElementById('dh-title').placeholder = currentTitle;
+        document.getElementById('dh-description').value = getPageDescription();
       } else {
         showMessage('❌ Chyba ukládání: ' + result.error, 'error');
       }
-
-      // Reset form
-      document.getElementById('dh-metadata-form').reset();
-      document.getElementById('dh-title').value = currentTitle;
     });
 
     // Panel controls
@@ -343,6 +377,77 @@ const CONFIG = {
 
     // Initialize connection status
     updateConnectionStatus();
+  }
+
+  // Global variable to store taxonomy data
+  let taxonomyOptions = [];
+
+  // Load taxonomy data from API
+  async function loadTaxonomyData() {
+    const taxonomySelect = document.getElementById('dh-taxonomy');
+    
+    const result = await api.getTaxonomy();
+    
+    if (result.success) {
+      taxonomyOptions = result.data;
+      renderTaxonomyOptions(taxonomyOptions);
+    } else {
+      taxonomySelect.innerHTML = '<option value="">Chyba načítání taxonomie</option>';
+      showMessage('❌ Chyba načítání taxonomie: ' + result.error, 'error');
+    }
+  }
+
+  // Render taxonomy options in select
+  function renderTaxonomyOptions(options) {
+    const taxonomySelect = document.getElementById('dh-taxonomy');
+    
+    taxonomySelect.innerHTML = '<option value="">Vyberte taxonomii...</option>';
+    
+    options.forEach(option => {
+      const optionElement = document.createElement('option');
+      optionElement.value = option.value;
+      optionElement.textContent = option.label;
+      optionElement.style.paddingLeft = `${option.level * 20}px`;
+      
+      if (option.level === 0) {
+        optionElement.style.fontWeight = 'bold';
+        optionElement.style.backgroundColor = '#f8f9fa';
+      } else if (option.level === 1) {
+        optionElement.style.fontStyle = 'italic';
+      }
+      
+      taxonomySelect.appendChild(optionElement);
+    });
+  }
+
+  // Filter taxonomy options based on search
+  function filterTaxonomyOptions(searchQuery) {
+    if (!searchQuery.trim()) {
+      renderTaxonomyOptions(taxonomyOptions);
+      return;
+    }
+    
+    const filteredOptions = taxonomyOptions.filter(option =>
+      option.label.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    
+    renderTaxonomyOptions(filteredOptions);
+  }
+
+  // Get icon based on taxonomy ID
+  function getTaxonomyIcon(taxonomyId) {
+    if (!taxonomyId) return '📎';
+    
+    // Map taxonomy categories to icons
+    if (taxonomyId.startsWith('01')) return '🔬'; // Natural Sciences
+    if (taxonomyId.startsWith('02.01')) return '📊'; // Mathematics
+    if (taxonomyId.startsWith('02.02')) return '💻'; // Computer Science
+    if (taxonomyId.startsWith('03')) return '🧠'; // Applied Sciences
+    if (taxonomyId.startsWith('04')) return '🏛️'; // Social Sciences
+    if (taxonomyId.startsWith('05')) return '📚'; // Humanities
+    if (taxonomyId.startsWith('06')) return '🎨'; // Arts
+    
+    return '📎'; // Default
   }
 
   // Update connection status
@@ -898,6 +1003,82 @@ const CONFIG = {
 
     #data-hoarding-companion.minimized {
       width: auto;
+    }
+
+    .dh-taxonomy-container {
+      position: relative;
+    }
+
+    .dh-taxonomy-search {
+      margin-top: 8px;
+    }
+
+    .dh-taxonomy-search input {
+      width: 100%;
+      padding: 6px 10px;
+      border: 1px solid #dadce0;
+      border-radius: 4px;
+      font-size: 12px;
+      background: #f8f9fa;
+    }
+
+    #dh-taxonomy {
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    #dh-taxonomy option {
+      padding: 4px 8px;
+    }
+
+    #dh-taxonomy option[style*="level"] {
+      font-family: monospace;
+    }
+
+    .dh-browse-header {
+      margin-bottom: 12px;
+    }
+
+    .dh-stats {
+      margin-bottom: 8px;
+    }
+
+    .dh-stats-text {
+      font-size: 12px;
+      color: #666;
+      background: #f8f9fa;
+      padding: 4px 8px;
+      border-radius: 4px;
+      display: inline-block;
+    }
+
+    .dh-record-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .dh-record-icon {
+      font-size: 16px;
+    }
+
+    .dh-taxonomy-badge {
+      background: #e3f2fd;
+      color: #1976d2;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 10px;
+      font-family: monospace;
+    }
+
+    .dh-record-link {
+      color: #1976d2;
+      text-decoration: none;
+    }
+
+    .dh-record-link:hover {
+      color: #0d47a1;
     }
   `;
 

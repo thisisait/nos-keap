@@ -30,6 +30,7 @@ export interface ApiTaxonomyMetadata {
   name: string;
   description: string;
   icon: string;
+  taxonomyId?: string;
   links: any;
   translations: any;
   createdAt?: string;
@@ -143,6 +144,7 @@ class DatabaseService {
         name TEXT,
         description TEXT,
         icon TEXT,
+        taxonomy_id TEXT,
         links TEXT DEFAULT '{}',
         translations TEXT DEFAULT '{}'
       );
@@ -415,13 +417,14 @@ class DatabaseService {
     
     this.db.exec(`
       INSERT OR REPLACE INTO taxonomy_metadata 
-      (id, name, description, icon, links, translations)
-      VALUES (?, ?, ?, ?, ?, ?)
+      (id, name, description, icon, taxonomy_id, links, translations)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `, [
       metadata.id,
       metadata.name,
       metadata.description || '',
       metadata.icon || '',
+      (metadata as any).taxonomy_id || null,
       metadata.links || '{}',
       metadata.translations || '{}'
     ]);
@@ -483,6 +486,7 @@ class DatabaseService {
     const metadata = this.getTaxonomyMetadata() as any[];
     return metadata.map(item => ({
       ...item,
+      taxonomyId: item.taxonomy_id,
       links: typeof item.links === 'string' ? JSON.parse(item.links || '{}') : item.links,
       translations: typeof item.translations === 'string' ? JSON.parse(item.translations || '{}') : item.translations,
       createdAt: new Date().toISOString(),
@@ -505,6 +509,7 @@ class DatabaseService {
       name: metadata.name,
       description: metadata.description,
       icon: metadata.icon,
+      taxonomy_id: (metadata as any).taxonomyId || null,
       links: JSON.stringify(metadata.links || {}),
       translations: JSON.stringify(metadata.translations || {})
     };
@@ -513,6 +518,7 @@ class DatabaseService {
     
     return {
       ...newMetadata,
+      taxonomyId: (metadata as any).taxonomyId,
       links: metadata.links || {},
       translations: metadata.translations || {},
       createdAt: new Date().toISOString(),

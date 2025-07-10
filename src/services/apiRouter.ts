@@ -4,11 +4,18 @@
  */
 
 import { ApiTaxonomyMetadata } from './database';
+import { taxonomyData } from '@/game/data/taxonomy';
 
 export interface ApiResponse<T = any> {
   success: boolean;
   data?: T;
   error?: string;
+}
+
+export interface TaxonomyOption {
+  value: string;
+  label: string;
+  level: number;
 }
 
 export interface ApiRequest {
@@ -154,6 +161,16 @@ export class ApiRouter {
       return { success: true, data: { status: 'OK', timestamp: new Date().toISOString() } };
     });
 
+    // GET /api/taxonomy
+    this.handlers.set('GET:/api/taxonomy', () => {
+      try {
+        const options = this.generateTaxonomyOptions();
+        return { success: true, data: options };
+      } catch (error) {
+        return { success: false, error: error instanceof Error ? error.message : 'Unknown error' };
+      }
+    });
+
     // GET /api/stats
     this.handlers.set('GET:/api/stats', () => {
       try {
@@ -227,5 +244,97 @@ export class ApiRouter {
       return `${method}:/api/metadata/domain/:domain`;
     }
     return `${method}:${path}`;
+  }
+
+  private generateTaxonomyOptions(): TaxonomyOption[] {
+    const options: TaxonomyOption[] = [];
+    let categoryIndex = 1;
+
+    Object.entries(taxonomyData).forEach(([categoryKey, category]) => {
+      const categoryId = String(categoryIndex).padStart(2, '0');
+      
+      options.push({
+        value: categoryId,
+        label: `${categoryId} - ${category.name}`,
+        level: 0
+      });
+
+      let subcategoryIndex = 1;
+      Object.entries(category.subcategories).forEach(([subcatKey, subcat]) => {
+        const subcatId = `${categoryId}.${String(subcategoryIndex).padStart(2, '0')}`;
+        
+        options.push({
+          value: subcatId,
+          label: `${subcatId} - ${subcat.name}`,
+          level: 1
+        });
+
+        if (subcat.subcategories) {
+          let subSubcategoryIndex = 1;
+          Object.entries(subcat.subcategories).forEach(([subSubcatKey, subSubcat]) => {
+            const subSubcatId = `${subcatId}.${String(subSubcategoryIndex).padStart(2, '0')}`;
+            
+            options.push({
+              value: subSubcatId,
+              label: `${subSubcatId} - ${subSubcat.name}`,
+              level: 2
+            });
+
+            if (subSubcat.subcategories) {
+              let subSubSubcategoryIndex = 1;
+              Object.entries(subSubcat.subcategories).forEach(([subSubSubcatKey, subSubSubcat]) => {
+                const subSubSubcatId = `${subSubcatId}.${String(subSubSubcategoryIndex).padStart(2, '0')}`;
+                
+                options.push({
+                  value: subSubSubcatId,
+                  label: `${subSubSubcatId} - ${subSubSubcat.name}`,
+                  level: 3
+                });
+
+                if (subSubSubcat.items) {
+                  let itemIndex = 1;
+                  subSubSubcat.items.forEach((item) => {
+                    const itemId = `${subSubSubcatId}.${String(itemIndex).padStart(2, '0')}`;
+                    
+                    options.push({
+                      value: itemId,
+                      label: `${itemId} - ${item.name}`,
+                      level: 4
+                    });
+                    
+                    itemIndex++;
+                  });
+                }
+
+                subSubSubcategoryIndex++;
+              });
+            }
+
+            if (subSubcat.items) {
+              let itemIndex = 1;
+              subSubcat.items.forEach((item) => {
+                const itemId = `${subSubcatId}.${String(itemIndex).padStart(2, '0')}`;
+                
+                options.push({
+                  value: itemId,
+                  label: `${itemId} - ${item.name}`,
+                  level: 3
+                });
+                
+                itemIndex++;
+              });
+            }
+
+            subSubcategoryIndex++;
+          });
+        }
+
+        subcategoryIndex++;
+      });
+
+      categoryIndex++;
+    });
+
+    return options;
   }
 }

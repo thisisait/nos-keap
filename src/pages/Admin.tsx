@@ -8,7 +8,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { TaxonomySelect } from '@/components/TaxonomySelect';
-import { ArrowLeft, Save, Settings, Database, Plus, Edit, Trash, Cog } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { ArrowLeft, Save, Settings, Database, Plus, Edit, Trash, Cog, ExternalLink, Globe } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
@@ -30,6 +31,18 @@ interface HomepageTile {
   config: string;
 }
 
+interface ApiMetadata {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  taxonomyId?: string;
+  links: any;
+  translations: any;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export default function Admin() {
   const { 
     isInitialized, 
@@ -37,12 +50,14 @@ export default function Admin() {
     saveTaxonomyMetadata: saveTaxonomyMetadataDB,
     deleteTaxonomyMetadata,
     getHomepageTiles,
-    saveHomepageTiles: saveHomepageTilesDB
+    saveHomepageTiles: saveHomepageTilesDB,
+    getAllMetadataApi
   } = useDatabase();
   const { toast } = useToast();
   
   const [taxonomyItems, setTaxonomyItems] = useState<TaxonomyMetadata[]>([]);
   const [homepageTiles, setHomepageTiles] = useState<HomepageTile[]>([]);
+  const [apiMetadata, setApiMetadata] = useState<ApiMetadata[]>([]);
   const [editingItem, setEditingItem] = useState<TaxonomyMetadata | null>(null);
   const [selectedTaxonomyId, setSelectedTaxonomyId] = useState<string | null>(null);
   const [newTile, setNewTile] = useState({ type: 'recent-pages', title: '', enabled: true });
@@ -54,6 +69,9 @@ export default function Admin() {
       
       const tilesData = getHomepageTiles();
       setHomepageTiles(tilesData || []);
+
+      const apiData = getAllMetadataApi();
+      setApiMetadata(apiData || []);
     } catch (error) {
       console.error('Error loading data:', error);
       toast({
@@ -227,11 +245,85 @@ export default function Admin() {
       </header>
 
       <div className="container mx-auto px-4 py-6">
-        <Tabs defaultValue="homepage" className="space-y-6">
-          <TabsList className="w-full max-w-md">
+        <Tabs defaultValue="api-data" className="space-y-6">
+          <TabsList className="w-full max-w-xl">
+            <TabsTrigger value="api-data" className="flex-1">API Data</TabsTrigger>
             <TabsTrigger value="homepage" className="flex-1">Homepage</TabsTrigger>
             <TabsTrigger value="taxonomy" className="flex-1">Taxonomie</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="api-data" className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Globe className="w-5 h-5" />
+                  Metadata z Companion API
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {apiMetadata.length === 0 ? (
+                    <div className="text-center py-8 text-muted-foreground">
+                      <Database className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                      <p>Žádná metadata z companion scriptu zatím nejsou uložena</p>
+                      <p className="text-sm">Data se objeví po prvním použití companion panelu</p>
+                    </div>
+                  ) : (
+                    <div className="grid gap-4">
+                      {apiMetadata.map((item) => (
+                        <Card key={item.id} className="border-l-4 border-l-primary">
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  <span className="text-lg">{item.icon || '📎'}</span>
+                                  <h3 className="font-semibold">{item.name}</h3>
+                                  {item.taxonomyId && (
+                                    <Badge variant="secondary">{item.taxonomyId}</Badge>
+                                  )}
+                                </div>
+                                {item.description && (
+                                  <p className="text-sm text-muted-foreground mb-2">{item.description}</p>
+                                )}
+                                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                  {item.links?.url && (
+                                    <a 
+                                      href={item.links.url} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="flex items-center gap-1 hover:text-primary"
+                                    >
+                                      <ExternalLink className="w-3 h-3" />
+                                      {item.links.domain || new URL(item.links.url).hostname}
+                                    </a>
+                                  )}
+                                  {item.links?.priority && (
+                                    <span className="capitalize">Priorita: {item.links.priority}</span>
+                                  )}
+                                  {item.createdAt && (
+                                    <span>Vytvořeno: {new Date(item.createdAt).toLocaleDateString()}</span>
+                                  )}
+                                </div>
+                                {item.links?.tags && item.links.tags.length > 0 && (
+                                  <div className="flex gap-1 mt-2">
+                                    {item.links.tags.map((tag: string, index: number) => (
+                                      <Badge key={index} variant="outline" className="text-xs">
+                                        {tag}
+                                      </Badge>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
           <TabsContent value="homepage" className="space-y-6">
             <Card>
