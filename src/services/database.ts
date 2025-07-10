@@ -433,7 +433,7 @@ class DatabaseService {
   }
 
   getTaxonomyMetadata(id?: string): TaxonomyMetadata | TaxonomyMetadata[] {
-    if (!this.db) return id ? null : [];
+    if (!this.db) return id ? {} as TaxonomyMetadata : [];
     
     if (id) {
       const stmt = this.db.prepare('SELECT * FROM taxonomy_metadata WHERE id = ?');
@@ -452,7 +452,7 @@ class DatabaseService {
         };
       }
       stmt.free();
-      return null;
+      return {} as TaxonomyMetadata;
     } else {
       const stmt = this.db.prepare('SELECT * FROM taxonomy_metadata ORDER BY id');
       const items = [];
