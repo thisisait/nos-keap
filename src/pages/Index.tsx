@@ -34,7 +34,9 @@ const Index = () => {
             tags: metadata.tags,
             savedAt: metadata.savedAt
           }),
-          translations: JSON.stringify({})
+          translations: JSON.stringify({}),
+          data: metadata,
+          updatedAt: Date.now()
         };
 
         saveTaxonomyMetadata(taxonomyMetadata);

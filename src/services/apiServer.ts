@@ -3,8 +3,11 @@
  */
 
 import { IncomingMessage, ServerResponse } from 'http';
-import { databaseService } from './database';
+import { databaseService } from './database.server';
 import { taxonomyData } from '../game/data/taxonomy';
+
+// Initialize database service
+databaseService.initialize().catch(console.error);
 
 interface ApiResponse<T = any> {
   success: boolean;

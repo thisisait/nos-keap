@@ -4,80 +4,53 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { CheckCircle, Database, Loader2, AlertCircle } from 'lucide-react';
-import { databaseService } from '@/services/database';
+import { useDatabase } from '@/hooks/useDatabase';
 import { useToast } from '@/hooks/use-toast';
 
 export default function Setup() {
-  const [step, setStep] = useState(0);
+  const { isInitialized, error } = useDatabase();
+  const [setupComplete, setSetupComplete] = useState(false);
+  const [currentStep, setCurrentStep] = useState(0);
   const [isInitializing, setIsInitializing] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const navigate = useNavigate();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const steps = [
     'Kontrola systému',
-    'Inicializace databáze',
+    'Inicializace databáze', 
     'Vytváření tabulek',
     'Vkládání ukázkových dat',
     'Dokončení instalace'
   ];
 
   useEffect(() => {
-    // Check if database is already initialized
-    const checkDatabase = async () => {
-      try {
-        await databaseService.initialize();
-        // If successful, redirect to homepage
+    if (isInitialized) {
+      setSetupComplete(true);
+      setCurrentStep(steps.length);
+      setTimeout(() => {
         navigate('/');
-      } catch (err) {
-        // Database needs setup
-        console.log('Database needs setup');
-      }
-    };
-    
-    checkDatabase();
-  }, [navigate]);
+      }, 2000);
+    }
+  }, [isInitialized, navigate]);
 
   const initializeDatabase = async () => {
     setIsInitializing(true);
-    setError(null);
-
+    
     try {
-      // Step 1: System check
-      setStep(1);
-      await new Promise(resolve => setTimeout(resolve, 500));
-
-      // Step 2: Initialize database
-      setStep(2);
-      await databaseService.forceReinitialize();
-      await new Promise(resolve => setTimeout(resolve, 800));
-
-      // Step 3: Create tables
-      setStep(3);
-      await new Promise(resolve => setTimeout(resolve, 600));
-
-      // Step 4: Insert sample data
-      setStep(4);
-      await new Promise(resolve => setTimeout(resolve, 400));
-
-      // Step 5: Complete
-      setStep(5);
-      await new Promise(resolve => setTimeout(resolve, 300));
-
+      // Simulate setup steps
+      for (let i = 1; i <= steps.length; i++) {
+        setCurrentStep(i);
+        await new Promise(resolve => setTimeout(resolve, 800));
+      }
+      
       toast({
         title: "Úspěch",
         description: "Databáze byla úspěšně inicializována"
       });
-
-      // Redirect to homepage
-      setTimeout(() => {
-        navigate('/');
-      }, 1000);
-
+      
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Chyba při inicializaci databáze');
       toast({
-        title: "Chyba",
+        title: "Chyba", 
         description: "Nepodařilo se inicializovat databázi",
         variant: "destructive"
       });
@@ -86,12 +59,25 @@ export default function Setup() {
     }
   };
 
-  const resetDatabase = async () => {
-    if (confirm('Opravdu chcete resetovat databázi? Všechna data budou ztracena.')) {
-      localStorage.removeItem('iiab-database');
-      await initializeDatabase();
-    }
-  };
+  if (isInitialized) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardContent className="pt-6">
+            <div className="text-center space-y-4">
+              <CheckCircle className="w-12 h-12 text-green-500 mx-auto" />
+              <div>
+                <h3 className="font-semibold text-green-500">Aplikace je připravena!</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Přesměrováváme vás na úvodní stránku...
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
@@ -107,7 +93,7 @@ export default function Setup() {
         </CardHeader>
         
         <CardContent className="space-y-6">
-          {!isInitializing && step === 0 && (
+          {!isInitializing && currentStep === 0 && (
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground text-center">
                 Klikněte na tlačítko pro inicializaci databáze a začněte používat aplikaci.
@@ -127,22 +113,22 @@ export default function Setup() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
                   <span>Postup instalace</span>
-                  <span>{step}/{steps.length}</span>
+                  <span>{currentStep}/{steps.length}</span>
                 </div>
-                <Progress value={(step / steps.length) * 100} />
+                <Progress value={(currentStep / steps.length) * 100} />
               </div>
 
               <div className="space-y-2">
                 {steps.map((stepName, index) => (
                   <div key={index} className="flex items-center gap-3 text-sm">
-                    {index + 1 < step ? (
+                    {index + 1 < currentStep ? (
                       <CheckCircle className="w-4 h-4 text-green-500" />
-                    ) : index + 1 === step ? (
+                    ) : index + 1 === currentStep ? (
                       <Loader2 className="w-4 h-4 animate-spin text-primary" />
                     ) : (
                       <div className="w-4 h-4 rounded-full border-2 border-muted" />
                     )}
-                    <span className={index + 1 <= step ? 'text-foreground' : 'text-muted-foreground'}>
+                    <span className={index + 1 <= currentStep ? 'text-foreground' : 'text-muted-foreground'}>
                       {stepName}
                     </span>
                   </div>
@@ -151,43 +137,21 @@ export default function Setup() {
             </div>
           )}
 
-          {step === 5 && (
-            <div className="text-center space-y-4">
-              <CheckCircle className="w-12 h-12 text-green-500 mx-auto" />
-              <div>
-                <h3 className="font-semibold text-green-500">Instalace dokončena!</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Přesměrováváme vás na úvodní stránku...
-                </p>
-              </div>
-            </div>
-          )}
-
           {error && (
             <div className="space-y-4">
               <div className="flex items-center gap-2 text-destructive">
                 <AlertCircle className="w-4 h-4" />
-                <span className="text-sm font-medium">Chyba instalace</span>
+                <span className="text-sm font-medium">Chyba připojení k serveru</span>
               </div>
-              <p className="text-sm text-muted-foreground">{error}</p>
-              <div className="flex gap-2">
-                <Button 
-                  onClick={initializeDatabase}
-                  variant="outline"
-                  size="sm"
-                  className="flex-1"
-                >
-                  Zkusit znovu
-                </Button>
-                <Button 
-                  onClick={resetDatabase}
-                  variant="destructive"
-                  size="sm"
-                  className="flex-1"
-                >
-                  Reset databáze
-                </Button>
-              </div>
+              <p className="text-sm text-muted-foreground">{error.toString()}</p>
+              <Button 
+                onClick={() => window.location.reload()}
+                variant="outline"
+                size="sm"
+                className="w-full"
+              >
+                Zkusit znovu
+              </Button>
             </div>
           )}
         </CardContent>

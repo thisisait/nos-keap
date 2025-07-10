@@ -10,6 +10,9 @@ export default defineConfig(({ mode }) => ({
     port: 8080,
     middlewareMode: false
   },
+  define: {
+    'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development')
+  },
   plugins: [
     react(),
     mode === 'development' && componentTagger(),
@@ -17,7 +20,7 @@ export default defineConfig(({ mode }) => ({
       name: 'api-middleware',
       configureServer(server: any) {
         server.middlewares.use('/api', (req: any, res: any, next: any) => {
-          console.log('=== API Middleware called ===', req.method, req.url);
+          console.log('=== API Middleware START ===', req.method, req.url);
           
           // Set CORS headers first
           res.setHeader('Access-Control-Allow-Origin', '*');
@@ -25,22 +28,22 @@ export default defineConfig(({ mode }) => ({
           res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
           
           if (req.method === 'OPTIONS') {
+            console.log('OPTIONS request handled');
             res.statusCode = 200;
             res.end();
             return;
           }
 
-          (async () => {
-            try {
-              const { handleApiRequest } = await import('./src/services/apiServer');
-              await handleApiRequest(req, res);
-            } catch (error) {
-              console.error('API Error:', error);
-              res.statusCode = 500;
-              res.setHeader('Content-Type', 'application/json');
-              res.end(JSON.stringify({ success: false, error: 'Internal Server Error' }));
-            }
-          })();
+          console.log('Importing API handler...');
+          import('./src/services/apiServer.js').then(({ handleApiRequest }) => {
+            console.log('API handler imported, calling...');
+            return handleApiRequest(req, res);
+          }).catch(error => {
+            console.error('API Error:', error);
+            res.statusCode = 500;
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify({ success: false, error: 'Internal Server Error', details: error.message }));
+          });
         });
       }
     }
