@@ -187,6 +187,129 @@ export async function handleApiRequest(req: IncomingMessage, res: ServerResponse
           lastUpdate: new Date().toISOString()
         }
       };
+
+    // Courses API
+    } else if (method === 'GET' && pathname === '/api/courses') {
+      const data = databaseService.getAllCourses();
+      response = { success: true, data };
+      
+    } else if (method === 'POST' && pathname.startsWith('/api/courses/') && pathname.includes('/progress')) {
+      const courseId = parseInt(pathname.split('/')[3]);
+      const body = await parseBody(req);
+      if (!body || !courseId) {
+        response = { success: false, error: 'Invalid course data' };
+      } else {
+        databaseService.updateCourseProgress(courseId, body.progress, body.completedChapters);
+        response = { success: true };
+      }
+
+    // Completed Items API
+    } else if (method === 'GET' && pathname === '/api/completed-items') {
+      const data = databaseService.getCompletedItems();
+      response = { success: true, data };
+      
+    } else if (method === 'POST' && pathname.startsWith('/api/completed-items/')) {
+      const itemId = extractParam(pathname, '/api/completed-items/');
+      const completedItems = databaseService.getCompletedItems();
+      if (completedItems.includes(itemId)) {
+        databaseService.removeCompletedItem(itemId);
+      } else {
+        databaseService.addCompletedItem(itemId);
+      }
+      response = { success: true };
+
+    // Taxonomy Metadata API
+    } else if (method === 'GET' && pathname === '/api/taxonomy-metadata') {
+      const data = databaseService.getTaxonomyMetadata();
+      response = { success: true, data };
+      
+    } else if (method === 'GET' && pathname.startsWith('/api/taxonomy-metadata/')) {
+      const id = extractParam(pathname, '/api/taxonomy-metadata/');
+      const data = databaseService.getTaxonomyMetadata(id);
+      response = { success: true, data };
+      
+    } else if (method === 'POST' && pathname === '/api/taxonomy-metadata') {
+      const body = await parseBody(req);
+      if (!body) {
+        response = { success: false, error: 'No data provided' };
+      } else {
+        databaseService.saveTaxonomyMetadata(body);
+        response = { success: true };
+      }
+      
+    } else if (method === 'DELETE' && pathname.startsWith('/api/taxonomy-metadata/')) {
+      const id = extractParam(pathname, '/api/taxonomy-metadata/');
+      databaseService.deleteTaxonomyMetadata(id);
+      response = { success: true };
+
+    // Homepage Tiles API
+    } else if (method === 'GET' && pathname === '/api/homepage-tiles') {
+      const data = databaseService.getHomepageTiles();
+      response = { success: true, data };
+      
+    } else if (method === 'POST' && pathname === '/api/homepage-tiles') {
+      const body = await parseBody(req);
+      if (!body) {
+        response = { success: false, error: 'No data provided' };
+      } else {
+        databaseService.saveHomepageTiles(body);
+        response = { success: true };
+      }
+
+    // Activity API
+    } else if (method === 'GET' && pathname === '/api/activity') {
+      const type = query.type;
+      const limit = query.limit ? parseInt(query.limit) : 10;
+      const data = databaseService.getRecentActivity(type, limit);
+      response = { success: true, data };
+      
+    } else if (method === 'POST' && pathname === '/api/activity') {
+      const body = await parseBody(req);
+      if (!body || !body.itemId || !body.itemType) {
+        response = { success: false, error: 'Invalid activity data' };
+      } else {
+        databaseService.trackActivity(body.itemId, body.itemType);
+        response = { success: true };
+      }
+
+    // App Metadata API
+    } else if (method === 'GET' && pathname === '/api/app-metadata') {
+      const data = databaseService.getAppMetadata();
+      response = { success: true, data };
+
+    // Settings API
+    } else if (method === 'POST' && pathname === '/api/settings') {
+      const body = await parseBody(req);
+      if (!body || !body.key || body.value === undefined) {
+        response = { success: false, error: 'Invalid settings data' };
+      } else {
+        databaseService.saveSetting(body.key, body.value);
+        response = { success: true };
+      }
+      
+    } else if (method === 'GET' && pathname.startsWith('/api/settings/')) {
+      const key = extractParam(pathname, '/api/settings/');
+      const data = databaseService.getSetting(key);
+      response = { success: true, data };
+
+    // Todos API
+    } else if (method === 'GET' && pathname === '/api/todos') {
+      const data = databaseService.getTodos();
+      response = { success: true, data };
+      
+    } else if (method === 'POST' && pathname === '/api/todos') {
+      const body = await parseBody(req);
+      if (!body) {
+        response = { success: false, error: 'No data provided' };
+      } else {
+        databaseService.saveTodo(body);
+        response = { success: true };
+      }
+      
+    } else if (method === 'DELETE' && pathname.startsWith('/api/todos/')) {
+      const id = extractParam(pathname, '/api/todos/');
+      databaseService.deleteTodo(id);
+      response = { success: true };
       
     } else {
       response = { success: false, error: 'Not Found' };
