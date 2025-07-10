@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useDatabase } from '@/hooks/useDatabase';
+import { useDatabase, type TaxonomyMetadata, type HomepageTile } from '@/hooks/useDatabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -12,21 +12,6 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Save, Settings, Database, Plus, Edit, Trash, Cog, ExternalLink, Globe } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-
-interface TaxonomyMetadata {
-  id: string;
-  data: any;
-  updatedAt: number;
-}
-
-interface HomepageTile {
-  id: string;
-  type: string;
-  title: string;
-  visible: boolean;
-  position: number;
-  config?: any;
-}
 
 interface ApiMetadata {
   id: string;
@@ -57,7 +42,7 @@ export default function Admin() {
   const [apiMetadata, setApiMetadata] = useState<ApiMetadata[]>([]);
   const [editingItem, setEditingItem] = useState<TaxonomyMetadata | null>(null);
   const [selectedTaxonomyId, setSelectedTaxonomyId] = useState<string | null>(null);
-  const [newTile, setNewTile] = useState({ type: 'recent-pages', title: '', enabled: true });
+  const [newTile, setNewTile] = useState({ type: 'recent-pages', title: '', visible: true });
 
   const loadData = async () => {
     try {
@@ -176,14 +161,14 @@ export default function Admin() {
   const addHomepageTile = () => {
     const tile: HomepageTile = {
       id: Date.now().toString(),
-      type: newTile.type,
+      type: newTile.type as any,
       title: newTile.title || getTileDefaultTitle(newTile.type),
-      enabled: true,
+      visible: true,
       position: homepageTiles.length,
       config: '{}'
     };
     setHomepageTiles([...homepageTiles, tile]);
-    setNewTile({ type: 'recent-pages', title: '', enabled: true });
+    setNewTile({ type: 'recent-pages', title: '', visible: true });
   };
 
   const getTileDefaultTitle = (type: string) => {
@@ -199,7 +184,7 @@ export default function Admin() {
   const toggleTile = (id: string) => {
     setHomepageTiles(prev => 
       prev.map(tile => 
-        tile.id === id ? { ...tile, enabled: !tile.enabled } : tile
+        tile.id === id ? { ...tile, visible: !tile.visible } : tile
       )
     );
   };
@@ -334,7 +319,7 @@ export default function Admin() {
                     <div key={tile.id} className="flex items-center justify-between p-3 border border-border rounded-md">
                       <div className="flex items-center gap-3">
                         <Checkbox
-                          checked={tile.enabled}
+                          checked={tile.visible}
                           onCheckedChange={() => toggleTile(tile.id)}
                         />
                         <div>
@@ -383,7 +368,6 @@ export default function Admin() {
                 <CardTitle>Správa metadata taxonomie</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Existing items list */}
                 <div>
                   <Label>Existující metadata</Label>
                   <div className="space-y-2 mt-2 max-h-40 overflow-y-auto border border-border rounded-md p-2">
@@ -394,7 +378,7 @@ export default function Admin() {
                         <div key={item.id} className="flex items-center justify-between p-2 bg-muted/30 rounded-md">
                           <div>
                             <div className="font-medium text-sm">{item.id}</div>
-                            <div className="text-xs text-muted-foreground">{item.name}</div>
+                            <div className="text-xs text-muted-foreground">{item.name || 'Bez názvu'}</div>
                           </div>
                           <div className="flex gap-1">
                             <Button
@@ -418,7 +402,6 @@ export default function Admin() {
                   </div>
                 </div>
 
-                {/* Taxonomy selector */}
                 <div>
                   <Label>Vybrat položku z taxonomie</Label>
                   <div className="flex gap-2 mt-2">
@@ -436,7 +419,6 @@ export default function Admin() {
                   </div>
                 </div>
 
-                {/* Edit form */}
                 {editingItem && (
                   <Card className="border-2 border-primary/20">
                     <CardHeader>

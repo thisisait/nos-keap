@@ -25,17 +25,31 @@ export default function Settings() {
     if (!isInitialized) return;
 
     // Load settings from database
-    const savedLanguage = getSetting('language') || 'cs';
-    setLanguage(savedLanguage);
+    const loadSettings = async () => {
+      try {
+        const savedLanguage = await getSetting('language') || 'cs';
+        setLanguage(savedLanguage);
+      } catch (error) {
+        console.error('Error loading settings:', error);
+      }
+    };
+    loadSettings();
     
     // Load app metadata
-    const metadata = getAppMetadata();
-    setAppMetadata(metadata);
+    const loadMetadata = async () => {
+      try {
+        const metadata = await getAppMetadata();
+        setAppMetadata(metadata);
+      } catch (error) {
+        console.error('Error loading metadata:', error);
+      }
+    };
+    loadMetadata();
   }, [isInitialized, getSetting, getAppMetadata]);
 
-  const handleLanguageChange = (newLanguage: string) => {
+  const handleLanguageChange = async (newLanguage: string) => {
     setLanguage(newLanguage);
-    saveSetting('language', newLanguage);
+    await saveSetting('language', newLanguage);
     localStorage.setItem('app-language', newLanguage);
     toast({
       title: "Jazyk změněn",

@@ -75,10 +75,10 @@ const Index = () => {
 
   // Mock homepage tiles configuration - would come from database
   const enabledTiles = [
-    { id: '1', type: 'progress-stats', title: 'Statistiky pokroku', enabled: true },
-    { id: '2', type: 'recent-cities', title: 'Poslední navštívená města', enabled: true },
-    { id: '3', type: 'recent-pages', title: 'Naposledy aktualizované', enabled: true },
-    { id: '4', type: 'custom-todo', title: 'TODO poznámky', enabled: true },
+    { id: '1', type: 'progress-stats', title: 'Statistiky pokroku', visible: true },
+    { id: '2', type: 'recent-cities', title: 'Poslední navštívená města', visible: true },
+    { id: '3', type: 'recent-pages', title: 'Naposledy aktualizované', visible: true },
+    { id: '4', type: 'custom-todo', title: 'TODO poznámky', visible: true },
   ];
 
   const renderTile = (tile: any) => {
@@ -153,7 +153,7 @@ const Index = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {enabledTiles
-            .filter(tile => tile.enabled)
+            .filter(tile => tile.visible)
             .map(tile => renderTile(tile))
           }
         </div>
