@@ -12,522 +12,958 @@
 /**
  * Data Hoarding Companion Panel
  * Userscript kompatibilní s Tampermonkey/Greasemonkey
- * Komunikuje s vaší data-hoarding aplikací
+ * Komunikuje s vaší data-hoarding aplikací přes API
  */
 
-(function() {
-    'use strict';
-    
-    // Konfigurace
-    const CONFIG = {
-        appUrl: 'http://localhost:5173', // URL vaší Lovable aplikace
-        storageKey: 'dh_companion_data',
-        apiEndpoint: '/api/companion' // Pro budoucí rozšíření
-    };
+// Configuration
+const CONFIG = {
+  // Default API servers
+  servers: [
+    { name: 'Local Development', url: 'http://localhost:8080', default: true },
+    { name: 'Local Network', url: 'http://box.local:8080', default: false },
+    { name: 'Custom', url: '', default: false }
+  ],
+  // Current API target
+  currentServer: localStorage.getItem('dh_api_server') || 'http://localhost:8080',
+  // Storage keys
+  storageKeys: {
+    server: 'dh_api_server',
+    position: 'dh_panel_position',
+    visible: 'dh_panel_visible'
+  }
+};
 
-    // Pokud už panel existuje, netvořit nový
-    if (document.getElementById('dh-companion-panel')) {
-        return;
+(function() {
+  'use strict';
+  
+  // Prevent multiple instances
+  if (window.DataHoardingCompanion) {
+    return;
+  }
+  
+  window.DataHoardingCompanion = true;
+
+  // API Service
+  class ApiService {
+    constructor(baseUrl) {
+      this.baseUrl = baseUrl.replace(/\/$/, '');
+      this.requestId = 0;
     }
 
-    // Získání aktuální domény a URL
-    const currentDomain = window.location.hostname;
-    const currentUrl = window.location.href;
-    const currentTitle = document.title;
+    setBaseUrl(url) {
+      this.baseUrl = url.replace(/\/$/, '');
+      CONFIG.currentServer = url;
+      localStorage.setItem(CONFIG.storageKeys.server, url);
+    }
 
-    // CSS styly pro panel
-    const styles = `
-        #dh-companion-panel {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 320px;
-            max-height: 500px;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 12px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-            z-index: 999999;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            font-size: 14px;
-            color: #333;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            transition: all 0.3s ease;
-        }
+    async request(method, path, data = null) {
+      const requestId = ++this.requestId;
+      
+      return new Promise((resolve) => {
+        const timeout = setTimeout(() => {
+          resolve({ success: false, error: 'Request timeout' });
+        }, 10000);
 
-        #dh-companion-panel.minimized {
-            width: 60px;
-            height: 60px;
-            overflow: hidden;
-        }
-
-        .dh-panel-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 12px 16px;
-            border-radius: 12px 12px 0 0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            cursor: move;
-        }
-
-        .dh-panel-title {
-            font-weight: 600;
-            font-size: 13px;
-        }
-
-        .dh-panel-controls {
-            display: flex;
-            gap: 8px;
-        }
-
-        .dh-control-btn {
-            width: 20px;
-            height: 20px;
-            border: none;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            color: white;
-            cursor: pointer;
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: background 0.2s;
-        }
-
-        .dh-control-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-        }
-
-        .dh-panel-content {
-            padding: 16px;
-            max-height: 400px;
-            overflow-y: auto;
-        }
-
-        .dh-current-page {
-            background: #f8f9fa;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 16px;
-            border-left: 4px solid #667eea;
-        }
-
-        .dh-current-page h4 {
-            margin: 0 0 8px 0;
-            font-size: 13px;
-            font-weight: 600;
-            color: #667eea;
-        }
-
-        .dh-current-page p {
-            margin: 4px 0;
-            font-size: 12px;
-            color: #666;
-            word-break: break-all;
-        }
-
-        .dh-form-group {
-            margin-bottom: 12px;
-        }
-
-        .dh-form-group label {
-            display: block;
-            margin-bottom: 4px;
-            font-weight: 500;
-            font-size: 12px;
-            color: #555;
-        }
-
-        .dh-form-group input,
-        .dh-form-group textarea,
-        .dh-form-group select {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            font-size: 12px;
-            font-family: inherit;
-            box-sizing: border-box;
-        }
-
-        .dh-form-group textarea {
-            resize: vertical;
-            min-height: 60px;
-        }
-
-        .dh-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 500;
-            width: 100%;
-            margin-top: 8px;
-            transition: transform 0.2s;
-        }
-
-        .dh-btn:hover {
-            transform: translateY(-1px);
-        }
-
-        .dh-btn:active {
-            transform: translateY(0);
-        }
-
-        .dh-records-list {
-            margin-top: 16px;
-            max-height: 150px;
-            overflow-y: auto;
-        }
-
-        .dh-record-item {
-            background: #f8f9fa;
-            border-radius: 6px;
-            padding: 8px;
-            margin-bottom: 8px;
-            font-size: 12px;
-            border-left: 3px solid #28a745;
-        }
-
-        .dh-record-item .title {
-            font-weight: 500;
-            color: #333;
-        }
-
-        .dh-record-item .meta {
-            color: #666;
-            font-size: 11px;
-            margin-top: 4px;
-        }
-
-        .dh-tabs {
-            display: flex;
-            border-bottom: 1px solid #eee;
-            margin-bottom: 16px;
-        }
-
-        .dh-tab {
-            padding: 8px 12px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            font-size: 12px;
-            color: #666;
-            border-bottom: 2px solid transparent;
-        }
-
-        .dh-tab.active {
-            color: #667eea;
-            border-bottom-color: #667eea;
-        }
-
-        .dh-tab-content {
-            display: none;
-        }
-
-        .dh-tab-content.active {
-            display: block;
-        }
-
-        @media (max-width: 768px) {
-            #dh-companion-panel {
-                width: 280px;
-                right: 10px;
-                top: 10px;
-            }
-        }
-    `;
-
-    // Vložení stylů
-    const styleSheet = document.createElement('style');
-    styleSheet.textContent = styles;
-    document.head.appendChild(styleSheet);
-
-    // Hlavní HTML struktura panelu
-    const panelHTML = `
-        <div class="dh-panel-header">
-            <span class="dh-panel-title">📚 Data Hoarder</span>
-            <div class="dh-panel-controls">
-                <button class="dh-control-btn" id="dh-minimize" title="Minimalizovat">−</button>
-                <button class="dh-control-btn" id="dh-close" title="Zavřít">×</button>
-            </div>
-        </div>
-        <div class="dh-panel-content">
-            <div class="dh-current-page">
-                <h4>📍 Aktuální stránka</h4>
-                <p><strong>Doména:</strong> ${currentDomain}</p>
-                <p><strong>Název:</strong> ${currentTitle}</p>
-                <p><strong>URL:</strong> ${currentUrl}</p>
-            </div>
-
-            <div class="dh-tabs">
-                <button class="dh-tab active" data-tab="add">Přidat</button>
-                <button class="dh-tab" data-tab="browse">Záznamy</button>
-            </div>
-
-            <div class="dh-tab-content active" id="dh-tab-add">
-                <form id="dh-metadata-form">
-                    <div class="dh-form-group">
-                        <label for="dh-category">Kategorie:</label>
-                        <select id="dh-category">
-                            <option value="">Vyberte kategorii...</option>
-                            <option value="01_natural_sciences">Přírodní vědy</option>
-                            <option value="02_formal_sciences">Formální vědy</option>
-                            <option value="03_social_sciences">Společenské vědy</option>
-                            <option value="04_humanities">Humanitní vědy</option>
-                            <option value="05_technology">Technologie</option>
-                            <option value="06_arts">Umění</option>
-                        </select>
-                    </div>
-
-                    <div class="dh-form-group">
-                        <label for="dh-title">Název:</label>
-                        <input type="text" id="dh-title" value="${currentTitle}" />
-                    </div>
-
-                    <div class="dh-form-group">
-                        <label for="dh-description">Popis:</label>
-                        <textarea id="dh-description" placeholder="Popište obsah této stránky..."></textarea>
-                    </div>
-
-                    <div class="dh-form-group">
-                        <label for="dh-tags">Štítky (oddělené čárkou):</label>
-                        <input type="text" id="dh-tags" placeholder="technologie, tutorial, zajímavé" />
-                    </div>
-
-                    <div class="dh-form-group">
-                        <label for="dh-priority">Priorita:</label>
-                        <select id="dh-priority">
-                            <option value="low">Nízká</option>
-                            <option value="medium" selected>Střední</option>
-                            <option value="high">Vysoká</option>
-                        </select>
-                    </div>
-
-                    <button type="submit" class="dh-btn">💾 Uložit do taxonomie</button>
-                </form>
-            </div>
-
-            <div class="dh-tab-content" id="dh-tab-browse">
-                <div id="dh-domain-stats">
-                    <p><strong>Záznamy pro ${currentDomain}:</strong> <span id="dh-domain-count">0</span></p>
-                </div>
-                <div class="dh-records-list" id="dh-records-list">
-                    <!-- Zde se zobrazí záznamy -->
-                </div>
-                <button class="dh-btn" id="dh-open-app">🔗 Otevřít aplikaci</button>
-            </div>
-        </div>
-    `;
-
-    // Vytvoření panelu
-    const panel = document.createElement('div');
-    panel.id = 'dh-companion-panel';
-    panel.innerHTML = panelHTML;
-    document.body.appendChild(panel);
-
-    // === FUNKCIONALITA ===
-
-    // Lokální úložiště dat
-    let companionData = JSON.parse(localStorage.getItem(CONFIG.storageKey) || '[]');
-
-    // Minimalizace/maximalizace panelu
-    let isMinimized = false;
-    document.getElementById('dh-minimize').addEventListener('click', () => {
-        isMinimized = !isMinimized;
-        panel.classList.toggle('minimized', isMinimized);
-        document.getElementById('dh-minimize').textContent = isMinimized ? '+' : '−';
-    });
-
-    // Zavření panelu
-    document.getElementById('dh-close').addEventListener('click', () => {
-        panel.remove();
-        styleSheet.remove();
-    });
-
-    // Přepínání tabů
-    document.querySelectorAll('.dh-tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-            const tabName = tab.dataset.tab;
-            
-            // Aktualizace aktivní tab
-            document.querySelectorAll('.dh-tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.dh-tab-content').forEach(c => c.classList.remove('active'));
-            
-            tab.classList.add('active');
-            document.getElementById(`dh-tab-${tabName}`).classList.add('active');
-            
-            if (tabName === 'browse') {
-                loadDomainRecords();
-            }
-        });
-    });
-
-    // Uložení metadat
-    document.getElementById('dh-metadata-form').addEventListener('submit', (e) => {
-        e.preventDefault();
-        
-        const metadata = {
-            id: Date.now().toString(),
-            url: currentUrl,
-            domain: currentDomain,
-            title: document.getElementById('dh-title').value,
-            description: document.getElementById('dh-description').value,
-            category: document.getElementById('dh-category').value,
-            tags: document.getElementById('dh-tags').value.split(',').map(t => t.trim()).filter(t => t),
-            priority: document.getElementById('dh-priority').value,
-            savedAt: new Date().toISOString(),
-            userAgent: navigator.userAgent.substring(0, 100)
+        const handleResponse = (event) => {
+          if (event.data.type === 'API_RESPONSE' && event.data.requestId === requestId) {
+            clearTimeout(timeout);
+            window.removeEventListener('message', handleResponse);
+            resolve(event.data.data);
+          }
         };
 
-        // Uložení do lokálního úložiště
-        companionData.push(metadata);
-        localStorage.setItem(CONFIG.storageKey, JSON.stringify(companionData));
+        window.addEventListener('message', handleResponse);
 
-        // Pokus o komunikaci s hlavní aplikací (přes postMessage)
-        try {
-            window.postMessage({
-                type: 'DH_SAVE_METADATA',
-                data: metadata
-            }, window.location.origin);
-        } catch (error) {
-            console.log('Companion: Nelze komunikovat s hlavní aplikací:', error);
-        }
-
-        // Reset formuláře
-        document.getElementById('dh-metadata-form').reset();
-        document.getElementById('dh-title').value = currentTitle;
-        
-        // Zobrazení potvrzení
-        const btn = document.querySelector('#dh-metadata-form .dh-btn');
-        const originalText = btn.textContent;
-        btn.textContent = '✅ Uloženo!';
-        btn.style.background = '#28a745';
-        
-        setTimeout(() => {
-            btn.textContent = originalText;
-            btn.style.background = '';
-        }, 2000);
-    });
-
-    // Načtení záznamů pro aktuální doménu
-    function loadDomainRecords() {
-        const domainRecords = companionData.filter(record => record.domain === currentDomain);
-        const recordsList = document.getElementById('dh-records-list');
-        const domainCount = document.getElementById('dh-domain-count');
-        
-        domainCount.textContent = domainRecords.length;
-        
-        if (domainRecords.length === 0) {
-            recordsList.innerHTML = '<p style="color: #666; font-size: 12px; text-align: center; padding: 20px;">Žádné záznamy pro tuto doménu</p>';
-            return;
-        }
-
-        recordsList.innerHTML = domainRecords
-            .sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt))
-            .slice(0, 10) // Pouze posledních 10 záznamů
-            .map(record => `
-                <div class="dh-record-item">
-                    <div class="title">${record.title}</div>
-                    <div class="meta">
-                        ${record.tags.length > 0 ? `🏷️ ${record.tags.join(', ')} • ` : ''}
-                        📅 ${new Date(record.savedAt).toLocaleDateString('cs-CZ')}
-                        ${record.priority === 'high' ? ' • 🔥 Vysoká priorita' : ''}
-                    </div>
-                </div>
-            `).join('');
+        // Send API request via postMessage (for development with React app)
+        window.postMessage({
+          type: 'API_REQUEST',
+          requestId,
+          method,
+          path,
+          data
+        }, '*');
+      });
     }
 
-    // Otevření hlavní aplikace
-    document.getElementById('dh-open-app').addEventListener('click', () => {
-        const appWindow = window.open(CONFIG.appUrl, 'DataHoarderApp', 'width=1200,height=800');
+    async getMetadataByDomain(domain) {
+      return this.request('GET', `/api/metadata/domain/${encodeURIComponent(domain)}`);
+    }
+
+    async saveMetadata(metadata) {
+      return this.request('POST', '/api/metadata', metadata);
+    }
+
+    async searchMetadata(query) {
+      return this.request('GET', `/api/metadata/search?q=${encodeURIComponent(query)}`);
+    }
+
+    async healthCheck() {
+      return this.request('GET', '/api/health');
+    }
+
+    async getStats() {
+      return this.request('GET', '/api/stats');
+    }
+  }
+
+  const api = new ApiService(CONFIG.currentServer);
+
+  // Create companion panel
+  function createCompanionPanel() {
+    const panel = document.createElement('div');
+    panel.id = 'data-hoarding-companion';
+    panel.innerHTML = `
+      <div class="dh-panel">
+        <div class="dh-header">
+          <div class="dh-title">
+            <span class="dh-icon">📚</span>
+            Data Hoarding
+          </div>
+          <div class="dh-status" id="dh-status">
+            <span class="dh-status-indicator" id="dh-status-indicator">🔴</span>
+            <span class="dh-status-text" id="dh-status-text">Offline</span>
+          </div>
+          <div class="dh-controls">
+            <button class="dh-btn dh-btn-minimize" title="Minimalizovat">−</button>
+            <button class="dh-btn dh-btn-close" title="Zavřít">×</button>
+          </div>
+        </div>
+        <div class="dh-content">
+          <div class="dh-tabs">
+            <button class="dh-tab active" data-tab="add">Přidat</button>
+            <button class="dh-tab" data-tab="browse">Procházet</button>
+            <button class="dh-tab" data-tab="settings">Nastavení</button>
+          </div>
+          
+          <div class="dh-tab-content" id="dh-add-tab">
+            <form class="dh-form" id="dh-metadata-form">
+              <div class="dh-form-group">
+                <label>Název</label>
+                <input type="text" id="dh-title" required>
+              </div>
+              <div class="dh-form-group">
+                <label>Popis</label>
+                <textarea id="dh-description" rows="3"></textarea>
+              </div>
+              <div class="dh-form-group">
+                <label>Kategorie</label>
+                <select id="dh-category">
+                  <option value="article">Článek</option>
+                  <option value="video">Video</option>
+                  <option value="tool">Nástroj</option>
+                  <option value="documentation">Dokumentace</option>
+                  <option value="other">Ostatní</option>
+                </select>
+              </div>
+              <div class="dh-form-group">
+                <label>Priorita</label>
+                <select id="dh-priority">
+                  <option value="low">Nízká</option>
+                  <option value="medium" selected>Střední</option>
+                  <option value="high">Vysoká</option>
+                </select>
+              </div>
+              <div class="dh-form-group">
+                <label>Tagy (oddělené čárkou)</label>
+                <input type="text" id="dh-tags" placeholder="web, development, tutorial">
+              </div>
+              <button type="submit" class="dh-btn dh-btn-primary">Uložit metadata</button>
+            </form>
+          </div>
+          
+          <div class="dh-tab-content" id="dh-browse-tab" style="display: none;">
+            <div class="dh-search">
+              <input type="text" id="dh-search" placeholder="Hledat záznamy...">
+              <button id="dh-search-btn" class="dh-btn">🔍</button>
+            </div>
+            <div class="dh-records" id="dh-records-list">
+              <div class="dh-loading">Načítám záznamy...</div>
+            </div>
+          </div>
+
+          <div class="dh-tab-content" id="dh-settings-tab" style="display: none;">
+            <div class="dh-form-group">
+              <label>API Server</label>
+              <select id="dh-server-select">
+                ${CONFIG.servers.map(server => `
+                  <option value="${server.url}" ${server.url === CONFIG.currentServer ? 'selected' : ''}>
+                    ${server.name}
+                  </option>
+                `).join('')}
+              </select>
+            </div>
+            <div class="dh-form-group" id="dh-custom-server-group" style="display: none;">
+              <label>Custom Server URL</label>
+              <input type="text" id="dh-custom-server" placeholder="http://example.com:8080">
+            </div>
+            <div class="dh-form-group">
+              <button id="dh-test-connection" class="dh-btn">Test připojení</button>
+            </div>
+            <div class="dh-api-stats" id="dh-api-stats">
+              <div class="dh-loading">Načítám statistiky...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(panel);
+    return panel;
+  }
+
+  // Initialize companion panel functionality
+  function initializeCompanion() {
+    const panel = document.getElementById('data-hoarding-companion');
+    if (!panel) return;
+
+    // Auto-fill form with current page data
+    const currentUrl = window.location.href;
+    const currentDomain = window.location.hostname;
+    const currentTitle = document.title || 'Untitled Page';
+
+    document.getElementById('dh-title').value = currentTitle;
+    document.getElementById('dh-description').value = getPageDescription();
+
+    // Tab switching
+    const tabs = panel.querySelectorAll('.dh-tab');
+    const tabContents = panel.querySelectorAll('.dh-tab-content');
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => t.classList.remove('active'));
+        tabContents.forEach(tc => tc.style.display = 'none');
         
-        // Pokus o předání dat do hlavní aplikace
-        setTimeout(() => {
-            try {
-                appWindow.postMessage({
-                    type: 'DH_COMPANION_DATA',
-                    data: companionData,
-                    currentUrl: currentUrl,
-                    currentDomain: currentDomain
-                }, CONFIG.appUrl);
-            } catch (error) {
-                console.log('Companion: Nelze předat data hlavní aplikaci:', error);
-            }
-        }, 1000);
+        tab.classList.add('active');
+        const targetTab = tab.getAttribute('data-tab');
+        document.getElementById(`dh-${targetTab}-tab`).style.display = 'block';
+        
+        if (targetTab === 'browse') {
+          loadDomainRecords();
+        } else if (targetTab === 'settings') {
+          loadApiStats();
+        }
+      });
     });
 
-    // Drag & Drop funkcionalita pro panel
+    // Server selection
+    document.getElementById('dh-server-select').addEventListener('change', (e) => {
+      const selectedValue = e.target.value;
+      const customGroup = document.getElementById('dh-custom-server-group');
+      
+      if (selectedValue === '') {
+        customGroup.style.display = 'block';
+      } else {
+        customGroup.style.display = 'none';
+        api.setBaseUrl(selectedValue);
+        updateConnectionStatus();
+      }
+    });
+
+    // Custom server input
+    document.getElementById('dh-custom-server').addEventListener('blur', (e) => {
+      const customUrl = e.target.value.trim();
+      if (customUrl) {
+        api.setBaseUrl(customUrl);
+        updateConnectionStatus();
+      }
+    });
+
+    // Test connection button
+    document.getElementById('dh-test-connection').addEventListener('click', async () => {
+      const btn = document.getElementById('dh-test-connection');
+      btn.textContent = 'Testování...';
+      btn.disabled = true;
+      
+      const result = await api.healthCheck();
+      
+      if (result.success) {
+        showMessage('✅ Připojení úspěšné!', 'success');
+        updateConnectionStatus(true);
+      } else {
+        showMessage('❌ Připojení selhalo: ' + result.error, 'error');
+        updateConnectionStatus(false);
+      }
+      
+      btn.textContent = 'Test připojení';
+      btn.disabled = false;
+    });
+
+    // Form submission
+    document.getElementById('dh-metadata-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const metadata = {
+        name: document.getElementById('dh-title').value,
+        description: document.getElementById('dh-description').value,
+        icon: getCategoryIcon(document.getElementById('dh-category').value),
+        links: {
+          url: currentUrl,
+          domain: currentDomain,
+          priority: document.getElementById('dh-priority').value,
+          tags: document.getElementById('dh-tags').value.split(',').map(tag => tag.trim()).filter(tag => tag),
+          savedAt: new Date().toISOString()
+        },
+        translations: {}
+      };
+
+      // Try to save via API
+      const result = await api.saveMetadata(metadata);
+      
+      if (result.success) {
+        showMessage('✅ Metadata uložena přes API!', 'success');
+      } else {
+        // Fallback to localStorage
+        const stored = JSON.parse(localStorage.getItem('dh_metadata') || '[]');
+        stored.push({ id: Date.now(), ...metadata });
+        localStorage.setItem('dh_metadata', JSON.stringify(stored));
+        
+        showMessage('⚠️ Uloženo lokálně (API nedostupné)', 'warning');
+      }
+
+      // Reset form
+      document.getElementById('dh-metadata-form').reset();
+      document.getElementById('dh-title').value = currentTitle;
+    });
+
+    // Panel controls
+    panel.querySelector('.dh-btn-minimize').addEventListener('click', () => {
+      panel.classList.toggle('minimized');
+    });
+
+    panel.querySelector('.dh-btn-close').addEventListener('click', () => {
+      panel.style.display = 'none';
+      localStorage.setItem(CONFIG.storageKeys.visible, 'false');
+    });
+
+    // Drag functionality
+    makePanelDraggable(panel);
+
+    // Search functionality
+    document.getElementById('dh-search-btn').addEventListener('click', searchRecords);
+    document.getElementById('dh-search').addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        searchRecords();
+      }
+    });
+
+    // Initialize connection status
+    updateConnectionStatus();
+  }
+
+  // Update connection status
+  async function updateConnectionStatus(forceStatus = null) {
+    const indicator = document.getElementById('dh-status-indicator');
+    const text = document.getElementById('dh-status-text');
+    
+    if (forceStatus !== null) {
+      indicator.textContent = forceStatus ? '🟢' : '🔴';
+      text.textContent = forceStatus ? 'Online' : 'Offline';
+      return;
+    }
+    
+    const result = await api.healthCheck();
+    
+    if (result.success) {
+      indicator.textContent = '🟢';
+      text.textContent = 'Online';
+    } else {
+      indicator.textContent = '🔴';
+      text.textContent = 'Offline';
+    }
+  }
+
+  // Load API stats
+  async function loadApiStats() {
+    const statsContainer = document.getElementById('dh-api-stats');
+    statsContainer.innerHTML = '<div class="dh-loading">Načítám statistiky...</div>';
+    
+    const result = await api.getStats();
+    
+    if (result.success) {
+      const stats = result.data;
+      statsContainer.innerHTML = `
+        <div class="dh-stats">
+          <div class="dh-stat">
+            <div class="dh-stat-label">Celkem metadat</div>
+            <div class="dh-stat-value">${stats.totalMetadata}</div>
+          </div>
+          <div class="dh-stat">
+            <div class="dh-stat-label">Domény</div>
+            <div class="dh-stat-value">${stats.domains.length}</div>
+          </div>
+          <div class="dh-stat">
+            <div class="dh-stat-label">Poslední aktualizace</div>
+            <div class="dh-stat-value">${new Date(stats.lastUpdate).toLocaleString()}</div>
+          </div>
+        </div>
+        <div class="dh-domains">
+          <div class="dh-domains-title">Top domény:</div>
+          ${stats.domains.slice(0, 5).map(domain => `
+            <div class="dh-domain">${domain}</div>
+          `).join('')}
+        </div>
+      `;
+    } else {
+      statsContainer.innerHTML = `<div class="dh-error">Chyba načítání: ${result.error}</div>`;
+    }
+  }
+
+  // Load domain records
+  async function loadDomainRecords() {
+    const recordsList = document.getElementById('dh-records-list');
+    const currentDomain = window.location.hostname;
+    
+    recordsList.innerHTML = '<div class="dh-loading">Načítám záznamy...</div>';
+    
+    // Try API first
+    const result = await api.getMetadataByDomain(currentDomain);
+    
+    if (result.success && result.data.length > 0) {
+      recordsList.innerHTML = result.data.map(record => `
+        <div class="dh-record">
+          <div class="dh-record-title">${record.name}</div>
+          <div class="dh-record-description">${record.description}</div>
+          <div class="dh-record-meta">
+            <span class="dh-record-category">${record.links.category || 'unknown'}</span>
+            <span class="dh-record-priority priority-${record.links.priority || 'medium'}">${record.links.priority || 'medium'}</span>
+            <span class="dh-record-date">${new Date(record.links.savedAt).toLocaleDateString()}</span>
+          </div>
+          <div class="dh-record-tags">
+            ${(record.links.tags || []).map(tag => `<span class="dh-tag">${tag}</span>`).join('')}
+          </div>
+        </div>
+      `).join('');
+    } else {
+      // Fallback to localStorage
+      const stored = JSON.parse(localStorage.getItem('dh_metadata') || '[]');
+      const domainRecords = stored.filter(record => record.domain === currentDomain);
+      
+      if (domainRecords.length === 0) {
+        recordsList.innerHTML = '<div class="dh-no-records">Žádné záznamy pro tuto doménu</div>';
+        return;
+      }
+      
+      recordsList.innerHTML = domainRecords.map(record => `
+        <div class="dh-record">
+          <div class="dh-record-title">${record.title}</div>
+          <div class="dh-record-description">${record.description}</div>
+          <div class="dh-record-meta">
+            <span class="dh-record-category">${record.category}</span>
+            <span class="dh-record-priority priority-${record.priority}">${record.priority}</span>
+            <span class="dh-record-date">${new Date(record.savedAt).toLocaleDateString()}</span>
+          </div>
+          <div class="dh-record-tags">
+            ${record.tags.map(tag => `<span class="dh-tag">${tag}</span>`).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+  }
+
+  // Search records
+  async function searchRecords() {
+    const query = document.getElementById('dh-search').value.toLowerCase();
+    const recordsList = document.getElementById('dh-records-list');
+    
+    if (!query.trim()) {
+      loadDomainRecords();
+      return;
+    }
+    
+    recordsList.innerHTML = '<div class="dh-loading">Vyhledávám...</div>';
+    
+    // Try API search first
+    const result = await api.searchMetadata(query);
+    
+    if (result.success) {
+      if (result.data.length === 0) {
+        recordsList.innerHTML = '<div class="dh-no-records">Žádné výsledky pro hledání</div>';
+        return;
+      }
+      
+      recordsList.innerHTML = result.data.map(record => `
+        <div class="dh-record">
+          <div class="dh-record-title">${record.name}</div>
+          <div class="dh-record-description">${record.description}</div>
+          <div class="dh-record-meta">
+            <span class="dh-record-domain">${record.links.domain || 'unknown'}</span>
+            <span class="dh-record-category">${record.links.category || 'unknown'}</span>
+            <span class="dh-record-priority priority-${record.links.priority || 'medium'}">${record.links.priority || 'medium'}</span>
+            <span class="dh-record-date">${new Date(record.links.savedAt).toLocaleDateString()}</span>
+          </div>
+          <div class="dh-record-tags">
+            ${(record.links.tags || []).map(tag => `<span class="dh-tag">${tag}</span>`).join('')}
+          </div>
+        </div>
+      `).join('');
+    } else {
+      // Fallback to localStorage search
+      const stored = JSON.parse(localStorage.getItem('dh_metadata') || '[]');
+      const filtered = stored.filter(record => 
+        record.title.toLowerCase().includes(query) ||
+        record.description.toLowerCase().includes(query) ||
+        record.tags.some(tag => tag.toLowerCase().includes(query))
+      );
+      
+      if (filtered.length === 0) {
+        recordsList.innerHTML = '<div class="dh-no-records">Žádné výsledky pro hledání</div>';
+        return;
+      }
+      
+      recordsList.innerHTML = filtered.map(record => `
+        <div class="dh-record">
+          <div class="dh-record-title">${record.title}</div>
+          <div class="dh-record-description">${record.description}</div>
+          <div class="dh-record-meta">
+            <span class="dh-record-domain">${record.domain}</span>
+            <span class="dh-record-category">${record.category}</span>
+            <span class="dh-record-priority priority-${record.priority}">${record.priority}</span>
+            <span class="dh-record-date">${new Date(record.savedAt).toLocaleDateString()}</span>
+          </div>
+          <div class="dh-record-tags">
+            ${record.tags.map(tag => `<span class="dh-tag">${tag}</span>`).join('')}
+          </div>
+        </div>
+      `).join('');
+    }
+  }
+
+  // Get category icon
+  function getCategoryIcon(category) {
+    const icons = {
+      article: '📄',
+      video: '🎥',
+      tool: '🔧',
+      documentation: '📚',
+      other: '📎'
+    };
+    return icons[category] || icons.other;
+  }
+
+  // Utility functions
+  function getPageDescription() {
+    const metaDesc = document.querySelector('meta[name="description"]');
+    if (metaDesc) return metaDesc.getAttribute('content');
+    
+    const firstP = document.querySelector('p');
+    if (firstP) return firstP.textContent.substring(0, 200);
+    
+    return '';
+  }
+
+  function makePanelDraggable(panel) {
     let isDragging = false;
     let dragOffset = { x: 0, y: 0 };
 
-    const header = panel.querySelector('.dh-panel-header');
+    const header = panel.querySelector('.dh-header');
     
     header.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        dragOffset.x = e.clientX - panel.offsetLeft;
-        dragOffset.y = e.clientY - panel.offsetTop;
-        panel.style.cursor = 'grabbing';
+      isDragging = true;
+      dragOffset.x = e.clientX - panel.offsetLeft;
+      dragOffset.y = e.clientY - panel.offsetTop;
+      panel.style.cursor = 'grabbing';
     });
 
     document.addEventListener('mousemove', (e) => {
-        if (!isDragging) return;
-        
-        const x = e.clientX - dragOffset.x;
-        const y = e.clientY - dragOffset.y;
-        
-        // Omezení pohybu v rámci viewportu
-        const maxX = window.innerWidth - panel.offsetWidth;
-        const maxY = window.innerHeight - panel.offsetHeight;
-        
-        panel.style.left = Math.max(0, Math.min(x, maxX)) + 'px';
-        panel.style.top = Math.max(0, Math.min(y, maxY)) + 'px';
-        panel.style.right = 'auto';
+      if (!isDragging) return;
+      
+      const x = e.clientX - dragOffset.x;
+      const y = e.clientY - dragOffset.y;
+      
+      const maxX = window.innerWidth - panel.offsetWidth;
+      const maxY = window.innerHeight - panel.offsetHeight;
+      
+      panel.style.left = Math.max(0, Math.min(x, maxX)) + 'px';
+      panel.style.top = Math.max(0, Math.min(y, maxY)) + 'px';
+      panel.style.right = 'auto';
     });
 
     document.addEventListener('mouseup', () => {
-        isDragging = false;
-        panel.style.cursor = '';
+      isDragging = false;
+      panel.style.cursor = '';
     });
+  }
 
-    // Inicializace - načtení záznamů pro aktuální doménu
-    loadDomainRecords();
+  function showMessage(text, type = 'info') {
+    const message = document.createElement('div');
+    message.className = `dh-message ${type}`;
+    message.textContent = text;
+    document.body.appendChild(message);
 
-    // Export funkcí pro případné rozšíření
-    window.DataHoarderCompanion = {
-        addRecord: (metadata) => {
-            companionData.push(metadata);
-            localStorage.setItem(CONFIG.storageKey, JSON.stringify(companionData));
-        },
-        getRecords: (domain = null) => {
-            return domain ? 
-                companionData.filter(r => r.domain === domain) : 
-                companionData;
-        },
-        exportData: () => {
-            return JSON.stringify(companionData, null, 2);
-        },
-        importData: (jsonData) => {
-            try {
-                const imported = JSON.parse(jsonData);
-                companionData = [...companionData, ...imported];
-                localStorage.setItem(CONFIG.storageKey, JSON.stringify(companionData));
-                loadDomainRecords();
-                return true;
-            } catch (error) {
-                console.error('Chyba při importu dat:', error);
-                return false;
-            }
-        }
-    };
+    setTimeout(() => {
+      message.remove();
+    }, 3000);
+  }
 
-    console.log('📚 Data Hoarder Companion Panel načten!');
-    console.log('Použijte window.DataHoarderCompanion pro programový přístup');
+  /* Improved Styles with API status */
+  const styles = `
+    #data-hoarding-companion {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      width: 350px;
+      max-height: 80vh;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      font-size: 14px;
+      z-index: 999999;
+      user-select: none;
+    }
+
+    .dh-panel {
+      background: linear-gradient(145deg, #ffffff, #f8f9fa);
+      border: 1px solid #e1e5e9;
+      border-radius: 12px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+    }
+
+    .dh-header {
+      background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: move;
+    }
+
+    .dh-title {
+      display: flex;
+      align-items: center;
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+    .dh-icon {
+      margin-right: 8px;
+      font-size: 18px;
+    }
+
+    .dh-status {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 4px 8px;
+      border-radius: 12px;
+    }
+
+    .dh-status-indicator {
+      font-size: 8px;
+    }
+
+    .dh-controls {
+      display: flex;
+      gap: 4px;
+    }
+
+    .dh-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+
+    .dh-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    .dh-content {
+      padding: 16px;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    .dh-tabs {
+      display: flex;
+      margin-bottom: 16px;
+      background: #f1f3f4;
+      border-radius: 8px;
+      padding: 4px;
+    }
+
+    .dh-tab {
+      flex: 1;
+      padding: 8px 12px;
+      background: transparent;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      transition: all 0.2s;
+      color: #5f6368;
+    }
+
+    .dh-tab.active {
+      background: white;
+      color: #1a73e8;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .dh-form-group {
+      margin-bottom: 12px;
+    }
+
+    .dh-form-group label {
+      display: block;
+      margin-bottom: 4px;
+      font-weight: 500;
+      color: #3c4043;
+      font-size: 13px;
+    }
+
+    .dh-form-group input,
+    .dh-form-group textarea,
+    .dh-form-group select {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #dadce0;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+      box-sizing: border-box;
+    }
+
+    .dh-form-group input:focus,
+    .dh-form-group textarea:focus,
+    .dh-form-group select:focus {
+      outline: none;
+      border-color: #1a73e8;
+      box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.1);
+    }
+
+    .dh-btn-primary {
+      background: linear-gradient(135deg, #1a73e8, #4285f4);
+      color: white;
+      border: none;
+      padding: 10px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 500;
+      width: 100%;
+      transition: all 0.2s;
+    }
+
+    .dh-btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(26, 115, 232, 0.3);
+    }
+
+    .dh-search {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .dh-search input {
+      flex: 1;
+    }
+
+    .dh-search button {
+      padding: 8px 12px;
+      background: #f8f9fa;
+      border: 1px solid #dadce0;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .dh-records {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .dh-record {
+      background: #f8f9fa;
+      border: 1px solid #e8eaed;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 8px;
+      transition: all 0.2s;
+    }
+
+    .dh-record:hover {
+      background: #f1f3f4;
+      border-color: #1a73e8;
+    }
+
+    .dh-record-title {
+      font-weight: 600;
+      color: #1a73e8;
+      margin-bottom: 4px;
+    }
+
+    .dh-record-description {
+      color: #5f6368;
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    .dh-record-meta {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+
+    .dh-record-category,
+    .dh-record-priority,
+    .dh-record-date,
+    .dh-record-domain {
+      background: #e8f0fe;
+      color: #1a73e8;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 11px;
+    }
+
+    .priority-high {
+      background: #fce8e6 !important;
+      color: #d93025 !important;
+    }
+
+    .priority-medium {
+      background: #fef7e0 !important;
+      color: #f29900 !important;
+    }
+
+    .priority-low {
+      background: #e6f4ea !important;
+      color: #137333 !important;
+    }
+
+    .dh-record-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .dh-tag {
+      background: #f1f3f4;
+      color: #3c4043;
+      padding: 2px 6px;
+      border-radius: 8px;
+      font-size: 11px;
+    }
+
+    .dh-loading,
+    .dh-no-records,
+    .dh-error {
+      text-align: center;
+      color: #5f6368;
+      font-style: italic;
+      padding: 20px;
+    }
+
+    .dh-error {
+      color: #d93025;
+    }
+
+    .dh-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .dh-stat {
+      background: #f8f9fa;
+      padding: 8px;
+      border-radius: 6px;
+      text-align: center;
+    }
+
+    .dh-stat-label {
+      font-size: 11px;
+      color: #5f6368;
+      margin-bottom: 2px;
+    }
+
+    .dh-stat-value {
+      font-weight: 600;
+      color: #1a73e8;
+    }
+
+    .dh-domains {
+      background: #f8f9fa;
+      padding: 8px;
+      border-radius: 6px;
+    }
+
+    .dh-domains-title {
+      font-size: 12px;
+      font-weight: 500;
+      margin-bottom: 4px;
+      color: #3c4043;
+    }
+
+    .dh-domain {
+      font-size: 11px;
+      color: #5f6368;
+      padding: 2px 0;
+    }
+
+    .dh-message {
+      position: fixed;
+      top: 50px;
+      right: 20px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      color: white;
+      font-weight: 500;
+      z-index: 1000000;
+      animation: dh-slideIn 0.3s ease;
+    }
+
+    .dh-message.success {
+      background: #137333;
+    }
+
+    .dh-message.error {
+      background: #d93025;
+    }
+
+    .dh-message.warning {
+      background: #f29900;
+    }
+
+    @keyframes dh-slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    #data-hoarding-companion.minimized .dh-content {
+      display: none;
+    }
+
+    #data-hoarding-companion.minimized {
+      width: auto;
+    }
+  `;
+
+  // Apply styles
+  const styleSheet = document.createElement('style');
+  styleSheet.textContent = styles;
+  document.head.appendChild(styleSheet);
+
+  // Initialize the panel
+  const panel = createCompanionPanel();
+  initializeCompanion();
+
+  console.log('📚 Data Hoarding Companion loaded with API support!');
 
 })();

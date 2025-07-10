@@ -10,6 +10,7 @@ import Admin from "./pages/Admin";
 import Game from "./pages/Game";
 import Setup from "./pages/Setup";
 import Settings from "./pages/Settings";
+import Api from "./pages/Api";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ const App = () => {
             <Route path="/game/building/:id" element={<Game />} />
             <Route path="/setup" element={<Setup />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/api" element={<Api />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
