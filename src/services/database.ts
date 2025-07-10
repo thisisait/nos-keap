@@ -79,9 +79,23 @@ class DatabaseService {
 
   async initialize() {
     if (!this.SQL) {
-      this.SQL = await initSqlJs({
-        locateFile: (file: string) => `https://sql.js.org/dist/${file}`
-      });
+      // Check if we're in browser or Node.js environment
+      if (typeof globalThis !== 'undefined' && 'window' in globalThis) {
+        // Browser environment
+        this.SQL = await initSqlJs({
+          locateFile: (file: string) => `https://sql.js.org/dist/${file}`
+        });
+      } else {
+        // Node.js environment - use local WASM file
+        const path = await import('path');
+        const fs = await import('fs');
+        const wasmBinary = fs.readFileSync(
+          path.join(process.cwd(), 'node_modules/sql.js/dist/sql-wasm.wasm')
+        );
+        this.SQL = await initSqlJs({
+          wasmBinary
+        });
+      }
     }
 
     // Try to load existing database from localStorage

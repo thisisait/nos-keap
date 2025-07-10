@@ -8,7 +8,7 @@ import { APP_PORT } from "./src/config/port";
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
-    port: APP_PORT,
+    port: 8080,
     middlewareMode: false
   },
   plugins: [
