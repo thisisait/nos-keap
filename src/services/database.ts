@@ -1,729 +1,502 @@
-import initSqlJs from 'sql.js';
+import Database from 'better-sqlite3';
+import path from 'path';
+import fs from 'fs';
 
+// Data model interfaces
 export interface UserProgress {
-  id: string;
-  taxonomyId: string;
+  courseId: number;
   progress: number;
-  completedItems: string;
-  totalXP: number;
-  level: number;
-  lastSync: string;
+  completedChapters: number;
 }
 
 export interface CompletedItem {
   id: string;
-  itemId: string;
-  completedAt: string;
+  completedAt: number;
 }
 
 export interface TaxonomyMetadata {
   id: string;
-  name: string;
-  description: string;
-  icon: string;
-  links: string;
-  translations: string;
+  data: any;
+  updatedAt: number;
 }
 
 export interface ApiTaxonomyMetadata {
   id: string;
-  name: string;
-  description: string;
-  icon: string;
-  taxonomyId?: string;
-  links: any;
-  translations: any;
-  createdAt?: string;
-  updatedAt?: string;
+  title: string;
+  description?: string;
+  url?: string;
+  domain?: string;
+  metadata?: any;
+  createdAt: number;
+  updatedAt: number;
 }
 
 export interface HomepageTile {
   id: string;
-  type: string;
   title: string;
-  enabled: boolean;
+  type: 'progress' | 'custom-todo' | 'recent-cities' | 'recent-pages';
   position: number;
-  config: string;
+  visible: boolean;
+  config?: any;
 }
 
 export interface AppMetadata {
   id: string;
   version: string;
-  lastUpdate: string;
-  migrations: string;
+  lastUpdated: number;
+  totalItems: number;
+  completedItems: number;
 }
 
 export interface AppSettings {
-  id: string;
   key: string;
   value: string;
 }
 
 export interface TodoItem {
   id: string;
-  text: string;
+  title: string;
   completed: boolean;
-  createdAt: string;
+  createdAt: number;
+  updatedAt: number;
 }
 
 class DatabaseService {
-  private db: any = null;
-  private SQL: any = null;
+  private db: Database.Database | null = null;
+  private dbPath: string;
 
-  async forceReinitialize() {
-    // Clear existing database
-    localStorage.removeItem('iiab-database');
-    this.db = null;
+  constructor() {
+    // Create data directory if it doesn't exist
+    const dataDir = path.join(process.cwd(), 'data');
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
+    }
+    this.dbPath = path.join(dataDir, 'knowledge-explorer.db');
+  }
+
+  async initialize(): Promise<void> {
+    if (!this.db) {
+      this.db = new Database(this.dbPath);
+      this.db.pragma('journal_mode = WAL');
+      await this.createTables();
+      this.initializeAppMetadata();
+    }
+  }
+
+  async forceReinitialize(): Promise<void> {
+    if (this.db) {
+      this.db.close();
+      this.db = null;
+    }
+    
+    // Delete the database file
+    if (fs.existsSync(this.dbPath)) {
+      fs.unlinkSync(this.dbPath);
+    }
+    
     await this.initialize();
   }
 
-  async initialize() {
-    if (!this.SQL) {
-      // Use local WASM file from node_modules
-      this.SQL = await initSqlJs({
-        locateFile: (file: string) => `/node_modules/sql.js/dist/${file}`
-      });
-    }
+  private async createTables(): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
 
-    // Try to load existing database from localStorage
-    const savedDb = localStorage.getItem('iiab-database');
-    if (savedDb) {
-      const data = new Uint8Array(JSON.parse(savedDb));
-      this.db = new this.SQL.Database(data);
-    } else {
-      this.db = new this.SQL.Database();
-      await this.createTables();
-    }
-
-    // Ensure all required tables exist
-    await this.ensureTablesExist();
-  }
-
-  private async createTables() {
-    // User progress table
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS user_progress (
-        id TEXT PRIMARY KEY,
-        taxonomy_id TEXT,
-        progress INTEGER DEFAULT 0,
-        completed_items TEXT DEFAULT '[]',
-        total_xp INTEGER DEFAULT 0,
-        level INTEGER DEFAULT 1,
-        last_sync TEXT
-      );
-    `);
-
-    // Completed items table
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS completed_items (
-        id TEXT PRIMARY KEY,
-        item_id TEXT,
-        completed_at TEXT
-      );
-    `);
-
-    // Course progress table
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS course_progress (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        course_id INTEGER,
-        title TEXT,
-        category TEXT,
-        progress INTEGER DEFAULT 0,
-        completed BOOLEAN DEFAULT FALSE,
-        duration TEXT,
-        points INTEGER,
-        chapters INTEGER,
-        completed_chapters INTEGER DEFAULT 0
-      );
-    `);
-
-    // Taxonomy metadata table
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS taxonomy_metadata (
-        id TEXT PRIMARY KEY,
-        name TEXT,
-        description TEXT,
-        icon TEXT,
-        taxonomy_id TEXT,
-        links TEXT DEFAULT '{}',
-        translations TEXT DEFAULT '{}'
-      );
-    `);
-
-    // Homepage tiles configuration
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS homepage_tiles (
-        id TEXT PRIMARY KEY,
-        type TEXT,
-        title TEXT,
-        enabled BOOLEAN DEFAULT TRUE,
-        position INTEGER,
-        config TEXT DEFAULT '{}'
-      );
-    `);
-
-    // Recent activity tracking
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS recent_activity (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        item_id TEXT,
-        item_type TEXT,
-        visited_at TEXT
-      );
-    `);
-
-    // App metadata table
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS app_metadata (
-        id TEXT PRIMARY KEY,
-        version TEXT,
-        last_update TEXT,
-        migrations TEXT DEFAULT '[]'
-      );
-    `);
-
-    // App settings table
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS app_settings (
-        id TEXT PRIMARY KEY,
-        key TEXT UNIQUE,
-        value TEXT
-      );
-    `);
-
-    // Todo items table
-    this.db.exec(`
-      CREATE TABLE IF NOT EXISTS todos (
-        id TEXT PRIMARY KEY,
-        text TEXT,
-        completed BOOLEAN DEFAULT FALSE,
-        created_at TEXT
-      );
-    `);
-
-    // Insert sample data
-    this.insertSampleData();
-    this.initializeAppMetadata();
-    this.save();
-  }
-
-  private async ensureTablesExist() {
     const tables = [
-      'user_progress',
-      'completed_items', 
-      'course_progress',
-      'taxonomy_metadata',
-      'homepage_tiles',
-      'recent_activity',
-      'app_metadata',
-      'app_settings',
-      'todos'
+      `CREATE TABLE IF NOT EXISTS course_progress (
+        course_id INTEGER PRIMARY KEY,
+        progress INTEGER DEFAULT 0,
+        completed_chapters INTEGER DEFAULT 0,
+        updated_at INTEGER DEFAULT (strftime('%s', 'now'))
+      )`,
+
+      `CREATE TABLE IF NOT EXISTS completed_items (
+        id TEXT PRIMARY KEY,
+        completed_at INTEGER DEFAULT (strftime('%s', 'now'))
+      )`,
+
+      `CREATE TABLE IF NOT EXISTS taxonomy_metadata (
+        id TEXT PRIMARY KEY,
+        data TEXT NOT NULL,
+        updated_at INTEGER DEFAULT (strftime('%s', 'now'))
+      )`,
+
+      `CREATE TABLE IF NOT EXISTS api_taxonomy_metadata (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        description TEXT,
+        url TEXT,
+        domain TEXT,
+        metadata TEXT,
+        created_at INTEGER DEFAULT (strftime('%s', 'now')),
+        updated_at INTEGER DEFAULT (strftime('%s', 'now'))
+      )`,
+
+      `CREATE TABLE IF NOT EXISTS homepage_tiles (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        type TEXT NOT NULL,
+        position INTEGER NOT NULL,
+        visible INTEGER DEFAULT 1,
+        config TEXT,
+        updated_at INTEGER DEFAULT (strftime('%s', 'now'))
+      )`,
+
+      `CREATE TABLE IF NOT EXISTS recent_activity (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        item_id TEXT NOT NULL,
+        item_type TEXT NOT NULL,
+        timestamp INTEGER DEFAULT (strftime('%s', 'now'))
+      )`,
+
+      `CREATE TABLE IF NOT EXISTS app_metadata (
+        id TEXT PRIMARY KEY,
+        version TEXT NOT NULL,
+        last_updated INTEGER DEFAULT (strftime('%s', 'now')),
+        total_items INTEGER DEFAULT 0,
+        completed_items INTEGER DEFAULT 0
+      )`,
+
+      `CREATE TABLE IF NOT EXISTS app_settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL,
+        updated_at INTEGER DEFAULT (strftime('%s', 'now'))
+      )`,
+
+      `CREATE TABLE IF NOT EXISTS todos (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        completed INTEGER DEFAULT 0,
+        created_at INTEGER DEFAULT (strftime('%s', 'now')),
+        updated_at INTEGER DEFAULT (strftime('%s', 'now'))
+      )`
     ];
 
     for (const table of tables) {
-      try {
-        // Try to query the table
-        this.db.exec(`SELECT 1 FROM ${table} LIMIT 1`);
-      } catch (error) {
-        // Table doesn't exist, recreate all tables
-        console.log(`Table ${table} missing, recreating database...`);
-        await this.createTables();
-        break;
-      }
+      this.db.exec(table);
+    }
+
+    // Insert sample data if course_progress is empty
+    const courseCount = this.db.prepare('SELECT COUNT(*) as count FROM course_progress').get() as { count: number };
+    if (courseCount.count === 0) {
+      this.insertSampleData();
     }
   }
 
-  private insertSampleData() {
-    const courses = [
-      {
-        id: 1,
-        title: "Základy informatiky",
-        category: "Technologie",
-        progress: 85,
-        completed: false,
-        duration: "4.5 hodin",
-        points: 50,
-        chapters: 12,
-        completed_chapters: 10
-      },
-      {
-        id: 2,
-        title: "Matematika pro všechny",
-        category: "Matematika",
-        progress: 100,
-        completed: true,
-        duration: "6 hodin",
-        points: 75,
-        chapters: 15,
-        completed_chapters: 15
-      },
-      {
-        id: 3,
-        title: "Historie světa",
-        category: "Historie",
-        progress: 34,
-        completed: false,
-        duration: "8 hodin",
-        points: 100,
-        chapters: 20,
-        completed_chapters: 7
-      },
-      {
-        id: 4,
-        title: "Přírodní vědy",
-        category: "Věda",
-        progress: 67,
-        completed: false,
-        duration: "5.5 hodin",
-        points: 80,
-        chapters: 14,
-        completed_chapters: 9
-      }
+  private insertSampleData(): void {
+    if (!this.db) return;
+
+    const insert = this.db.prepare(`
+      INSERT INTO course_progress (course_id, progress, completed_chapters)
+      VALUES (?, ?, ?)
+    `);
+
+    const sampleData = [
+      { courseId: 1, progress: 75, completedChapters: 8 },
+      { courseId: 2, progress: 40, completedChapters: 4 },
+      { courseId: 3, progress: 90, completedChapters: 12 },
+      { courseId: 4, progress: 20, completedChapters: 2 },
+      { courseId: 5, progress: 100, completedChapters: 15 }
     ];
 
-    courses.forEach(course => {
-      this.db.exec(`
-        INSERT OR REPLACE INTO course_progress 
-        (course_id, title, category, progress, completed, duration, points, chapters, completed_chapters)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `, [
-        course.id,
-        course.title,
-        course.category,
-        course.progress,
-        course.completed,
-        course.duration,
-        course.points,
-        course.chapters,
-        course.completed_chapters
-      ]);
-    });
-  }
-
-  save() {
-    if (this.db) {
-      const data = this.db.export();
-      const buffer = JSON.stringify(Array.from(data));
-      localStorage.setItem('iiab-database', buffer);
+    for (const course of sampleData) {
+      insert.run(course.courseId, course.progress, course.completedChapters);
     }
   }
 
-  getAllCourses() {
+  // Course Progress Methods
+  getAllCourses(): UserProgress[] {
     if (!this.db) return [];
-    
-    const stmt = this.db.prepare('SELECT * FROM course_progress ORDER BY course_id');
-    const courses = [];
-    
-    while (stmt.step()) {
-      const row = stmt.getAsObject();
-      courses.push({
-        id: row.course_id,
-        title: row.title,
-        category: row.category,
-        progress: row.progress,
-        completed: Boolean(row.completed),
-        duration: row.duration,
-        points: row.points,
-        chapters: row.chapters,
-        completedChapters: row.completed_chapters
-      });
-    }
-    
-    stmt.free();
-    return courses;
+    return this.db.prepare('SELECT course_id as courseId, progress, completed_chapters as completedChapters FROM course_progress').all() as UserProgress[];
   }
 
-  updateCourseProgress(courseId: number, progress: number, completedChapters: number) {
+  updateCourseProgress(courseId: number, progress: number, completedChapters: number): void {
     if (!this.db) return;
     
-    const completed = progress >= 100;
-    this.db.exec(`
-      UPDATE course_progress 
-      SET progress = ?, completed_chapters = ?, completed = ?
-      WHERE course_id = ?
-    `, [progress, completedChapters, completed, courseId]);
+    const stmt = this.db.prepare(`
+      INSERT INTO course_progress (course_id, progress, completed_chapters, updated_at)
+      VALUES (?, ?, ?, strftime('%s', 'now'))
+      ON CONFLICT(course_id) DO UPDATE SET
+        progress = excluded.progress,
+        completed_chapters = excluded.completed_chapters,
+        updated_at = excluded.updated_at
+    `);
     
-    this.save();
+    stmt.run(courseId, progress, completedChapters);
   }
 
   getUserStats() {
-    if (!this.db) return {
-      totalProgress: 0,
-      completedCourses: 0,
-      totalCourses: 0,
-      totalPoints: 0,
-      totalHours: 0
-    };
-
-    const stmt = this.db.prepare(`
+    if (!this.db) return { totalCourses: 0, completedCourses: 0, averageProgress: 0 };
+    
+    const stats = this.db.prepare(`
       SELECT 
-        AVG(progress) as avg_progress,
-        COUNT(*) as total_courses,
-        SUM(CASE WHEN completed = 1 THEN 1 ELSE 0 END) as completed_courses,
-        SUM(points) as total_points
+        COUNT(*) as totalCourses,
+        SUM(CASE WHEN progress = 100 THEN 1 ELSE 0 END) as completedCourses,
+        AVG(progress) as averageProgress
       FROM course_progress
-    `);
+    `).get() as { totalCourses: number; completedCourses: number; averageProgress: number };
     
-    stmt.step();
-    const row = stmt.getAsObject();
-    stmt.free();
-
-    return {
-      totalProgress: Math.round(row.avg_progress || 0),
-      completedCourses: row.completed_courses || 0,
-      totalCourses: row.total_courses || 0,
-      totalPoints: row.total_points || 0,
-      totalHours: 47 // Static for now
-    };
+    return stats;
   }
 
-  addCompletedItem(itemId: string) {
+  // Completed Items Methods
+  addCompletedItem(id: string): void {
     if (!this.db) return;
-    
-    const id = `${itemId}_${Date.now()}`;
-    this.db.exec(`
-      INSERT OR REPLACE INTO completed_items (id, item_id, completed_at)
-      VALUES (?, ?, ?)
-    `, [id, itemId, new Date().toISOString()]);
-    
-    this.save();
+    this.db.prepare('INSERT OR REPLACE INTO completed_items (id) VALUES (?)').run(id);
   }
 
-  removeCompletedItem(itemId: string) {
+  removeCompletedItem(id: string): void {
     if (!this.db) return;
-    
-    this.db.exec(`DELETE FROM completed_items WHERE item_id = ?`, [itemId]);
-    this.save();
+    this.db.prepare('DELETE FROM completed_items WHERE id = ?').run(id);
   }
 
   getCompletedItems(): string[] {
     if (!this.db) return [];
-    
-    const stmt = this.db.prepare('SELECT item_id FROM completed_items');
-    const items = [];
-    
-    while (stmt.step()) {
-      const row = stmt.getAsObject();
-      items.push(row.item_id);
-    }
-    
-    stmt.free();
-    return items;
+    return this.db.prepare('SELECT id FROM completed_items').all().map((row: any) => row.id);
   }
 
-  // Taxonomy metadata methods
-  saveTaxonomyMetadata(metadata: TaxonomyMetadata) {
+  // Taxonomy Metadata Methods
+  saveTaxonomyMetadata(metadata: TaxonomyMetadata): void {
     if (!this.db) return;
     
-    this.db.exec(`
-      INSERT OR REPLACE INTO taxonomy_metadata 
-      (id, name, description, icon, taxonomy_id, links, translations)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-    `, [
-      metadata.id,
-      metadata.name,
-      metadata.description || '',
-      metadata.icon || '',
-      (metadata as any).taxonomy_id || null,
-      metadata.links || '{}',
-      metadata.translations || '{}'
-    ]);
+    const stmt = this.db.prepare(`
+      INSERT INTO taxonomy_metadata (id, data, updated_at)
+      VALUES (?, ?, strftime('%s', 'now'))
+      ON CONFLICT(id) DO UPDATE SET
+        data = excluded.data,
+        updated_at = excluded.updated_at
+    `);
     
-    this.save();
+    stmt.run(metadata.id, JSON.stringify(metadata.data));
   }
 
-  getTaxonomyMetadata(id?: string): TaxonomyMetadata | TaxonomyMetadata[] {
-    if (!this.db) return id ? {} as TaxonomyMetadata : [];
+  getTaxonomyMetadata(id?: string): TaxonomyMetadata[] | TaxonomyMetadata | null {
+    if (!this.db) return id ? null : [];
     
     if (id) {
-      const stmt = this.db.prepare('SELECT * FROM taxonomy_metadata WHERE id = ?');
-      stmt.bind([id]);
-      
-      if (stmt.step()) {
-        const row = stmt.getAsObject();
-        stmt.free();
-        return {
-          id: row.id,
-          name: row.name,
-          description: row.description,
-          icon: row.icon,
-          links: row.links,
-          translations: row.translations
-        };
-      }
-      stmt.free();
-      return {} as TaxonomyMetadata;
+      const row = this.db.prepare('SELECT * FROM taxonomy_metadata WHERE id = ?').get(id) as any;
+      if (!row) return null;
+      return {
+        id: row.id,
+        data: JSON.parse(row.data),
+        updatedAt: row.updated_at
+      };
     } else {
-      const stmt = this.db.prepare('SELECT * FROM taxonomy_metadata ORDER BY id');
-      const items = [];
-      
-      while (stmt.step()) {
-        const row = stmt.getAsObject();
-        items.push({
-          id: row.id,
-          name: row.name,
-          description: row.description,
-          icon: row.icon,
-          links: row.links,
-          translations: row.translations
-        });
-      }
-      
-      stmt.free();
-      return items;
+      const rows = this.db.prepare('SELECT * FROM taxonomy_metadata').all() as any[];
+      return rows.map(row => ({
+        id: row.id,
+        data: JSON.parse(row.data),
+        updatedAt: row.updated_at
+      }));
     }
   }
 
-  deleteTaxonomyMetadata(id: string) {
+  deleteTaxonomyMetadata(id: string): void {
     if (!this.db) return;
-    
-    this.db.exec('DELETE FROM taxonomy_metadata WHERE id = ?', [id]);
-    this.save();
+    this.db.prepare('DELETE FROM taxonomy_metadata WHERE id = ?').run(id);
   }
 
-  // API-compatible methods
+  // API Taxonomy Metadata Methods
   getAllMetadataApi(): ApiTaxonomyMetadata[] {
-    const metadata = this.getTaxonomyMetadata() as any[];
-    return metadata.map(item => ({
-      ...item,
-      taxonomyId: item.taxonomy_id,
-      links: typeof item.links === 'string' ? JSON.parse(item.links || '{}') : item.links,
-      translations: typeof item.translations === 'string' ? JSON.parse(item.translations || '{}') : item.translations,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
+    if (!this.db) return [];
+    const rows = this.db.prepare('SELECT * FROM api_taxonomy_metadata ORDER BY updated_at DESC').all() as any[];
+    return rows.map(row => ({
+      id: row.id,
+      title: row.title,
+      description: row.description,
+      url: row.url,
+      domain: row.domain,
+      metadata: row.metadata ? JSON.parse(row.metadata) : null,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
     }));
   }
 
   getMetadataByDomainApi(domain: string): ApiTaxonomyMetadata[] {
-    const allMetadata = this.getAllMetadataApi();
-    return allMetadata.filter(item => {
-      const links = item.links || {};
-      return links.domain === domain || (links.url && new URL(links.url).hostname === domain);
-    });
+    if (!this.db) return [];
+    const rows = this.db.prepare('SELECT * FROM api_taxonomy_metadata WHERE domain = ? ORDER BY updated_at DESC').all(domain) as any[];
+    return rows.map(row => ({
+      id: row.id,
+      title: row.title,
+      description: row.description,
+      url: row.url,
+      domain: row.domain,
+      metadata: row.metadata ? JSON.parse(row.metadata) : null,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
+    }));
   }
 
-  saveMetadataApi(metadata: Omit<ApiTaxonomyMetadata, 'id' | 'createdAt' | 'updatedAt'>): ApiTaxonomyMetadata {
-    const id = `api_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    const newMetadata = {
-      id,
-      name: metadata.name,
-      description: metadata.description,
-      icon: metadata.icon,
-      taxonomy_id: (metadata as any).taxonomyId || null,
-      links: JSON.stringify(metadata.links || {}),
-      translations: JSON.stringify(metadata.translations || {})
-    };
+  saveMetadataApi(metadata: Omit<ApiTaxonomyMetadata, 'createdAt' | 'updatedAt'>): void {
+    if (!this.db) return;
     
-    this.saveTaxonomyMetadata(newMetadata);
+    const stmt = this.db.prepare(`
+      INSERT INTO api_taxonomy_metadata (id, title, description, url, domain, metadata, created_at, updated_at)
+      VALUES (?, ?, ?, ?, ?, ?, strftime('%s', 'now'), strftime('%s', 'now'))
+      ON CONFLICT(id) DO UPDATE SET
+        title = excluded.title,
+        description = excluded.description,
+        url = excluded.url,
+        domain = excluded.domain,
+        metadata = excluded.metadata,
+        updated_at = excluded.updated_at
+    `);
     
-    return {
-      ...newMetadata,
-      taxonomyId: (metadata as any).taxonomyId,
-      links: metadata.links || {},
-      translations: metadata.translations || {},
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
+    stmt.run(
+      metadata.id,
+      metadata.title,
+      metadata.description,
+      metadata.url,
+      metadata.domain,
+      metadata.metadata ? JSON.stringify(metadata.metadata) : null
+    );
   }
 
-  // Homepage tiles methods
-  saveHomepageTiles(tiles: HomepageTile[]) {
+  // Homepage Tiles Methods
+  saveHomepageTiles(tiles: HomepageTile[]): void {
     if (!this.db) return;
     
     // Clear existing tiles
-    this.db.exec('DELETE FROM homepage_tiles');
+    this.db.prepare('DELETE FROM homepage_tiles').run();
     
     // Insert new tiles
-    tiles.forEach(tile => {
-      this.db.exec(`
-        INSERT INTO homepage_tiles (id, type, title, enabled, position, config)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `, [
-        tile.id,
-        tile.type,
-        tile.title,
-        tile.enabled,
-        tile.position,
-        tile.config
-      ]);
-    });
+    const stmt = this.db.prepare(`
+      INSERT INTO homepage_tiles (id, title, type, position, visible, config)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `);
     
-    this.save();
+    for (const tile of tiles) {
+      stmt.run(
+        tile.id,
+        tile.title,
+        tile.type,
+        tile.position,
+        tile.visible ? 1 : 0,
+        tile.config ? JSON.stringify(tile.config) : null
+      );
+    }
   }
 
   getHomepageTiles(): HomepageTile[] {
     if (!this.db) return [];
-    
-    const stmt = this.db.prepare('SELECT * FROM homepage_tiles ORDER BY position');
-    const tiles = [];
-    
-    while (stmt.step()) {
-      const row = stmt.getAsObject();
-      tiles.push({
-        id: row.id,
-        type: row.type,
-        title: row.title,
-        enabled: Boolean(row.enabled),
-        position: row.position,
-        config: row.config
-      });
-    }
-    
-    stmt.free();
-    return tiles;
+    const rows = this.db.prepare('SELECT * FROM homepage_tiles ORDER BY position').all() as any[];
+    return rows.map(row => ({
+      id: row.id,
+      title: row.title,
+      type: row.type,
+      position: row.position,
+      visible: Boolean(row.visible),
+      config: row.config ? JSON.parse(row.config) : null
+    }));
   }
 
-  // Activity tracking
-  trackActivity(itemId: string, itemType: string) {
+  // Activity Tracking Methods
+  trackActivity(itemId: string, itemType: string): void {
     if (!this.db) return;
-    
-    this.db.exec(`
-      INSERT INTO recent_activity (item_id, item_type, visited_at)
-      VALUES (?, ?, ?)
-    `, [itemId, itemType, new Date().toISOString()]);
-    
-    // Keep only last 50 activities
-    this.db.exec(`
-      DELETE FROM recent_activity 
-      WHERE id NOT IN (
-        SELECT id FROM recent_activity 
-        ORDER BY visited_at DESC 
-        LIMIT 50
-      )
-    `);
-    
-    this.save();
+    this.db.prepare('INSERT INTO recent_activity (item_id, item_type) VALUES (?, ?)').run(itemId, itemType);
   }
 
   getRecentActivity(type?: string, limit: number = 10): any[] {
     if (!this.db) return [];
     
     let query = 'SELECT * FROM recent_activity';
-    const params = [];
+    const params: any[] = [];
     
     if (type) {
       query += ' WHERE item_type = ?';
       params.push(type);
     }
     
-    query += ' ORDER BY visited_at DESC LIMIT ?';
+    query += ' ORDER BY timestamp DESC LIMIT ?';
     params.push(limit);
     
-    const stmt = this.db.prepare(query);
-    stmt.bind(params);
-    
-    const activities = [];
-    while (stmt.step()) {
-      const row = stmt.getAsObject();
-      activities.push({
-        id: row.id,
-        itemId: row.item_id,
-        itemType: row.item_type,
-        visitedAt: row.visited_at
-      });
-    }
-    
-    stmt.free();
-    return activities;
+    return this.db.prepare(query).all(...params) as any[];
   }
 
-  // App metadata methods
-  initializeAppMetadata() {
+  // App Metadata Methods
+  initializeAppMetadata(): void {
     if (!this.db) return;
     
-    this.db.exec(`
-      INSERT OR REPLACE INTO app_metadata (id, version, last_update, migrations)
-      VALUES (?, ?, ?, ?)
-    `, ['main', '1.0.0', new Date().toISOString(), JSON.stringify([])]);
-    
-    this.save();
+    const existing = this.db.prepare('SELECT COUNT(*) as count FROM app_metadata').get() as { count: number };
+    if (existing.count === 0) {
+      this.db.prepare(`
+        INSERT INTO app_metadata (id, version, total_items, completed_items)
+        VALUES ('main', '1.0.0', 0, 0)
+      `).run();
+    }
   }
 
   getAppMetadata(): AppMetadata | null {
     if (!this.db) return null;
+    const row = this.db.prepare('SELECT * FROM app_metadata WHERE id = ?').get('main') as any;
+    if (!row) return null;
     
-    const stmt = this.db.prepare('SELECT * FROM app_metadata WHERE id = ?');
-    stmt.bind(['main']);
-    
-    if (stmt.step()) {
-      const row = stmt.getAsObject();
-      stmt.free();
-      return {
-        id: row.id,
-        version: row.version,
-        lastUpdate: row.last_update,
-        migrations: row.migrations
-      };
-    }
-    stmt.free();
-    return null;
+    return {
+      id: row.id,
+      version: row.version,
+      lastUpdated: row.last_updated,
+      totalItems: row.total_items,
+      completedItems: row.completed_items
+    };
   }
 
-  // App settings methods
-  saveSetting(key: string, value: string) {
+  // Settings Methods
+  saveSetting(key: string, value: string): void {
     if (!this.db) return;
     
-    this.db.exec(`
-      INSERT OR REPLACE INTO app_settings (id, key, value)
-      VALUES (?, ?, ?)
-    `, [`setting_${key}`, key, value]);
+    const stmt = this.db.prepare(`
+      INSERT INTO app_settings (key, value, updated_at)
+      VALUES (?, ?, strftime('%s', 'now'))
+      ON CONFLICT(key) DO UPDATE SET
+        value = excluded.value,
+        updated_at = excluded.updated_at
+    `);
     
-    this.save();
+    stmt.run(key, value);
   }
 
   getSetting(key: string): string | null {
     if (!this.db) return null;
-    
-    const stmt = this.db.prepare('SELECT value FROM app_settings WHERE key = ?');
-    stmt.bind([key]);
-    
-    if (stmt.step()) {
-      const row = stmt.getAsObject();
-      stmt.free();
-      return row.value;
-    }
-    stmt.free();
-    return null;
+    const row = this.db.prepare('SELECT value FROM app_settings WHERE key = ?').get(key) as any;
+    return row ? row.value : null;
   }
 
-  // Todo methods
-  saveTodo(todo: TodoItem) {
+  // Todo Methods
+  saveTodo(todo: TodoItem): void {
     if (!this.db) return;
     
-    this.db.exec(`
-      INSERT OR REPLACE INTO todos (id, text, completed, created_at)
-      VALUES (?, ?, ?, ?)
-    `, [todo.id, todo.text, todo.completed, todo.createdAt]);
+    const stmt = this.db.prepare(`
+      INSERT INTO todos (id, title, completed, created_at, updated_at)
+      VALUES (?, ?, ?, ?, strftime('%s', 'now'))
+      ON CONFLICT(id) DO UPDATE SET
+        title = excluded.title,
+        completed = excluded.completed,
+        updated_at = excluded.updated_at
+    `);
     
-    this.save();
+    stmt.run(todo.id, todo.title, todo.completed ? 1 : 0, todo.createdAt);
   }
 
   getTodos(): TodoItem[] {
     if (!this.db) return [];
-    
-    const stmt = this.db.prepare('SELECT * FROM todos ORDER BY created_at DESC');
-    const todos = [];
-    
-    while (stmt.step()) {
-      const row = stmt.getAsObject();
-      todos.push({
-        id: row.id,
-        text: row.text,
-        completed: Boolean(row.completed),
-        createdAt: row.created_at
-      });
-    }
-    
-    stmt.free();
-    return todos;
+    const rows = this.db.prepare('SELECT * FROM todos ORDER BY created_at DESC').all() as any[];
+    return rows.map(row => ({
+      id: row.id,
+      title: row.title,
+      completed: Boolean(row.completed),
+      createdAt: row.created_at,
+      updatedAt: row.updated_at
+    }));
   }
 
-  deleteTodo(id: string) {
+  deleteTodo(id: string): void {
     if (!this.db) return;
-    
-    this.db.exec('DELETE FROM todos WHERE id = ?', [id]);
-    this.save();
+    this.db.prepare('DELETE FROM todos WHERE id = ?').run(id);
+  }
+
+  close(): void {
+    if (this.db) {
+      this.db.close();
+      this.db = null;
+    }
   }
 }
 

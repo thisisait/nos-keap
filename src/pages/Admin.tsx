@@ -15,20 +15,17 @@ import { useToast } from '@/hooks/use-toast';
 
 interface TaxonomyMetadata {
   id: string;
-  name: string;
-  description: string;
-  icon: string;
-  links: string;
-  translations: string;
+  data: any;
+  updatedAt: number;
 }
 
 interface HomepageTile {
   id: string;
   type: string;
   title: string;
-  enabled: boolean;
+  visible: boolean;
   position: number;
-  config: string;
+  config?: any;
 }
 
 interface ApiMetadata {
@@ -62,15 +59,15 @@ export default function Admin() {
   const [selectedTaxonomyId, setSelectedTaxonomyId] = useState<string | null>(null);
   const [newTile, setNewTile] = useState({ type: 'recent-pages', title: '', enabled: true });
 
-  const loadData = () => {
+  const loadData = async () => {
     try {
-      const taxonomyData = getTaxonomyMetadata() as TaxonomyMetadata[];
+      const taxonomyData = await getTaxonomyMetadata() as any[];
       setTaxonomyItems(taxonomyData || []);
       
-      const tilesData = getHomepageTiles();
+      const tilesData = await getHomepageTiles();
       setHomepageTiles(tilesData || []);
 
-      const apiData = getAllMetadataApi();
+      const apiData = await getAllMetadataApi();
       setApiMetadata(apiData || []);
     } catch (error) {
       console.error('Error loading data:', error);

@@ -14,7 +14,7 @@ const ProgressTracker: React.FC = () => {
 
   useEffect(() => {
     if (isInitialized) {
-      setCourses(getCourses());
+      getCourses().then(setCourses);
       setStats(getUserStats());
     }
   }, [isInitialized, getCourses, getUserStats]);
