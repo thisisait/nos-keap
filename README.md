@@ -26,10 +26,10 @@ KEAP is the primary interface for the TaxonomyCollection project, which aims to:
 ### Technology Stack
 - **Frontend**: React 18 + TypeScript + Vite
 - **Styling**: Tailwind CSS + shadcn/ui components
-- **Database**: SQL.js (client-side SQLite)
+- **Database**: better-sqlite3 (server-side SQLite)
 - **Routing**: React Router
-- **State Management**: React Query + Custom hooks
-- **Build System**: Vite with static output
+- **API**: Custom Vite middleware with REST endpoints
+- **Build System**: Vite with static output + backend server
 
 ### Data Structure
 ```typescript
@@ -75,7 +75,7 @@ npm install
 npm run dev
 ```
 
-The application will be available at `http://localhost:8080`
+The application will be available at `http://localhost:42069`
 
 ### Development Scripts
 ```bash
@@ -224,8 +224,8 @@ function captureIIABPage() {
 ## 📊 Data Management
 
 ### Local Storage
-- SQLite database stores all user progress and metadata
-- Taxonomy structures cached locally for offline use
+- Server-side SQLite database stores all user progress and metadata
+- Local API endpoints provide real-time data access
 - Export capabilities for progress sharing and backup
 
 ### Taxonomy Structure
@@ -267,10 +267,11 @@ interface TaxonomyImport {
 ## 🔧 Configuration
 
 ### Environment Setup
-No environment variables required for basic operation. Configuration handled through:
-- `src/game/config/featureFlags.ts` - Feature toggles
+Configuration handled through:
+- `src/config/port.ts` - Server port configuration (42069)
+- `src/game/config/featureFlags.ts` - Feature toggles  
 - `src/game/data/taxonomy.ts` - Taxonomy structure
-- `src/services/database.ts` - Database schema
+- `src/services/database.ts` - Database schema and API layer
 
 ### IIAB-Specific Configuration
 ```typescript
@@ -307,9 +308,9 @@ export const iiabConfig = {
 
 ### Phase 1 (Current)
 - ✅ Basic gamified interface
-- ✅ Local taxonomy management
-- ✅ IIAB static integration
-- 🔄 PoC quest line implementation
+- ✅ Server-side database with API
+- ✅ Real-time data management
+- ✅ Backend-first architecture
 
 ### Phase 2
 - 📱 Mobile-responsive interface

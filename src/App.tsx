@@ -5,8 +5,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { useDatabase } from './hooks/useDatabase';
-import { ApiRouter } from './services/apiRouter';
 import Index from "./pages/Index";
 import Admin from "./pages/Admin";
 import Game from "./pages/Game";
@@ -17,16 +15,6 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const App = () => {
-  const database = useDatabase();
-  const { isInitialized: isReady } = database;
-
-  // Initialize API router
-  useEffect(() => {
-    if (isReady) {
-      new ApiRouter(database);
-    }
-  }, [isReady, database]);
-
   // Initialize theme on app startup
   useEffect(() => {
     const savedTheme = localStorage.getItem('app-theme') || 'light';
@@ -36,17 +24,6 @@ const App = () => {
       document.documentElement.classList.remove('dark');
     }
   }, []);
-
-  if (!isReady) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h2 className="text-2xl font-semibold mb-2">Loading...</h2>
-          <p className="text-muted-foreground">Initializing database...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <QueryClientProvider client={queryClient}>

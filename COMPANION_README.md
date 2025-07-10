@@ -17,7 +17,7 @@ Miniaturní JavaScript companion panel pro vaši data-hoarding aplikaci, který 
 ### Metoda 1: Přímé vložení scriptu
 
 ```html
-<script src="http://localhost:5173/companion-script.js"></script>
+<script src="http://localhost:42069/companion-script.js"></script>
 ```
 
 ### Metoda 2: Bookmarklet (doporučeno)
@@ -55,7 +55,7 @@ Upravte konstanty v `companion-script.js`:
 
 ```javascript
 const CONFIG = {
-    appUrl: 'http://localhost:5173', // URL vaší aplikace
+    appUrl: 'http://localhost:42069', // URL vaší aplikace
     storageKey: 'dh_companion_data', // Klíč pro localStorage
     apiEndpoint: '/api/companion'    // Pro budoucí API
 };
@@ -63,7 +63,7 @@ const CONFIG = {
 
 ## 📡 Komunikace s hlavní aplikací
 
-Panel komunikuje s hlavní aplikací pomocí `postMessage` API:
+Panel komunikuje s hlavní aplikací pomocí REST API na portu 42069:
 
 ### Zprávy od Companion panelu:
 ```javascript

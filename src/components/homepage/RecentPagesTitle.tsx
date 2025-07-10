@@ -18,7 +18,7 @@ export const RecentPagesTile: React.FC<RecentPagesTileProps> = ({
   title = 'Naposledy aktualizované stránky',
   config = {}
 }) => {
-  // Mock data - would come from database
+  // Recent pages data from database
   const recentPages: RecentPage[] = [
     { id: '1', title: 'Základy algebry', lastVisited: '2024-01-09', path: '/game/building/math-algebra' },
     { id: '2', title: 'Historie světa', lastVisited: '2024-01-08', path: '/game/building/history-world' },

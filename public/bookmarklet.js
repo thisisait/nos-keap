@@ -13,7 +13,7 @@ javascript:(function(){
     
     // Jinak načteme script z vaší aplikace
     const script = document.createElement('script');
-    script.src = 'http://localhost:5173/companion-script.js'; // Změňte na vaši doménu
+    script.src = 'http://localhost:42069/companion-script.js'; // Změňte na vaši doménu
     script.onload = function() {
         console.log('Data Hoarder Companion načten!');
     };

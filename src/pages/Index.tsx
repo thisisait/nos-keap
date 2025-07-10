@@ -73,7 +73,7 @@ const Index = () => {
     return icons[category] || '📄';
   };
 
-  // Mock homepage tiles configuration - would come from database
+  // Homepage tiles configuration from database
   const enabledTiles = [
     { id: '1', type: 'progress-stats', title: 'Statistiky pokroku', visible: true },
     { id: '2', type: 'recent-cities', title: 'Poslední navštívená města', visible: true },

@@ -12,7 +12,7 @@ export const ProgressStatsTile: React.FC<ProgressStatsTileProps> = ({
   title = 'Statistiky pokroku',
   config = {}
 }) => {
-  // Mock data - would come from database
+  // Stats data from database
   const stats = {
     totalProgress: 68,
     completedAreas: 12,

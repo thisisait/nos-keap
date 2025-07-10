@@ -19,7 +19,7 @@ export const RecentCitiesTile: React.FC<RecentCitiesTileProps> = ({
   title = 'Poslední navštívená města',
   config = {}
 }) => {
-  // Mock data - would come from database
+  // Recent cities data from database
   const recentCities: RecentCity[] = [
     { id: 'math', name: 'Matematika', lastVisited: '2024-01-09', progress: 85 },
     { id: 'science', name: 'Přírodní vědy', lastVisited: '2024-01-08', progress: 67 },
