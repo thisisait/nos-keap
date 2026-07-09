@@ -1,0 +1,17 @@
+# Standalone local run of KEAP OUTSIDE nOS (no Authentik in front → the
+# backend falls back to the single "local" identity, see server/identity.ts).
+# On nOS you do NOT use this file — you use deploy/nos/keap.yml instead.
+services:
+  keap:
+    build: .
+    image: keap:local
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - KEAP_DATA_DIR=/data
+      - KEAP_TENANT_DOMAIN=dev.local
+    volumes:
+      - keap_data:/data
+volumes:
+  keap_data:
