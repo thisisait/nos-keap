@@ -47,7 +47,11 @@
     "title": "Administration",
     "backHome": "Back to overview",
     "settings": "Settings",
-    "tabs": { "captures": "Captured pages", "homepage": "Homepage", "taxonomy": "Taxonomy" },
+    "tabs": {
+      "captures": "Captured pages",
+      "homepage": "Homepage",
+      "taxonomy": "Taxonomy"
+    },
     "captures": {
       "title": "Captured page metadata",
       "empty": "No captures yet.",
@@ -89,7 +93,9 @@
       "deleteFailed": "Could not delete metadata.",
       "loadFailed": "Could not load data from the server.",
       "idNameRequired": "ID and name are required.",
-      "selectFirst": "Select a taxonomy item first."
+      "selectFirst": "Select a taxonomy item first.",
+      "requiredData": "Content link (service:path)",
+      "requiredDataHint": "Deep-links this node into a live nOS service. Available: {{list}}"
     },
     "tileTypes": {
       "recent-pages": "Recently captured",
@@ -102,7 +108,11 @@
   "settings": {
     "title": "Settings",
     "backToAdmin": "Back to administration",
-    "tabs": { "general": "General", "data": "Data", "about": "About" },
+    "tabs": {
+      "general": "General",
+      "data": "Data",
+      "about": "About"
+    },
     "languageAppearance": "Language & appearance",
     "language": "Application language",
     "languageChanged": "Language changed",
@@ -151,6 +161,12 @@
   },
   "game": {
     "back": "Back",
-    "home": "Home"
+    "home": "Home",
+    "selectTopics": "Select topics to learn",
+    "progress": "Progress",
+    "noDescription": "No description available"
+  },
+  "content": {
+    "openIn": "Open in {{service}}"
   }
 }

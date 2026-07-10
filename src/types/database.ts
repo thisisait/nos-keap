@@ -18,6 +18,8 @@ export interface TaxonomyMetadata {
   icon: string;
   links: string;
   translations: string;
+  /** Content ref into an nOS service, e.g. "kiwix:wikipedia_en" */
+  requiredData?: string;
   data?: any;
   updatedAt?: number;
 }

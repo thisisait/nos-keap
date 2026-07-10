@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Save, Database, Plus, Edit, Trash, Cog, ExternalLink, Bookmark, Bot } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { useNosConfig } from '@/config/nos';
 import type { ApiTaxonomyMetadata } from '@/types/database';
 
 const TILE_TYPES = ['recent-pages', 'recent-cities', 'custom-todo', 'progress-stats'] as const;
@@ -29,6 +30,7 @@ export default function Admin() {
     getAllMetadataApi,
   } = useDatabase();
   const { toast } = useToast();
+  const nosConfig = useNosConfig();
 
   const [taxonomyItems, setTaxonomyItems] = useState<TaxonomyMetadata[]>([]);
   const [homepageTiles, setHomepageTiles] = useState<HomepageTile[]>([]);
@@ -325,7 +327,14 @@ export default function Admin() {
                           className="flex items-center justify-between p-2 bg-muted/30 rounded-md"
                         >
                           <div>
-                            <div className="font-medium text-sm">{item.id}</div>
+                            <div className="font-medium text-sm flex items-center gap-2">
+                              {item.id}
+                              {item.requiredData && (
+                                <Badge variant="outline" className="text-xs font-normal">
+                                  {item.requiredData}
+                                </Badge>
+                              )}
+                            </div>
                             <div className="text-xs text-muted-foreground">
                               {item.name || t('admin.taxonomy.unnamed')}
                             </div>
@@ -434,6 +443,31 @@ export default function Admin() {
                             }
                           />
                         </div>
+                      </div>
+
+                      <div>
+                        <Label htmlFor="itemRequiredData">{t('admin.taxonomy.requiredData')}</Label>
+                        <Input
+                          id="itemRequiredData"
+                          placeholder="kiwix:wikipedia_en"
+                          list="nos-service-keys"
+                          value={editingItem.requiredData ?? ''}
+                          onChange={(e) =>
+                            setEditingItem((prev) =>
+                              prev ? { ...prev, requiredData: e.target.value || undefined } : null,
+                            )
+                          }
+                        />
+                        <datalist id="nos-service-keys">
+                          {nosConfig.services.map((s) => (
+                            <option key={s.key} value={`${s.key}:`} label={s.label} />
+                          ))}
+                        </datalist>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {t('admin.taxonomy.requiredDataHint', {
+                            list: nosConfig.services.map((s) => s.key).join(', '),
+                          })}
+                        </p>
                       </div>
 
                       <div>

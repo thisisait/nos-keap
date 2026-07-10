@@ -1,49 +1,66 @@
 /**
  * nOS content-service link map — REPLACES the old (phantom) src/config/iiab.ts.
  *
- * The IIAB-era app hard-coded IIAB module paths (/kiwix, /kolibri, /sugarizer)
- * and mocked an "IIAB network" of servers. On nOS the real, live content
- * services a knowledge app links to are first-class nOS roles, each reachable
- * at `<service>.<tenant_domain>` behind the same Authentik SSO session (cookie
- * domain `.<tld>` gives cross-subdomain SSO — one login covers all of these).
+ * A `requiredData` ref on a taxonomy node (e.g. "kiwix:wikipedia_en") resolves
+ * into a deep link into a live nOS service. The authoritative service list
+ * comes from the backend at runtime (GET /api/config, driven by
+ * KEAP_TENANT_DOMAIN — one image serves any tenant); the static list below is
+ * only the fallback while that request is in flight or outside nOS.
  *
- * These are BUILD-TIME defaults; the backend can override them at runtime from
- * env (KEAP_TENANT_DOMAIN, KEAP_LINKS_JSON) so one image serves any tenant.
- *
- * A `requiredData` reference on a taxonomy item (e.g. "kiwix:wikipedia_en")
- * resolves against this map to produce a deep link into the live nOS service.
+ * Keep the fallback map in sync with server/content-links.ts.
  */
+import { useQuery } from '@tanstack/react-query';
+import { apiFetch } from '@/services/api/client';
+
 export interface NosContentService {
   key: string;
   label: string;
-  subdomain: string; // <subdomain>.<tenant_domain>
-  kind: 'library' | 'media' | 'files' | 'ai' | 'cms' | 'books';
-  enabled: boolean;
+  url: string;
 }
 
-const TENANT_DOMAIN =
-  (typeof window !== 'undefined' && (window as any).__KEAP_TENANT_DOMAIN__) || 'dev.local';
-
-/** nOS roles that actually ship as content sources (see nOS `iiab` stack). */
-export const nosContentServices: NosContentService[] = [
-  { key: 'kiwix', label: 'Kiwix (offline Wikipedia & ZIM)', subdomain: 'kiwix', kind: 'library', enabled: true },
-  { key: 'nextcloud', label: 'Nextcloud (files & docs)', subdomain: 'cloud', kind: 'files', enabled: true },
-  { key: 'jellyfin', label: 'Jellyfin (media)', subdomain: 'jellyfin', kind: 'media', enabled: true },
-  { key: 'calibre', label: 'Calibre-Web (e-books)', subdomain: 'books', kind: 'books', enabled: true },
-  { key: 'openwebui', label: 'Open WebUI (local AI chat)', subdomain: 'chat', kind: 'ai', enabled: true },
-  { key: 'wordpress', label: 'WordPress (site/blog)', subdomain: 'blog', kind: 'cms', enabled: false },
-];
-
-export function serviceUrl(key: string, pathSuffix = ''): string | null {
-  const svc = nosContentServices.find((s) => s.key === key && s.enabled);
-  if (!svc) return null;
-  return `https://${svc.subdomain}.${TENANT_DOMAIN}${pathSuffix}`;
+export interface NosConfig {
+  tenantDomain: string;
+  services: NosContentService[];
 }
 
-/** Resolve a taxonomy item's `requiredData` (e.g. "kiwix:wikipedia") to a URL. */
-export function resolveRequiredData(requiredData?: string): string | null {
-  if (!requiredData) return null;
-  const [key, ...rest] = requiredData.split(':');
+const FALLBACK_TENANT = 'dev.local';
+
+export const fallbackNosConfig: NosConfig = {
+  tenantDomain: FALLBACK_TENANT,
+  services: [
+    { key: 'kiwix', label: 'Kiwix (offline Wikipedia & ZIM)', url: `https://kiwix.${FALLBACK_TENANT}` },
+    { key: 'nextcloud', label: 'Nextcloud (files & docs)', url: `https://cloud.${FALLBACK_TENANT}` },
+    { key: 'jellyfin', label: 'Jellyfin (media)', url: `https://jellyfin.${FALLBACK_TENANT}` },
+    { key: 'calibre', label: 'Calibre-Web (e-books)', url: `https://books.${FALLBACK_TENANT}` },
+    { key: 'openwebui', label: 'Open WebUI (local AI chat)', url: `https://chat.${FALLBACK_TENANT}` },
+  ],
+};
+
+/** Tenant config from the backend, with the static fallback until loaded. */
+export function useNosConfig(): NosConfig {
+  const { data } = useQuery({
+    queryKey: ['nos-config'],
+    queryFn: () => apiFetch<NosConfig>('/api/config'),
+    staleTime: Infinity,
+  });
+  return data ?? fallbackNosConfig;
+}
+
+export interface ResolvedContentLink {
+  ref: string;
+  service: NosContentService;
+  url: string;
+}
+
+/** Resolve a `requiredData` ref ("kiwix:wikipedia_en") against the config. */
+export function resolveRequiredData(
+  ref: string | undefined,
+  config: NosConfig,
+): ResolvedContentLink | null {
+  if (!ref) return null;
+  const [key, ...rest] = ref.split(':');
+  const service = config.services.find((s) => s.key === key);
+  if (!service) return null;
   const suffix = rest.join(':');
-  return serviceUrl(key, suffix ? `/${suffix}` : '');
+  return { ref, service, url: `${service.url}${suffix ? `/${suffix}` : ''}` };
 }

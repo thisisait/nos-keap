@@ -131,15 +131,18 @@ export function registerAgentRoutes(app: Express) {
       .filter((n): n is FlatNode => Boolean(n))
       .slice(0, MAX_LIMIT)
       .map((n) => ({ id: n.id, name: n.name, kind: n.kind }));
-    const curated = db.getTaxonomyMetadata(node.id);
+    const curatedRow = db.getTaxonomyMetadata(node.id);
+    const curated = curatedRow && !Array.isArray(curatedRow) ? curatedRow.data : null;
+    // Admin-curated content ref overrides the static dataset's requiredData.
+    const contentRef = curated?.requiredData ?? node.requiredData;
     ok(res, {
       ...nodeSummary(node),
       description: node.description, // full description on the detail view
       ancestors: getAncestors(node.id),
       children,
       childCount: node.childIds.length,
-      curated: curated && !Array.isArray(curated) ? curated.data : null,
-      contentLink: resolveContentRef(node.requiredData),
+      curated,
+      contentLink: resolveContentRef(contentRef),
     });
   });
 

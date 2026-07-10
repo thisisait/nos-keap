@@ -47,7 +47,11 @@
     "title": "Administrace",
     "backHome": "Zpět na přehled",
     "settings": "Nastavení",
-    "tabs": { "captures": "Zachycené stránky", "homepage": "Úvodní stránka", "taxonomy": "Taxonomie" },
+    "tabs": {
+      "captures": "Zachycené stránky",
+      "homepage": "Úvodní stránka",
+      "taxonomy": "Taxonomie"
+    },
     "captures": {
       "title": "Metadata zachycených stránek",
       "empty": "Zatím žádné záznamy.",
@@ -89,7 +93,9 @@
       "deleteFailed": "Metadata se nepodařilo smazat.",
       "loadFailed": "Data se nepodařilo načíst ze serveru.",
       "idNameRequired": "ID a název jsou povinné.",
-      "selectFirst": "Nejdříve vyberte položku taxonomie."
+      "selectFirst": "Nejdříve vyberte položku taxonomie.",
+      "requiredData": "Odkaz na obsah (služba:cesta)",
+      "requiredDataHint": "Propojí uzel s živou nOS službou. K dispozici: {{list}}"
     },
     "tileTypes": {
       "recent-pages": "Naposledy zachycené",
@@ -102,7 +108,11 @@
   "settings": {
     "title": "Nastavení",
     "backToAdmin": "Zpět do administrace",
-    "tabs": { "general": "Obecné", "data": "Data", "about": "O aplikaci" },
+    "tabs": {
+      "general": "Obecné",
+      "data": "Data",
+      "about": "O aplikaci"
+    },
     "languageAppearance": "Jazyk a vzhled",
     "language": "Jazyk aplikace",
     "languageChanged": "Jazyk změněn",
@@ -151,6 +161,12 @@
   },
   "game": {
     "back": "Zpět",
-    "home": "Domů"
+    "home": "Domů",
+    "selectTopics": "Vyberte témata k učení",
+    "progress": "Pokrok",
+    "noDescription": "Bez popisu"
+  },
+  "content": {
+    "openIn": "Otevřít v {{service}}"
   }
 }

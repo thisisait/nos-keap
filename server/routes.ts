@@ -15,6 +15,7 @@ import crypto from 'node:crypto';
 import type { Express, Request, Response } from 'express';
 import * as db from './db';
 import { generateTaxonomyOptions } from './taxonomy';
+import { listContentServices } from './content-links';
 
 const ok = (res: Response, data?: unknown) => res.json({ success: true, data });
 const fail = (res: Response, status: number, error: string) =>
@@ -43,6 +44,15 @@ export function registerApiRoutes(app: Express) {
 
   // Taxonomy options (static dataset, global)
   app.get('/api/taxonomy', (_req, res) => ok(res, generateTaxonomyOptions()));
+
+  // Tenant config for the SPA: which nOS content services exist and where.
+  // Served from env (KEAP_TENANT_DOMAIN) so one image serves any tenant.
+  app.get('/api/config', (_req, res) =>
+    ok(res, {
+      tenantDomain: process.env.KEAP_TENANT_DOMAIN ?? 'dev.local',
+      services: listContentServices(),
+    }),
+  );
 
   // Captured page metadata (companion userscript → review in Admin)
   app.get('/api/metadata', (req, res) => ok(res, db.getAllMetadataApi(req.user.id, req.user.isAdmin)));

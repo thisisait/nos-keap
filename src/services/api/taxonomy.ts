@@ -20,6 +20,7 @@ function toFlat(row: ServerTaxonomyMetadata): TaxonomyMetadata {
     description: d.description ?? '',
     icon: d.icon ?? '',
     links: typeof d.links === 'string' ? d.links : JSON.stringify(d.links ?? {}),
+    requiredData: d.requiredData ?? undefined,
     translations:
       typeof d.translations === 'string' ? d.translations : JSON.stringify(d.translations ?? {}),
     updatedAt: row.updatedAt,
