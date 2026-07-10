@@ -15,9 +15,9 @@ import express from 'express';
 import helmet from 'helmet';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { registerApiRoutes } from './routes.js';
-import { identityMiddleware } from './identity.js';
-import { initDb } from './db.js';
+import { registerApiRoutes } from './routes';
+import { identityMiddleware } from './identity';
+import { initDb } from './db';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT ?? 8080);

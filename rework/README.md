@@ -25,8 +25,9 @@ base platform. Nothing outside `rework/` is modified.
    (~9–14 days), effort, risks, and **10 open questions we need you to decide**.
 4. **[NEW_REPO_STRUCTURE.md](./NEW_REPO_STRUCTURE.md)** — the proposed directory layout of the new repo
    with rationale.
-5. **[scaffold/](./scaffold/)** — a runnable skeleton of the new repo (real backend, Dockerfile, nOS
-   Tier-2 manifest + Tier-1 plugin manifest, content-link config) ready to copy into a fresh repository.
+5. ~~scaffold/~~ — **merged into the repo root in Phase 0′** (2026-07-10): the real backend now
+   lives at `/server`, the deployment manifests at `/deploy`, the content-link config at
+   `/src/config/nos.ts`, and the container build at `/Dockerfile`.
 
 ## The three things that shape everything
 

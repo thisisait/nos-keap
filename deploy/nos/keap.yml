@@ -2,10 +2,13 @@
 # ==============================================================================
 # KEAP — nOS Tier-2 app manifest (drop into nOS `apps/keap.yml`).
 #
-# This is the RECOMMENDED integration path: KEAP ships as a single container
-# image and is onboarded by nOS's `pazny.apps_runner` with zero changes to the
-# nOS playbook. Traefik routing, Authentik SSO, secrets, GDPR register entry,
-# observability and health-wait are all derived from this file.
+# This is the FALLBACK fast-path (the destination is the Tier-1 role
+# `pazny.keap`, see ../plugin/ and rework/COMPLETION_PROPOSAL.md §4): onboarded
+# by nOS's `pazny.apps_runner` with zero changes to the nOS playbook. Traefik
+# routing, Authentik SSO, secrets, GDPR register entry, observability and
+# health-wait are all derived from this file. No registry image is published —
+# the compose fragment uses a `build:` context (operator-built images are
+# explicitly tolerated by nos_app_parser.py:382-384).
 #
 # Onboard on an nOS host:
 #   cp keap.yml <nOS>/apps/keap.yml
@@ -63,8 +66,11 @@ authentik:
 compose:
   services:
     keap:
-      # Build+push this image in CI to your registry, or let nОS build locally.
-      image: "ghcr.io/budweis-dev/keap:1.0.0"
+      # Built locally from a checkout of this repo (no registry publish).
+      # Adjust `context` to wherever the operator cloned the repo.
+      build:
+        context: "../files/keap"
+      image: "nos/keap:1.0.0"
       container_name: keap
       restart: unless-stopped
       # Bind loopback only — Traefik is the sole edge and enforces the SSO gate.

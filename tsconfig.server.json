@@ -1,0 +1,14 @@
+{
+  "//": "Typechecks the standalone backend (server/) plus the taxonomy dataset it compiles in. Emit is done by esbuild (npm run build:server) into dist-server/index.js; this config is noEmit on purpose.",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "noEmit": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "types": ["node"]
+  },
+  "include": ["server/**/*.ts", "src/game/data/taxonomy.ts", "src/game/types/taxonomy.ts"]
+}
