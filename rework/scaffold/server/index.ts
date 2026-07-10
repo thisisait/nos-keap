@@ -31,20 +31,27 @@ async function main() {
   app.use(helmet({ contentSecurityPolicy: false }));
   app.use(express.json({ limit: '2mb' }));
 
-  // Resolve X-Authentik-Username / X-Authentik-Email into req.user.
-  app.use(identityMiddleware);
-
-  // Liveness/readiness — the nOS health probe hits this.
+  // Liveness/readiness — the nOS health probe hits this from the host
+  // loopback (no Authentik headers), so it MUST be registered before the
+  // identity middleware, which 401s header-less requests in production.
   app.get('/api/health', (_req, res) =>
     res.json({ success: true, data: { status: 'OK', ts: new Date().toISOString() } }),
   );
 
+  // Resolve X-Authentik-Uid / -Username / -Email into req.user
+  // (401 without headers when KEAP_TRUSTED_PROXY=1 — see identity.ts).
+  app.use(identityMiddleware);
+
   registerApiRoutes(app);
 
   // SPA static + history-fallback (replaces the Apache RewriteRule from the
-  // old README's IIAB deployment).
+  // old README's IIAB deployment). Plain middleware instead of app.get('*'):
+  // the '*' path pattern breaks on Express 5 (path-to-regexp v8).
   app.use(express.static(STATIC_DIR));
-  app.get('*', (_req, res) => res.sendFile(path.join(STATIC_DIR, 'index.html')));
+  app.use((req, res, next) => {
+    if (req.method !== 'GET') return next();
+    res.sendFile(path.join(STATIC_DIR, 'index.html'));
+  });
 
   app.listen(PORT, () => {
     // eslint-disable-next-line no-console

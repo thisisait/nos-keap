@@ -5,6 +5,14 @@
 > [`MIGRATION_PLAN.md`](./MIGRATION_PLAN.md)** (notably open questions 1, 4, 10 and Phases 0/4/5)
 > and extends the blueprint with the agent-facing half that the overnight review did not cover.
 > All `nOS:` paths below are relative to the nOS repo root and were verified against the working tree.
+>
+> **Reviewed 2026-07-10 by an nOS-side agent against the live repo** (12/13 factual claims
+> confirmed). All findings are incorporated: the Tier-2 justification correction (§0.2), the
+> `KEAP_TRUSTED_PROXY` 401 rule closing the dev-fallback hole (§2, fixed in
+> `scaffold/server/identity.ts`), the `traefik_container_upstreams` step and the honest mcpo
+> wording (§4), the `firefly-base`-shaped plugin (fixed in `scaffold/deploy/plugin/`), the
+> `pazny.hermes` git-clone precedent with the Gitea-mirror/offline caveat (§4.1), and the
+> Express-5-safe SPA fallback (fixed in `scaffold/server/index.ts`).
 
 ## 0. Decisions taken by the owner (fixed constraints)
 
@@ -14,8 +22,12 @@
    **Tier-1** nOS service. The **only artifact living in the nOS repo is an Ansible role
    (`roles/pazny.keap/`) + the standard Tier-1 onboarding row/toggle/plugin**; the role
    `git clone`s this repository at a pinned ref and builds the image from source.
-   No image is published to a registry — this removes the Tier-2 pilot (Tier-2 requires a
-   pullable `image:`, per `nOS:CLAUDE.md` §Tier-2) and makes Tier-1 the direct target.
+   No image is published to a registry. Tier-1 is the direct target because only it provides
+   what KEAP needs: file-provider routing, the Wing hub card, lifecycle hooks, and the agent
+   integration. (Correction after nOS-side review: Tier-2 does **not** require a pullable
+   `image:` — `nOS:files/anatomy/module_utils/nos_app_parser.py:382-384` explicitly tolerates
+   `build:` directives — so a `build:`-based Tier-2 `apps/keap.yml` remains a legal fast-path
+   fallback; it is skipped by choice, not necessity.)
 3. **KEAP must serve nOS agents**, not only humans: the knowledge system becomes a queryable
    knowledge source (and a write target for preservation) for the AgentKit runtime.
 4. **The repo becomes `thisisait/nos-keap`** — same GitHub org as nOS. The current
@@ -93,8 +105,13 @@ Facts the design below builds on — each checked in the nOS working tree:
 
 - **Human surface** (`/`, `/api/*`): SPA + the existing REST API. Identity from
   `X-authentik-uid` (stable key; username/email/groups as profile), trusted **only** because the
-  container is reachable exclusively through Traefik on `gated_net`. Per-user data scoping as in
-  `scaffold/server/identity.ts`, but keyed on `uid`, not username.
+  container is reachable exclusively through Traefik on `gated_net`. **Hard rule (nOS-review
+  finding): the role sets `KEAP_TRUSTED_PROXY=1`, and with that flag a request without
+  `X-Authentik-*` headers gets a 401 — never a fallback identity.** The single-tenant dev
+  fallback in `scaffold/server/identity.ts` exists only when the flag is absent (local dev);
+  otherwise any host process could hit the loopback port header-less and be treated as admin.
+  Health endpoints stay unauthenticated (registered before the identity middleware) so the nOS
+  stack-health probe works from the host.
 - **Agent surface** (`/agent/v1/*`): reached by host-side AgentKit processes directly on the
   loopback-published port — which **bypasses Traefik**, so Authentik headers are absent and must
   not be trusted there. Instead: a **bearer service token** minted by the Ansible role
@@ -104,8 +121,15 @@ Facts the design below builds on — each checked in the nOS working tree:
 
 This dual-surface split resolves the apparent conflict between R4 of the migration plan ("loopback
 port = header forgery risk") and the agents' need to skip SSO: containers can't reach KEAP at all
-(gated_net), LAN can't reach it (loopback), and host processes get a scoped token instead of
-identity headers.
+(gated_net — and per the A19 note in `nOS:roles/pazny.traefik/templates/dynamic/services.yml.j2:125-129`,
+Docker-published loopback ports are not reachable via host-gateway either, so the loopback port is
+purely a host-process surface), the LAN can't reach it (loopback bind), host processes get a scoped
+bearer token on `/agent/v1`, and header-less requests to `/api/*` are rejected outright
+(`KEAP_TRUSTED_PROXY=1`).
+
+Networking: KEAP joins **`gated_net` only** — no `shared_net` (calibre-web precedent, smaller
+attack surface). Traefik reaches it over `gated_net`; Bone's embeddings API (Phase 6) is a
+host-side loopback service reached from the container via `nos-host:host-gateway`.
 
 ## 3. The agent-facing API (the "helps nOS agents" half)
 
@@ -113,7 +137,7 @@ New in this repo, `server/agent/` — versioned, machine-first, self-describing:
 
 | Endpoint | Purpose |
 |---|---|
-| `GET /agent/v1/health` | liveness + version + corpus stats |
+| `GET /agent/v1/health` | agent-facing alias: version + corpus stats (container liveness lives at `/api/health`, which the nOS health probe and hub card use) |
 | `GET /agent/v1/openapi.json` | self-description (also what mcpo/Open WebUI consumes) |
 | `GET /agent/v1/taxonomy/search?q=&domain=` | structural + FTS5 full-text search over the 790-node tree and captured metadata |
 | `GET /agent/v1/taxonomy/node/{id}` | node + ancestors + children + **content links resolved to live nOS URLs** (kiwix/calibre/nextcloud/openwebui deep links via `src/config/nos.ts`) |
@@ -135,27 +159,42 @@ Standard Tier-1 onboarding, all mechanical (`nOS:CLAUDE.md:266-274`):
 
 1. `roles/pazny.keap/` — defaults (`keap_version`, `keap_port`, `keap_domain: keap.<tld>`,
    `keap_data_dir`, `keap_repo_url: https://github.com/thisisait/nos-keap`, `keap_repo_ref`),
-   tasks: **`git clone`/fetch this repo at the pinned ref** into the role's build dir → render compose override with
-   `build: { context: <clone dir> }`, image `nos/keap:{{ keap_version }}` (puter pattern, but
-   cloning instead of vendoring), loopback port bind, `gated_net` + shared net, healthcheck
-   (`/agent/v1/health`), `mem_limit`/`cpus`.
+   tasks: **`git clone`/fetch this repo at the pinned ref** into the role's build dir → render
+   compose override with `build: { context: <clone dir> }`, image `nos/keap:{{ keap_version }}`,
+   loopback port bind, `gated_net` only (no `shared_net`), healthcheck (`/api/health`),
+   `KEAP_TRUSTED_PROXY=1` env, `mem_limit`/`cpus`. **Precedent: `nOS:roles/pazny.hermes`**
+   already does exactly this (`ansible.builtin.git`, pinned `version:`, `depth: 1` from GitHub) —
+   no new mechanism. Offline-first caveat from review: keep `keap_repo_url` overridable to a
+   local Gitea mirror, and let the clone task tolerate being offline when the pinned checkout
+   already exists on disk (otherwise `--tags keap` fails without internet).
 2. `state/manifest.yml` row (`id: keap`, `stack: iiab`, `install_flag: install_keap`,
    `domain_var: keap_domain`, `port_var: keap_port`, `data_path_var: keap_data_dir`,
-   `oidc: proxy`, `rbac_tier: 3`, `version_source: config`).
-3. `install_keap: false` toggle in `default.config.yml`; `include_role` in the iiab orchestrator.
-4. `files/anatomy/plugins/keap-base/plugin.yml` — adapted from `deploy/plugin/keap-base/plugin.yml`
-   in this repo: `authentik: mode: header_oidc` (proxy provider), full GDPR Art-30 block
-   (categories: username/uid/email/groups, learning progress, captured page metadata;
-   `transfers_outside_eu: false`), lifecycle `wait_health`, Wing hub card.
-5. **One deliberate code addition beyond the role** (flagging it honestly — it cannot be expressed
+   `oidc: proxy`, `rbac_tier: 3`, `version_source: docker_image`, `image: nos/keap` — the puter
+   pattern for source-built images).
+3. **`traefik_container_upstreams` entry** (`nOS:roles/pazny.traefik/vars/main.yml:174`;
+   review-found gap): `keap: { svc: keap, port: <container port> }`, so the file provider routes
+   Traefik → container directly over `gated_net` (`calibre_web` is the exact precedent). Without
+   it Traefik falls back to the host-gateway and 502s.
+4. `install_keap: false` toggle in `default.config.yml`; `include_role` in the iiab orchestrator
+   (one-line include + the remaining-stacks banner if the role gains a `post.yml`).
+5. `files/anatomy/plugins/keap-base/plugin.yml` — from `deploy/plugin/keap-base/plugin.yml`
+   in this repo, aligned with the **`firefly-base`** shape (review finding): `_NOS_PLUGIN`
+   sentinel, `description`/`upstream`/`license`, `authentik: mode: header_oidc` with
+   `provider_type: header_oidc` (not `forward_auth`), full GDPR Art-30 block incl.
+   `transfers_outside_eu: false`, lifecycle `pre_compose: render_compose_extension` +
+   `post_compose: wait_health` (dict form with `timeout`), Wing hub card.
+6. **One deliberate code addition beyond the role** (flagging it honestly — it cannot be expressed
    as Ansible): the AgentKit tool `mcp-keap`, following the documented 4-step recipe
    (`nOS:docs/ait-runtime-architecture.md:283-288`): `Tools/KeapTool.php` cloned from
    `McpWingTool.php` (loopback base URL `http://127.0.0.1:{keap_port}/agent/v1`, bearer from vault,
-   scopes `keap.read`/`keap.write`), enum entry in `state/schema/agent.schema.yaml`, registration in
-   `common.neon`, schema CI test. ~150 lines total. Until it lands, agents can already reach KEAP
-   zero-code through **mcpo** (config-only SSE/OpenAPI entry in
-   `roles/pazny.mcp_gateway/templates/mcpo-config.json.j2`) — Open WebUI gets KEAP tools for free.
-6. *(Phase 6, optional)* a `keap_knowledge` Qdrant collection declared alongside the three reserved
+   `requiredScopes()` = `mcp.tool_use` + `keap.read`/`keap.write`, which consuming agents must
+   carry in `audit.capability_scopes`), enum entry in `state/schema/agent.schema.yaml`,
+   registration in `common.neon`, schema CI test. ~150 lines total. The **mcpo** path for
+   Open WebUI is *also* an nOS commit, not zero-touch (review correction): the gateway config is a
+   hardcoded `{% if mcp_enable_<x> %}` block in
+   `roles/pazny.mcp_gateway/templates/mcpo-config.json.j2`, so KEAP needs an `mcp_enable_keap`
+   flag + template block there — still config-only, but versioned in nOS.
+7. *(Phase 6, optional)* a `keap_knowledge` Qdrant collection declared alongside the three reserved
    collections in `nOS:files/anatomy/plugins/qdrant-base/plugin.yml:95-138`; KEAP syncs embeddings
    through Bone's `POST /api/v1/embeddings/upsert` using an Authentik client-credentials JWT with
    `nos:embeddings:write` — computing vectors via Ollama `nomic-embed-text` (768-dim), exactly the
@@ -170,7 +209,7 @@ observability, backups of the `keap_data` volume — is inherited from the platf
 
 | Phase | Work | Effort | Where |
 |---|---|---|---|
-| **0′ In-place restructure** | Owner action: transfer the repo to `thisisait/nos-keap`. Merge `scaffold/` into repo root (`server/`, `Dockerfile`, `tsconfig.server.json`, SPA-only `vite.config.ts`); delete Vite api-middleware; delete obsolete `deploy/nos/keap.yml` (Tier-2 path dropped); keep `deploy/plugin/` as the source for nOS's plugin. Exit: `npm run build && npm start` serves SPA + live `/api/health`. | 0.5 d | this repo |
+| **0′ In-place restructure** | Owner action: transfer the repo to `thisisait/nos-keap`. Merge `scaffold/` into repo root (`server/`, `Dockerfile`, `tsconfig.server.json`, SPA-only `vite.config.ts`); delete Vite api-middleware; retarget `deploy/nos/keap.yml` from a pullable image to a `build:` context and keep it as the documented Tier-2 fast-path fallback; keep `deploy/plugin/` as the source for nOS's plugin. Exit: `npm run build && npm start` serves SPA + live `/api/health`. | 0.5 d | this repo |
 | **1 Real backend + identity** | As MIGRATION_PLAN Phase 1, with two changes: key users on `X-authentik-uid`, and every user-scoped table carries an owner + `visibility` column (`private` default) so future sharing needs no schema rework. | 2–3 d | this repo |
 | **2 De-mock, de-IIAB & i18n** | Delete fiction, rebrand; **stand up real i18n** (extract all hardcoded Czech into `cs`+`en` catalogs via react-i18next, wire the language setting, locale-aware dates/numbers). Game-view fixes move to the backlog (Phase G). | 3–4 d | this repo |
 | **3 Content linking** | Unchanged (`src/config/nos.ts` resolver + Admin `requiredData` editing + deep-link affordances). | 1–2 d | this repo |
