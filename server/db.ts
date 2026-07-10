@@ -16,11 +16,12 @@
  *   5. The fake sample courses from the old insertSampleData() are gone —
  *      empty state is real state.
  */
-import Database from 'better-sqlite3';
+import Database from 'libsql';
 import fs from 'node:fs';
 import path from 'node:path';
 
 let db: Database.Database | null = null;
+let vectorsOk = false;
 
 const DATA_DIR = process.env.KEAP_DATA_DIR ?? path.resolve(process.cwd(), 'data');
 const DB_PATH = path.join(DATA_DIR, 'keap.db');
@@ -103,18 +104,55 @@ const SCHEMA = [
    )`,
 ];
 
+// ── Vector layer (libSQL native) ──────────────────────────────────────────────
+// One table for every embeddable object kind; the vector sits NEXT to the row
+// reference, so joins + filters + distance run in a single SQL statement (the
+// reason libSQL replaced better-sqlite3 here). Dimension is fixed to 768
+// (nomic-embed-text); switching to a model with a different dimension requires
+// DROP TABLE embeddings + a full re-sync from the host-side embed job.
+// content_hash invalidates stale vectors when the source text changes.
+const VECTOR_SCHEMA = [
+  `CREATE TABLE IF NOT EXISTS embeddings (
+     kind TEXT NOT NULL,
+     ref_id TEXT NOT NULL,
+     model TEXT NOT NULL,
+     dim INTEGER NOT NULL,
+     content_hash TEXT NOT NULL,
+     vector F32_BLOB(768),
+     updated_at INTEGER DEFAULT (strftime('%s','now')),
+     PRIMARY KEY (kind, ref_id)
+   )`,
+  `CREATE INDEX IF NOT EXISTS embeddings_vec_idx
+     ON embeddings(libsql_vector_idx(vector))`,
+];
+
 export async function initDb(): Promise<void> {
   if (db) return;
   fs.mkdirSync(DATA_DIR, { recursive: true });
   db = new Database(DB_PATH);
   db.pragma('journal_mode = WAL');
   for (const stmt of SCHEMA) db.exec(stmt);
+  // Vector tables degrade gracefully: if the runtime lacks the libSQL vector
+  // functions (e.g. a stock-SQLite build), semantic features stay off and the
+  // FTS/tree surfaces keep working — same pattern as the agent-token 503s.
+  try {
+    for (const stmt of VECTOR_SCHEMA) db.exec(stmt);
+    vectorsOk = true;
+  } catch (err) {
+    vectorsOk = false;
+    console.warn('[db] vector layer unavailable, semantic features disabled:', err);
+  }
   initializeAppMetadata();
 }
 
 export function getDb(): Database.Database {
   if (!db) throw new Error('DB not initialised — call initDb() first');
   return db;
+}
+
+/** True when the libSQL vector layer initialised (embeddings table + ANN index). */
+export function vectorSearchAvailable(): boolean {
+  return vectorsOk;
 }
 
 // ── Courses ───────────────────────────────────────────────────────────────────
