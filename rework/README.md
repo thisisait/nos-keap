@@ -5,10 +5,12 @@ Preserver) where **[nOS](https://github.com/thisisait/nOS)** replaces Internet-i
 base platform. Nothing outside `rework/` is modified.
 
 > **2026-07-10 update — direction fixed by the owner:** the rework happens **in this repository**
-> (no fresh repo); nOS gets only a Tier-1 Ansible role that git-clones this project and builds it
-> from source; and KEAP must also serve **nOS agents** (AgentKit). The authoritative plan is now
+> (which becomes **`thisisait/nos-keap`**); nOS gets only a Tier-1 Ansible role that git-clones
+> this project and builds it from source; KEAP must also serve **nOS agents** (AgentKit); real
+> cs/en i18n is required; gamification moves to the backlog while the data model stays
+> sharing-ready. The authoritative plan is now
 > **[COMPLETION_PROPOSAL.md](./COMPLETION_PROPOSAL.md)**, which supersedes MIGRATION_PLAN.md
-> Phases 0/4/5 and resolves 6 of its 10 open questions. The documents below remain valid as the
+> Phases 0/4/5 and resolves all 10 of its open questions. The documents below remain valid as the
 > underlying analysis.
 
 ## Read in this order

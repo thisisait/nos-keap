@@ -18,6 +18,16 @@
    pullable `image:`, per `nOS:CLAUDE.md` §Tier-2) and makes Tier-1 the direct target.
 3. **KEAP must serve nOS agents**, not only humans: the knowledge system becomes a queryable
    knowledge source (and a write target for preservation) for the AgentKit runtime.
+4. **The repo becomes `thisisait/nos-keap`** — same GitHub org as nOS. The current
+   `budweis-dev/knowledge-explorer-and-preserver` is transferred/renamed there (GitHub transfer
+   keeps history, PRs, and redirects); the nOS role's `keap_repo_url` points at the new home.
+5. **Real cs/en i18n is a requirement**, not English-only. The currently inert language setting
+   becomes functional; hardcoded Czech strings are extracted into locale catalogs.
+6. **Gamification is deprioritized** (island→city→building map moves to the backlog); the core
+   product is the knowledge system: taxonomy, Admin CMS, companion capture, and the agent surface.
+   **Sharing is strategically important later** — the data model must be sharing-ready from day one
+   (per-user rows carry a `visibility`/owner field so shared collections and social features can be
+   added without a schema rework).
 
 ## 1. What nOS actually provides (verified, with sources)
 
@@ -124,8 +134,8 @@ durable place to *preserve* what they discover (the "P" in KEAP) with human revi
 Standard Tier-1 onboarding, all mechanical (`nOS:CLAUDE.md:266-274`):
 
 1. `roles/pazny.keap/` — defaults (`keap_version`, `keap_port`, `keap_domain: keap.<tld>`,
-   `keap_data_dir`, `keap_repo_url`, `keap_repo_ref`), tasks: **`git clone`/fetch this repo at the
-   pinned ref** into the role's build dir → render compose override with
+   `keap_data_dir`, `keap_repo_url: https://github.com/thisisait/nos-keap`, `keap_repo_ref`),
+   tasks: **`git clone`/fetch this repo at the pinned ref** into the role's build dir → render compose override with
    `build: { context: <clone dir> }`, image `nos/keap:{{ keap_version }}` (puter pattern, but
    cloning instead of vendoring), loopback port bind, `gated_net` + shared net, healthcheck
    (`/agent/v1/health`), `mem_limit`/`cpus`.
@@ -160,17 +170,24 @@ observability, backups of the `keap_data` volume — is inherited from the platf
 
 | Phase | Work | Effort | Where |
 |---|---|---|---|
-| **0′ In-place restructure** | Merge `scaffold/` into repo root (`server/`, `Dockerfile`, `tsconfig.server.json`, SPA-only `vite.config.ts`); delete Vite api-middleware; delete obsolete `deploy/nos/keap.yml` (Tier-2 path dropped); keep `deploy/plugin/` as the source for nOS's plugin. Exit: `npm run build && npm start` serves SPA + live `/api/health`. | 0.5 d | this repo |
-| **1 Real backend + identity** | As MIGRATION_PLAN Phase 1, with one change: key users on `X-authentik-uid`. | 2–3 d | this repo |
-| **2 De-mock & de-IIAB** | Unchanged (delete fiction, fix async bug class, rebrand, English-first). | 2–3 d | this repo |
+| **0′ In-place restructure** | Owner action: transfer the repo to `thisisait/nos-keap`. Merge `scaffold/` into repo root (`server/`, `Dockerfile`, `tsconfig.server.json`, SPA-only `vite.config.ts`); delete Vite api-middleware; delete obsolete `deploy/nos/keap.yml` (Tier-2 path dropped); keep `deploy/plugin/` as the source for nOS's plugin. Exit: `npm run build && npm start` serves SPA + live `/api/health`. | 0.5 d | this repo |
+| **1 Real backend + identity** | As MIGRATION_PLAN Phase 1, with two changes: key users on `X-authentik-uid`, and every user-scoped table carries an owner + `visibility` column (`private` default) so future sharing needs no schema rework. | 2–3 d | this repo |
+| **2 De-mock, de-IIAB & i18n** | Delete fiction, rebrand; **stand up real i18n** (extract all hardcoded Czech into `cs`+`en` catalogs via react-i18next, wire the language setting, locale-aware dates/numbers). Game-view fixes move to the backlog (Phase G). | 3–4 d | this repo |
 | **3 Content linking** | Unchanged (`src/config/nos.ts` resolver + Admin `requiredData` editing + deep-link affordances). | 1–2 d | this repo |
 | **4′ Agent surface** | `/agent/v1/*` per §3: routes, bearer-token auth with read/write scopes, FTS5 index, capture review queue in Admin, OpenAPI doc. | 1–2 d | this repo |
 | **5′ Tier-1 role (git-clone build)** | §4 items 1–4 in nOS; deploy via `ansible-playbook main.yml --tags keap`. Exit: `https://keap.<tld>` behind SSO, per-user data isolated, health green in Wing. | 1–1.5 d | nOS |
 | **6 Agent integration** | `mcp-keap` tool (§4 item 5) + mcpo entry; smoke agent session (e.g. `scout` or a new `knowledge-guide` agent.yml) querying taxonomy and filing a capture. *(Optional +1–2 d: Qdrant/Bone semantic sync, §4 item 6.)* | 1–2 d | nOS + this repo |
 
-**Total ~7.5–12 d** (was 9–14): dropping the Tier-2 pilot and new-repo bootstrap pays for the agent
-surface. Phases 0′–4′ need no nOS changes and are fully testable locally (`docker compose up` +
-curl with faked `X-authentik-*` headers and a static bearer token).
+**Total ~8.5–13 d.** Phases 0′–4′ need no nOS changes and are fully testable locally
+(`docker compose up` + curl with faked `X-authentik-*` headers and a static bearer token).
+
+**Backlog (deliberately after the above):**
+- **Phase G — gamification revival**: fix the async-metadata bug in `GameMap`/`CityView`/`BuildingView`,
+  persist completion via API, re-enable progression (drop `unlock_all`). The game layer stays in the
+  codebase but receives no rework investment until the knowledge core + agent surface ship.
+- **Phase S — sharing & social**: shared collections (flip `visibility` to `shared`/`public`),
+  sharing captures/curated links between users, and a leaderboard rebuilt on real per-user data.
+  Enabled by the Phase 1 data model; no earlier phase may hardcode single-user assumptions.
 
 ## 6. Risks (delta to MIGRATION_PLAN §5)
 
@@ -187,15 +204,23 @@ curl with faked `X-authentik-*` headers and a static bearer token).
 - **R12 — 16 KiB tool cap.** Agent endpoints must paginate/summarize; a raw taxonomy dump is ~3.4k
   lines. Enforce response-size budget in `/agent/v1` handlers from day one.
 
-## 7. Remaining open questions (was 10, now 4)
+## 7. Open questions — all resolved
 
-Resolved by the owner's decisions: repo/new-repo (stays here) · target tier (Tier-1) · repo-vs-vendored
-(standalone, git-cloned by the role) · SSO (header_oidc via gated_net) · persistence default
-(volume-SQLite; shared-Postgres promotion stays optional later) · backend framework (Express, as
-scaffolded) · deployment (role, no registry).
+All 10 questions from MIGRATION_PLAN §6 are now decided by the owner:
 
-Still open:
-1. **Naming**: keep repo name `knowledge-explorer-and-preserver` with service slug `keap`, or rename the repo to `keap`? (Role clones by URL either way.)
-2. **Language**: English-only UI (recommended; nOS retired Czech) or cs/en i18n?
-3. **Companion userscript**: rewrite (served at `/companion-script.js`) or defer to a later phase?
-4. **Leaderboard/social**: drop for good, or rebuild later on real per-user data?
+| # | Question | Decision |
+|---|---|---|
+| 1 | Repo name & owner | **`thisisait/nos-keap`** (same org as nOS); service slug `keap` |
+| 2 | SSO posture | `header_oidc` on `gated_net`; native_oidc optional later |
+| 3 | Persistence | volume-SQLite default; shared-Postgres promotion optional later |
+| 4 | Target tier | **Tier-1** role, no Tier-2 pilot |
+| 5 | Backend framework | Express (as scaffolded) |
+| 6 | Language | **real cs/en i18n** (Phase 2); language setting becomes functional |
+| 7 | Companion userscript | keep & rewrite (Phase 2/4′ serve it at `/companion-script.js`); browser-extension form factor stays a backlog idea |
+| 8 | Leaderboard / social | not dropped — **deferred to Phase S (sharing)** on real per-user data |
+| 9 | Taxonomy storage | static 790-node tree as DB seed, Admin-editable after seeding |
+| 10 | Repo vs vendored into nOS | standalone repo, git-cloned + built from source by `roles/pazny.keap` |
+
+Strategic note: **gamification is on the back burner, sharing is the future.** The near-term product
+is the knowledge core (taxonomy · Admin CMS · companion capture · agent surface); the sharing-ready
+data model (Phase 1) is the only investment made now for that future.
