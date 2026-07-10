@@ -16,7 +16,7 @@
 import type { Express, Request, Response } from 'express';
 import * as db from './db';
 import { allNodes, getNode, getAncestors } from './taxonomy';
-import { resolveContentRef } from './content-links';
+import { resolveContentRef, inferCaptureType } from './content-links';
 import { embedText, liveEmbedAvailable } from './embeddings';
 
 const ok = (res: Response, data?: unknown) => res.json({ success: true, data });
@@ -30,8 +30,9 @@ function nodeLevel(id: string): number {
   return getAncestors(id).length;
 }
 
-function serviceKeyOf(ref?: string): string | undefined {
-  return ref?.includes(':') ? ref.split(':')[0] : undefined;
+/** dataType facet of a taxonomy node = the content TYPE behind its ref. */
+function nodeDataType(ref?: string): string | undefined {
+  return resolveContentRef(ref)?.type;
 }
 
 // ── Neighbor hit enrichment: join vector hits back to their source rows ──────
@@ -56,12 +57,13 @@ function enrich(hits: db.NeighborHit[]): EnrichedHit[] {
       const curatedRow = db.getTaxonomyMetadata(h.refId);
       const curated = curatedRow && !Array.isArray(curatedRow) ? curatedRow.data : null;
       const ref = curated?.requiredData ?? n.requiredData;
+      const resolved = resolveContentRef(ref);
       out.push({
         ...h,
         name: n.name,
         description: n.description,
-        dataType: serviceKeyOf(ref),
-        url: resolveContentRef(ref)?.url,
+        dataType: resolved?.type,
+        url: resolved?.url,
         nodeId: n.id,
       });
     } else if (h.kind === 'capture') {
@@ -72,7 +74,7 @@ function enrich(hits: db.NeighborHit[]): EnrichedHit[] {
         ...h,
         name: c.title,
         description: c.description,
-        dataType: 'capture',
+        dataType: inferCaptureType(c.domain, c.url),
         url: c.url ?? undefined,
       });
     } else {
@@ -122,7 +124,7 @@ export function registerGraphRoutes(app: Express) {
         level: nodeLevel(n.id),
         childCount: n.childIds.length,
         hasNote: curatedById.has(n.id),
-        dataType: serviceKeyOf(ref),
+        dataType: nodeDataType(ref),
       };
     });
     const links = nodes

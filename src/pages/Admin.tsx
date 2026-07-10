@@ -460,7 +460,7 @@ export default function Admin() {
                         />
                         <datalist id="nos-service-keys">
                           {nosConfig.services.map((s) => (
-                            <option key={s.key} value={`${s.key}:`} label={s.label} />
+                            <option key={s.key} value={`${s.key}:`} label={`${s.label} · ${s.type}`} />
                           ))}
                         </datalist>
                         <p className="text-xs text-muted-foreground mt-1">

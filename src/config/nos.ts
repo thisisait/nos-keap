@@ -15,6 +15,8 @@ import { apiFetch } from '@/services/api/client';
 export interface NosContentService {
   key: string;
   label: string;
+  /** dataType facet — what kind of knowledge lives behind the link. */
+  type: string;
   url: string;
 }
 
@@ -25,14 +27,13 @@ export interface NosConfig {
 
 const FALLBACK_TENANT = 'dev.local';
 
+// Minimal in-flight fallback ONLY — the server catalog (GET /api/config,
+// server/content-links.ts) is the source of truth for keys/subdomains/types.
 export const fallbackNosConfig: NosConfig = {
   tenantDomain: FALLBACK_TENANT,
   services: [
-    { key: 'kiwix', label: 'Kiwix (offline Wikipedia & ZIM)', url: `https://kiwix.${FALLBACK_TENANT}` },
-    { key: 'nextcloud', label: 'Nextcloud (files & docs)', url: `https://cloud.${FALLBACK_TENANT}` },
-    { key: 'jellyfin', label: 'Jellyfin (media)', url: `https://jellyfin.${FALLBACK_TENANT}` },
-    { key: 'calibre', label: 'Calibre-Web (e-books)', url: `https://books.${FALLBACK_TENANT}` },
-    { key: 'openwebui', label: 'Open WebUI (local AI chat)', url: `https://chat.${FALLBACK_TENANT}` },
+    { key: 'kiwix', label: 'Kiwix (offline Wikipedia & ZIM)', type: 'encyclopedia', url: `https://kiwix.${FALLBACK_TENANT}` },
+    { key: 'nextcloud', label: 'Nextcloud (files & docs)', type: 'files', url: `https://cloud.${FALLBACK_TENANT}` },
   ],
 };
 
