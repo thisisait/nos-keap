@@ -4,6 +4,13 @@ This directory is a **decision-ready blueprint** for rebuilding KEAP (Knowledge 
 Preserver) where **[nOS](https://github.com/thisisait/nOS)** replaces Internet-in-a-Box as the
 base platform. Nothing outside `rework/` is modified.
 
+> **Implementation status (2026-07-10):** Phases **0′, 1, 2, 3 and 4′ are DONE** on this branch —
+> real Express backend with header-OIDC identity (`KEAP_TRUSTED_PROXY`), agent API `/agent/v1`
+> (bearer tokens, FTS5 search, captures), de-mock + de-IIAB + full cs/en i18n, and taxonomy
+> content links resolving against `GET /api/config`. Remaining: **Phase 5′/6 in nOS**
+> (role `pazny.keap` + `mcp-keap` tool — checklist in COMPLETION_PROPOSAL.md §4, integration
+> in progress on the nOS side) and backlog Phases G (gamification) & S (sharing).
+>
 > **2026-07-10 update — direction fixed by the owner:** the rework happens **in this repository**
 > (which becomes **`thisisait/nos-keap`**); nOS gets only a Tier-1 Ansible role that git-clones
 > this project and builds it from source; KEAP must also serve **nOS agents** (AgentKit); real
