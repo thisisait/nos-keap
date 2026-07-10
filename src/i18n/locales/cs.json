@@ -1,0 +1,156 @@
+{
+  "app": {
+    "name": "KEAP",
+    "tagline": "Průzkumník a strážce znalostí",
+    "loading": "Načítám…",
+    "connecting": "Připojuji se k serveru…"
+  },
+  "common": {
+    "save": "Uložit",
+    "cancel": "Zrušit",
+    "add": "Přidat",
+    "edit": "Upravit",
+    "delete": "Smazat",
+    "back": "Zpět",
+    "home": "Domů",
+    "error": "Chyba",
+    "success": "Hotovo"
+  },
+  "index": {
+    "heading": "Přehled",
+    "welcome": "Vítejte ve vašem osobním znalostním centru. Tuto stránku nastavíte v administraci.",
+    "startExploring": "Začít objevovat",
+    "administration": "Administrace"
+  },
+  "tiles": {
+    "progress": {
+      "title": "Váš pokrok",
+      "completedItems": "dokončených položek",
+      "capturedPages": "zachycených stránek",
+      "openTodos": "otevřených úkolů"
+    },
+    "todos": {
+      "title": "Poznámky a úkoly",
+      "placeholder": "Nová poznámka…",
+      "empty": "Zatím tu nic není. Přidejte první poznámku."
+    },
+    "recentActivity": {
+      "title": "Poslední aktivita",
+      "empty": "Zatím žádná aktivita — objeví se, jakmile začnete objevovat."
+    },
+    "recentPages": {
+      "title": "Naposledy zachycené",
+      "empty": "Zatím žádné zachycené stránky. Použijte companion panel."
+    }
+  },
+  "admin": {
+    "title": "Administrace",
+    "backHome": "Zpět na přehled",
+    "settings": "Nastavení",
+    "tabs": { "captures": "Zachycené stránky", "homepage": "Úvodní stránka", "taxonomy": "Taxonomie" },
+    "captures": {
+      "title": "Metadata zachycených stránek",
+      "empty": "Zatím žádné záznamy.",
+      "emptyHint": "Záznamy se objeví po uložení z companion panelu nebo od nOS agenta.",
+      "priority": "Priorita: {{value}}",
+      "created": "Vytvořeno: {{date}}",
+      "byAgent": "odesláno agentem"
+    },
+    "homepage": {
+      "title": "Konfigurace úvodní stránky",
+      "activeTiles": "Aktivní dlaždice",
+      "addTile": "Přidat dlaždici",
+      "customTitle": "Vlastní nadpis (volitelný)",
+      "saveConfig": "Uložit konfiguraci úvodní stránky",
+      "saved": "Konfigurace úvodní stránky uložena.",
+      "saveFailed": "Konfiguraci se nepodařilo uložit."
+    },
+    "taxonomy": {
+      "title": "Kurátorská metadata taxonomie",
+      "existing": "Existující metadata",
+      "empty": "Zatím žádná metadata.",
+      "unnamed": "Bez názvu",
+      "pickItem": "Vybrat položku taxonomie",
+      "pickPlaceholder": "Vyberte položku taxonomie…",
+      "newMetadata": "Nová metadata",
+      "editMetadata": "Upravit metadata",
+      "itemId": "ID položky",
+      "name": "Název",
+      "namePlaceholder": "Zobrazovaný název",
+      "description": "Popis",
+      "descriptionPlaceholder": "Co tato položka pokrývá",
+      "icon": "Ikona (emoji nebo název z Lucide)",
+      "links": "Odkazy (JSON)",
+      "translations": "Překlady (JSON)",
+      "saveMetadata": "Uložit metadata",
+      "saved": "Metadata uložena.",
+      "deleted": "Metadata smazána.",
+      "saveFailed": "Metadata se nepodařilo uložit.",
+      "deleteFailed": "Metadata se nepodařilo smazat.",
+      "loadFailed": "Data se nepodařilo načíst ze serveru.",
+      "idNameRequired": "ID a název jsou povinné.",
+      "selectFirst": "Nejdříve vyberte položku taxonomie."
+    },
+    "tileTypes": {
+      "recent-pages": "Naposledy zachycené",
+      "recent-cities": "Poslední aktivita",
+      "custom-todo": "Poznámky a úkoly",
+      "progress-stats": "Váš pokrok",
+      "new": "Nová dlaždice"
+    }
+  },
+  "settings": {
+    "title": "Nastavení",
+    "backToAdmin": "Zpět do administrace",
+    "tabs": { "general": "Obecné", "data": "Data", "about": "O aplikaci" },
+    "languageAppearance": "Jazyk a vzhled",
+    "language": "Jazyk aplikace",
+    "languageChanged": "Jazyk změněn",
+    "languageChangedTo": "Aplikace teď mluví jazykem: {{language}}.",
+    "czech": "čeština",
+    "english": "angličtina",
+    "darkMode": "Tmavý režim",
+    "darkModeHint": "Přepnout mezi světlým a tmavým tématem",
+    "themeChanged": "Téma změněno",
+    "themeChangedTo": "Přepnuto do {{mode}} režimu.",
+    "dark": "tmavého",
+    "light": "světlého",
+    "dataManagement": "Správa dat",
+    "export": "Export dat",
+    "exportHint": "Stáhněte si zálohu svých úkolů, dokončených položek a zachycených stránek jako JSON.",
+    "exportButton": "Exportovat moje data",
+    "exportDone": "Export dokončen",
+    "exportDoneHint": "Data byla stažena do souboru.",
+    "exportFailed": "Chyba exportu",
+    "exportFailedHint": "Data se nepodařilo exportovat.",
+    "dbInfo": "Informace o serveru",
+    "dbInfoHint": "Technické informace o běžící instanci",
+    "property": "Vlastnost",
+    "value": "Hodnota",
+    "appVersion": "Verze aplikace",
+    "lastUpdated": "Poslední aktualizace",
+    "about": "O aplikaci KEAP",
+    "aboutVersion": "Verze",
+    "aboutDatabase": "Úložiště",
+    "aboutFramework": "Framework",
+    "aboutUi": "UI knihovna",
+    "aboutDescription": "Popis",
+    "aboutDescriptionText": "KEAP (Knowledge Explorer and Preserver) je znalostní systém pro platformu nOS: kurátorská taxonomie lidského vědění s odkazy do živých obsahových služeb nOS, zachytávání stránek pro uchování nalezeného a API pro nOS agenty.",
+    "aboutFeatures": "Funkce",
+    "aboutFeaturesList": [
+      "Kurátorská taxonomie znalostí ve 12 doménách",
+      "Zachytávání stránek přes companion panel",
+      "Pokrok a poznámky pro každého uživatele za nOS SSO",
+      "Agentní API — nOS agenti se ptají a uchovávají znalosti",
+      "Hluboké odkazy do Kiwix, Calibre-Web, Nextcloudu a Open WebUI"
+    ]
+  },
+  "notFound": {
+    "message": "Tahle stránka neexistuje.",
+    "backHome": "Zpět na přehled"
+  },
+  "game": {
+    "back": "Zpět",
+    "home": "Domů"
+  }
+}

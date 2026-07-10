@@ -6,7 +6,7 @@ export class TaxonomyMapper {
   static mapToGameNodes(taxonomy: TaxonomyData): GameNode[] {
     const islands: GameNode[] = [];
     
-    Object.entries(taxonomy).forEach(([key, category], index) => {
+    Object.entries(taxonomy).forEach(([_key, category], index) => {
       const island: GameNode = {
         id: category.id,
         name: category.name,
@@ -33,10 +33,10 @@ export class TaxonomyMapper {
     };
   }
   
-  private static mapSubcategoriesToCities(subcategories: any, parentId: string): GameNode[] {
+  private static mapSubcategoriesToCities(subcategories: any, _parentId: string): GameNode[] {
     const cities: GameNode[] = [];
     
-    Object.entries(subcategories).forEach(([key, subcat]: [string, any], index) => {
+    Object.entries(subcategories).forEach(([_key, subcat]: [string, any], index) => {
       const city: GameNode = {
         id: subcat.id,
         name: subcat.name,
@@ -64,10 +64,10 @@ export class TaxonomyMapper {
     };
   }
   
-  private static mapSubcategoriesToBuildings(subcategories: any, parentId: string): GameNode[] {
+  private static mapSubcategoriesToBuildings(subcategories: any, _parentId: string): GameNode[] {
     const buildings: GameNode[] = [];
     
-    Object.entries(subcategories).forEach(([key, subcat]: [string, any], index) => {
+    Object.entries(subcategories).forEach(([_key, subcat]: [string, any], index) => {
       const building: GameNode = {
         id: subcat.id,
         name: subcat.name,

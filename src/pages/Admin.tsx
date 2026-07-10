@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useDatabase, type TaxonomyMetadata, type HomepageTile } from '@/hooks/useDatabase';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,198 +10,130 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { TaxonomySelect } from '@/components/TaxonomySelect';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Save, Settings, Database, Plus, Edit, Trash, Cog, ExternalLink, Globe } from 'lucide-react';
+import { ArrowLeft, Save, Database, Plus, Edit, Trash, Cog, ExternalLink, Bookmark, Bot } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import type { ApiTaxonomyMetadata } from '@/types/database';
 
-interface ApiMetadata {
-  id: string;
-  name: string;
-  description: string;
-  icon: string;
-  taxonomyId?: string;
-  links: any;
-  translations: any;
-  createdAt?: string;
-  updatedAt?: string;
-}
+const TILE_TYPES = ['recent-pages', 'recent-cities', 'custom-todo', 'progress-stats'] as const;
 
 export default function Admin() {
-  const { 
-    isInitialized, 
-    getTaxonomyMetadata, 
+  const { t, i18n } = useTranslation();
+  const {
+    isInitialized,
+    getTaxonomyMetadata,
     saveTaxonomyMetadata: saveTaxonomyMetadataDB,
     deleteTaxonomyMetadata,
     getHomepageTiles,
     saveHomepageTiles: saveHomepageTilesDB,
-    getAllMetadataApi
+    getAllMetadataApi,
   } = useDatabase();
   const { toast } = useToast();
-  
+
   const [taxonomyItems, setTaxonomyItems] = useState<TaxonomyMetadata[]>([]);
   const [homepageTiles, setHomepageTiles] = useState<HomepageTile[]>([]);
-  const [apiMetadata, setApiMetadata] = useState<ApiMetadata[]>([]);
+  const [captures, setCaptures] = useState<ApiTaxonomyMetadata[]>([]);
   const [editingItem, setEditingItem] = useState<TaxonomyMetadata | null>(null);
   const [selectedTaxonomyId, setSelectedTaxonomyId] = useState<string | null>(null);
-  const [newTile, setNewTile] = useState({ type: 'recent-pages', title: '', visible: true });
+  const [newTile, setNewTile] = useState({ type: 'recent-pages', title: '' });
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
-      const taxonomyData = await getTaxonomyMetadata() as any[];
+      const taxonomyData = (await getTaxonomyMetadata()) as TaxonomyMetadata[];
       setTaxonomyItems(taxonomyData || []);
-      
-      const tilesData = await getHomepageTiles();
-      setHomepageTiles(tilesData || []);
-
-      const apiData = await getAllMetadataApi();
-      setApiMetadata(apiData || []);
+      setHomepageTiles((await getHomepageTiles()) || []);
+      setCaptures((await getAllMetadataApi()) || []);
     } catch (error) {
       console.error('Error loading data:', error);
-      toast({
-        title: "Chyba",
-        description: "Nepodařilo se načíst data z databáze",
-        variant: "destructive"
-      });
+      toast({ title: t('common.error'), description: t('admin.taxonomy.loadFailed'), variant: 'destructive' });
     }
-  };
+  }, [getTaxonomyMetadata, getHomepageTiles, getAllMetadataApi, toast, t]);
 
   const createNewTaxonomyItem = () => {
     if (!selectedTaxonomyId) {
-      toast({
-        title: "Chyba",
-        description: "Nejdříve vyberte položku z taxonomie",
-        variant: "destructive"
-      });
+      toast({ title: t('common.error'), description: t('admin.taxonomy.selectFirst'), variant: 'destructive' });
       return;
     }
-
-    const existingItem = taxonomyItems.find(item => item.id === selectedTaxonomyId);
-    if (existingItem) {
-      setEditingItem(existingItem);
-    } else {
-      setEditingItem({
+    const existingItem = taxonomyItems.find((item) => item.id === selectedTaxonomyId);
+    setEditingItem(
+      existingItem ?? {
         id: selectedTaxonomyId,
         name: '',
         description: '',
         icon: '',
         links: '{}',
-        translations: '{}'
-      });
-    }
+        translations: '{}',
+      },
+    );
   };
 
   const saveTaxonomyMetadata = async () => {
-    if (!editingItem || !editingItem.id || !editingItem.name) {
-      toast({
-        title: "Chyba",
-        description: "ID a název jsou povinné",
-        variant: "destructive"
-      });
+    if (!editingItem?.id || !editingItem.name) {
+      toast({ title: t('common.error'), description: t('admin.taxonomy.idNameRequired'), variant: 'destructive' });
       return;
     }
-
     try {
       await saveTaxonomyMetadataDB(editingItem);
-      
-      // Reload data from database
-      loadData();
-
-      toast({
-        title: "Úspěch",
-        description: "Metadata byla uložena"
-      });
-      
+      await loadData();
+      toast({ title: t('common.success'), description: t('admin.taxonomy.saved') });
       setEditingItem(null);
       setSelectedTaxonomyId(null);
     } catch (error) {
       console.error('Error saving taxonomy metadata:', error);
-      toast({
-        title: "Chyba",
-        description: "Nepodařilo se uložit metadata",
-        variant: "destructive"
-      });
+      toast({ title: t('common.error'), description: t('admin.taxonomy.saveFailed'), variant: 'destructive' });
     }
   };
 
-  const deleteTaxonomyItem = (id: string) => {
+  const deleteTaxonomyItem = async (id: string) => {
     try {
-      deleteTaxonomyMetadata(id);
-      setTaxonomyItems(prev => prev.filter(item => item.id !== id));
-      
-      toast({
-        title: "Úspěch", 
-        description: "Metadata byla smazána"
-      });
+      await deleteTaxonomyMetadata(id);
+      setTaxonomyItems((prev) => prev.filter((item) => item.id !== id));
+      toast({ title: t('common.success'), description: t('admin.taxonomy.deleted') });
     } catch (error) {
       console.error('Error deleting taxonomy metadata:', error);
-      toast({
-        title: "Chyba",
-        description: "Nepodařilo se smazat metadata",
-        variant: "destructive"
-      });
+      toast({ title: t('common.error'), description: t('admin.taxonomy.deleteFailed'), variant: 'destructive' });
     }
   };
 
   const saveHomepageTiles = async () => {
     try {
       await saveHomepageTilesDB(homepageTiles);
-      toast({
-        title: "Úspěch",
-        description: "Konfigurace homepage byla uložena"
-      });
+      toast({ title: t('common.success'), description: t('admin.homepage.saved') });
     } catch (error) {
       console.error('Error saving homepage tiles:', error);
-      toast({
-        title: "Chyba", 
-        description: "Nepodařilo se uložit konfiguraci",
-        variant: "destructive"
-      });
+      toast({ title: t('common.error'), description: t('admin.homepage.saveFailed'), variant: 'destructive' });
     }
   };
 
   const addHomepageTile = () => {
     const tile: HomepageTile = {
-      id: Date.now().toString(),
-      type: newTile.type as any,
-      title: newTile.title || getTileDefaultTitle(newTile.type),
+      id: crypto.randomUUID(),
+      type: newTile.type as HomepageTile['type'],
+      title: newTile.title || t(`admin.tileTypes.${newTile.type}`),
       visible: true,
       position: homepageTiles.length,
-      config: '{}'
+      config: '{}',
     };
     setHomepageTiles([...homepageTiles, tile]);
-    setNewTile({ type: 'recent-pages', title: '', visible: true });
-  };
-
-  const getTileDefaultTitle = (type: string) => {
-    switch (type) {
-      case 'recent-pages': return 'Naposledy aktualizované stránky';
-      case 'recent-cities': return 'Poslední navštívená města';
-      case 'custom-todo': return 'TODO poznámky';
-      case 'progress-stats': return 'Statistiky pokroku';
-      default: return 'Nová dlaždice';
-    }
+    setNewTile({ type: 'recent-pages', title: '' });
   };
 
   const toggleTile = (id: string) => {
-    setHomepageTiles(prev => 
-      prev.map(tile => 
-        tile.id === id ? { ...tile, visible: !tile.visible } : tile
-      )
+    setHomepageTiles((prev) =>
+      prev.map((tile) => (tile.id === id ? { ...tile, visible: !tile.visible } : tile)),
     );
   };
 
   useEffect(() => {
-    if (isInitialized) {
-      loadData();
-    }
-  }, [isInitialized]);
+    if (isInitialized) loadData();
+  }, [isInitialized, loadData]);
 
   if (!isInitialized) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <Database className="w-8 h-8 mx-auto mb-2 text-muted-foreground animate-pulse" />
-          <p className="text-muted-foreground">Načítám databázi...</p>
+          <Database className="w-8 h-8 mx-auto mb-2 text-muted-foreground animate-pulse motion-reduce:animate-none" />
+          <p className="text-muted-foreground">{t('app.connecting')}</p>
         </div>
       </div>
     );
@@ -208,101 +141,110 @@ export default function Admin() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="border-b border-border bg-card">
+      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/70 backdrop-blur-xl">
         <div className="container mx-auto px-4 h-14 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link to="/" className="flex items-center gap-2 text-foreground hover:text-primary">
               <ArrowLeft className="w-4 h-4" />
-              Zpět na úvodní stránku
+              {t('admin.backHome')}
             </Link>
-            <h1 className="text-lg font-semibold">Administrace</h1>
+            <h1 className="text-lg font-semibold tracking-tight">{t('admin.title')}</h1>
           </div>
           <Link to="/settings">
             <Button variant="ghost" size="sm" className="flex items-center gap-2">
               <Cog className="w-4 h-4" />
-              Nastavení
+              {t('admin.settings')}
             </Button>
           </Link>
         </div>
       </header>
 
       <div className="container mx-auto px-4 py-6">
-        <Tabs defaultValue="api-data" className="space-y-6">
+        <Tabs defaultValue="captures" className="space-y-6">
           <TabsList className="w-full max-w-xl">
-            <TabsTrigger value="api-data" className="flex-1">API Data</TabsTrigger>
-            <TabsTrigger value="homepage" className="flex-1">Homepage</TabsTrigger>
-            <TabsTrigger value="taxonomy" className="flex-1">Taxonomie</TabsTrigger>
+            <TabsTrigger value="captures" className="flex-1">{t('admin.tabs.captures')}</TabsTrigger>
+            <TabsTrigger value="homepage" className="flex-1">{t('admin.tabs.homepage')}</TabsTrigger>
+            <TabsTrigger value="taxonomy" className="flex-1">{t('admin.tabs.taxonomy')}</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="api-data" className="space-y-6">
+          <TabsContent value="captures" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Globe className="w-5 h-5" />
-                  Metadata z Companion API
+                  <Bookmark className="w-5 h-5" />
+                  {t('admin.captures.title')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {apiMetadata.length === 0 ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <Database className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <p>Žádná metadata z companion scriptu zatím nejsou uložena</p>
-                      <p className="text-sm">Data se objeví po prvním použití companion panelu</p>
-                    </div>
-                  ) : (
-                    <div className="grid gap-4">
-                      {apiMetadata.map((item) => (
+                {captures.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Database className="w-12 h-12 mx-auto mb-4 opacity-50" />
+                    <p>{t('admin.captures.empty')}</p>
+                    <p className="text-sm">{t('admin.captures.emptyHint')}</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-4">
+                    {captures.map((item) => {
+                      const links = item.metadata?.links;
+                      const taxonomyId = item.metadata?.taxonomyId;
+                      const fromAgent = item.userId?.startsWith('agent:');
+                      return (
                         <Card key={item.id} className="border-l-4 border-l-primary">
                           <CardContent className="p-4">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <span className="text-lg">{item.icon || '📎'}</span>
-                                  <h3 className="font-semibold">{item.name}</h3>
-                                  {item.taxonomyId && (
-                                    <Badge variant="secondary">{item.taxonomyId}</Badge>
-                                  )}
-                                </div>
-                                {item.description && (
-                                  <p className="text-sm text-muted-foreground mb-2">{item.description}</p>
-                                )}
-                                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                                  {item.links?.url && (
-                                    <a 
-                                      href={item.links.url} 
-                                      target="_blank" 
-                                      rel="noopener noreferrer"
-                                      className="flex items-center gap-1 hover:text-primary"
-                                    >
-                                      <ExternalLink className="w-3 h-3" />
-                                      {item.links.domain || new URL(item.links.url).hostname}
-                                    </a>
-                                  )}
-                                  {item.links?.priority && (
-                                    <span className="capitalize">Priorita: {item.links.priority}</span>
-                                  )}
-                                  {item.createdAt && (
-                                    <span>Vytvořeno: {new Date(item.createdAt).toLocaleDateString()}</span>
-                                  )}
-                                </div>
-                                {item.links?.tags && item.links.tags.length > 0 && (
-                                  <div className="flex gap-1 mt-2">
-                                    {item.links.tags.map((tag: string, index: number) => (
-                                      <Badge key={index} variant="outline" className="text-xs">
-                                        {tag}
-                                      </Badge>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
+                            <div className="flex items-center gap-2 mb-2">
+                              {item.metadata?.icon && <span className="text-lg">{item.metadata.icon}</span>}
+                              <h3 className="font-semibold">{item.title}</h3>
+                              {taxonomyId && <Badge variant="secondary">{taxonomyId}</Badge>}
+                              {fromAgent && (
+                                <Badge variant="outline" className="flex items-center gap-1">
+                                  <Bot className="w-3 h-3" />
+                                  {item.userId?.slice('agent:'.length)}
+                                </Badge>
+                              )}
                             </div>
+                            {item.description && (
+                              <p className="text-sm text-muted-foreground mb-2">{item.description}</p>
+                            )}
+                            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                              {item.url && (
+                                <a
+                                  href={item.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex items-center gap-1 hover:text-primary"
+                                >
+                                  <ExternalLink className="w-3 h-3" />
+                                  {item.domain ?? item.url}
+                                </a>
+                              )}
+                              {links?.priority && (
+                                <span className="capitalize">
+                                  {t('admin.captures.priority', { value: links.priority })}
+                                </span>
+                              )}
+                              {item.createdAt && (
+                                <span>
+                                  {t('admin.captures.created', {
+                                    date: new Date(item.createdAt * 1000).toLocaleDateString(i18n.language),
+                                  })}
+                                </span>
+                              )}
+                            </div>
+                            {links?.tags?.length > 0 && (
+                              <div className="flex gap-1 mt-2">
+                                {links.tags.map((tag: string) => (
+                                  <Badge key={tag} variant="outline" className="text-xs">
+                                    {tag}
+                                  </Badge>
+                                ))}
+                              </div>
+                            )}
                           </CardContent>
                         </Card>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -310,21 +252,23 @@ export default function Admin() {
           <TabsContent value="homepage" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Konfigurace úvodní stránky</CardTitle>
+                <CardTitle>{t('admin.homepage.title')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
-                  <Label>Aktivní dlaždice</Label>
+                  <Label>{t('admin.homepage.activeTiles')}</Label>
                   {homepageTiles.map((tile) => (
-                    <div key={tile.id} className="flex items-center justify-between p-3 border border-border rounded-md">
+                    <div
+                      key={tile.id}
+                      className="flex items-center justify-between p-3 border border-border rounded-md"
+                    >
                       <div className="flex items-center gap-3">
-                        <Checkbox
-                          checked={tile.visible}
-                          onCheckedChange={() => toggleTile(tile.id)}
-                        />
+                        <Checkbox checked={tile.visible} onCheckedChange={() => toggleTile(tile.id)} />
                         <div>
                           <div className="font-medium">{tile.title}</div>
-                          <div className="text-sm text-muted-foreground">{tile.type}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {t(`admin.tileTypes.${tile.type}`, { defaultValue: tile.type })}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -332,31 +276,32 @@ export default function Admin() {
                 </div>
 
                 <div className="border-t border-border pt-4">
-                  <Label className="text-base">Přidat novou dlaždici</Label>
+                  <Label className="text-base">{t('admin.homepage.addTile')}</Label>
                   <div className="flex gap-2 mt-2">
-                    <select 
+                    <select
                       value={newTile.type}
-                      onChange={(e) => setNewTile({...newTile, type: e.target.value})}
+                      onChange={(e) => setNewTile({ ...newTile, type: e.target.value })}
                       className="flex-1 px-3 py-2 border border-input rounded-md bg-background"
                     >
-                      <option value="recent-pages">Naposledy aktualizované stránky</option>
-                      <option value="recent-cities">Poslední navštívená města</option>
-                      <option value="custom-todo">TODO poznámky</option>
-                      <option value="progress-stats">Statistiky pokroku</option>
+                      {TILE_TYPES.map((type) => (
+                        <option key={type} value={type}>
+                          {t(`admin.tileTypes.${type}`)}
+                        </option>
+                      ))}
                     </select>
                     <Input
-                      placeholder="Vlastní nadpis (volitelný)"
+                      placeholder={t('admin.homepage.customTitle')}
                       value={newTile.title}
-                      onChange={(e) => setNewTile({...newTile, title: e.target.value})}
+                      onChange={(e) => setNewTile({ ...newTile, title: e.target.value })}
                       className="flex-1"
                     />
-                    <Button onClick={addHomepageTile}>Přidat</Button>
+                    <Button onClick={addHomepageTile}>{t('common.add')}</Button>
                   </div>
                 </div>
 
                 <Button onClick={saveHomepageTiles} className="w-full">
                   <Save className="w-4 h-4 mr-2" />
-                  Uložit konfiguraci homepage
+                  {t('admin.homepage.saveConfig')}
                 </Button>
               </CardContent>
             </Card>
@@ -365,26 +310,32 @@ export default function Admin() {
           <TabsContent value="taxonomy" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Správa metadata taxonomie</CardTitle>
+                <CardTitle>{t('admin.taxonomy.title')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
-                  <Label>Existující metadata</Label>
+                  <Label>{t('admin.taxonomy.existing')}</Label>
                   <div className="space-y-2 mt-2 max-h-40 overflow-y-auto border border-border rounded-md p-2">
                     {taxonomyItems.length === 0 ? (
-                      <p className="text-muted-foreground text-sm">Žádná metadata zatím nejsou uložena</p>
+                      <p className="text-muted-foreground text-sm">{t('admin.taxonomy.empty')}</p>
                     ) : (
                       taxonomyItems.map((item) => (
-                        <div key={item.id} className="flex items-center justify-between p-2 bg-muted/30 rounded-md">
+                        <div
+                          key={item.id}
+                          className="flex items-center justify-between p-2 bg-muted/30 rounded-md"
+                        >
                           <div>
                             <div className="font-medium text-sm">{item.id}</div>
-                            <div className="text-xs text-muted-foreground">{item.name || 'Bez názvu'}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {item.name || t('admin.taxonomy.unnamed')}
+                            </div>
                           </div>
                           <div className="flex gap-1">
                             <Button
                               size="sm"
                               variant="outline"
                               onClick={() => setEditingItem(item)}
+                              aria-label={t('common.edit')}
                             >
                               <Edit className="w-3 h-3" />
                             </Button>
@@ -392,6 +343,7 @@ export default function Admin() {
                               size="sm"
                               variant="outline"
                               onClick={() => deleteTaxonomyItem(item.id)}
+                              aria-label={t('common.delete')}
                             >
                               <Trash className="w-3 h-3" />
                             </Button>
@@ -403,18 +355,18 @@ export default function Admin() {
                 </div>
 
                 <div>
-                  <Label>Vybrat položku z taxonomie</Label>
+                  <Label>{t('admin.taxonomy.pickItem')}</Label>
                   <div className="flex gap-2 mt-2">
                     <div className="flex-1">
                       <TaxonomySelect
                         value={selectedTaxonomyId}
                         onChange={setSelectedTaxonomyId}
-                        placeholder="Vyberte položku z taxonomie..."
+                        placeholder={t('admin.taxonomy.pickPlaceholder')}
                       />
                     </div>
                     <Button onClick={createNewTaxonomyItem} disabled={!selectedTaxonomyId}>
                       <Plus className="w-4 h-4 mr-2" />
-                      Nové metadata
+                      {t('admin.taxonomy.newMetadata')}
                     </Button>
                   </div>
                 </div>
@@ -423,91 +375,96 @@ export default function Admin() {
                   <Card className="border-2 border-primary/20">
                     <CardHeader>
                       <CardTitle className="text-base">
-                        {taxonomyItems.find(item => item.id === editingItem.id) ? 'Upravit metadata' : 'Nová metadata'}
+                        {taxonomyItems.some((item) => item.id === editingItem.id)
+                          ? t('admin.taxonomy.editMetadata')
+                          : t('admin.taxonomy.newMetadata')}
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="itemId">ID položky</Label>
-                          <Input
-                            id="itemId"
-                            placeholder="02.03.01.05"
-                            value={editingItem.id}
-                            onChange={(e) => setEditingItem(prev => prev ? {...prev, id: e.target.value} : null)}
-                            disabled
-                            className="bg-muted"
-                          />
+                          <Label htmlFor="itemId">{t('admin.taxonomy.itemId')}</Label>
+                          <Input id="itemId" value={editingItem.id} disabled className="bg-muted" />
                         </div>
                         <div>
-                          <Label htmlFor="itemName">Název</Label>
+                          <Label htmlFor="itemName">{t('admin.taxonomy.name')}</Label>
                           <Input
                             id="itemName"
-                            placeholder="Název v češtině"
+                            placeholder={t('admin.taxonomy.namePlaceholder')}
                             value={editingItem.name}
-                            onChange={(e) => setEditingItem(prev => prev ? {...prev, name: e.target.value} : null)}
+                            onChange={(e) =>
+                              setEditingItem((prev) => (prev ? { ...prev, name: e.target.value } : null))
+                            }
                           />
                         </div>
                       </div>
 
                       <div>
-                        <Label htmlFor="itemDescription">Popis</Label>
+                        <Label htmlFor="itemDescription">{t('admin.taxonomy.description')}</Label>
                         <Textarea
                           id="itemDescription"
-                          placeholder="Popis položky"
+                          placeholder={t('admin.taxonomy.descriptionPlaceholder')}
                           value={editingItem.description}
-                          onChange={(e) => setEditingItem(prev => prev ? {...prev, description: e.target.value} : null)}
+                          onChange={(e) =>
+                            setEditingItem((prev) => (prev ? { ...prev, description: e.target.value } : null))
+                          }
                         />
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                          <Label htmlFor="itemIcon">Ikona (emoji nebo lucide název)</Label>
+                          <Label htmlFor="itemIcon">{t('admin.taxonomy.icon')}</Label>
                           <Input
                             id="itemIcon"
-                            placeholder="📚 nebo BookOpen"
+                            placeholder="📚 / BookOpen"
                             value={editingItem.icon}
-                            onChange={(e) => setEditingItem(prev => prev ? {...prev, icon: e.target.value} : null)}
+                            onChange={(e) =>
+                              setEditingItem((prev) => (prev ? { ...prev, icon: e.target.value } : null))
+                            }
                           />
                         </div>
                         <div>
-                          <Label htmlFor="itemLinks">Odkazy (JSON)</Label>
+                          <Label htmlFor="itemLinks">{t('admin.taxonomy.links')}</Label>
                           <Input
                             id="itemLinks"
-                            placeholder='{"wiki": "https://..."}'
+                            placeholder='{"kiwix": "kiwix:wikipedia_en"}'
                             value={editingItem.links}
-                            onChange={(e) => setEditingItem(prev => prev ? {...prev, links: e.target.value} : null)}
+                            onChange={(e) =>
+                              setEditingItem((prev) => (prev ? { ...prev, links: e.target.value } : null))
+                            }
                           />
                         </div>
                       </div>
 
                       <div>
-                        <Label htmlFor="itemTranslations">Překlady (JSON)</Label>
+                        <Label htmlFor="itemTranslations">{t('admin.taxonomy.translations')}</Label>
                         <Textarea
                           id="itemTranslations"
-                          placeholder='{"en": "Mathematics", "de": "Mathematik"}'
+                          placeholder='{"en": "Mathematics", "cs": "Matematika"}'
                           value={editingItem.translations}
-                          onChange={(e) => setEditingItem(prev => prev ? {...prev, translations: e.target.value} : null)}
+                          onChange={(e) =>
+                            setEditingItem((prev) => (prev ? { ...prev, translations: e.target.value } : null))
+                          }
                         />
                       </div>
 
                       <div className="flex gap-2">
-                        <Button 
+                        <Button
                           onClick={saveTaxonomyMetadata}
                           disabled={!editingItem.id || !editingItem.name}
                           className="flex-1"
                         >
                           <Save className="w-4 h-4 mr-2" />
-                          Uložit metadata
+                          {t('admin.taxonomy.saveMetadata')}
                         </Button>
-                        <Button 
+                        <Button
                           variant="outline"
                           onClick={() => {
                             setEditingItem(null);
                             setSelectedTaxonomyId(null);
                           }}
                         >
-                          Zrušit
+                          {t('common.cancel')}
                         </Button>
                       </div>
                     </CardContent>

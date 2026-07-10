@@ -2,6 +2,16 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Typography foundations: system optical sizing + smoothing (headings set
+   their own tighter tracking via `tracking-tight`; body stays at 0). */
+@layer base {
+  html {
+    font-optical-sizing: auto;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+}
+
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
 All colors MUST be HSL.
 */

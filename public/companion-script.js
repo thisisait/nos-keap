@@ -19,12 +19,12 @@
 const CONFIG = {
   // Default API servers
   servers: [
-    { name: 'Local Development', url: 'http://localhost:42069', default: true },
-    { name: 'Local Network', url: 'http://192.168.1.131:42069', default: false },
+    { name: 'Local Development', url: 'http://localhost:8080', default: true },
+
     { name: 'Custom', url: '', default: false }
   ],
   // Current API target
-  currentServer: localStorage.getItem('dh_api_server') || 'http://localhost:42069',
+  currentServer: localStorage.getItem('dh_api_server') || 'http://localhost:8080',
   // Storage keys
   storageKeys: {
     server: 'dh_api_server',

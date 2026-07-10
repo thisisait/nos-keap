@@ -44,7 +44,7 @@ export const CityView: React.FC<CityViewProps> = ({ island, onNodeClick, discove
 
       <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {cities.map((city) => {
-          const isDiscovered = discoveredNodes.includes(city.id);
+          const _isDiscovered = discoveredNodes.includes(city.id);
           const isUnlocked = city.unlocked;
           const cityMeta = metadata[city.id];
           

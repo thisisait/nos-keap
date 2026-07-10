@@ -20,7 +20,7 @@
 import crypto from 'node:crypto';
 import type { Express, Request, Response, NextFunction } from 'express';
 import * as db from './db';
-import { allNodes, getNode, getAncestors, taxonomyNodeCount, type FlatNode } from './taxonomy';
+import { getNode, getAncestors, taxonomyNodeCount, type FlatNode } from './taxonomy';
 import { resolveContentRef, listContentServices } from './content-links';
 
 const ok = (res: Response, data?: unknown) => res.json({ success: true, data });

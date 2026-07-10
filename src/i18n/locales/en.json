@@ -1,0 +1,156 @@
+{
+  "app": {
+    "name": "KEAP",
+    "tagline": "Knowledge Explorer & Preserver",
+    "loading": "Loading…",
+    "connecting": "Connecting to the server…"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "add": "Add",
+    "edit": "Edit",
+    "delete": "Delete",
+    "back": "Back",
+    "home": "Home",
+    "error": "Error",
+    "success": "Done"
+  },
+  "index": {
+    "heading": "Overview",
+    "welcome": "Welcome to your personal knowledge center. Configure this page in Administration.",
+    "startExploring": "Start exploring",
+    "administration": "Administration"
+  },
+  "tiles": {
+    "progress": {
+      "title": "Your progress",
+      "completedItems": "completed items",
+      "capturedPages": "captured pages",
+      "openTodos": "open todos"
+    },
+    "todos": {
+      "title": "Notes & todos",
+      "placeholder": "New note…",
+      "empty": "Nothing here yet. Add your first note."
+    },
+    "recentActivity": {
+      "title": "Recent activity",
+      "empty": "No activity yet — it will appear as you explore."
+    },
+    "recentPages": {
+      "title": "Recently captured",
+      "empty": "No captured pages yet. Use the companion panel to capture one."
+    }
+  },
+  "admin": {
+    "title": "Administration",
+    "backHome": "Back to overview",
+    "settings": "Settings",
+    "tabs": { "captures": "Captured pages", "homepage": "Homepage", "taxonomy": "Taxonomy" },
+    "captures": {
+      "title": "Captured page metadata",
+      "empty": "No captures yet.",
+      "emptyHint": "Entries appear after the companion panel or an nOS agent submits one.",
+      "priority": "Priority: {{value}}",
+      "created": "Created: {{date}}",
+      "byAgent": "submitted by agent"
+    },
+    "homepage": {
+      "title": "Homepage configuration",
+      "activeTiles": "Active tiles",
+      "addTile": "Add a tile",
+      "customTitle": "Custom title (optional)",
+      "saveConfig": "Save homepage configuration",
+      "saved": "Homepage configuration saved.",
+      "saveFailed": "Could not save the configuration."
+    },
+    "taxonomy": {
+      "title": "Curated taxonomy metadata",
+      "existing": "Existing metadata",
+      "empty": "No metadata saved yet.",
+      "unnamed": "Unnamed",
+      "pickItem": "Pick a taxonomy item",
+      "pickPlaceholder": "Select a taxonomy item…",
+      "newMetadata": "New metadata",
+      "editMetadata": "Edit metadata",
+      "itemId": "Item ID",
+      "name": "Name",
+      "namePlaceholder": "Display name",
+      "description": "Description",
+      "descriptionPlaceholder": "What this item covers",
+      "icon": "Icon (emoji or Lucide name)",
+      "links": "Links (JSON)",
+      "translations": "Translations (JSON)",
+      "saveMetadata": "Save metadata",
+      "saved": "Metadata saved.",
+      "deleted": "Metadata deleted.",
+      "saveFailed": "Could not save metadata.",
+      "deleteFailed": "Could not delete metadata.",
+      "loadFailed": "Could not load data from the server.",
+      "idNameRequired": "ID and name are required.",
+      "selectFirst": "Select a taxonomy item first."
+    },
+    "tileTypes": {
+      "recent-pages": "Recently captured",
+      "recent-cities": "Recent activity",
+      "custom-todo": "Notes & todos",
+      "progress-stats": "Your progress",
+      "new": "New tile"
+    }
+  },
+  "settings": {
+    "title": "Settings",
+    "backToAdmin": "Back to administration",
+    "tabs": { "general": "General", "data": "Data", "about": "About" },
+    "languageAppearance": "Language & appearance",
+    "language": "Application language",
+    "languageChanged": "Language changed",
+    "languageChangedTo": "The app now speaks {{language}}.",
+    "czech": "Czech",
+    "english": "English",
+    "darkMode": "Dark mode",
+    "darkModeHint": "Switch between the light and dark theme",
+    "themeChanged": "Theme changed",
+    "themeChangedTo": "Switched to the {{mode}} theme.",
+    "dark": "dark",
+    "light": "light",
+    "dataManagement": "Data management",
+    "export": "Export data",
+    "exportHint": "Download your todos, completed items and captures as a JSON backup.",
+    "exportButton": "Export my data",
+    "exportDone": "Export finished",
+    "exportDoneHint": "Your data was downloaded as a file.",
+    "exportFailed": "Export failed",
+    "exportFailedHint": "Could not export your data.",
+    "dbInfo": "Server information",
+    "dbInfoHint": "Technical details about the running instance",
+    "property": "Property",
+    "value": "Value",
+    "appVersion": "Application version",
+    "lastUpdated": "Last updated",
+    "about": "About KEAP",
+    "aboutVersion": "Version",
+    "aboutDatabase": "Storage",
+    "aboutFramework": "Framework",
+    "aboutUi": "UI library",
+    "aboutDescription": "Description",
+    "aboutDescriptionText": "KEAP (Knowledge Explorer and Preserver) is a knowledge system for the nOS platform: a curated taxonomy of human knowledge with links into live nOS content services, a capture pipeline for preserving what you find, and an API that serves nOS agents.",
+    "aboutFeatures": "Features",
+    "aboutFeaturesList": [
+      "Curated 12-domain knowledge taxonomy",
+      "Capture pages via the companion panel",
+      "Per-user progress and notes behind nOS SSO",
+      "Agent API — nOS agents query and preserve knowledge",
+      "Deep links into Kiwix, Calibre-Web, Nextcloud and Open WebUI"
+    ]
+  },
+  "notFound": {
+    "message": "This page doesn't exist.",
+    "backHome": "Back to overview"
+  },
+  "game": {
+    "back": "Back",
+    "home": "Home"
+  }
+}

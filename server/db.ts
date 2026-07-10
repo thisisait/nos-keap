@@ -210,6 +210,7 @@ export function deleteTaxonomyMetadata(id: string): void {
 
 export interface ApiTaxonomyMetadata {
   id: string;
+  userId?: string;
   title: string;
   description?: string;
   url?: string;
@@ -222,6 +223,7 @@ export interface ApiTaxonomyMetadata {
 function mapCaptureRow(row: any): ApiTaxonomyMetadata {
   return {
     id: row.id,
+    userId: row.user_id,
     title: row.title,
     description: row.description,
     url: row.url,

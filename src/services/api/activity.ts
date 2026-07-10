@@ -1,20 +1,20 @@
-export const activityApi = {
-  trackActivity: async (itemId: string, itemType: string) => {
-    const response = await fetch('/api/activity', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ itemId, itemType })
-    });
-    if (!response.ok) throw new Error('Failed to track activity');
-  },
+import { apiFetch } from './client';
 
-  getRecentActivity: async (type?: string, limit?: number) => {
+export interface ActivityEntry {
+  id: number;
+  item_id: string;
+  item_type: string;
+  timestamp: number;
+}
+
+export const activityApi = {
+  trackActivity: (itemId: string, itemType: string) =>
+    apiFetch('/api/activity', { method: 'POST', body: JSON.stringify({ itemId, itemType }) }),
+
+  getRecentActivity: (type?: string, limit?: number) => {
     const params = new URLSearchParams();
     if (type) params.set('type', type);
-    if (limit) params.set('limit', limit.toString());
-    
-    const response = await fetch(`/api/activity?${params}`);
-    if (!response.ok) throw new Error('Failed to fetch recent activity');
-    return response.json();
-  }
+    if (limit) params.set('limit', String(limit));
+    return apiFetch<ActivityEntry[]>(`/api/activity?${params}`);
+  },
 };

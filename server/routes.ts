@@ -11,6 +11,7 @@
  *   - global:   taxonomy options (static dataset), curated taxonomy-metadata
  *     (writes admin-gated), app-metadata.
  */
+import crypto from 'node:crypto';
 import type { Express, Request, Response } from 'express';
 import * as db from './db';
 import { generateTaxonomyOptions } from './taxonomy';
@@ -46,9 +47,26 @@ export function registerApiRoutes(app: Express) {
   // Captured page metadata (companion userscript → review in Admin)
   app.get('/api/metadata', (req, res) => ok(res, db.getAllMetadataApi(req.user.id, req.user.isAdmin)));
   app.post('/api/metadata', (req, res) => {
-    if (!req.body?.id || !req.body?.title) return fail(res, 400, 'id and title required');
-    db.saveMetadataApi(req.user.id, req.body);
-    ok(res, req.body);
+    // Accept both the canonical shape ({id,title,url,domain,metadata}) and
+    // the companion userscript's shape ({name, links:{url,domain,...},
+    // taxonomyId, icon}) — normalize the latter instead of breaking capture.
+    const b = req.body ?? {};
+    const title = b.title ?? b.name;
+    if (!title) return fail(res, 400, 'title required');
+    const capture = {
+      id: String(b.id ?? crypto.randomUUID()),
+      title: String(title),
+      description: b.description ? String(b.description) : undefined,
+      url: b.url ?? b.links?.url,
+      domain: b.domain ?? b.links?.domain,
+      metadata:
+        b.metadata ??
+        (b.links || b.taxonomyId || b.icon
+          ? { taxonomyId: b.taxonomyId, icon: b.icon, links: b.links, translations: b.translations }
+          : undefined),
+    };
+    db.saveMetadataApi(req.user.id, capture);
+    ok(res, capture);
   });
   app.get('/api/metadata/search', (req, res) => {
     const q = String(req.query.q ?? '').toLowerCase();

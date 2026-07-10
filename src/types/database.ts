@@ -24,6 +24,7 @@ export interface TaxonomyMetadata {
 
 export interface ApiTaxonomyMetadata {
   id: string;
+  userId?: string;
   title: string;
   description?: string;
   url?: string;

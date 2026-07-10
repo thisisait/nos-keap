@@ -1,15 +1,7 @@
-export const completionApi = {
-  getCompletedItems: async (): Promise<string[]> => {
-    const response = await fetch('/api/completed-items');
-    if (!response.ok) throw new Error('Failed to fetch completed items');
-    return response.json();
-  },
+import { apiFetch } from './client';
 
-  toggleItemCompletion: async (itemId: string) => {
-    const response = await fetch(`/api/completed-items/${itemId}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' }
-    });
-    if (!response.ok) throw new Error('Failed to toggle item completion');
-  }
+export const completionApi = {
+  getCompletedItems: () => apiFetch<string[]>('/api/completed-items'),
+  toggleItemCompletion: (itemId: string) =>
+    apiFetch(`/api/completed-items/${encodeURIComponent(itemId)}`, { method: 'POST' }),
 };

@@ -34,7 +34,7 @@ export const GameMap: React.FC<GameMapProps> = ({ onNodeClick, discoveredNodes }
     <div className="min-h-screen bg-background p-6">
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold text-foreground mb-2">
-          IIAB Learning Galaxy
+          Knowledge Galaxy
         </h1>
         <p className="text-muted-foreground">
           Choose a knowledge island to explore
@@ -43,7 +43,7 @@ export const GameMap: React.FC<GameMapProps> = ({ onNodeClick, discoveredNodes }
 
       <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {gameMap.map((island) => {
-          const isDiscovered = discoveredNodes.includes(island.id);
+          const _isDiscovered = discoveredNodes.includes(island.id);
           const isUnlocked = island.unlocked;
           const islandMeta = metadata[island.id];
           

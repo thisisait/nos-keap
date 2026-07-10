@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
+import React, { useState } from 'react';
 import { GameMap } from '@/game/components/GameMap';
 import { CityView } from '@/game/components/CityView';
 import { BuildingView } from '@/game/components/BuildingView';
@@ -10,6 +11,7 @@ import { isUnlockAllEnabled } from '@/game/config/featureFlags';
 import { Link } from 'react-router-dom';
 
 const Game: React.FC = () => {
+  const { t } = useTranslation();
   const [currentLevel, setCurrentLevel] = useState<GameLevel>('island');
   const [currentNode, setCurrentNode] = useState<GameNode | null>(null);
   const [currentIsland, setCurrentIsland] = useState<GameNode | null>(null);
@@ -143,7 +145,7 @@ const Game: React.FC = () => {
                 className="game-button-secondary"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Zpět
+                {t('game.back')}
               </Button>
               <Button
                 onClick={handleHomeNavigation}
@@ -160,7 +162,7 @@ const Game: React.FC = () => {
                   className="game-button-secondary"
                 >
                   <Home className="w-4 h-4 mr-2" />
-                  Domů
+                  {t('game.home')}
                 </Button>
               </Link>
               <Link to="/admin">
@@ -168,7 +170,7 @@ const Game: React.FC = () => {
                   variant="outline"
                   size="sm"
                   className="game-button-secondary"
-                  title="Administrace"
+                  title={t('index.administration')}
                 >
                   <Settings className="w-4 h-4" />
                 </Button>
@@ -180,7 +182,7 @@ const Game: React.FC = () => {
               <div className="bg-muted/50 border border-border rounded-full px-4 py-2">
                 <div className="flex items-center text-foreground text-sm">
                   <span className="text-muted-foreground">Galaxie</span>
-                  {breadcrumb.map((node, index) => (
+                  {breadcrumb.map((node, _index) => (
                     <React.Fragment key={node.id}>
                       <span className="mx-2 text-muted-foreground">→</span>
                       <span>{node.name}</span>
