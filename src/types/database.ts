@@ -39,7 +39,7 @@ export interface ApiTaxonomyMetadata {
 export interface HomepageTile {
   id: string;
   title: string;
-  type: 'progress' | 'custom-todo' | 'recent-cities' | 'recent-pages' | 'progress-stats';
+  type: 'progress' | 'custom-todo' | 'recent-cities' | 'recent-pages' | 'progress-stats' | 'explore-map';
   position: number;
   visible: boolean;
   config?: any;

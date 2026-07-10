@@ -16,7 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useNosConfig } from '@/config/nos';
 import type { ApiTaxonomyMetadata } from '@/types/database';
 
-const TILE_TYPES = ['recent-pages', 'recent-cities', 'custom-todo', 'progress-stats'] as const;
+const TILE_TYPES = ['recent-pages', 'recent-cities', 'custom-todo', 'progress-stats', 'explore-map'] as const;
 
 export default function Admin() {
   const { t, i18n } = useTranslation();

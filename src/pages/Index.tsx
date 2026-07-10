@@ -8,6 +8,7 @@ import { RecentPagesTile } from '@/components/homepage/RecentPagesTitle';
 import { RecentCitiesTile } from '@/components/homepage/RecentCitiesTile';
 import { CustomTodoTile } from '@/components/homepage/CustomTodoTile';
 import { ProgressStatsTile } from '@/components/homepage/ProgressStatsTile';
+import { ExploreMapTile } from '@/components/homepage/ExploreMapTile';
 import { Settings, Play, Globe } from 'lucide-react';
 import type { HomepageTile } from '../types/database';
 
@@ -17,6 +18,7 @@ const DEFAULT_TILES: HomepageTile[] = [
   { id: 'default-pages', type: 'recent-pages', title: '', position: 1, visible: true },
   { id: 'default-activity', type: 'recent-cities', title: '', position: 2, visible: true },
   { id: 'default-todos', type: 'custom-todo', title: '', position: 3, visible: true },
+  { id: 'default-explore', type: 'explore-map', title: '', position: 4, visible: true },
 ];
 
 const Index = () => {
@@ -44,6 +46,8 @@ const Index = () => {
         return <RecentPagesTile key={tile.id} title={title} />;
       case 'custom-todo':
         return <CustomTodoTile key={tile.id} title={title} />;
+      case 'explore-map':
+        return <ExploreMapTile key={tile.id} title={title} />;
       default:
         return null;
     }

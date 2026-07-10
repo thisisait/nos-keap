@@ -14,7 +14,8 @@
     "back": "Zpět",
     "home": "Domů",
     "error": "Chyba",
-    "success": "Hotovo"
+    "success": "Hotovo",
+    "loading": "Načítání…"
   },
   "index": {
     "heading": "Přehled",
@@ -41,6 +42,12 @@
     "recentPages": {
       "title": "Naposledy zachycené",
       "empty": "Zatím žádné zachycené stránky. Použijte companion panel."
+    },
+    "exploreMap": {
+      "title": "Mapa znalostí",
+      "subtitle": "Prozkoumej taxonomii ve vektorovém prostoru — souhvězdí, sémantičtí sousedé a hvězdy v dálce.",
+      "stats": "{{nodes}} uzlů · {{embedded}} embeddingů",
+      "cta": "Otevřít explorer"
     }
   },
   "admin": {
@@ -102,7 +109,8 @@
       "recent-cities": "Poslední aktivita",
       "custom-todo": "Poznámky a úkoly",
       "progress-stats": "Váš pokrok",
-      "new": "Nová dlaždice"
+      "new": "Nová dlaždice",
+      "explore-map": "Mapa znalostí"
     }
   },
   "settings": {
@@ -168,5 +176,32 @@
   },
   "content": {
     "openIn": "Otevřít v {{service}}"
+  },
+  "explore": {
+    "title": "Explorer — mapa znalostí",
+    "stats": "{{nodes}} uzlů · {{embedded}} embeddingů",
+    "mode": {
+      "related": "Příbuzné",
+      "unrelated": "Nejvzdálenější"
+    },
+    "kind": {
+      "taxonomy": "Taxonomie",
+      "capture": "Zachycené stránky",
+      "note": "Kurátorské poznámky"
+    },
+    "panel": {
+      "title": "Souhvězdí",
+      "focusOn": "Fokus: {{name}}",
+      "noFocus": "Klikni na uzel — objeví se jeho sémantické okolí.",
+      "noVectors": "Vektory zatím nejsou synchronizované — spusť keap-embed-sync na hostu. Strom funguje i bez nich.",
+      "kinds": "Zdroje",
+      "dataTypes": "Typy dat",
+      "results": "{{count}} bodů",
+      "notSemantic": "bez vektorů"
+    },
+    "drawer": {
+      "open": "Otevřít obsah",
+      "focus": "Zaměřit v grafu"
+    }
   }
 }

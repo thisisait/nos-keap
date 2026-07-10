@@ -14,7 +14,8 @@
     "back": "Back",
     "home": "Home",
     "error": "Error",
-    "success": "Done"
+    "success": "Done",
+    "loading": "Loading…"
   },
   "index": {
     "heading": "Overview",
@@ -41,6 +42,12 @@
     "recentPages": {
       "title": "Recently captured",
       "empty": "No captured pages yet. Use the companion panel to capture one."
+    },
+    "exploreMap": {
+      "title": "Knowledge map",
+      "subtitle": "Explore the taxonomy in vector space — constellations, semantic neighbours and distant stars.",
+      "stats": "{{nodes}} nodes · {{embedded}} embeddings",
+      "cta": "Open explorer"
     }
   },
   "admin": {
@@ -102,7 +109,8 @@
       "recent-cities": "Recent activity",
       "custom-todo": "Notes & todos",
       "progress-stats": "Your progress",
-      "new": "New tile"
+      "new": "New tile",
+      "explore-map": "Knowledge map"
     }
   },
   "settings": {
@@ -168,5 +176,32 @@
   },
   "content": {
     "openIn": "Open in {{service}}"
+  },
+  "explore": {
+    "title": "Explorer — knowledge map",
+    "stats": "{{nodes}} nodes · {{embedded}} embeddings",
+    "mode": {
+      "related": "Related",
+      "unrelated": "Most unrelated"
+    },
+    "kind": {
+      "taxonomy": "Taxonomy",
+      "capture": "Captured pages",
+      "note": "Curated notes"
+    },
+    "panel": {
+      "title": "Constellation",
+      "focusOn": "Focus: {{name}}",
+      "noFocus": "Click a node to reveal its semantic neighbourhood.",
+      "noVectors": "Vectors not synced yet — run keap-embed-sync on the host. The tree works without them.",
+      "kinds": "Sources",
+      "dataTypes": "Data types",
+      "results": "{{count}} points",
+      "notSemantic": "no vectors"
+    },
+    "drawer": {
+      "open": "Open content",
+      "focus": "Focus in graph"
+    }
   }
 }

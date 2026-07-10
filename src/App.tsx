@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, lazy, Suspense } from 'react';
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
@@ -9,6 +9,9 @@ import Admin from './pages/Admin';
 import Game from './pages/Game';
 import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
+
+// Lazy: the explorer pulls in three.js/WebGL — keep it out of the main chunk.
+const Explore = lazy(() => import('./pages/Explore'));
 
 const queryClient = new QueryClient();
 
@@ -33,6 +36,14 @@ const App = () => {
             <Route path="/game/island/:id" element={<Game />} />
             <Route path="/game/city/:id" element={<Game />} />
             <Route path="/game/building/:id" element={<Game />} />
+            <Route
+              path="/explore"
+              element={
+                <Suspense fallback={null}>
+                  <Explore />
+                </Suspense>
+              }
+            />
             <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
