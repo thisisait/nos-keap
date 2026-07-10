@@ -17,6 +17,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { registerApiRoutes } from './routes';
 import { registerAgentRoutes } from './agent';
+import { registerGraphRoutes } from './graph';
 import { identityMiddleware } from './identity';
 import { initDb, rebuildTaxonomyFts } from './db';
 import { allNodes } from './taxonomy';
@@ -50,6 +51,9 @@ async function main() {
   // (401 without headers when KEAP_TRUSTED_PROXY=1 — see identity.ts).
   app.use(identityMiddleware);
 
+  // Graph/explorer surface first — registerApiRoutes ends with the /api/*
+  // 404 fallback, so anything mounted after it is unreachable.
+  registerGraphRoutes(app); // /api/graph* + /api/search/semantic
   registerApiRoutes(app);
 
   // SPA static + history-fallback (replaces the Apache RewriteRule from the

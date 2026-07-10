@@ -524,3 +524,145 @@ export function corpusStats(): { captures: number; curatedNotes: number } {
   const curatedNotes = (d.prepare('SELECT COUNT(*) AS c FROM taxonomy_metadata').get() as any).c;
   return { captures, curatedNotes };
 }
+
+// ── Embeddings (libSQL vector layer) ──────────────────────────────────────────
+// Vectors are written by the host-side sync job (nOS Pulse: Ollama on the host
+// loopback → POST /agent/v1/embeddings) — the container never needs to reach
+// an embedder for node-anchored distance queries.
+
+export type EmbeddingKind = 'taxonomy' | 'capture' | 'note';
+
+export interface NeighborHit {
+  kind: EmbeddingKind;
+  refId: string;
+  distance: number;
+}
+
+export function embeddingStats(): { total: number; byKind: Record<string, number>; model: string | null } {
+  if (!vectorsOk) return { total: 0, byKind: {}, model: null };
+  const d = getDb();
+  const rows = d.prepare('SELECT kind, COUNT(*) AS c FROM embeddings GROUP BY kind').all() as any[];
+  const byKind: Record<string, number> = {};
+  let total = 0;
+  for (const r of rows) {
+    byKind[r.kind] = r.c;
+    total += r.c;
+  }
+  const m = d.prepare('SELECT model FROM embeddings LIMIT 1').get() as any;
+  return { total, byKind, model: m?.model ?? null };
+}
+
+/** ref_id → content_hash for one kind — drives the pending/stale diff. */
+export function getEmbeddingHashes(kind: EmbeddingKind): Map<string, string> {
+  if (!vectorsOk) return new Map();
+  const rows = getDb().prepare('SELECT ref_id, content_hash FROM embeddings WHERE kind = ?').all(kind) as any[];
+  return new Map(rows.map((r) => [r.ref_id, r.content_hash]));
+}
+
+export function upsertEmbeddings(
+  model: string,
+  dim: number,
+  items: Array<{ kind: EmbeddingKind; refId: string; contentHash: string; vector: number[] }>,
+): number {
+  if (!vectorsOk) throw new Error('vector layer unavailable');
+  const d = getDb();
+  const insert = d.prepare(
+    `INSERT INTO embeddings (kind, ref_id, model, dim, content_hash, vector, updated_at)
+     VALUES (?, ?, ?, ?, ?, vector32(?), strftime('%s','now'))
+     ON CONFLICT(kind, ref_id) DO UPDATE SET
+       model = excluded.model,
+       dim = excluded.dim,
+       content_hash = excluded.content_hash,
+       vector = excluded.vector,
+       updated_at = excluded.updated_at`,
+  );
+  const tx = d.transaction((rows: typeof items) => {
+    for (const it of rows) {
+      insert.run(it.kind, it.refId, model, dim, it.contentHash, JSON.stringify(it.vector));
+    }
+  });
+  tx(items);
+  return items.length;
+}
+
+/** Drop vectors whose source row no longer exists (deleted capture/note). */
+export function pruneEmbeddings(kind: EmbeddingKind, liveIds: Set<string>): number {
+  if (!vectorsOk) return 0;
+  const d = getDb();
+  const stored = d.prepare('SELECT ref_id FROM embeddings WHERE kind = ?').all(kind) as any[];
+  const del = d.prepare('DELETE FROM embeddings WHERE kind = ? AND ref_id = ?');
+  let pruned = 0;
+  const tx = d.transaction(() => {
+    for (const r of stored) {
+      if (!liveIds.has(r.ref_id)) {
+        del.run(kind, r.ref_id);
+        pruned++;
+      }
+    }
+  });
+  tx();
+  return pruned;
+}
+
+/**
+ * k nearest (mode=related) or farthest (mode=unrelated) stored vectors from an
+ * anchor row. Nearest uses the DiskANN index (vector_top_k); farthest is a
+ * full scan — DiskANN has no "farthest" query, and at ~1k rows a scan is free.
+ */
+export function vectorNeighbors(
+  anchorKind: EmbeddingKind,
+  anchorRefId: string,
+  mode: 'related' | 'unrelated',
+  kinds: EmbeddingKind[],
+  limit: number,
+): NeighborHit[] | null {
+  if (!vectorsOk) return null;
+  const d = getDb();
+  const anchor = d
+    .prepare('SELECT vector_extract(vector) AS v FROM embeddings WHERE kind = ? AND ref_id = ?')
+    .get(anchorKind, anchorRefId) as any;
+  if (!anchor?.v) return null;
+  return vectorNeighborsOf(anchor.v, mode, kinds, limit, { kind: anchorKind, refId: anchorRefId });
+}
+
+/** Same as vectorNeighbors but anchored on a raw query vector (live embed). */
+export function vectorNeighborsOf(
+  vectorJson: string,
+  mode: 'related' | 'unrelated',
+  kinds: EmbeddingKind[],
+  limit: number,
+  exclude?: { kind: string; refId: string },
+): NeighborHit[] {
+  if (!vectorsOk) return [];
+  const d = getDb();
+  const kindFilter = kinds.length ? `AND e.kind IN (${kinds.map(() => '?').join(',')})` : '';
+  if (mode === 'related') {
+    // Over-fetch from the ANN index, then kind-filter + self-exclude in SQL.
+    const rows = d
+      .prepare(
+        `SELECT e.kind, e.ref_id AS refId,
+                vector_distance_cos(e.vector, vector32(?)) AS distance
+         FROM vector_top_k('embeddings_vec_idx', vector32(?), ?) AS v
+         JOIN embeddings e ON e.rowid = v.id
+         WHERE 1=1 ${kindFilter}
+         ORDER BY distance ASC`,
+      )
+      .all(vectorJson, vectorJson, Math.min(limit * 4 + 1, 256), ...kinds) as any[];
+    return rows
+      .filter((r) => !(exclude && r.kind === exclude.kind && r.refId === exclude.refId))
+      .slice(0, limit);
+  }
+  const rows = d
+    .prepare(
+      `SELECT e.kind, e.ref_id AS refId,
+              vector_distance_cos(e.vector, vector32(?)) AS distance
+       FROM embeddings e
+       WHERE 1=1 ${kindFilter}
+       ORDER BY distance DESC
+       LIMIT ?`,
+    )
+    .all(vectorJson, ...kinds, limit + 1) as any[];
+  return rows
+    .filter((r) => !(exclude && r.kind === exclude.kind && r.refId === exclude.refId))
+    .slice(0, limit);
+}

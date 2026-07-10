@@ -22,6 +22,7 @@ import type { Express, Request, Response, NextFunction } from 'express';
 import * as db from './db';
 import { getNode, getAncestors, taxonomyNodeCount, type FlatNode } from './taxonomy';
 import { resolveContentRef, listContentServices } from './content-links';
+import { pendingEmbeddings, embedText, EMBED_MODEL, EMBED_DIM } from './embeddings';
 
 const ok = (res: Response, data?: unknown) => res.json({ success: true, data });
 const fail = (res: Response, status: number, error: string) =>
@@ -107,6 +108,7 @@ export function registerAgentRoutes(app: Express) {
       status: 'OK',
       surface: TOKEN_RO || TOKEN_RW ? 'enabled' : 'disabled',
       corpus: { taxonomyNodes: taxonomyNodeCount(), ...stats },
+      embeddings: db.embeddingStats(),
     });
   });
 
@@ -159,13 +161,61 @@ export function registerAgentRoutes(app: Express) {
     ok(res, listContentServices()),
   );
 
-  // Semantic search — Phase 6 lands the Qdrant/Bone index; until then this
-  // transparently answers from FTS so agent callers have a stable endpoint.
-  app.get('/agent/v1/search/semantic', agentAuth('ro'), (req, res) => {
+  // Semantic search — true vector search when the query can be embedded live
+  // (KEAP_OLLAMA_URL wired) AND the libSQL corpus is populated; FTS otherwise.
+  app.get('/agent/v1/search/semantic', agentAuth('ro'), async (req, res) => {
     const q = String(req.query.q ?? '').trim();
     if (!q) return fail(res, 400, 'q required');
     const limit = Math.min(Number(req.query.limit) || 20, MAX_LIMIT);
-    ok(res, { query: q, semantic: false, note: 'semantic index not yet populated — FTS results', results: searchNodes(q, undefined, limit) });
+    const vec = await embedText(q);
+    if (vec) {
+      const hits = db.vectorNeighborsOf(JSON.stringify(vec), 'related', ['taxonomy'], limit);
+      const results = hits
+        .map((h) => getNode(h.refId))
+        .filter((n): n is FlatNode => Boolean(n))
+        .map((n) => nodeSummary(n));
+      if (results.length) return ok(res, { query: q, semantic: true, results });
+    }
+    ok(res, {
+      query: q,
+      semantic: false,
+      note: 'live embedder or vector corpus unavailable — FTS results',
+      results: searchNodes(q, undefined, limit),
+    });
+  });
+
+  // ── Embedding sync surface (consumed by the nOS keap-embed-sync Pulse job) ──
+  // The container decides WHAT to embed (canonical text + content_hash diff);
+  // the host job decides HOW (loopback Ollama) and pushes vectors back.
+  app.get('/agent/v1/embeddings/pending', agentAuth('ro'), (req, res) => {
+    if (!db.vectorSearchAvailable()) return fail(res, 503, 'vector layer unavailable');
+    const limit = Math.min(Number(req.query.limit) || 100, 500);
+    const { pending, total, pruned } = pendingEmbeddings(limit);
+    ok(res, { model: EMBED_MODEL, dim: EMBED_DIM, total, pruned, items: pending });
+  });
+
+  app.post('/agent/v1/embeddings', agentAuth('rw'), (req, res) => {
+    if (!db.vectorSearchAvailable()) return fail(res, 503, 'vector layer unavailable');
+    const { model, dim, items } = req.body ?? {};
+    if (!model || !Array.isArray(items) || !items.length) {
+      return fail(res, 400, 'model + non-empty items required');
+    }
+    if (Number(dim) !== EMBED_DIM) return fail(res, 400, `dim must be ${EMBED_DIM}`);
+    const rows: Array<{ kind: db.EmbeddingKind; refId: string; contentHash: string; vector: number[] }> = [];
+    for (const it of items) {
+      if (
+        !['taxonomy', 'capture', 'note'].includes(it?.kind) ||
+        typeof it?.refId !== 'string' ||
+        typeof it?.contentHash !== 'string' ||
+        !Array.isArray(it?.vector) ||
+        it.vector.length !== EMBED_DIM
+      ) {
+        return fail(res, 400, `invalid item at index ${rows.length}`);
+      }
+      rows.push({ kind: it.kind, refId: it.refId, contentHash: it.contentHash, vector: it.vector });
+    }
+    const upserted = db.upsertEmbeddings(String(model), EMBED_DIM, rows);
+    ok(res, { upserted, submittedBy: `agent:${req.agentName}` });
   });
 
   // Agents PRESERVE knowledge: submit a capture into the Admin review queue.
@@ -222,11 +272,51 @@ const OPENAPI_SPEC = {
     '/agent/v1/content/services': { get: { summary: 'List linkable nOS content services' } },
     '/agent/v1/search/semantic': {
       get: {
-        summary: 'Semantic search (FTS fallback until the Qdrant/Bone index is populated)',
+        summary: 'Semantic search over the libSQL vector corpus (FTS fallback when live embed or corpus is unavailable)',
         parameters: [
           { name: 'q', in: 'query', required: true, schema: { type: 'string' } },
           { name: 'limit', in: 'query', schema: { type: 'integer', maximum: 50, default: 20 } },
         ],
+      },
+    },
+    '/agent/v1/embeddings/pending': {
+      get: {
+        summary: 'Embedding sync diff: canonical texts missing or stale in the vector corpus',
+        parameters: [
+          { name: 'limit', in: 'query', schema: { type: 'integer', maximum: 500, default: 100 } },
+        ],
+      },
+    },
+    '/agent/v1/embeddings': {
+      post: {
+        summary: 'Upsert computed vectors into the libSQL corpus (write scope; nOS keap-embed-sync job)',
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['model', 'dim', 'items'],
+                properties: {
+                  model: { type: 'string' },
+                  dim: { type: 'integer', const: 768 },
+                  items: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      required: ['kind', 'refId', 'contentHash', 'vector'],
+                      properties: {
+                        kind: { type: 'string', enum: ['taxonomy', 'capture', 'note'] },
+                        refId: { type: 'string' },
+                        contentHash: { type: 'string' },
+                        vector: { type: 'array', items: { type: 'number' } },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     },
     '/agent/v1/captures': {
