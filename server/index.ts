@@ -16,8 +16,10 @@ import helmet from 'helmet';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { registerApiRoutes } from './routes';
+import { registerAgentRoutes } from './agent';
 import { identityMiddleware } from './identity';
-import { initDb } from './db';
+import { initDb, rebuildTaxonomyFts } from './db';
+import { allNodes } from './taxonomy';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT ?? 8080);
@@ -25,6 +27,7 @@ const STATIC_DIR = process.env.KEAP_STATIC_DIR ?? path.resolve(__dirname, '../di
 
 async function main() {
   await initDb();
+  rebuildTaxonomyFts(allNodes());
 
   const app = express();
   // Relaxed CSP because the SPA is self-hosted behind Traefik+Authentik.
@@ -37,6 +40,11 @@ async function main() {
   app.get('/api/health', (_req, res) =>
     res.json({ success: true, data: { status: 'OK', ts: new Date().toISOString() } }),
   );
+
+  // Agent surface (/agent/v1) — bearer-token auth, NOT Authentik headers:
+  // host processes (AgentKit, mcpo) hit the loopback port directly, so this
+  // must be mounted before the identity middleware. See server/agent.ts.
+  registerAgentRoutes(app);
 
   // Resolve X-Authentik-Uid / -Username / -Email into req.user
   // (401 without headers when KEAP_TRUSTED_PROXY=1 — see identity.ts).

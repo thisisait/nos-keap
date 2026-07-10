@@ -434,3 +434,53 @@ export function saveTodo(
 export function deleteTodo(userId: string, id: string): void {
   getDb().prepare('DELETE FROM todos WHERE user_id = ? AND id = ?').run(userId, id);
 }
+
+// ── Taxonomy full-text index (agent surface) ─────────────────────────────────
+// FTS5 over the static taxonomy tree. Rebuilt on every startup — the dataset
+// is a compiled-in constant, so the index is derived state, never a source.
+
+export interface FtsHit {
+  id: string;
+  rank: number;
+}
+
+export function rebuildTaxonomyFts(
+  nodes: Array<{ id: string; name: string; description?: string; path: string }>,
+): void {
+  const d = getDb();
+  d.exec(
+    `CREATE VIRTUAL TABLE IF NOT EXISTS taxonomy_fts USING fts5(id UNINDEXED, name, description, path)`,
+  );
+  const rebuild = d.transaction(() => {
+    d.prepare('DELETE FROM taxonomy_fts').run();
+    const insert = d.prepare('INSERT INTO taxonomy_fts (id, name, description, path) VALUES (?, ?, ?, ?)');
+    for (const n of nodes) insert.run(n.id, n.name, n.description ?? '', n.path);
+  });
+  rebuild();
+}
+
+export function searchTaxonomyFts(query: string, limit: number): FtsHit[] {
+  // Quote each token so user input can't inject FTS5 syntax (NEAR, *, etc.).
+  const match = query
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((t) => `"${t.replace(/"/g, '')}"`)
+    .join(' ');
+  if (!match) return [];
+  try {
+    return getDb()
+      .prepare('SELECT id, rank FROM taxonomy_fts WHERE taxonomy_fts MATCH ? ORDER BY rank LIMIT ?')
+      .all(match, limit) as FtsHit[];
+  } catch {
+    return [];
+  }
+}
+
+// ── Corpus stats (agent health endpoint) ─────────────────────────────────────
+
+export function corpusStats(): { captures: number; curatedNotes: number } {
+  const d = getDb();
+  const captures = (d.prepare('SELECT COUNT(*) AS c FROM api_taxonomy_metadata').get() as any).c;
+  const curatedNotes = (d.prepare('SELECT COUNT(*) AS c FROM taxonomy_metadata').get() as any).c;
+  return { captures, curatedNotes };
+}
