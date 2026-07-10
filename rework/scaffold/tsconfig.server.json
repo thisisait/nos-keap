@@ -1,0 +1,15 @@
+{
+  "//": "Compiles the standalone backend (server/) to dist-server/. The SPA is built separately by Vite. This split is what the old repo lacked.",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "outDir": "dist-server",
+    "rootDir": "server",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "types": ["node"]
+  },
+  "include": ["server/**/*.ts"]
+}

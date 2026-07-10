@@ -1,0 +1,84 @@
+---
+# ==============================================================================
+# keap-base — nOS Tier-1 plugin autowiring manifest.
+#
+# This is the DESTINATION integration for KEAP (Tier-2 apps/keap.yml is the
+# quick-pilot path). It pairs with a `roles/pazny.keap/` role (compose-override
+# pattern, built from source under `files/keap/`) and a `state/manifest.yml`
+# row with domain_var + port_var for Traefik file-provider auto-routing.
+#
+# Model: files/anatomy/plugins/miniflux-base/plugin.yml (native_oidc web app on
+# the iiab stack). Copy this tree into nOS at
+#   files/anatomy/plugins/keap-base/plugin.yml
+# ==============================================================================
+
+name: keap-base
+version: "1.0.0"
+type: [service, ui-extension]
+
+requires:
+  role: pazny.keap
+  feature_flag: install_keap
+  variables:
+    - keap_domain
+    - keap_port
+    - tenant_domain
+    - global_password_prefix
+
+# ── SSO ───────────────────────────────────────────────────────────────────────
+# Two supported postures (pick one):
+#   header_oidc  — simplest; the outpost injects X-Authentik-* headers, the Node
+#                  backend (server/identity.ts) reads them for per-user state.
+#                  No OIDC client code needed. RECOMMENDED first step.
+#   native_oidc  — full OIDC; add an OIDC client lib to the backend and consume
+#                  the discovery URL. Better UX (in-app account), more code.
+# This manifest ships header_oidc; flip `mode`/`provider_type` + add
+# redirect_uris/scopes to go native_oidc (see miniflux-base for the shape).
+authentik:
+  mode: header_oidc
+  provider_type: forward_auth
+  client_id: nos-keap
+  client_secret: "{{ global_password_prefix }}_pw_oidc_keap"
+  slug: keap
+  name: 'KEAP — Knowledge Explorer'
+  enabled: "{{ install_keap | default(false) }}"
+  launch_url: "https://{{ keap_domain }}"
+  tier: 3
+
+# ── Compose extension (OIDC env + mkcert CA gate live here, not in the role) ──
+compose_extension:
+  template: templates/keap-base.compose.yml.j2
+  target_stack: iiab
+  target_service: keap
+
+# ── Lifecycle tendons ─────────────────────────────────────────────────────────
+lifecycle:
+  post_compose:
+    - wait_health: "http://127.0.0.1:{{ keap_port }}/api/health"
+
+# ── GDPR Article 30 ───────────────────────────────────────────────────────────
+gdpr:
+  purpose: "Per-user knowledge-exploration progress, todos, and saved bookmarks."
+  legal_basis: legitimate_interests
+  data_categories: [email, behavioural_data]
+  data_subjects: [end_users]
+  retention_days: 365
+  processors: []
+  eu_residency: true
+
+# ── Wing /hub tile ────────────────────────────────────────────────────────────
+ui-extension:
+  hub_card:
+    title: "Knowledge Explorer"
+    icon: "compass"
+    url: "https://{{ keap_domain }}"
+    tier: 3
+    health_check: "https://{{ keap_domain }}/api/health"
+
+# ── A9 notification routing (required across service plugins) ─────────────────
+notification:
+  on_critical: [wing-inbox, ntfy]
+  on_high: [wing-inbox]
+  on_medium: [wing-inbox]
+  on_low: [wing-inbox]
+  on_info: [wing-inbox]
