@@ -1,8 +1,15 @@
 # Rework blueprint — nOS as base platform (replacing IIAB)
 
 This directory is a **decision-ready blueprint** for rebuilding KEAP (Knowledge Explorer and
-Preserver) in a fresh repository where **[nOS](https://github.com/thisisait/nOS)** replaces
-Internet-in-a-Box as the base platform. Nothing outside `rework/` is modified.
+Preserver) where **[nOS](https://github.com/thisisait/nOS)** replaces Internet-in-a-Box as the
+base platform. Nothing outside `rework/` is modified.
+
+> **2026-07-10 update — direction fixed by the owner:** the rework happens **in this repository**
+> (no fresh repo); nOS gets only a Tier-1 Ansible role that git-clones this project and builds it
+> from source; and KEAP must also serve **nOS agents** (AgentKit). The authoritative plan is now
+> **[COMPLETION_PROPOSAL.md](./COMPLETION_PROPOSAL.md)**, which supersedes MIGRATION_PLAN.md
+> Phases 0/4/5 and resolves 6 of its 10 open questions. The documents below remain valid as the
+> underlying analysis.
 
 ## Read in this order
 
