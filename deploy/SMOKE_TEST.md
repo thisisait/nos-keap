@@ -36,6 +36,15 @@ RO=<keap ro token>; RW=<keap rw token>; B=http://127.0.0.1:8091
 
 curl -s $B/agent/v1/health | python3 -m json.tool         # surface: enabled, corpus counts
 curl -s -H "Authorization: Bearer $RO" "$B/agent/v1/taxonomy/search?q=quantum"
+
+# Hybrid RRF search (S4) — one typed ranked list over the whole corpus.
+# legs.lexical is always true; legs.vector flips true once KEAP_OLLAMA_URL
+# is wired; legs.graph true when one-hop expansion contributed:
+curl -s -H "Authorization: Bearer $RO" "$B/agent/v1/search/semantic?q=quantum&limit=5" \
+  | python3 -c "import json,sys; d=json.load(sys.stdin)['data']; \
+      print(d['legs']); [print(r['kind'], r.get('name') or r.get('title')) for r in d['results']]"
+# expected: {'lexical': True, ...} + Quantum Foundations/Computing/Optics
+# nodes and 'Physics' arriving via the graph leg
 curl -s -o /dev/null -w '%{http_code}\n' \
   -X POST -H "Authorization: Bearer $RO" $B/agent/v1/objects \
   -H 'content-type: application/json' -d '{"type":"note","title":"x"}'   # 403 (ro can't write)
