@@ -14,6 +14,8 @@
 import { useMemo, useRef, useEffect, useCallback } from 'react';
 import ForceGraph2D from 'react-force-graph-2d';
 import ForceGraph3D from 'react-force-graph-3d';
+// @ts-expect-error — no bundled types; same engine react-force-graph uses.
+import { forceCollide } from 'd3-force-3d';
 
 export interface CanvasNode {
   id: string;
@@ -90,12 +92,21 @@ export default function GraphCanvas({ nodes, links, is3D, focusId, onNodeClick, 
         const linkForce = ref.d3Force('link');
         if (linkForce) {
           linkForce.distance((l: any) =>
-            l.semantic ? 60 + (l.distance ?? 0.5) * 220 : l.target?.star ? 40 : 24,
+            l.semantic ? 90 + (l.distance ?? 0.5) * 260 : l.target?.star ? 55 : 38,
           );
-          ref.d3ReheatSimulation();
         }
+        // Breathing room: stronger repulsion + a collide force so sibling
+        // clusters don't sit on top of each other (radius tracks the node's
+        // rendered size: r = sqrt(val) * nodeRelSize, plus padding).
+        const charge = ref.d3Force('charge');
+        if (charge) charge.strength(-55);
+        ref.d3Force(
+          'collide',
+          forceCollide((n: any) => Math.sqrt(nodeSize(n)) * 2.4 + 4),
+        );
+        ref.d3ReheatSimulation();
       } catch {
-        // Engine not initialised yet — default link distances are fine.
+        // Engine not initialised yet — default forces are fine.
       }
     }, 300);
     return () => clearTimeout(t);
@@ -153,7 +164,7 @@ export default function GraphCanvas({ nodes, links, is3D, focusId, onNodeClick, 
       ref={fg2dRef}
       {...common}
       dagMode="radialout"
-      dagLevelDistance={42}
+      dagLevelDistance={80}
       linkLineDash={(l: any) => (l.semantic ? [3, 3] : null)}
       nodeCanvasObjectMode={() => 'after'}
       nodeCanvasObject={(node: any, ctx, globalScale) => {
