@@ -26,7 +26,7 @@ import { pendingEmbeddings, EMBED_MODEL, EMBED_DIM } from './embeddings';
 import { extractRefs } from './objects';
 import { hybridSearch, markCorpusDirty } from './search';
 import { runLint, lastLintReport } from './lint';
-import { propose, moderationPolicy } from './promotions';
+import { propose, proposeNode, moderationPolicy } from './promotions';
 import { normalizeAndSaveCapture, parseEnvelope } from './intake';
 import { TOKEN_RO, TOKEN_RW, tokenEquals } from './tokens';
 
@@ -150,6 +150,8 @@ export function registerAgentRoutes(app: Express) {
     ok(res, {
       ...nodeSummary(node),
       description: node.description, // full description on the detail view
+      zone: node.zone,
+      ext: node.ext ?? false,
       ancestors: getAncestors(node.id),
       children,
       childCount: node.childIds.length,
@@ -369,6 +371,20 @@ export function registerAgentRoutes(app: Express) {
     });
   });
 
+  // Taxonomy extension proposal (Track T): grow the tree under votable/free
+  // parents. Description is MANDATORY (DescGraph doctrine) — a 400 explains
+  // why. Free-zone parents auto-approve (light governance); votable-core
+  // parents queue for the moderator; anchor-core parents refuse.
+  app.post('/agent/v1/taxonomy/propose', agentAuth('rw'), (req, res) => {
+    const { parentId, name, description, rationale } = req.body ?? {};
+    try {
+      const result = proposeNode({ parentId, name, description }, rationale, `agent:${req.agentName}`);
+      ok(res, { ...result, submittedBy: `agent:${req.agentName}` });
+    } catch (err) {
+      return fail(res, 400, (err as Error).message);
+    }
+  });
+
   // Promotion proposals — the librarian PROPOSES, the moderator DECIDES.
   // No agent path can approve; the curated corpus stays human-gated
   // (or quorum-gated in the future democratic/MMO policy).
@@ -513,6 +529,27 @@ const OPENAPI_SPEC = {
                       tags: { type: 'array', items: { type: 'string' } },
                     },
                   },
+                  rationale: { type: 'string', maxLength: 1000 },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/agent/v1/taxonomy/propose': {
+      post: {
+        summary: 'Propose a new taxonomy node (Track T). Description REQUIRED (DescGraph). Anchor-core parents refuse; votable-core queue for the moderator; free-zone auto-approve.',
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['parentId', 'name', 'description'],
+                properties: {
+                  parentId: { type: 'string' },
+                  name: { type: 'string', maxLength: 120 },
+                  description: { type: 'string', minLength: 20, maxLength: 2000 },
                   rationale: { type: 'string', maxLength: 1000 },
                 },
               },

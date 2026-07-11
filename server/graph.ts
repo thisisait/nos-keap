@@ -143,6 +143,8 @@ export function registerGraphRoutes(app: Express) {
         childCount: n.childIds.length,
         hasNote: curatedById.has(n.id),
         dataType: nodeDataType(ref),
+        zone: n.zone,
+        ext: n.ext ?? false,
         x: p?.x,
         y: p?.y,
         z: p?.z,

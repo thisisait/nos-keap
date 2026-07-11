@@ -115,6 +115,11 @@ export function decide(
     return { status: 'rejected' };
   }
 
+  if ((p as any).kind === 'node') {
+    const { nodeId } = materializeNode(promotionId, decidedBy);
+    return { status: 'approved', objectId: nodeId };
+  }
+
   // Approve: materialize the object through the standard write path.
   const draft = p.object as ObjectDraft;
   const broken = brokenAnchors(draft);
@@ -141,4 +146,110 @@ export function decide(
   db.setPromotionDecision(promotionId, 'approved', decidedBy, objectId);
   markCorpusDirty();
   return { status: 'approved', objectId };
+}
+
+// ── Taxonomy extension proposals (Track T) ────────────────────────────────────
+// Same moderated machinery, kind='node'. Governance is keyed on the PARENT's
+// zone: anchor core refuses (the sky's constants change only by release),
+// votable core requires moderation, free zone approves lightly (auto —
+// append-only depth where most datapoints live).
+
+import { registerExtNode, nodeLevel, zoneOfLevel, allNodes } from './taxonomy';
+import { appendExtNodeToLayout } from './layout';
+import { rebuildTaxonomyFts } from './db';
+
+export interface NodeDraft {
+  parentId: string;
+  name: string;
+  description: string;
+}
+
+export function proposeNode(
+  draft: NodeDraft,
+  rationale: string | undefined,
+  proposedBy: string,
+): { id: string; status: string; nodeId?: string } {
+  const parent = getNode(draft?.parentId ?? '');
+  if (!parent) throw new Error(`unknown parent node ${draft?.parentId}`);
+  if (!draft.name?.trim()) throw new Error('name is required');
+  // DescGraph doctrine (arXiv 2601.01280): descriptions are load-bearing —
+  // an entity-relation graph with natural-language descriptions beats every
+  // other memory structure. A node without a description would be dead
+  // weight in search, embeddings and the librarian's judgment alike.
+  if (!draft.description || draft.description.trim().length < 20) {
+    throw new Error(
+      'description is required (min 20 chars): descriptions are load-bearing — ' +
+      'the node exists for search/embeddings only through its description (DescGraph doctrine)',
+    );
+  }
+  if (parent.zone === 'anchor') {
+    throw new Error(
+      `parent "${parent.name}" is ANCHOR CORE (level ${nodeLevel(parent.id)}) — ` +
+      'the sky\'s constants change only by release, not by proposal',
+    );
+  }
+  const name = draft.name.trim().slice(0, 120);
+  const dup = parent.childIds
+    .map((id) => getNode(id))
+    .find((n) => n && n.name.toLowerCase() === name.toLowerCase());
+  if (dup) throw new Error(`"${name}" already exists under "${parent.name}" (${dup.id})`);
+
+  const normalized: NodeDraft = {
+    parentId: parent.id,
+    name,
+    description: draft.description.trim().slice(0, 2000),
+  };
+
+  const existing = db
+    .listPromotions('proposed')
+    .find((p) => (p as any).kind === 'node' && p.object?.parentId === parent.id
+      && String(p.object?.name).toLowerCase() === name.toLowerCase());
+  const id = existing?.id ?? crypto.randomUUID();
+  db.upsertPromotion({ id, kind: 'node', captureId: `node:${parent.id}`, proposedBy, rationale: rationale?.slice(0, 1000), object: normalized });
+
+  // Free zone approves lightly: materialize immediately, still recorded as
+  // an approved proposal (full audit trail, moderator can prune later).
+  if (parent.zone === 'free') {
+    const { nodeId } = materializeNode(id, 'auto:free-zone');
+    return { id, status: 'approved', nodeId };
+  }
+  return { id, status: 'proposed' };
+}
+
+/** Approve side-effect for kind='node': grow the tree + wire every consumer. */
+export function materializeNode(promotionId: string, decidedBy: string): { nodeId: string } {
+  const p = db.getPromotion(promotionId);
+  if (!p) throw new Error('unknown promotion');
+  const draft = p.object as NodeDraft;
+  const parent = getNode(draft.parentId);
+  if (!parent) throw new Error(`parent ${draft.parentId} vanished`);
+
+  // Child id = next numeric suffix among ALL siblings (static + grown).
+  const used = parent.childIds
+    .map((cid) => Number(cid.split('.').pop()))
+    .filter((n) => Number.isInteger(n));
+  const next = (used.length ? Math.max(...used) : 0) + 1;
+  const nodeId = `${parent.id}.${String(next).padStart(2, '0')}`;
+  const zone = zoneOfLevel(nodeLevel(parent.id) + 1);
+  const ordinal = db.extChildCount(parent.id);
+
+  db.insertExtNode({
+    id: nodeId,
+    parentId: parent.id,
+    name: draft.name,
+    description: draft.description,
+    zone,
+    ordinal,
+    proposedBy: p.proposedBy,
+    approvedBy: decidedBy,
+  });
+  // "An index without a consumer dies" (llms.txt lesson) — the node joins
+  // EVERY read path in the same step: tree, FTS, layout, hybrid search;
+  // the embeddings pending diff includes it on the next sync pass.
+  registerExtNode({ id: nodeId, parentId: parent.id, name: draft.name, description: draft.description, zone });
+  rebuildTaxonomyFts(allNodes());
+  appendExtNodeToLayout({ id: nodeId, parentId: parent.id, ordinal });
+  markCorpusDirty();
+  db.setPromotionDecision(promotionId, 'approved', decidedBy, nodeId);
+  return { nodeId };
 }

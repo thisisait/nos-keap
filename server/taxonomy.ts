@@ -19,6 +19,8 @@ export interface TaxonomyOption {
   level: number;
 }
 
+export type TaxonomyZone = 'anchor' | 'votable' | 'free';
+
 export interface FlatNode {
   id: string;
   name: string;
@@ -30,6 +32,32 @@ export interface FlatNode {
   requiredData?: string;
   questType?: string;
   childIds: string[];
+  /** Track T governance zone (derived from depth; explicit on ext nodes). */
+  zone: TaxonomyZone;
+  /** True for dynamically grown nodes (taxonomy_nodes_ext), absent on the seed. */
+  ext?: boolean;
+}
+
+/**
+ * Track T governance zones by topological depth:
+ *   0-1  anchor core  — hardcoded, changes only by release
+ *   2-4  votable core — moderated extension proposals
+ *   5+   free zone    — organic growth, light approval
+ */
+export function zoneOfLevel(level: number): TaxonomyZone {
+  if (level <= 1) return 'anchor';
+  if (level <= 4) return 'votable';
+  return 'free';
+}
+
+export function nodeLevel(id: string): number {
+  let level = 0;
+  let cur = nodesById.get(id)?.parentId ?? null;
+  while (cur) {
+    level++;
+    cur = nodesById.get(cur)?.parentId ?? null;
+  }
+  return level;
 }
 
 export function generateTaxonomyOptions(): TaxonomyOption[] {
@@ -77,6 +105,7 @@ function walkSubcategory(sub: TaxonomySubcategory, parentId: string, parentPath:
     parentId,
     path: parentPath,
     childIds: [],
+    zone: 'votable',
   });
   for (const child of Object.values(sub.subcategories ?? {})) {
     walkSubcategory(child, sub.id, path);
@@ -92,6 +121,7 @@ function walkSubcategory(sub: TaxonomySubcategory, parentId: string, parentPath:
       requiredData: (item as TaxonomyItem).requiredData,
       questType: (item as TaxonomyItem).questType,
       childIds: [],
+      zone: 'votable',
     });
   }
 }
@@ -105,6 +135,7 @@ for (const category of Object.values(taxonomyData)) {
     parentId: null,
     path: '',
     childIds: [],
+    zone: 'anchor',
   });
   for (const sub of Object.values(category.subcategories ?? {})) {
     walkSubcategory(sub, category.id, category.name);
@@ -129,6 +160,47 @@ export function getAncestors(id: string): Array<{ id: string; name: string }> {
     cur = n.parentId;
   }
   return out;
+}
+
+// Zone finalize: depth is only known once the whole seed is in the map.
+for (const n of nodesById.values()) {
+  n.zone = zoneOfLevel(nodeLevel(n.id));
+}
+
+/** The immutable seed (static dataset only) — the U1 bake's input. */
+export function staticNodes(): FlatNode[] {
+  return [...nodesById.values()].filter((n) => !n.ext);
+}
+
+/**
+ * Merge one approved dynamic node (taxonomy_nodes_ext) into the live tree.
+ * Idempotent; called at startup for every stored row and immediately after
+ * an approval materializes a node.
+ */
+export function registerExtNode(row: {
+  id: string;
+  parentId: string;
+  name: string;
+  description: string;
+  zone: string;
+}): FlatNode | null {
+  if (nodesById.has(row.id)) return nodesById.get(row.id)!;
+  const parent = nodesById.get(row.parentId);
+  if (!parent) return null;
+  const node: FlatNode = {
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    kind: 'item',
+    parentId: row.parentId,
+    path: parent.path ? `${parent.path} > ${parent.name}` : parent.name,
+    childIds: [],
+    zone: row.zone as TaxonomyZone,
+    ext: true,
+  };
+  nodesById.set(node.id, node);
+  parent.childIds.push(node.id);
+  return node;
 }
 
 export function taxonomyNodeCount(): number {

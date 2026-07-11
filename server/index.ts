@@ -21,7 +21,8 @@ import { registerGraphRoutes } from './graph';
 import { registerIngestRoutes } from './intake';
 import { identityMiddleware } from './identity';
 import { initDb, rebuildTaxonomyFts } from './db';
-import { allNodes } from './taxonomy';
+import * as dbmod from './db';
+import { allNodes, registerExtNode } from './taxonomy';
 import { ensureLayout } from './layout';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -30,6 +31,9 @@ const STATIC_DIR = process.env.KEAP_STATIC_DIR ?? path.resolve(__dirname, '../di
 
 async function main() {
   await initDb();
+  // Track T: merge approved grown nodes into the tree BEFORE the FTS
+  // rebuild + layout ensure, so search and the universe see them.
+  for (const ext of dbmod.listExtNodes()) registerExtNode(ext);
   rebuildTaxonomyFts(allNodes());
   ensureLayout(); // U1: bake star positions iff the root index changed
 

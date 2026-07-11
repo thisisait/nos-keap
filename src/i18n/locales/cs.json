@@ -160,7 +160,9 @@
       "approve": "Schválit",
       "reject": "Zamítnout",
       "rationale": "Zdůvodnění",
-      "recentlyDecided": "Nedávno rozhodnuto"
+      "recentlyDecided": "Nedávno rozhodnuto",
+      "nodeKind": "nový uzel",
+      "underParent": "pod {{parent}}"
     }
   },
   "settings": {

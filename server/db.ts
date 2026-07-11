@@ -132,6 +132,23 @@ const SCHEMA = [
      created_at INTEGER DEFAULT (strftime('%s','now')),
      updated_at INTEGER DEFAULT (strftime('%s','now'))
    )`,
+  // Dynamic taxonomy nodes (Track T free/votable zones) — approved
+  // extension proposals materialize here and merge into the static tree at
+  // startup (server/taxonomy.ts registerExtNode). ordinal pins the U1
+  // append placement forever (spatial-memory contract: new stars appear,
+  // existing stars never move).
+  `CREATE TABLE IF NOT EXISTS taxonomy_nodes_ext (
+     id TEXT PRIMARY KEY,
+     parent_id TEXT NOT NULL,
+     name TEXT NOT NULL,
+     description TEXT NOT NULL,
+     zone TEXT NOT NULL,
+     ordinal INTEGER NOT NULL,
+     proposed_by TEXT NOT NULL,
+     approved_by TEXT NOT NULL,
+     created_at INTEGER DEFAULT (strftime('%s','now'))
+   )`,
+
   // Promotion proposals (server/promotions.ts) — the moderated bridge from
   // the review queue into the curated corpus. An agent (librarian) or a user
   // PROPOSES turning a capture into a knowledge object; the MODERATOR has
@@ -140,6 +157,7 @@ const SCHEMA = [
   // same doctrine as the spatial-memory consensus note).
   `CREATE TABLE IF NOT EXISTS promotions (
      id TEXT PRIMARY KEY,
+     kind TEXT NOT NULL DEFAULT 'object',
      capture_id TEXT NOT NULL,
      proposed_by TEXT NOT NULL,
      rationale TEXT,
@@ -218,6 +236,11 @@ export async function initDb(): Promise<void> {
     } catch {
       /* duplicate column — already migrated */
     }
+  }
+  try {
+    db.exec("ALTER TABLE promotions ADD COLUMN kind TEXT NOT NULL DEFAULT 'object'");
+  } catch {
+    /* duplicate column — already migrated */
   }
   initializeAppMetadata();
 }
@@ -1116,6 +1139,7 @@ export function applyLintVerdict(
 
 export interface PromotionRow {
   id: string;
+  kind: 'object' | 'node';
   captureId: string;
   proposedBy: string;
   rationale?: string;
@@ -1131,6 +1155,7 @@ export interface PromotionRow {
 function mapPromotionRow(row: any): PromotionRow {
   return {
     id: row.id,
+    kind: row.kind ?? 'object',
     captureId: row.capture_id,
     proposedBy: row.proposed_by,
     rationale: row.rationale ?? undefined,
@@ -1150,17 +1175,18 @@ export function upsertPromotion(p: {
   proposedBy: string;
   rationale?: string;
   object: any;
+  kind?: 'object' | 'node';
 }): void {
   getDb()
     .prepare(
-      `INSERT INTO promotions (id, capture_id, proposed_by, rationale, object_json)
-       VALUES (?, ?, ?, ?, ?)
+      `INSERT INTO promotions (id, kind, capture_id, proposed_by, rationale, object_json)
+       VALUES (?, ?, ?, ?, ?, ?)
        ON CONFLICT(id) DO UPDATE SET
          rationale = excluded.rationale,
          object_json = excluded.object_json,
          proposed_by = excluded.proposed_by`,
     )
-    .run(p.id, p.captureId, p.proposedBy, p.rationale ?? null, JSON.stringify(p.object));
+    .run(p.id, p.kind ?? 'object', p.captureId, p.proposedBy, p.rationale ?? null, JSON.stringify(p.object));
 }
 
 export function getPromotion(id: string): PromotionRow | null {
@@ -1202,4 +1228,60 @@ export function markCapturePromoted(captureId: string, objectId: string): void {
   meta.promotedTo = objectId;
   d.prepare("UPDATE api_taxonomy_metadata SET metadata = ?, updated_at = strftime('%s','now') WHERE id = ?")
     .run(JSON.stringify(meta), captureId);
+}
+
+// ── Dynamic taxonomy nodes (Track T) ──────────────────────────────────────────
+
+export interface ExtNodeRow {
+  id: string;
+  parentId: string;
+  name: string;
+  description: string;
+  zone: string;
+  ordinal: number;
+  proposedBy: string;
+  approvedBy: string;
+  createdAt: number;
+}
+
+export function listExtNodes(): ExtNodeRow[] {
+  return (getDb().prepare('SELECT * FROM taxonomy_nodes_ext ORDER BY created_at, ordinal').all() as any[]).map(
+    (r) => ({
+      id: r.id,
+      parentId: r.parent_id,
+      name: r.name,
+      description: r.description,
+      zone: r.zone,
+      ordinal: r.ordinal,
+      proposedBy: r.proposed_by,
+      approvedBy: r.approved_by,
+      createdAt: r.created_at,
+    }),
+  );
+}
+
+export function insertExtNode(n: Omit<ExtNodeRow, 'createdAt'>): void {
+  getDb()
+    .prepare(
+      `INSERT INTO taxonomy_nodes_ext (id, parent_id, name, description, zone, ordinal, proposed_by, approved_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .run(n.id, n.parentId, n.name, n.description, n.zone, n.ordinal, n.proposedBy, n.approvedBy);
+}
+
+/** How many ext children a parent already has — the next append ordinal. */
+export function extChildCount(parentId: string): number {
+  return (getDb().prepare('SELECT COUNT(*) AS c FROM taxonomy_nodes_ext WHERE parent_id = ?').get(parentId) as any).c;
+}
+
+/** Append one star to the baked layout under the CURRENT version (U1 append). */
+export function appendLayoutPoint(nodeId: string, x: number, y: number, z: number): void {
+  const version = getLayoutVersion() ?? 'v1:unbaked';
+  getDb()
+    .prepare(
+      `INSERT INTO taxonomy_layout (node_id, x, y, z, layout_version)
+       VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT(node_id) DO UPDATE SET x = excluded.x, y = excluded.y, z = excluded.z`,
+    )
+    .run(nodeId, x, y, z, version);
 }

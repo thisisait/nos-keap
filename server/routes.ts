@@ -19,7 +19,7 @@ import { listContentServices } from './content-links';
 import { extractRefs } from './objects';
 import { markCorpusDirty } from './search';
 import { runLint, lastLintReport } from './lint';
-import { propose, vote, decide, moderationPolicy } from './promotions';
+import { propose, proposeNode, vote, decide, moderationPolicy } from './promotions';
 import { normalizeAndSaveCapture } from './intake';
 
 const ok = (res: Response, data?: unknown) => res.json({ success: true, data });
@@ -191,6 +191,14 @@ export function registerApiRoutes(app: Express) {
     if (typeof captureId !== 'string' || !object) return fail(res, 400, 'captureId + object draft required');
     try {
       ok(res, propose(captureId, object, rationale, req.user.id));
+    } catch (err) {
+      return fail(res, 400, (err as Error).message);
+    }
+  });
+  app.post('/api/taxonomy/propose', (req, res) => {
+    const { parentId, name, description, rationale } = req.body ?? {};
+    try {
+      ok(res, proposeNode({ parentId, name, description }, rationale, req.user.id));
     } catch (err) {
       return fail(res, 400, (err as Error).message);
     }

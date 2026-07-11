@@ -16,10 +16,12 @@ import { apiFetch } from '@/services/api/client';
 
 interface Promotion {
   id: string;
+  kind: 'object' | 'node';
   captureId: string;
   proposedBy: string;
   rationale?: string;
-  object: { type: string; title: string; body?: string; resource?: string; tags?: string[] };
+  // kind=object: {type,title,body,…}; kind=node: {parentId,name,description}
+  object: any;
   status: string;
   votes: Array<{ by: string; value: number }>;
   decidedBy?: string;
@@ -80,8 +82,15 @@ export function ModerationPanel() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="font-medium">
-                        {p.object.title}{' '}
-                        <Badge variant="secondary" className="ml-1">{p.object.type}</Badge>
+                        {p.kind === 'node' ? p.object.name : p.object.title}{' '}
+                        <Badge variant="secondary" className="ml-1">
+                          {p.kind === 'node' ? t('admin.moderation.nodeKind') : p.object.type}
+                        </Badge>
+                        {p.kind === 'node' && (
+                          <span className="ml-2 text-xs font-normal text-muted-foreground">
+                            {t('admin.moderation.underParent', { parent: p.object.parentId })}
+                          </span>
+                        )}
                       </p>
                       <p className="mt-0.5 text-xs text-muted-foreground">
                         {t('admin.moderation.proposedBy', { by: p.proposedBy })}
@@ -113,9 +122,9 @@ export function ModerationPanel() {
                       <span className="font-medium">{t('admin.moderation.rationale')}:</span> {p.rationale}
                     </p>
                   )}
-                  {p.object.body && (
+                  {(p.object.body || p.object.description) && (
                     <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap rounded bg-muted p-2 text-xs">
-                      {p.object.body}
+                      {p.object.body ?? p.object.description}
                     </pre>
                   )}
                 </li>
@@ -135,7 +144,7 @@ export function ModerationPanel() {
                   <Badge variant={p.status === 'approved' ? 'default' : 'outline'} className="mr-1 text-[10px]">
                     {p.status}
                   </Badge>
-                  {p.object.title} · {p.decidedBy}
+                  {p.kind === 'node' ? p.object.name : p.object.title} · {p.decidedBy}
                 </li>
               ))}
             </ul>

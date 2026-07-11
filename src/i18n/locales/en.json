@@ -160,7 +160,9 @@
       "approve": "Approve",
       "reject": "Reject",
       "rationale": "Rationale",
-      "recentlyDecided": "Recently decided"
+      "recentlyDecided": "Recently decided",
+      "nodeKind": "new node",
+      "underParent": "under {{parent}}"
     }
   },
   "settings": {

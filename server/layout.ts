@@ -18,7 +18,7 @@
  * pinned (fx/fy/fz) — only semantic stars and nebula dust stay free.
  */
 import crypto from 'node:crypto';
-import { allNodes, type FlatNode } from './taxonomy';
+import { staticNodes, getNode, nodeLevel, type FlatNode } from './taxonomy';
 import * as db from './db';
 
 const ALGO_VERSION = 'v1';
@@ -31,7 +31,11 @@ const GALAXY_PLANE_LIFT = 160; // alternate ±z so the ring isn't a flat disc
 const LEVEL_RADIUS = [0, 260, 110, 48, 26];
 
 function levelRadius(level: number): number {
-  return LEVEL_RADIUS[level] ?? 18;
+  if (level < LEVEL_RADIUS.length) return LEVEL_RADIUS[level];
+  // Track T decaying tail: free-zone depth shrinks geometrically ("a frog
+  // in a lake, on a planet…") with a floor so dust stays clickable.
+  const beyond = level - (LEVEL_RADIUS.length - 1);
+  return Math.max(6, LEVEL_RADIUS[LEVEL_RADIUS.length - 1] * Math.pow(0.55, beyond));
 }
 
 /** Deterministic 0..1 from a node id — the jitter seed. */
@@ -119,12 +123,59 @@ export function bakeLayout(nodes: FlatNode[]): LayoutPoint[] {
  * one. Returns the active version either way.
  */
 export function ensureLayout(): string {
-  const nodes = allNodes();
+  // The version contract covers the STATIC seed only — dynamically grown
+  // nodes (Track T) are appended and must never trigger (or be moved by)
+  // a full re-bake. A version change = a release-level seed change; ext
+  // nodes are re-appended deterministically right after.
+  const nodes = staticNodes();
   const version = computeLayoutVersion(nodes);
   if (db.getLayoutVersion() !== version) {
     const points = bakeLayout(nodes);
     db.saveLayout(points, version);
     console.log(`[layout] baked ${points.length} star positions (${version})`);
   }
+  let appended = 0;
+  const layout = db.getLayout();
+  for (const ext of db.listExtNodes()) {
+    if (layout.has(ext.id)) continue;
+    if (appendExtNodeToLayout(ext)) appended++;
+  }
+  if (appended) console.log(`[layout] appended ${appended} grown star(s)`);
   return version;
+}
+
+/** Place + persist one grown node. Parent must already have a position. */
+export function appendExtNodeToLayout(ext: {
+  id: string;
+  parentId: string;
+  ordinal: number;
+}): boolean {
+  const layout = db.getLayout();
+  const pp = layout.get(ext.parentId);
+  const node = getNode(ext.id);
+  if (!pp || !node) return false;
+  const [x, y, z] = appendPlacement(pp, nodeLevel(ext.id), ext.ordinal, ext.id);
+  db.appendLayoutPoint(ext.id, x, y, z);
+  return true;
+}
+
+/**
+ * U1 APPEND (Track T): place ONE new node without touching any existing
+ * star. Deterministic in (parent position, the node's own ordinal + id) —
+ * never in the sibling count, so later appends cannot move earlier ones.
+ * Latitude comes from the id hash, longitude walks the golden angle by
+ * ordinal; radius is the level shell with the usual jitter.
+ */
+export function appendPlacement(
+  parent: { x: number; y: number; z: number },
+  level: number,
+  ordinal: number,
+  id: string,
+): [number, number, number] {
+  const y = 2 * hash01(id, 'lat') - 1;
+  const rr = Math.sqrt(Math.max(0, 1 - y * y));
+  const phi = ordinal * GOLDEN_ANGLE + hash01(id, 'phi') * 0.5;
+  const dir: [number, number, number] = [Math.cos(phi) * rr, y, Math.sin(phi) * rr];
+  const r = levelRadius(level) * (0.85 + hash01(id, 'r') * 0.3);
+  return [parent.x + dir[0] * r, parent.y + dir[1] * r, parent.z + dir[2] * r];
 }
