@@ -60,7 +60,7 @@ function noteText(nodeName: string | undefined, data: unknown): string {
 
 // ── Sources: every embeddable object with its current text + hash ─────────────
 
-function allSources(): PendingItem[] {
+export function allSources(): PendingItem[] {
   const out: PendingItem[] = [];
   const nodeById = new Map(allNodes().map((n) => [n.id, n]));
 

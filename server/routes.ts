@@ -17,6 +17,7 @@ import * as db from './db';
 import { generateTaxonomyOptions } from './taxonomy';
 import { listContentServices } from './content-links';
 import { extractRefs } from './objects';
+import { markCorpusDirty } from './search';
 
 const ok = (res: Response, data?: unknown) => res.json({ success: true, data });
 const fail = (res: Response, status: number, error: string) =>
@@ -77,6 +78,7 @@ export function registerApiRoutes(app: Express) {
           : undefined),
     };
     db.saveMetadataApi(req.user.id, capture);
+    markCorpusDirty();
     ok(res, capture);
   });
   app.get('/api/metadata/search', (req, res) => {
@@ -137,11 +139,13 @@ export function registerApiRoutes(app: Express) {
     if (!requireAdmin(req, res)) return;
     if (!req.body?.id) return fail(res, 400, 'No data provided');
     db.saveTaxonomyMetadata(req.body, req.user.id);
+    markCorpusDirty();
     ok(res);
   });
   app.delete('/api/taxonomy-metadata/:id', (req, res) => {
     if (!requireAdmin(req, res)) return;
     db.deleteTaxonomyMetadata(req.params.id);
+    markCorpusDirty();
     ok(res);
   });
 
@@ -212,6 +216,7 @@ export function registerApiRoutes(app: Express) {
     };
     // Edits keep the original owner (admin fixing a card must not steal it).
     db.saveObject(existing?.userId ?? req.user.id, object);
+    markCorpusDirty();
     ok(res, db.getObject(id));
   });
   app.delete('/api/objects/:id', (req, res) => {
@@ -219,6 +224,7 @@ export function registerApiRoutes(app: Express) {
     if (!o) return fail(res, 404, 'unknown object');
     if (o.userId !== req.user.id && !req.user.isAdmin) return fail(res, 403, 'not your object');
     db.deleteObject(req.params.id);
+    markCorpusDirty();
     ok(res);
   });
 

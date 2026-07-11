@@ -22,8 +22,9 @@ import type { Express, Request, Response, NextFunction } from 'express';
 import * as db from './db';
 import { getNode, getAncestors, taxonomyNodeCount, type FlatNode } from './taxonomy';
 import { resolveContentRef, listContentServices } from './content-links';
-import { pendingEmbeddings, embedText, EMBED_MODEL, EMBED_DIM } from './embeddings';
+import { pendingEmbeddings, EMBED_MODEL, EMBED_DIM } from './embeddings';
 import { extractRefs } from './objects';
+import { hybridSearch, markCorpusDirty } from './search';
 
 const ok = (res: Response, data?: unknown) => res.json({ success: true, data });
 const fail = (res: Response, status: number, error: string) =>
@@ -86,6 +87,17 @@ function nodeSummary(n: FlatNode) {
     description: trim(n.description),
     requiredData: n.requiredData,
   };
+}
+
+function parseAgentKinds(raw: unknown): db.EmbeddingKind[] {
+  const all: db.EmbeddingKind[] = ['taxonomy', 'capture', 'note', 'object'];
+  if (!raw) return all;
+  const asked = String(raw)
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const picked = all.filter((k) => asked.includes(k));
+  return picked.length ? picked : all;
 }
 
 function searchNodes(q: string, domain: string | undefined, limit: number) {
@@ -162,27 +174,41 @@ export function registerAgentRoutes(app: Express) {
     ok(res, listContentServices()),
   );
 
-  // Semantic search — true vector search when the query can be embedded live
-  // (KEAP_OLLAMA_URL wired) AND the libSQL corpus is populated; FTS otherwise.
+  // Hybrid corpus search (S4): RRF fusion of BM25 over the whole corpus
+  // ⊕ vectors (when KEAP_OLLAMA_URL is wired) ⊕ one-hop graph expansion.
+  // Result items are typed by kind — taxonomy nodes, knowledge objects,
+  // captures, curated notes in one ranked list.
   app.get('/agent/v1/search/semantic', agentAuth('ro'), async (req, res) => {
     const q = String(req.query.q ?? '').trim();
     if (!q) return fail(res, 400, 'q required');
     const limit = Math.min(Number(req.query.limit) || 20, MAX_LIMIT);
-    const vec = await embedText(q);
-    if (vec) {
-      const hits = db.vectorNeighborsOf(JSON.stringify(vec), 'related', ['taxonomy'], limit);
-      const results = hits
-        .map((h) => getNode(h.refId))
-        .filter((n): n is FlatNode => Boolean(n))
-        .map((n) => nodeSummary(n));
-      if (results.length) return ok(res, { query: q, semantic: true, results });
-    }
-    ok(res, {
-      query: q,
-      semantic: false,
-      note: 'live embedder or vector corpus unavailable — FTS results',
-      results: searchNodes(q, undefined, limit),
-    });
+    const kinds = parseAgentKinds(req.query.kinds);
+    const { hits, legs } = await hybridSearch(q, kinds, limit);
+    const results = hits
+      .map((h) => {
+        const base = { kind: h.kind, score: Number(h.score.toFixed(5)), legs: h.legs };
+        if (h.kind === 'taxonomy') {
+          const n = getNode(h.refId);
+          // base last: `kind` must stay the corpus kind ('taxonomy'), the
+          // node's own category/subcategory/item level moves to nodeKind.
+          return n ? { ...nodeSummary(n), nodeKind: n.kind, ...base } : null;
+        }
+        if (h.kind === 'object') {
+          const o = db.getObject(h.refId);
+          return o
+            ? { ...base, id: o.id, type: o.type, title: o.title, description: trim(o.description), resource: o.resource }
+            : null;
+        }
+        if (h.kind === 'capture') {
+          const c = db.getAllMetadataApi('', true).find((x) => x.id === h.refId);
+          return c ? { ...base, id: c.id, title: c.title, description: trim(c.description), url: c.url } : null;
+        }
+        const row = db.getTaxonomyMetadata(h.refId);
+        const note = row && !Array.isArray(row) ? row : null;
+        return note ? { ...base, id: note.id, curated: note.data } : null;
+      })
+      .filter(Boolean);
+    ok(res, { query: q, semantic: legs.vector, legs, results });
   });
 
   // ── Embedding sync surface (consumed by the nOS keap-embed-sync Pulse job) ──
@@ -279,6 +305,7 @@ export function registerAgentRoutes(app: Express) {
       links: extractRefs(body, resource),
       visibility: 'private',
     });
+    markCorpusDirty();
     ok(res, { id, submittedBy: `agent:${req.agentName}` });
   });
 
@@ -296,6 +323,7 @@ export function registerAgentRoutes(app: Express) {
       domain: req.body.domain ? String(req.body.domain) : undefined,
       metadata: req.body.metadata,
     });
+    markCorpusDirty();
     ok(res, { id, submittedBy: `agent:${req.agentName}` });
   });
 }
@@ -336,9 +364,11 @@ const OPENAPI_SPEC = {
     '/agent/v1/content/services': { get: { summary: 'List linkable nOS content services' } },
     '/agent/v1/search/semantic': {
       get: {
-        summary: 'Semantic search over the libSQL vector corpus (FTS fallback when live embed or corpus is unavailable)',
+        summary:
+          'Hybrid corpus search: RRF fusion of BM25 (whole corpus) + vectors (when live embed is wired) + one-hop graph expansion. Items are typed by kind (taxonomy/object/capture/note) with score and contributing legs.',
         parameters: [
           { name: 'q', in: 'query', required: true, schema: { type: 'string' } },
+          { name: 'kinds', in: 'query', schema: { type: 'string' }, description: 'Comma list of kinds to include (default all): taxonomy,capture,note,object' },
           { name: 'limit', in: 'query', schema: { type: 'integer', maximum: 50, default: 20 } },
         ],
       },

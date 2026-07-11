@@ -650,17 +650,64 @@ export function rebuildTaxonomyFts(
 }
 
 export function searchTaxonomyFts(query: string, limit: number): FtsHit[] {
-  // Quote each token so user input can't inject FTS5 syntax (NEAR, *, etc.).
-  const match = query
-    .split(/\s+/)
-    .filter(Boolean)
-    .map((t) => `"${t.replace(/"/g, '')}"`)
-    .join(' ');
+  const match = ftsQuery(query);
   if (!match) return [];
   try {
     return getDb()
       .prepare('SELECT id, rank FROM taxonomy_fts WHERE taxonomy_fts MATCH ? ORDER BY rank LIMIT ?')
       .all(match, limit) as FtsHit[];
+  } catch {
+    return [];
+  }
+}
+
+/** Quote each token so user input can't inject FTS5 syntax (NEAR, *, etc.). */
+function ftsQuery(query: string): string {
+  return query
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((t) => `"${t.replace(/"/g, '')}"`)
+    .join(' ');
+}
+
+// ── Corpus full-text index (S4 — lexical leg of RRF hybrid search) ───────────
+// One FTS5 table over EVERY searchable item (taxonomy nodes, captures,
+// curated notes, knowledge objects). Rebuilt from the same canonical texts
+// the embedding pipeline uses, so the lexical and vector legs of the hybrid
+// search always describe the same corpus.
+
+export function rebuildCorpusFts(
+  rows: Array<{ kind: EmbeddingKind; refId: string; text: string }>,
+): void {
+  const d = getDb();
+  d.exec(
+    `CREATE VIRTUAL TABLE IF NOT EXISTS corpus_fts USING fts5(kind UNINDEXED, ref_id UNINDEXED, text)`,
+  );
+  const rebuild = d.transaction(() => {
+    d.prepare('DELETE FROM corpus_fts').run();
+    const insert = d.prepare('INSERT INTO corpus_fts (kind, ref_id, text) VALUES (?, ?, ?)');
+    for (const r of rows) insert.run(r.kind, r.refId, r.text);
+  });
+  rebuild();
+}
+
+export interface CorpusFtsHit {
+  kind: EmbeddingKind;
+  refId: string;
+  rank: number;
+}
+
+export function searchCorpusFts(query: string, kinds: EmbeddingKind[], limit: number): CorpusFtsHit[] {
+  const match = ftsQuery(query);
+  if (!match) return [];
+  const kindFilter = kinds.length ? `AND kind IN (${kinds.map(() => '?').join(',')})` : '';
+  try {
+    return getDb()
+      .prepare(
+        `SELECT kind, ref_id AS refId, rank FROM corpus_fts
+         WHERE corpus_fts MATCH ? ${kindFilter} ORDER BY rank LIMIT ?`,
+      )
+      .all(match, ...kinds, limit) as CorpusFtsHit[];
   } catch {
     return [];
   }

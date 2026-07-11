@@ -17,8 +17,9 @@ import type { Express, Request, Response } from 'express';
 import * as db from './db';
 import { allNodes, getNode, getAncestors } from './taxonomy';
 import { resolveContentRef, inferCaptureType } from './content-links';
-import { embedText, liveEmbedAvailable } from './embeddings';
+import { liveEmbedAvailable } from './embeddings';
 import { anchorNodeIds, type ObjectRef } from './objects';
+import { hybridSearch } from './search';
 
 const ok = (res: Response, data?: unknown) => res.json({ success: true, data });
 const fail = (res: Response, status: number, error: string) =>
@@ -192,23 +193,22 @@ export function registerGraphRoutes(app: Express) {
     ok(res, { id, mode, semantic: true, items: enrich(hits) });
   });
 
-  // Free-text semantic search (human twin of /agent/v1/search/semantic).
-  // True vector search only when the operator wired KEAP_OLLAMA_URL.
+  // Free-text hybrid search (human twin of /agent/v1/search/semantic).
+  // S4: RRF fusion of BM25 ⊕ vectors (when live embed is wired) ⊕ one-hop
+  // graph expansion — one ranked list over the whole corpus.
   app.get('/api/search/semantic', async (req: Request, res: Response) => {
     const q = String(req.query.q ?? '').trim();
     if (!q) return fail(res, 400, 'q required');
     const limit = Math.min(Number(req.query.limit) || 20, MAX_NEIGHBORS);
     const kinds = parseKinds(req.query.kinds);
-    const vec = await embedText(q);
-    if (vec) {
-      const hits = db.vectorNeighborsOf(JSON.stringify(vec), 'related', kinds, limit);
-      return ok(res, { query: q, semantic: true, items: enrich(hits) });
-    }
-    const fts = db.searchTaxonomyFts(q, limit);
-    const items = fts
-      .map((hit) => getNode(hit.id))
-      .filter((n): n is NonNullable<ReturnType<typeof getNode>> => Boolean(n))
-      .map((n) => ({ kind: 'taxonomy', refId: n.id, name: n.name, nodeId: n.id }));
-    ok(res, { query: q, semantic: false, items });
+    const { hits, legs } = await hybridSearch(q, kinds, limit);
+    const enriched = enrich(hits.map((h) => ({ kind: h.kind, refId: h.refId, distance: 0 })));
+    const byKey = new Map(hits.map((h) => [`${h.kind}:${h.refId}`, h]));
+    const items = enriched.map(({ distance: _d, ...e }) => ({
+      ...e,
+      score: byKey.get(`${e.kind}:${e.refId}`)?.score ?? 0,
+      legs: byKey.get(`${e.kind}:${e.refId}`)?.legs ?? [],
+    }));
+    ok(res, { query: q, semantic: legs.vector, legs, items });
   });
 }
