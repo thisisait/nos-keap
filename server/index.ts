@@ -41,6 +41,8 @@ async function main() {
   // Relaxed CSP because the SPA is self-hosted behind Traefik+Authentik.
   app.use(helmet({ contentSecurityPolicy: false }));
   app.use(express.json({ limit: '2mb' }));
+  // OKF bundle import arrives as a raw zip body (S3).
+  app.use('/api/objects/import.okf', express.raw({ type: ['application/zip', 'application/octet-stream'], limit: '100mb' }));
 
   // Liveness/readiness — the nOS health probe hits this from the host
   // loopback (no Authentik headers), so it MUST be registered before the

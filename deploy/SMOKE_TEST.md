@@ -111,3 +111,33 @@ curl -s $B/agent/v1/health | python3 -c "import json,sys; \
 | Node `01` position | `x=1400, y=0` |
 | RO token POST /agent/v1/objects | 403 `write scope required` |
 | Docker image | builds & runs as non-root; `/data` chown fix landed 2026-07-11 |
+
+## 8. Taxonomy extension proposals (Track T, v0.6.0)
+
+```bash
+RW=<keap rw token>; B=http://127.0.0.1:8091
+# anchor-core parent refuses:
+curl -s -X POST -H "Authorization: Bearer $RW" -H 'content-type: application/json' \
+  $B/agent/v1/taxonomy/propose -d '{"parentId":"08","name":"X","description":"a sufficiently long description here"}'
+  # → 400 "ANCHOR CORE … changes only by release"
+# missing description refuses with the doctrine:
+curl -s -X POST -H "Authorization: Bearer $RW" -H 'content-type: application/json' \
+  $B/agent/v1/taxonomy/propose -d '{"parentId":"02.02.02.05.04","name":"Hypergraphs"}'
+  # → 400 "descriptions are load-bearing … (DescGraph doctrine)"
+# votable parent queues; approve in Admin › Moderation (badge "new node") →
+# node materializes with the next numeric id, appears in search + universe
+# IMMEDIATELY; original stars must not move (compare /api/graph positions).
+# A level-5+ parent auto-approves (free zone), recorded as decided_by
+# auto:free-zone. Restart: no re-bake, grown stars persist.
+```
+
+## 9. OKF bundle roundtrip (S3, v0.6.0)
+
+```bash
+# Two dev instances (SOURCE seeded, TARGET on an EMPTY data dir; avoid :8099 — Bone owns it):
+node deploy/smoke-okf-roundtrip.mjs   # SOURCE=… TARGET=… env-overridable
+# expected: import {queued:N, errors:[]} → approve N → "OK: N card(s) identical"
+# re-import the same bundle → {queued:0, skippedIdentical:N} (id+content_hash dedupe)
+# Bundle layout objects/<type>/<slug>-<id8>.md is OKF v0.1 conformant
+# (only required key: type) — readable by the openknowledge CLI.
+```

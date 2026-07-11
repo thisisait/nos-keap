@@ -40,6 +40,9 @@ export function moderationPolicy(): { policy: string; quorum: number } {
 }
 
 export interface ObjectDraft {
+  /** Optional pinned id (OKF import roundtrip) — approve materializes
+   *  the object under THIS id instead of a fresh uuid. */
+  id?: string;
   type: string;
   title: string;
   description?: string;
@@ -124,7 +127,7 @@ export function decide(
   const draft = p.object as ObjectDraft;
   const broken = brokenAnchors(draft);
   if (broken.length) throw new Error(`draft anchors vanished from taxonomy: ${broken.join(', ')}`);
-  const objectId = crypto.randomUUID();
+  const objectId = draft.id ?? crypto.randomUUID();
   db.saveObject(p.proposedBy, {
     id: objectId,
     type: draft.type,

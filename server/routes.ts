@@ -20,6 +20,7 @@ import { extractRefs } from './objects';
 import { markCorpusDirty } from './search';
 import { runLint, lastLintReport } from './lint';
 import { propose, proposeNode, vote, decide, moderationPolicy } from './promotions';
+import { exportBundle, importBundle } from './okf';
 import { normalizeAndSaveCapture } from './intake';
 
 const ok = (res: Response, data?: unknown) => res.json({ success: true, data });
@@ -177,6 +178,30 @@ export function registerApiRoutes(app: Express) {
 
   // App metadata (global)
   app.get('/api/app-metadata', (_req, res) => ok(res, db.getAppMetadata()));
+
+  // OKF bundle export/import (S3). Export = the caller's visible objects as
+  // an Open Knowledge Format zip (openknowledge-CLI readable). Import goes
+  // through the intake review queue + auto-proposals — never straight into
+  // the curated corpus; dedupe on keap.id + content hash.
+  app.get('/api/objects/export.okf', (req, res) => {
+    const zip = exportBundle(req.user.id, req.user.isAdmin);
+    res
+      .status(200)
+      .setHeader('content-type', 'application/zip')
+      .setHeader('content-disposition', 'attachment; filename="keap-knowledge.okf.zip"')
+      .end(Buffer.from(zip));
+  });
+  app.post('/api/objects/import.okf', (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    if (!Buffer.isBuffer(req.body) || req.body.length === 0) {
+      return fail(res, 400, 'send the .okf.zip as the raw request body (content-type: application/zip)');
+    }
+    try {
+      ok(res, importBundle(new Uint8Array(req.body), req.user.username));
+    } catch (err) {
+      return fail(res, 400, (err as Error).message);
+    }
+  });
 
   // Promotion moderation — the operator's FINAL WORD on what enters the
   // curated corpus. Votes are the MMO seed (advisory under policy=local).
