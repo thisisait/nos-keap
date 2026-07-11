@@ -58,7 +58,8 @@
       "captures": "Zachycené stránky",
       "objects": "Znalostní objekty",
       "homepage": "Úvodní stránka",
-      "taxonomy": "Taxonomie"
+      "taxonomy": "Taxonomie",
+      "lint": "Lint"
     },
     "objects": {
       "title": "Znalostní objekty",
@@ -134,6 +135,19 @@
       "progress-stats": "Váš pokrok",
       "new": "Nová dlaždice",
       "explore-map": "Mapa znalostí"
+    },
+    "lint": {
+      "title": "Zdraví znalostí",
+      "summary": "{{open}} otevřených nálezů",
+      "run": "Spustit kontrolu",
+      "running": "Běží…",
+      "clean": "Žádné otevřené nálezy — cortex je zdravý.",
+      "judged": "verdikt: {{verdict}} ({{by}})",
+      "verdict": {
+        "fine": "OK",
+        "duplicate": "Duplikát",
+        "contradiction": "Kontradikce"
+      }
     }
   },
   "settings": {

@@ -253,7 +253,24 @@ export function registerAgentRoutes(app: Express) {
   app.get('/agent/v1/lint', agentAuth('ro'), (req, res) => {
     const report = lastLintReport();
     const limit = Math.min(Number(req.query.limit) || 100, 500);
-    ok(res, { ...report, findings: report.findings.slice(0, limit) });
+    let findings = report.findings;
+    // Intake filters for the librarian judge: ?check=overlap-review&unjudged=1
+    const check = req.query.check ? String(req.query.check) : null;
+    if (check) findings = findings.filter((f) => f.checkId === check);
+    if (req.query.unjudged === '1') findings = findings.filter((f) => !f.data?.verdict);
+    ok(res, { ...report, findings: findings.slice(0, limit) });
+  });
+
+  // Layer-2 judgment: the librarian (or an admin) rules on a finding.
+  // fine -> resolves; duplicate -> medium; contradiction -> high (see db).
+  app.post('/agent/v1/lint/verdict', agentAuth('rw'), (req, res) => {
+    const { findingId, verdict, note } = req.body ?? {};
+    if (typeof findingId !== 'string' || !['fine', 'duplicate', 'contradiction'].includes(verdict)) {
+      return fail(res, 400, 'findingId + verdict (fine|duplicate|contradiction) required');
+    }
+    const row = db.applyLintVerdict(findingId, verdict, note ? String(note).slice(0, 500) : undefined, `agent:${req.agentName}`);
+    if (!row) return fail(res, 404, 'unknown finding');
+    ok(res, row);
   });
 
   app.post('/agent/v1/lint/run', agentAuth('rw'), (req, res) => {
@@ -405,6 +422,26 @@ const OPENAPI_SPEC = {
     '/agent/v1/lint/run': {
       post: {
         summary: 'Run all lint checks now and reconcile the findings lifecycle (write scope; nightly keap-lint job)',
+      },
+    },
+    '/agent/v1/lint/verdict': {
+      post: {
+        summary: 'Judge a lint finding (librarian Layer 2): fine resolves it, duplicate/contradiction escalate it',
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['findingId', 'verdict'],
+                properties: {
+                  findingId: { type: 'string' },
+                  verdict: { type: 'string', enum: ['fine', 'duplicate', 'contradiction'] },
+                  note: { type: 'string', maxLength: 500 },
+                },
+              },
+            },
+          },
+        },
       },
     },
     '/agent/v1/embeddings/pending': {

@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useNosConfig } from '@/config/nos';
 import ObjectsTab from '@/components/admin/ObjectsTab';
 import type { ApiTaxonomyMetadata } from '@/types/database';
+import { LintPanel } from '@/components/admin/LintPanel';
 
 const TILE_TYPES = ['recent-pages', 'recent-cities', 'custom-todo', 'progress-stats', 'explore-map'] as const;
 
@@ -169,7 +170,12 @@ export default function Admin() {
             <TabsTrigger value="objects" className="flex-1">{t('admin.tabs.objects')}</TabsTrigger>
             <TabsTrigger value="homepage" className="flex-1">{t('admin.tabs.homepage')}</TabsTrigger>
             <TabsTrigger value="taxonomy" className="flex-1">{t('admin.tabs.taxonomy')}</TabsTrigger>
+            <TabsTrigger value="lint" className="flex-1">{t('admin.tabs.lint')}</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="lint" className="space-y-6">
+            <LintPanel />
+          </TabsContent>
 
           <TabsContent value="objects">
             <ObjectsTab />

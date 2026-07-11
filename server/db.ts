@@ -952,15 +952,27 @@ export function syncLintFindings(
                            THEN strftime('%s','now') ELSE lint_findings.first_seen END,
          resolved_at = NULL`,
     );
-    const wasKnown = d.prepare('SELECT resolved_at FROM lint_findings WHERE id = ?');
+    const wasKnown = d.prepare('SELECT resolved_at, severity, data FROM lint_findings WHERE id = ?');
     for (const f of findings) {
       if (seen.has(f.id)) continue; // a check may emit the same pair twice
-      seen.add(f.id);
       const prior = wasKnown.get(f.id) as any;
+      const priorData = prior?.data ? JSON.parse(prior.data) : null;
+      const verdict = priorData?.verdict?.verdict;
+      // A standing librarian/human verdict outlives the re-detection:
+      //   fine          -> stays resolved (skip entirely, no reopen)
+      //   dup/contradic -> stays open at the ESCALATED severity, verdict kept
+      if (verdict === 'fine') continue;
+      seen.add(f.id);
+      let severity = f.severity;
+      let data = f.data;
+      if (verdict === 'duplicate' || verdict === 'contradiction') {
+        severity = prior.severity; // escalation from applyLintVerdict wins
+        data = { ...(f.data ?? {}), verdict: priorData.verdict };
+      }
       if (!prior || prior.resolved_at !== null) newIds.push(f.id);
       insert.run(
-        f.id, f.checkId, f.severity, f.refKind ?? null, f.refId ?? null,
-        f.message, f.data === undefined ? null : JSON.stringify(f.data),
+        f.id, f.checkId, severity, f.refKind ?? null, f.refId ?? null,
+        f.message, data === undefined ? null : JSON.stringify(data),
       );
     }
     const resolve = d.prepare(
@@ -1023,4 +1035,36 @@ export function countRows(table: 'taxonomy_fts' | 'taxonomy_layout'): number {
   } catch {
     return -1;
   }
+}
+
+/**
+ * Librarian verdict on a lint finding (the Layer-2 judgment loop):
+ *   fine          -> finding resolves (judged a false positive / acceptable)
+ *   duplicate     -> stays open, escalated to medium (human should merge)
+ *   contradiction -> stays open, escalated to high (knowledge conflict!)
+ * The verdict is preserved in data.verdict even after resolution, so a
+ * re-appearing pair carries its judgment history.
+ */
+export function applyLintVerdict(
+  findingId: string,
+  verdict: 'fine' | 'duplicate' | 'contradiction',
+  note: string | undefined,
+  by: string,
+): LintFindingRow | null {
+  const d = getDb();
+  const row = d.prepare('SELECT * FROM lint_findings WHERE id = ?').get(findingId) as any;
+  if (!row) return null;
+  const data = row.data ? JSON.parse(row.data) : {};
+  data.verdict = { verdict, note: note ?? null, by, at: Math.floor(Date.now() / 1000) };
+  if (verdict === 'fine') {
+    d.prepare(
+      "UPDATE lint_findings SET data = ?, resolved_at = strftime('%s','now') WHERE id = ?",
+    ).run(JSON.stringify(data), findingId);
+  } else {
+    const severity = verdict === 'contradiction' ? 'high' : 'medium';
+    d.prepare('UPDATE lint_findings SET data = ?, severity = ? WHERE id = ?').run(
+      JSON.stringify(data), severity, findingId,
+    );
+  }
+  return mapLintRow(d.prepare('SELECT * FROM lint_findings WHERE id = ?').get(findingId));
 }

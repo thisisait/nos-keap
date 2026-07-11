@@ -58,7 +58,8 @@
       "captures": "Captured pages",
       "objects": "Knowledge objects",
       "homepage": "Homepage",
-      "taxonomy": "Taxonomy"
+      "taxonomy": "Taxonomy",
+      "lint": "Lint"
     },
     "objects": {
       "title": "Knowledge objects",
@@ -134,6 +135,19 @@
       "progress-stats": "Your progress",
       "new": "New tile",
       "explore-map": "Knowledge map"
+    },
+    "lint": {
+      "title": "Knowledge health",
+      "summary": "{{open}} open findings",
+      "run": "Run checks",
+      "running": "Running…",
+      "clean": "No open findings — the cortex is healthy.",
+      "judged": "verdict: {{verdict}} ({{by}})",
+      "verdict": {
+        "fine": "OK",
+        "duplicate": "Duplicate",
+        "contradiction": "Contradiction"
+      }
     }
   },
   "settings": {

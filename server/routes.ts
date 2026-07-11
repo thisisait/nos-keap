@@ -183,6 +183,16 @@ export function registerApiRoutes(app: Express) {
     if (!requireAdmin(req, res)) return;
     ok(res, runLint());
   });
+  app.post('/api/lint/verdict', (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const { findingId, verdict, note } = req.body ?? {};
+    if (typeof findingId !== 'string' || !['fine', 'duplicate', 'contradiction'].includes(verdict)) {
+      return fail(res, 400, 'findingId + verdict (fine|duplicate|contradiction) required');
+    }
+    const row = db.applyLintVerdict(findingId, verdict, note ? String(note).slice(0, 500) : undefined, req.user.username);
+    if (!row) return fail(res, 404, 'unknown finding');
+    ok(res, row);
+  });
 
   // Settings (per-user)
   app.post('/api/settings', (req, res) => {
