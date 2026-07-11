@@ -3,8 +3,8 @@
 # nOS (the old repo had no production server, only Vite dev-middleware).
 #
 # Multi-arch: nOS targets arm64 (Apple Silicon) AND linux/amd64 (v0.4 Linux
-# port). better-sqlite3 ships prebuilt binaries for both; the build stage
-# keeps build-essential/python3 available in case a source rebuild is needed.
+# port). libsql ships prebuilt binaries for both; the build stage keeps
+# build-essential/python3 available in case a source rebuild is needed.
 
 # ---- build ----
 FROM node:22-bookworm-slim AS build
@@ -28,6 +28,10 @@ COPY package.json package-lock.json* ./
 RUN npm ci --omit=dev
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/dist-server ./dist-server
+# /data must exist and belong to the runtime user BEFORE the VOLUME
+# declaration — an anonymous volume inherits these permissions; without the
+# chown the non-root process gets SQLITE_CANTOPEN on first boot.
+RUN mkdir -p /data && chown node:node /data
 VOLUME ["/data"]
 EXPOSE 8080
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=5 \
