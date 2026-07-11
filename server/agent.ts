@@ -26,13 +26,14 @@ import { pendingEmbeddings, EMBED_MODEL, EMBED_DIM } from './embeddings';
 import { extractRefs } from './objects';
 import { hybridSearch, markCorpusDirty } from './search';
 import { runLint, lastLintReport } from './lint';
+import { normalizeAndSaveCapture, parseEnvelope } from './intake';
+import { TOKEN_RO, TOKEN_RW, tokenEquals } from './tokens';
 
 const ok = (res: Response, data?: unknown) => res.json({ success: true, data });
 const fail = (res: Response, status: number, error: string) =>
   res.status(status).json({ success: false, error });
 
-const TOKEN_RO = process.env.KEAP_AGENT_TOKEN_RO ?? null;
-const TOKEN_RW = process.env.KEAP_AGENT_TOKEN_RW ?? null;
+// Token tiers live in server/tokens.ts (shared with the /ingest surface).
 
 type AgentScope = 'ro' | 'rw';
 
@@ -44,12 +45,6 @@ declare global {
       agentName?: string;
     }
   }
-}
-
-function tokenEquals(a: string, b: string): boolean {
-  const ha = crypto.createHash('sha256').update(a).digest();
-  const hb = crypto.createHash('sha256').update(b).digest();
-  return crypto.timingSafeEqual(ha, hb);
 }
 
 function agentAuth(required: AgentScope) {
@@ -351,16 +346,20 @@ export function registerAgentRoutes(app: Express) {
   // Same shape as the companion userscript's POST /api/metadata; attributed
   // to the calling agent (user_id = "agent:<name>").
   app.post('/agent/v1/captures', agentAuth('rw'), (req, res) => {
-    if (!req.body?.title) return fail(res, 400, 'title required');
-    const id = String(req.body.id ?? crypto.randomUUID());
-    db.saveMetadataApi(`agent:${req.agentName}`, {
-      id,
-      title: String(req.body.title),
-      description: req.body.description ? String(req.body.description) : undefined,
-      url: req.body.url ? String(req.body.url) : undefined,
-      domain: req.body.domain ? String(req.body.domain) : undefined,
-      metadata: req.body.metadata,
-    });
+    // Unified intake: accept the flat legacy shape OR a full envelope; both
+    // normalize through the same path as /ingest/v1 and the web surface.
+    let envelope;
+    try {
+      envelope = parseEnvelope({
+        source: { kind: 'agent', name: req.agentName },
+        text: req.body?.description,
+        ...req.body,
+      });
+    } catch (err) {
+      return fail(res, 400, (err as Error).message);
+    }
+    envelope.source = { kind: 'agent', name: req.agentName ?? 'unknown' };
+    const { id } = normalizeAndSaveCapture(envelope, `agent:${req.agentName}`);
     markCorpusDirty();
     ok(res, { id, submittedBy: `agent:${req.agentName}` });
   });

@@ -57,6 +57,8 @@ const SCHEMA = [
      url TEXT,
      domain TEXT,
      metadata TEXT,
+     source TEXT,
+     modality TEXT,
      visibility TEXT NOT NULL DEFAULT 'private',
      created_at INTEGER DEFAULT (strftime('%s','now')),
      updated_at INTEGER DEFAULT (strftime('%s','now'))
@@ -187,6 +189,16 @@ export async function initDb(): Promise<void> {
     vectorsOk = false;
     console.warn('[db] vector layer unavailable, semantic features disabled:', err);
   }
+  // Additive column sweep for pre-intake DBs (Wing /events ALTER precedent):
+  // source/modality landed with the unified intake — ALTER is idempotent via
+  // the duplicate-column catch.
+  for (const col of ['source TEXT', 'modality TEXT']) {
+    try {
+      db.exec(`ALTER TABLE api_taxonomy_metadata ADD COLUMN ${col}`);
+    } catch {
+      /* duplicate column — already migrated */
+    }
+  }
   initializeAppMetadata();
 }
 
@@ -299,6 +311,10 @@ export interface ApiTaxonomyMetadata {
   url?: string;
   domain?: string;
   metadata?: any;
+  /** Intake attribution: which ENTRY POINT class produced this capture. */
+  source?: string;
+  /** Intake modality: url | text | geo | media | audio-transcript. */
+  modality?: string;
   createdAt: number;
   updatedAt: number;
 }
@@ -312,6 +328,8 @@ function mapCaptureRow(row: any): ApiTaxonomyMetadata {
     url: row.url,
     domain: row.domain,
     metadata: row.metadata ? JSON.parse(row.metadata) : null,
+    source: row.source ?? undefined,
+    modality: row.modality ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -337,18 +355,21 @@ export function getMetadataByDomainApi(userId: string, seeAll: boolean, domain: 
 
 export function saveMetadataApi(
   userId: string,
-  metadata: Omit<ApiTaxonomyMetadata, 'createdAt' | 'updatedAt'>,
+  metadata: Omit<ApiTaxonomyMetadata, 'createdAt' | 'updatedAt' | 'source' | 'modality'>,
+  intake?: { source: string; modality: string },
 ): void {
   getDb()
     .prepare(
-      `INSERT INTO api_taxonomy_metadata (id, user_id, title, description, url, domain, metadata, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, strftime('%s','now'), strftime('%s','now'))
+      `INSERT INTO api_taxonomy_metadata (id, user_id, title, description, url, domain, metadata, source, modality, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%s','now'), strftime('%s','now'))
        ON CONFLICT(id) DO UPDATE SET
          title = excluded.title,
          description = excluded.description,
          url = excluded.url,
          domain = excluded.domain,
          metadata = excluded.metadata,
+         source = COALESCE(excluded.source, api_taxonomy_metadata.source),
+         modality = COALESCE(excluded.modality, api_taxonomy_metadata.modality),
          updated_at = excluded.updated_at`,
     )
     .run(
@@ -359,6 +380,8 @@ export function saveMetadataApi(
       metadata.url ?? null,
       metadata.domain ?? null,
       metadata.metadata ? JSON.stringify(metadata.metadata) : null,
+      intake?.source ?? null,
+      intake?.modality ?? null,
     );
 }
 

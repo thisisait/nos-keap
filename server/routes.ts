@@ -19,6 +19,7 @@ import { listContentServices } from './content-links';
 import { extractRefs } from './objects';
 import { markCorpusDirty } from './search';
 import { runLint, lastLintReport } from './lint';
+import { normalizeAndSaveCapture } from './intake';
 
 const ok = (res: Response, data?: unknown) => res.json({ success: true, data });
 const fail = (res: Response, status: number, error: string) =>
@@ -68,8 +69,11 @@ export function registerApiRoutes(app: Express) {
     if (!title) return fail(res, 400, 'title required');
     const capture = {
       id: String(b.id ?? crypto.randomUUID()),
+      // Unified intake envelope — same normalizer the /ingest/v1 device
+      // surface and the agent surface use (source/modality attribution).
+      source: { kind: 'userscript' as const, name: req.user.username || 'web' },
       title: String(title),
-      description: b.description ? String(b.description) : undefined,
+      text: b.description ? String(b.description) : undefined,
       url: b.url ?? b.links?.url,
       domain: b.domain ?? b.links?.domain,
       metadata:
@@ -78,7 +82,7 @@ export function registerApiRoutes(app: Express) {
           ? { taxonomyId: b.taxonomyId, icon: b.icon, links: b.links, translations: b.translations }
           : undefined),
     };
-    db.saveMetadataApi(req.user.id, capture);
+    normalizeAndSaveCapture(capture, req.user.id);
     markCorpusDirty();
     ok(res, capture);
   });

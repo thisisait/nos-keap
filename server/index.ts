@@ -18,6 +18,7 @@ import { fileURLToPath } from 'node:url';
 import { registerApiRoutes } from './routes';
 import { registerAgentRoutes } from './agent';
 import { registerGraphRoutes } from './graph';
+import { registerIngestRoutes } from './intake';
 import { identityMiddleware } from './identity';
 import { initDb, rebuildTaxonomyFts } from './db';
 import { allNodes } from './taxonomy';
@@ -48,6 +49,12 @@ async function main() {
   // host processes (AgentKit, mcpo) hit the loopback port directly, so this
   // must be mounted before the identity middleware. See server/agent.ts.
   registerAgentRoutes(app);
+
+  // Ingest surface (/ingest/v1) — the DEVICE entry point (AR glasses, mobile
+  // companions). Own bearer tier (capture-only token), never reads identity
+  // headers, mounted before the identity middleware so the public bearer-only
+  // Traefik route works without SSO. See server/intake.ts.
+  registerIngestRoutes(app);
 
   // Resolve X-Authentik-Uid / -Username / -Email into req.user
   // (401 without headers when KEAP_TRUSTED_PROXY=1 — see identity.ts).
