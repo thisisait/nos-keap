@@ -223,6 +223,17 @@ Dependencies, not dates. Each milestone ends in something demoable.
    nebulae, OKF star charts. NMS energy.
 7. **M7 “Multiplayer”** = U5 + Phase S sharing.
 
+### Backlog guard — owner-flagged, must not slip (2026-07-12)
+
+- **S3 OKF bundle export/import.** Scheduled inside M6 but strategically ahead of
+  it: the bundle is the sharing unit (Phase S), the Track T "star chart", AND the
+  interop story with Google's tooling/openknowledge CLI — while the format is
+  young (see `rework/KNOWLEDGE_SUBSTRATE_RESEARCH.md` R1). Implementation is
+  small: `knowledge_objects` ↔ `type/…/slug.md` with YAML frontmatter is already
+  1:1, and the unified intake envelope fields (source, modality, tags,
+  capturedAt) map onto frontmatter cleanly. Pull it forward into whichever
+  milestone lands next.
+
 ## Standing rules
 
 - **Spatial-memory contract**: coordinates are a pure function of the root index; they
