@@ -19,7 +19,7 @@ import { useNosConfig } from '@/config/nos';
 import { objectsApi } from '@/services/api/objects';
 import type { KnowledgeObject } from '@/types/database';
 
-const SUGGESTED_TYPES = ['note', 'page', 'query', 'table', 'database', 'file', 'recipe', 'howto', 'contact'];
+const SUGGESTED_TYPES = ['note', 'page', 'document', 'table', 'query', 'database', 'file', 'recipe', 'howto', 'contact'];
 
 interface Draft {
   id?: string;

@@ -147,6 +147,38 @@ nOS-side counterparts flagged **[nOS]**).
   become the *average* of their positions across participating instances (each instance
   keeps its local root index; consensus emerges, it is not imposed). Until then: local-only.
 
+### Track R — Rich authoring (create IN nOS services, index in KEAP)
+
+> Owner requirement (2026-07-11): entering rich data, not just notes — office
+> documents, SharePoint-style tables. **KEAP never becomes an editor or a table
+> engine**: the asset is created and lives in the right nOS service; KEAP
+> orchestrates creation and holds the index card (`knowledge_object` with
+> `resource` pointing at the live asset). Same progressive-disclosure shape as
+> everything else — the card is searchable, the service is the editor.
+
+- **R1 — create-in-service flow**: "New document" in KEAP → server-side call to
+  Nextcloud WebDAV (`PUT` an empty/templated .odt/.md/.xlsx into a `KEAP/` folder)
+  → open the service's editor in a new tab (Nextcloud Office/Collabora) → the
+  knowledge_object card (type `document`, resource `nextcloud:KEAP/<file>`) is
+  created in the same action, pre-anchored to the taxonomy node the user started
+  from. Needs a service account credential (`KEAP_NEXTCLOUD_URL/USER/TOKEN`) —
+  provisioned by the nOS role **[nOS]**.
+- **R2 — structured tables (SharePoint-style)**: recommend **Grist** as the nOS
+  table service — SQLite-native documents (each Grist doc IS a SQLite file →
+  DuckDB/S6 can query it in place, embeddings can index it), REST API, self-hosted
+  friendly. Alternatives if Grist doesn't fit nOS: NocoDB (over a real DB),
+  Baserow. Flow mirrors R1: "New table" → Grist API creates doc/table → card
+  (type `table`, resource `grist:<doc>/<table>`, frontmatter = schema card) →
+  edit in Grist, query via S6, search via S4. Requires a new Tier-1/Tier-2
+  service in nOS **[nOS]**.
+- **R3 — templates per type**: object types carry an optional template (frontmatter
+  skeleton + body scaffold + target service) so "new recipe", "new meeting-notes
+  doc", "new inventory table" are one-click; K-track skills can propose templates
+  from usage.
+- **R4 — sync-back**: a Pulse job (like keap-embed-sync) walks `KEAP/`-scoped
+  service content and refreshes cards' content_hash/description so edited
+  documents re-embed and re-index automatically **[nOS]**.
+
 ### Track C — Capture overlay (extension + native app)
 
 > Owner direction: overlay = browser extension, likely later a native app.
@@ -184,6 +216,9 @@ Dependencies, not dates. Each milestone ends in something demoable.
    quantum optics" → course plotted, fly past the survival nebula you remember on the way.
 5. **M5 “Everything is a datapoint”** = S4 + S5 + S6 + C1 + C2 — DBs, queries, files and
    live pages join the universe; agents query them in place through one tool pair.
+   **M5.5 “Author rich data”** = R1 + R2 — documents and tables are created FROM
+   KEAP INTO nOS services (Nextcloud Office, Grist) and come back as index cards;
+   R4 keeps edited assets fresh in search.
 6. **M6 “Discovery”** = U4 + K5 + S3 — fog-of-war, scanning, star formation from dense
    nebulae, OKF star charts. NMS energy.
 7. **M7 “Multiplayer”** = U5 + Phase S sharing.
