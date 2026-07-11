@@ -31,20 +31,27 @@ universe UI). Nobody has all four.
 
 | Space | Data | Guarantee |
 |---|---|---|
-| Galaxy | Domain (12) | fixed forever |
-| Constellation / region | Zone / area levels | fixed forever |
-| **Star** | Taxonomy node (790, growing) | **deterministic coordinates — the spatial-memory contract** |
+| Galaxy | Domain (12) = tier-1 of the root index | static between root-index versions |
+| Constellation / region | Zone / area levels | static between root-index versions |
+| **Star** | Taxonomy node (790, growing) | **deterministic function of the root index — the spatial-memory contract** |
 | Nebula / dust cloud | Captures & knowledge objects clustered near their nodes | drifts as knowledge grows |
 | Star formation | Dense nebula → LLM proposes a new taxonomy node | admin-gated |
 | Distant stars behind the constellation | Semantic neighbors (vector distance) | ephemeral view, never stored as edges |
 | Ship position / bookmarks | User state | per-user, persistent |
 
-**The spatial-memory contract** is the load-bearing rule: *a star, once placed, never
-moves.* "That knowledge is up-right behind Survival" only works if coordinates are
-deterministic and versioned — computed once from the taxonomy structure by a seeded layout
-algorithm, persisted, and append-only for new nodes. Force simulation may fine-tune the
-*initial* bake, never the live view. (This is also why LLM skills may rewrite descriptions
-and metadata but may **never** move stars.)
+**The spatial-memory contract**: coordinates are a *pure deterministic function of the
+canonical root index* (the taxonomy). Galaxy positions are primarily static because they
+ARE tier-1 of the root index — and the same holds down the hierarchy. Positions never
+drift on their own; they change **only when the root index itself updates**, in which case
+the layout recomputes and `layout_version` bumps together with the taxonomy version (one
+atomic event users can notice and re-learn, not continuous drift). Force simulation may
+fine-tune a bake, never the live view. LLM skills may rewrite descriptions and metadata,
+but only an admin-approved root-index change moves stars.
+
+**Future (MMO-style sharing)**: once universes are shared, the *real* position of an
+object will be determined by **averaging across participating instances** (consensus
+layout) — but for now we run **local-only**, and the local root index is the sole source
+of coordinates.
 
 ---
 
@@ -117,8 +124,9 @@ nOS-side counterparts flagged **[nOS]**).
 - **U1 — deterministic layout bake**: seeded 3D layout (golden-angle spirals per level,
   hash-jitter per node id) → `taxonomy_layout` table (`node_id, x, y, z, layout_version`).
   Explorer switches from live force-sim to baked coordinates; force-sim remains a
-  bake-time tool. New nodes append; existing stars never move. *This unlocks spatial
-  memory and is a prerequisite for everything below.*
+  bake-time tool. `layout_version` is coupled to the root-index (taxonomy) version: new
+  nodes append in place, and a root-index update is the *only* event that rebakes
+  positions. *This unlocks spatial memory and is a prerequisite for everything below.*
 - **U2 — nebulae & dust**: objects/captures rendered as instanced particle clouds around
   their anchor stars (density = knowledge mass); LOD so 100k+ points stay smooth
   (instanced meshes, impostors; three.js now, WebGPU when it pays).
@@ -133,7 +141,9 @@ nOS-side counterparts flagged **[nOS]**).
   progress = illuminated map. Discovery events feed recent_activity.
 - **U5 — shared universe** (with Phase S): `visibility` columns finally pay off —
   co-op exploration, seeing teammates' illuminated regions, shared bookmarks; OKF bundles
-  as tradeable star charts.
+  as tradeable star charts. **MMO layout consensus**: shared objects' real positions
+  become the *average* of their positions across participating instances (each instance
+  keeps its local root index; consensus emerges, it is not imposed). Until then: local-only.
 
 ### Track C — Capture overlay (extension + native app)
 
@@ -178,8 +188,9 @@ Dependencies, not dates. Each milestone ends in something demoable.
 
 ## Standing rules
 
-- **Spatial-memory contract**: baked coordinates are append-only; a layout_version bump is
-  a breaking change requiring explicit owner sign-off.
+- **Spatial-memory contract**: coordinates are a pure function of the root index; they
+  change only when the root index does (atomic `layout_version` bump coupled to the
+  taxonomy version), never by drift. Local-only until MMO consensus (U5).
 - **Similarity is a view, never an edge** (research: SimGraph edges degrade retrieval).
 - **LLM writes propose, humans dispose**: all skill output goes through the review queue
   with attribution; the canonical taxonomy layer stays deterministic and admin-owned.
