@@ -102,6 +102,16 @@ const SCHEMA = [
      created_at INTEGER DEFAULT (strftime('%s','now')),
      updated_at INTEGER DEFAULT (strftime('%s','now'))
    )`,
+  // Baked star positions — pure function of the root index (ROADMAP U1,
+  // spatial-memory contract; see server/layout.ts). Rebaked ONLY when
+  // layout_version changes.
+  `CREATE TABLE IF NOT EXISTS taxonomy_layout (
+     node_id TEXT PRIMARY KEY,
+     x REAL NOT NULL,
+     y REAL NOT NULL,
+     z REAL NOT NULL,
+     layout_version TEXT NOT NULL
+   )`,
   // OKF-aligned index cards (ROADMAP Track S — see server/objects.ts).
   // JSON columns (tags/frontmatter/links) stay opaque here; shape lives in
   // objects.ts. links is derived from body+resource on every write.
@@ -586,6 +596,33 @@ export function objectTypes(): string[] {
   return (getDb().prepare('SELECT DISTINCT type FROM knowledge_objects ORDER BY type').all() as any[]).map(
     (r) => r.type,
   );
+}
+
+// ── Baked layout (U1 — deterministic star positions) ─────────────────────────
+
+export function getLayoutVersion(): string | null {
+  const row = getDb().prepare('SELECT layout_version FROM taxonomy_layout LIMIT 1').get() as any;
+  return row?.layout_version ?? null;
+}
+
+export function getLayout(): Map<string, { x: number; y: number; z: number }> {
+  const rows = getDb().prepare('SELECT node_id, x, y, z FROM taxonomy_layout').all() as any[];
+  return new Map(rows.map((r) => [r.node_id, { x: r.x, y: r.y, z: r.z }]));
+}
+
+export function saveLayout(
+  points: Array<{ nodeId: string; x: number; y: number; z: number }>,
+  version: string,
+): void {
+  const d = getDb();
+  const tx = d.transaction(() => {
+    d.prepare('DELETE FROM taxonomy_layout').run();
+    const ins = d.prepare(
+      'INSERT INTO taxonomy_layout (node_id, x, y, z, layout_version) VALUES (?, ?, ?, ?, ?)',
+    );
+    for (const p of points) ins.run(p.nodeId, p.x, p.y, p.z, version);
+  });
+  tx();
 }
 
 // ── Taxonomy full-text index (agent surface) ─────────────────────────────────

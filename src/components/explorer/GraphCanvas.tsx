@@ -2,10 +2,11 @@
  * The universe canvas — 3D only (ROADMAP Track U; the 2.5D/2D renderer was
  * retired 2026-07-11 by owner decision: one renderer, one force config).
  *
- * This is the OBSERVER mode: orbit camera around the radial constellation
- * DAG. The future rocketship mode (U3) swaps the camera controller, not the
- * scene. Until the deterministic layout bake (U1) lands, the radial DAG +
- * seeded force sim is the layout.
+ * This is the OBSERVER mode: orbit camera over the baked universe. Taxonomy
+ * stars arrive PINNED (fx/fy/fz from the U1 layout bake — the spatial-memory
+ * contract); the force engine only places free bodies (semantic stars,
+ * nebula dust) around them. The future rocketship mode (U3) swaps the camera
+ * controller, not the scene.
  *
  * Stars (semantic hits that are captures/notes/objects, i.e. NOT part of the
  * hard-coded taxonomy) arrive as extra nodes with star=true, linked to the
@@ -34,6 +35,10 @@ export interface CanvasNode {
   nebula?: boolean;
   distance?: number;
   categoryHue: number;
+  /** Baked position pin (U1) — d3-force never moves fx/fy/fz nodes. */
+  fx?: number;
+  fy?: number;
+  fz?: number;
 }
 
 export interface CanvasLink {
@@ -77,6 +82,7 @@ function nodeSize(n: CanvasNode): number {
 
 export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width, height }: Props) {
   const fgRef = useRef<any>(null);
+  const didFitRef = useRef(false);
 
   const graphData = useMemo(() => {
     // force-graph mutates its input (source/target become object refs) —
@@ -112,6 +118,12 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
           forceCollide((n: any) => Math.sqrt(nodeSize(n)) * 2.4 + 4),
         );
         ref.d3ReheatSimulation();
+        // The baked universe is big (galaxy ring r≈1400) — frame it once so
+        // the observer starts seeing the whole sky, not one galaxy's flank.
+        if (!didFitRef.current) {
+          didFitRef.current = true;
+          ref.zoomToFit(600, 60);
+        }
       } catch {
         // Engine not initialised yet — default forces are fine.
       }
@@ -167,8 +179,6 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       backgroundColor="rgba(0,0,0,0)"
       width={width}
       height={height}
-      dagMode="radialout"
-      dagLevelDistance={80}
       linkOpacity={0.4}
       nodeOpacity={0.92}
       showNavInfo={false}

@@ -61,8 +61,13 @@ export default function Explore() {
   // Merge the static constellation with the semantic star field.
   const { canvasNodes, canvasLinks } = useMemo(() => {
     if (!graph) return { canvasNodes: [] as CanvasNode[], canvasLinks: [] as CanvasLink[] };
+    // Taxonomy stars arrive PINNED to their baked coordinates (fx/fy/fz —
+    // the spatial-memory contract); the force engine only places stars/dust.
     const nodes: CanvasNode[] = graph.nodes.map((n) => ({
       ...n,
+      fx: n.x,
+      fy: n.y,
+      fz: n.z,
       categoryHue: hueByCategory.get(rootOf(n.id)) ?? 210,
     }));
     const links: CanvasLink[] = graph.links.map((l) => ({ ...l }));

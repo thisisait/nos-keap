@@ -126,9 +126,13 @@ export function registerGraphRoutes(app: Express) {
     const curatedById = new Map(
       (Array.isArray(curated) ? curated : []).map((c) => [c.id, c.data]),
     );
+    // Baked star positions (U1) — the explorer pins taxonomy nodes to these;
+    // only semantic stars and nebula dust stay force-simulated.
+    const layout = db.getLayout();
     const nodes = allNodes().map((n) => {
       const cur = curatedById.get(n.id);
       const ref = cur?.requiredData ?? n.requiredData;
+      const p = layout.get(n.id);
       return {
         id: n.id,
         name: n.name,
@@ -138,6 +142,9 @@ export function registerGraphRoutes(app: Express) {
         childCount: n.childIds.length,
         hasNote: curatedById.has(n.id),
         dataType: nodeDataType(ref),
+        x: p?.x,
+        y: p?.y,
+        z: p?.z,
       };
     });
     const links = nodes
@@ -163,6 +170,7 @@ export function registerGraphRoutes(app: Express) {
         vectors: db.vectorSearchAvailable(),
         embeddings: db.embeddingStats(),
         liveEmbed: liveEmbedAvailable(),
+        layoutVersion: db.getLayoutVersion(),
       },
     });
   });

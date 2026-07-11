@@ -21,6 +21,7 @@ import { registerGraphRoutes } from './graph';
 import { identityMiddleware } from './identity';
 import { initDb, rebuildTaxonomyFts } from './db';
 import { allNodes } from './taxonomy';
+import { ensureLayout } from './layout';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT ?? 8080);
@@ -29,6 +30,7 @@ const STATIC_DIR = process.env.KEAP_STATIC_DIR ?? path.resolve(__dirname, '../di
 async function main() {
   await initDb();
   rebuildTaxonomyFts(allNodes());
+  ensureLayout(); // U1: bake star positions iff the root index changed
 
   const app = express();
   // Relaxed CSP because the SPA is self-hosted behind Traefik+Authentik.

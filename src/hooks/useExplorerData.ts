@@ -19,6 +19,10 @@ export interface GraphNode {
   childCount: number;
   hasNote: boolean;
   dataType?: string;
+  /** Baked star position (U1) — present once the server has a layout. */
+  x?: number;
+  y?: number;
+  z?: number;
 }
 
 export interface GraphLink {
@@ -42,6 +46,7 @@ export interface GraphPayload {
     vectors: boolean;
     embeddings: { total: number; byKind: Record<string, number>; model: string | null };
     liveEmbed: boolean;
+    layoutVersion: string | null;
   };
 }
 
