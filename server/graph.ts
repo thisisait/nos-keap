@@ -18,6 +18,7 @@ import * as db from './db';
 import { allNodes, getNode, getAncestors } from './taxonomy';
 import { resolveContentRef, inferCaptureType } from './content-links';
 import { embedText, liveEmbedAvailable } from './embeddings';
+import { anchorNodeIds, type ObjectRef } from './objects';
 
 const ok = (res: Response, data?: unknown) => res.json({ success: true, data });
 const fail = (res: Response, status: number, error: string) =>
@@ -77,6 +78,18 @@ function enrich(hits: db.NeighborHit[]): EnrichedHit[] {
         dataType: inferCaptureType(c.domain, c.url),
         url: c.url ?? undefined,
       });
+    } else if (h.kind === 'object') {
+      const o = db.getObject(h.refId);
+      if (!o) continue;
+      const anchors = anchorNodeIds((o.links ?? []) as ObjectRef[]);
+      out.push({
+        ...h,
+        name: o.title,
+        description: o.description,
+        dataType: o.type,
+        url: o.resource ? resolveContentRef(o.resource)?.url ?? undefined : undefined,
+        nodeId: anchors[0],
+      });
     } else {
       const row = db.getTaxonomyMetadata(h.refId);
       const note = row && !Array.isArray(row) ? row : null;
@@ -95,7 +108,7 @@ function enrich(hits: db.NeighborHit[]): EnrichedHit[] {
 }
 
 function parseKinds(raw: unknown): db.EmbeddingKind[] {
-  const all: db.EmbeddingKind[] = ['taxonomy', 'capture', 'note'];
+  const all: db.EmbeddingKind[] = ['taxonomy', 'capture', 'note', 'object'];
   if (!raw) return all;
   const asked = String(raw)
     .split(',')
@@ -108,7 +121,7 @@ function parseKinds(raw: unknown): db.EmbeddingKind[] {
 export function registerGraphRoutes(app: Express) {
   // The full taxonomy as a render-ready graph. The dataset is static, curated
   // overlay is tiny — one uncached pass per request is fine at ~790 nodes.
-  app.get('/api/graph', (_req: Request, res: Response) => {
+  app.get('/api/graph', (req: Request, res: Response) => {
     const curated = db.getTaxonomyMetadata();
     const curatedById = new Map(
       (Array.isArray(curated) ? curated : []).map((c) => [c.id, c.data]),
@@ -130,9 +143,22 @@ export function registerGraphRoutes(app: Express) {
     const links = nodes
       .filter((n) => n.parentId)
       .map((n) => ({ source: n.parentId as string, target: n.id }));
+    // Nebula layer: the user's knowledge objects hung on their taxonomy
+    // anchors ([[node-id]] refs in the card body). Cards without an anchor
+    // stay panel/search-only — free-floating dust would break spatial memory.
+    const objects = db
+      .getObjects(req.user.id, req.user.isAdmin)
+      .map((o) => ({
+        id: o.id,
+        title: o.title,
+        type: o.type,
+        anchors: anchorNodeIds((o.links ?? []) as ObjectRef[]).filter((a) => getNode(a)),
+      }))
+      .filter((o) => o.anchors.length > 0);
     ok(res, {
       nodes,
       links,
+      objects,
       meta: {
         vectors: db.vectorSearchAvailable(),
         embeddings: db.embeddingStats(),

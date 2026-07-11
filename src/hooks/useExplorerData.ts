@@ -26,9 +26,18 @@ export interface GraphLink {
   target: string;
 }
 
+export interface GraphObject {
+  id: string;
+  title: string;
+  type: string;
+  anchors: string[];
+}
+
 export interface GraphPayload {
   nodes: GraphNode[];
   links: GraphLink[];
+  /** The user's knowledge objects anchored to taxonomy nodes — the nebula layer. */
+  objects: GraphObject[];
   meta: {
     vectors: boolean;
     embeddings: { total: number; byKind: Record<string, number>; model: string | null };
@@ -39,7 +48,7 @@ export interface GraphPayload {
 export type NeighborMode = 'related' | 'unrelated';
 
 export interface NeighborItem {
-  kind: 'taxonomy' | 'capture' | 'note';
+  kind: 'taxonomy' | 'capture' | 'note' | 'object';
   refId: string;
   distance: number;
   name: string;

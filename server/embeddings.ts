@@ -18,6 +18,7 @@
 import crypto from 'node:crypto';
 import * as db from './db';
 import { allNodes } from './taxonomy';
+import { objectText } from './objects';
 
 export const EMBED_MODEL = process.env.KEAP_EMBED_MODEL ?? 'nomic-embed-text';
 export const EMBED_DIM = 768; // must match embeddings.vector F32_BLOB(768)
@@ -76,6 +77,10 @@ function allSources(): PendingItem[] {
     const text = noteText(nodeById.get(note.id)?.name, note.data);
     out.push({ kind: 'note', refId: note.id, contentHash: hash(text), text });
   }
+  for (const o of db.getObjects('', true)) {
+    const text = objectText(o);
+    out.push({ kind: 'object', refId: o.id, contentHash: hash(text), text });
+  }
   return out;
 }
 
@@ -87,12 +92,12 @@ function allSources(): PendingItem[] {
 export function pendingEmbeddings(limit: number): { pending: PendingItem[]; total: number; pruned: number } {
   const sources = allSources();
   let pruned = 0;
-  for (const kind of ['taxonomy', 'capture', 'note'] as const) {
+  for (const kind of ['taxonomy', 'capture', 'note', 'object'] as const) {
     const live = new Set(sources.filter((s) => s.kind === kind).map((s) => s.refId));
     pruned += db.pruneEmbeddings(kind, live);
   }
   const pending: PendingItem[] = [];
-  for (const kind of ['taxonomy', 'capture', 'note'] as const) {
+  for (const kind of ['taxonomy', 'capture', 'note', 'object'] as const) {
     const stored = db.getEmbeddingHashes(kind);
     for (const s of sources) {
       if (s.kind !== kind) continue;

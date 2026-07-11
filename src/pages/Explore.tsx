@@ -31,7 +31,7 @@ export default function Explore() {
 
   const [focusId, setFocusId] = useState<string | null>(null);
   const [mode, setMode] = useState<NeighborMode>('related');
-  const [kinds, setKinds] = useState<string[]>(['taxonomy', 'capture', 'note']);
+  const [kinds, setKinds] = useState<string[]>(['taxonomy', 'capture', 'note', 'object']);
   const [typeFilter, setTypeFilter] = useState<Set<string>>(new Set());
   const [is3D, setIs3D] = useState(false);
   const [drawer, setDrawer] = useState<DrawerTarget | null>(null);
@@ -68,6 +68,24 @@ export default function Explore() {
       categoryHue: hueByCategory.get(rootOf(n.id)) ?? 210,
     }));
     const links: CanvasLink[] = graph.links.map((l) => ({ ...l }));
+    // Nebula layer: anchored knowledge objects as dust around their stars.
+    // Only the first anchor becomes the tree edge — the 2D radial DAG cannot
+    // take multi-parent nodes; remaining anchors stay panel/drawer facts.
+    for (const o of graph.objects ?? []) {
+      const id = `obj:${o.id}`;
+      nodes.push({
+        id,
+        name: o.title,
+        kind: 'object',
+        level: 98,
+        childCount: 0,
+        hasNote: false,
+        dataType: o.type,
+        nebula: true,
+        categoryHue: hueByCategory.get(rootOf(o.anchors[0])) ?? 180,
+      });
+      links.push({ source: o.anchors[0], target: id, nebula: true });
+    }
     if (focusId) {
       for (const item of starItems) {
         if (item.kind === 'taxonomy' && item.nodeId && nodeById.has(item.nodeId)) {
@@ -100,6 +118,20 @@ export default function Explore() {
   );
 
   const openTarget = (id: string) => {
+    if (id.startsWith('obj:')) {
+      const o = (graph?.objects ?? []).find((x) => `obj:${x.id}` === id);
+      if (o) {
+        setDrawer({
+          id,
+          name: o.title,
+          kind: 'object',
+          dataType: o.type,
+          isStar: true,
+          nodeId: o.anchors[0],
+        });
+      }
+      return;
+    }
     if (id.startsWith('star:')) {
       const [, kind, ...ref] = id.split(':');
       const item = (neighbors.data?.items ?? []).find(

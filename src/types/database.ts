@@ -65,3 +65,19 @@ export interface TodoItem {
   createdAt: number;
   updatedAt: number;
 }
+
+export interface KnowledgeObject {
+  id: string;
+  userId?: string;
+  type: string;
+  title: string;
+  description?: string;
+  resource?: string;
+  tags?: string[];
+  frontmatter?: Record<string, unknown>;
+  body?: string;
+  links?: Array<{ kind: 'node' | 'object' | 'service' | 'url'; ref: string }>;
+  visibility?: string;
+  createdAt: number;
+  updatedAt: number;
+}

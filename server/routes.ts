@@ -16,6 +16,7 @@ import type { Express, Request, Response } from 'express';
 import * as db from './db';
 import { generateTaxonomyOptions } from './taxonomy';
 import { listContentServices } from './content-links';
+import { extractRefs } from './objects';
 
 const ok = (res: Response, data?: unknown) => res.json({ success: true, data });
 const fail = (res: Response, status: number, error: string) =>
@@ -174,6 +175,52 @@ export function registerApiRoutes(app: Express) {
     ok(res);
   });
   app.get('/api/settings/:key', (req, res) => ok(res, db.getSetting(req.user.id, req.params.key)));
+
+  // Knowledge objects (per-user OKF index cards; admins see all — ROADMAP S1)
+  app.get('/api/objects', (req, res) => {
+    const type = req.query.type ? String(req.query.type) : undefined;
+    ok(res, db.getObjects(req.user.id, req.user.isAdmin, type));
+  });
+  app.get('/api/objects/types', (_req, res) => ok(res, db.objectTypes()));
+  app.get('/api/objects/:id', (req, res) => {
+    const o = db.getObject(req.params.id);
+    if (!o) return fail(res, 404, 'unknown object');
+    if (o.userId !== req.user.id && !req.user.isAdmin && o.visibility === 'private') {
+      return fail(res, 404, 'unknown object');
+    }
+    ok(res, o);
+  });
+  app.post('/api/objects', (req, res) => {
+    const b = req.body ?? {};
+    if (!b.type || !b.title) return fail(res, 400, 'type and title required');
+    const id = String(b.id ?? crypto.randomUUID());
+    const existing = db.getObject(id);
+    if (existing && existing.userId !== req.user.id && !req.user.isAdmin) {
+      return fail(res, 403, 'not your object');
+    }
+    const object = {
+      id,
+      type: String(b.type),
+      title: String(b.title),
+      description: b.description ? String(b.description) : undefined,
+      resource: b.resource ? String(b.resource) : undefined,
+      tags: Array.isArray(b.tags) ? b.tags.map(String) : undefined,
+      frontmatter: b.frontmatter && typeof b.frontmatter === 'object' ? b.frontmatter : undefined,
+      body: b.body ? String(b.body) : undefined,
+      links: extractRefs(b.body ? String(b.body) : undefined, b.resource ? String(b.resource) : undefined),
+      visibility: b.visibility === 'shared' ? 'shared' : 'private',
+    };
+    // Edits keep the original owner (admin fixing a card must not steal it).
+    db.saveObject(existing?.userId ?? req.user.id, object);
+    ok(res, db.getObject(id));
+  });
+  app.delete('/api/objects/:id', (req, res) => {
+    const o = db.getObject(req.params.id);
+    if (!o) return fail(res, 404, 'unknown object');
+    if (o.userId !== req.user.id && !req.user.isAdmin) return fail(res, 403, 'not your object');
+    db.deleteObject(req.params.id);
+    ok(res);
+  });
 
   // Todos (per-user)
   app.get('/api/todos', (req, res) => ok(res, db.getTodos(req.user.id)));

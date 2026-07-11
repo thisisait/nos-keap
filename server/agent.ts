@@ -23,6 +23,7 @@ import * as db from './db';
 import { getNode, getAncestors, taxonomyNodeCount, type FlatNode } from './taxonomy';
 import { resolveContentRef, listContentServices } from './content-links';
 import { pendingEmbeddings, embedText, EMBED_MODEL, EMBED_DIM } from './embeddings';
+import { extractRefs } from './objects';
 
 const ok = (res: Response, data?: unknown) => res.json({ success: true, data });
 const fail = (res: Response, status: number, error: string) =>
@@ -204,7 +205,7 @@ export function registerAgentRoutes(app: Express) {
     const rows: Array<{ kind: db.EmbeddingKind; refId: string; contentHash: string; vector: number[] }> = [];
     for (const it of items) {
       if (
-        !['taxonomy', 'capture', 'note'].includes(it?.kind) ||
+        !['taxonomy', 'capture', 'note', 'object'].includes(it?.kind) ||
         typeof it?.refId !== 'string' ||
         typeof it?.contentHash !== 'string' ||
         !Array.isArray(it?.vector) ||
@@ -216,6 +217,69 @@ export function registerAgentRoutes(app: Express) {
     }
     const upserted = db.upsertEmbeddings(String(model), EMBED_DIM, rows);
     ok(res, { upserted, submittedBy: `agent:${req.agentName}` });
+  });
+
+  // ── Knowledge objects — OKF index cards (ROADMAP S1) ───────────────────────
+  // Agents read the shared card corpus and PRESERVE durable findings as new
+  // cards (Karpathy's "query writes valuable answers back as new pages").
+  app.get('/agent/v1/objects', agentAuth('ro'), (req, res) => {
+    const type = req.query.type ? String(req.query.type) : undefined;
+    const q = req.query.q ? String(req.query.q).toLowerCase() : undefined;
+    const limit = Math.min(Number(req.query.limit) || 20, MAX_LIMIT);
+    let items = db.getObjects('', true, type);
+    if (q) {
+      items = items.filter(
+        (o) =>
+          o.title.toLowerCase().includes(q) ||
+          o.description?.toLowerCase().includes(q) ||
+          o.body?.toLowerCase().includes(q),
+      );
+    }
+    ok(res, {
+      total: items.length,
+      results: items.slice(0, limit).map((o) => ({
+        id: o.id,
+        type: o.type,
+        title: o.title,
+        description: trim(o.description),
+        resource: o.resource,
+        tags: o.tags,
+        userId: o.userId,
+      })),
+    });
+  });
+
+  app.get('/agent/v1/objects/:id', agentAuth('ro'), (req, res) => {
+    const o = db.getObject(req.params.id);
+    if (!o) return fail(res, 404, 'unknown object');
+    ok(res, {
+      ...o,
+      // Body dominates the 16 KiB tool budget; cap it and say so.
+      body: o.body && o.body.length > 8000 ? `${o.body.slice(0, 8000)}\n…[truncated]` : o.body,
+      contentLink: o.resource ? resolveContentRef(o.resource) : null,
+    });
+  });
+
+  app.post('/agent/v1/objects', agentAuth('rw'), (req, res) => {
+    const b = req.body ?? {};
+    if (!b.type || !b.title) return fail(res, 400, 'type and title required');
+    const id = String(b.id ?? crypto.randomUUID());
+    const existing = db.getObject(id);
+    const body = b.body ? String(b.body) : undefined;
+    const resource = b.resource ? String(b.resource) : undefined;
+    db.saveObject(existing?.userId ?? `agent:${req.agentName}`, {
+      id,
+      type: String(b.type),
+      title: String(b.title),
+      description: b.description ? String(b.description) : undefined,
+      resource,
+      tags: Array.isArray(b.tags) ? b.tags.map(String) : undefined,
+      frontmatter: b.frontmatter && typeof b.frontmatter === 'object' ? b.frontmatter : undefined,
+      body,
+      links: extractRefs(body, resource),
+      visibility: 'private',
+    });
+    ok(res, { id, submittedBy: `agent:${req.agentName}` });
   });
 
   // Agents PRESERVE knowledge: submit a capture into the Admin review queue.
@@ -305,7 +369,7 @@ const OPENAPI_SPEC = {
                       type: 'object',
                       required: ['kind', 'refId', 'contentHash', 'vector'],
                       properties: {
-                        kind: { type: 'string', enum: ['taxonomy', 'capture', 'note'] },
+                        kind: { type: 'string', enum: ['taxonomy', 'capture', 'note', 'object'] },
                         refId: { type: 'string' },
                         contentHash: { type: 'string' },
                         vector: { type: 'array', items: { type: 'number' } },
@@ -317,6 +381,46 @@ const OPENAPI_SPEC = {
             },
           },
         },
+      },
+    },
+    '/agent/v1/objects': {
+      get: {
+        summary: 'List/filter knowledge objects (OKF index cards) — id, type, title, resource',
+        parameters: [
+          { name: 'type', in: 'query', schema: { type: 'string' }, description: 'Filter by object type, e.g. "query", "recipe"' },
+          { name: 'q', in: 'query', schema: { type: 'string' }, description: 'Substring filter over title/description/body' },
+          { name: 'limit', in: 'query', schema: { type: 'integer', maximum: 50, default: 20 } },
+        ],
+      },
+      post: {
+        summary:
+          'Preserve durable knowledge as an OKF index card (write scope). type + title required; resource is a content ref/URN; frontmatter carries per-type structured data; markdown body links ([[node-id]]) become graph edges.',
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['type', 'title'],
+                properties: {
+                  id: { type: 'string' },
+                  type: { type: 'string' },
+                  title: { type: 'string' },
+                  description: { type: 'string' },
+                  resource: { type: 'string' },
+                  tags: { type: 'array', items: { type: 'string' } },
+                  frontmatter: { type: 'object' },
+                  body: { type: 'string' },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/agent/v1/objects/{id}': {
+      get: {
+        summary: 'Object detail: full card + resolved content link',
+        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
       },
     },
     '/agent/v1/captures': {

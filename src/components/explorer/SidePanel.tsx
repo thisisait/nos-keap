@@ -26,7 +26,7 @@ interface Props {
   onItemClick: (item: NeighborItem) => void;
 }
 
-const KINDS = ['taxonomy', 'capture', 'note'] as const;
+const KINDS = ['taxonomy', 'capture', 'note', 'object'] as const;
 
 export default function SidePanel({
   focusName,

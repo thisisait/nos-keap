@@ -56,8 +56,31 @@
     "settings": "Nastavení",
     "tabs": {
       "captures": "Zachycené stránky",
+      "objects": "Znalostní objekty",
       "homepage": "Úvodní stránka",
       "taxonomy": "Taxonomie"
+    },
+    "objects": {
+      "title": "Znalostní objekty",
+      "new": "Nový objekt",
+      "type": "Typ",
+      "typePlaceholder": "note, query, recipe, …",
+      "name": "Název",
+      "description": "Popis",
+      "resource": "Zdroj (služba:cesta nebo URL)",
+      "resourceHint": "Kde skutečný obsah žije. K dispozici: {{list}}",
+      "tags": "Štítky (oddělené čárkou)",
+      "body": "Obsah (markdown)",
+      "bodyPlaceholder": "Markdown text… [[01.02]] připojí objekt k uzlu taxonomie.",
+      "bodyHint": "Odkazy [[id-uzlu]] a [text](ref) se stanou hranami v exploreru.",
+      "empty": "Zatím žádné objekty.",
+      "emptyHint": "Znalostní objekty jsou indexové karty pro cokoliv — poznámky, queries, recepty, tabulky.",
+      "linkCount": "{{count}} odkazů",
+      "saved": "Objekt uložen.",
+      "deleted": "Objekt smazán.",
+      "saveFailed": "Objekt se nepodařilo uložit.",
+      "deleteFailed": "Objekt se nepodařilo smazat.",
+      "typeTitleRequired": "Typ a název jsou povinné."
     },
     "captures": {
       "title": "Metadata zachycených stránek",
@@ -187,7 +210,8 @@
     "kind": {
       "taxonomy": "Taxonomie",
       "capture": "Zachycené stránky",
-      "note": "Kurátorské poznámky"
+      "note": "Kurátorské poznámky",
+      "object": "Znalostní objekty"
     },
     "panel": {
       "title": "Souhvězdí",

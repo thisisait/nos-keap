@@ -14,6 +14,7 @@ import { ArrowLeft, Save, Database, Plus, Edit, Trash, Cog, ExternalLink, Bookma
 import { Link } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useNosConfig } from '@/config/nos';
+import ObjectsTab from '@/components/admin/ObjectsTab';
 import type { ApiTaxonomyMetadata } from '@/types/database';
 
 const TILE_TYPES = ['recent-pages', 'recent-cities', 'custom-todo', 'progress-stats', 'explore-map'] as const;
@@ -165,9 +166,14 @@ export default function Admin() {
         <Tabs defaultValue="captures" className="space-y-6">
           <TabsList className="w-full max-w-xl">
             <TabsTrigger value="captures" className="flex-1">{t('admin.tabs.captures')}</TabsTrigger>
+            <TabsTrigger value="objects" className="flex-1">{t('admin.tabs.objects')}</TabsTrigger>
             <TabsTrigger value="homepage" className="flex-1">{t('admin.tabs.homepage')}</TabsTrigger>
             <TabsTrigger value="taxonomy" className="flex-1">{t('admin.tabs.taxonomy')}</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="objects">
+            <ObjectsTab />
+          </TabsContent>
 
           <TabsContent value="captures" className="space-y-6">
             <Card>

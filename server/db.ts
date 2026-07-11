@@ -102,6 +102,24 @@ const SCHEMA = [
      created_at INTEGER DEFAULT (strftime('%s','now')),
      updated_at INTEGER DEFAULT (strftime('%s','now'))
    )`,
+  // OKF-aligned index cards (ROADMAP Track S — see server/objects.ts).
+  // JSON columns (tags/frontmatter/links) stay opaque here; shape lives in
+  // objects.ts. links is derived from body+resource on every write.
+  `CREATE TABLE IF NOT EXISTS knowledge_objects (
+     id TEXT PRIMARY KEY,
+     user_id TEXT NOT NULL DEFAULT 'local',
+     type TEXT NOT NULL,
+     title TEXT NOT NULL,
+     description TEXT,
+     resource TEXT,
+     tags TEXT,
+     frontmatter TEXT,
+     body TEXT,
+     links TEXT,
+     visibility TEXT NOT NULL DEFAULT 'private',
+     created_at INTEGER DEFAULT (strftime('%s','now')),
+     updated_at INTEGER DEFAULT (strftime('%s','now'))
+   )`,
 ];
 
 // ── Vector layer (libSQL native) ──────────────────────────────────────────────
@@ -475,6 +493,101 @@ export function deleteTodo(userId: string, id: string): void {
   getDb().prepare('DELETE FROM todos WHERE user_id = ? AND id = ?').run(userId, id);
 }
 
+// ── Knowledge objects (per-user OKF index cards; admins see all) ─────────────
+
+export interface KnowledgeObject {
+  id: string;
+  userId?: string;
+  type: string;
+  title: string;
+  description?: string;
+  resource?: string;
+  tags?: string[];
+  frontmatter?: any;
+  body?: string;
+  links?: any[];
+  visibility?: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
+function mapObjectRow(row: any): KnowledgeObject {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    type: row.type,
+    title: row.title,
+    description: row.description ?? undefined,
+    resource: row.resource ?? undefined,
+    tags: row.tags ? JSON.parse(row.tags) : undefined,
+    frontmatter: row.frontmatter ? JSON.parse(row.frontmatter) : undefined,
+    body: row.body ?? undefined,
+    links: row.links ? JSON.parse(row.links) : undefined,
+    visibility: row.visibility,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export function getObjects(userId: string, seeAll: boolean, type?: string): KnowledgeObject[] {
+  const d = getDb();
+  const where = [seeAll ? null : 'user_id = ?', type ? 'type = ?' : null].filter(Boolean);
+  const params = [...(seeAll ? [] : [userId]), ...(type ? [type] : [])];
+  const sql = `SELECT * FROM knowledge_objects ${where.length ? `WHERE ${where.join(' AND ')}` : ''} ORDER BY updated_at DESC`;
+  return (d.prepare(sql).all(...params) as any[]).map(mapObjectRow);
+}
+
+export function getObject(id: string): KnowledgeObject | null {
+  const row = getDb().prepare('SELECT * FROM knowledge_objects WHERE id = ?').get(id) as any;
+  return row ? mapObjectRow(row) : null;
+}
+
+export function saveObject(
+  userId: string,
+  o: Omit<KnowledgeObject, 'userId' | 'createdAt' | 'updatedAt'>,
+): void {
+  getDb()
+    .prepare(
+      `INSERT INTO knowledge_objects (id, user_id, type, title, description, resource, tags, frontmatter, body, links, visibility, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%s','now'), strftime('%s','now'))
+       ON CONFLICT(id) DO UPDATE SET
+         type = excluded.type,
+         title = excluded.title,
+         description = excluded.description,
+         resource = excluded.resource,
+         tags = excluded.tags,
+         frontmatter = excluded.frontmatter,
+         body = excluded.body,
+         links = excluded.links,
+         visibility = excluded.visibility,
+         updated_at = excluded.updated_at`,
+    )
+    .run(
+      o.id,
+      userId,
+      o.type,
+      o.title,
+      o.description ?? null,
+      o.resource ?? null,
+      o.tags ? JSON.stringify(o.tags) : null,
+      o.frontmatter ? JSON.stringify(o.frontmatter) : null,
+      o.body ?? null,
+      o.links ? JSON.stringify(o.links) : null,
+      o.visibility ?? 'private',
+    );
+}
+
+export function deleteObject(id: string): void {
+  getDb().prepare('DELETE FROM knowledge_objects WHERE id = ?').run(id);
+}
+
+/** Distinct types in use — the "recent types" suggestions in the object form. */
+export function objectTypes(): string[] {
+  return (getDb().prepare('SELECT DISTINCT type FROM knowledge_objects ORDER BY type').all() as any[]).map(
+    (r) => r.type,
+  );
+}
+
 // ── Taxonomy full-text index (agent surface) ─────────────────────────────────
 // FTS5 over the static taxonomy tree. Rebuilt on every startup — the dataset
 // is a compiled-in constant, so the index is derived state, never a source.
@@ -518,11 +631,12 @@ export function searchTaxonomyFts(query: string, limit: number): FtsHit[] {
 
 // ── Corpus stats (agent health endpoint) ─────────────────────────────────────
 
-export function corpusStats(): { captures: number; curatedNotes: number } {
+export function corpusStats(): { captures: number; curatedNotes: number; objects: number } {
   const d = getDb();
   const captures = (d.prepare('SELECT COUNT(*) AS c FROM api_taxonomy_metadata').get() as any).c;
   const curatedNotes = (d.prepare('SELECT COUNT(*) AS c FROM taxonomy_metadata').get() as any).c;
-  return { captures, curatedNotes };
+  const objects = (d.prepare('SELECT COUNT(*) AS c FROM knowledge_objects').get() as any).c;
+  return { captures, curatedNotes, objects };
 }
 
 // ── Embeddings (libSQL vector layer) ──────────────────────────────────────────
@@ -530,7 +644,7 @@ export function corpusStats(): { captures: number; curatedNotes: number } {
 // loopback → POST /agent/v1/embeddings) — the container never needs to reach
 // an embedder for node-anchored distance queries.
 
-export type EmbeddingKind = 'taxonomy' | 'capture' | 'note';
+export type EmbeddingKind = 'taxonomy' | 'capture' | 'note' | 'object';
 
 export interface NeighborHit {
   kind: EmbeddingKind;

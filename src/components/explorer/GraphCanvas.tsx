@@ -26,6 +26,8 @@ export interface CanvasNode {
   hasNote: boolean;
   dataType?: string;
   star?: boolean;
+  /** Anchored knowledge object — dust orbiting its taxonomy star. */
+  nebula?: boolean;
   distance?: number;
   categoryHue: number;
 }
@@ -34,6 +36,7 @@ export interface CanvasLink {
   source: string;
   target: string;
   semantic?: boolean;
+  nebula?: boolean;
   distance?: number;
 }
 
@@ -50,16 +53,19 @@ interface Props {
 const STAR_COLOR: Record<string, string> = {
   capture: '#f59e0b',
   note: '#a78bfa',
+  object: '#2dd4bf',
 };
 
 function nodeColor(n: CanvasNode, focusId: string | null): string {
-  if (n.star) return STAR_COLOR[n.dataType ?? ''] ?? '#fbbf24';
+  if (n.star) return STAR_COLOR[n.kind] ?? STAR_COLOR[n.dataType ?? ''] ?? '#fbbf24';
+  if (n.nebula) return `hsl(${n.categoryHue} 45% 62% / 0.85)`;
   const l = n.id === focusId ? 72 : n.kind === 'item' ? 46 : 58;
   const s = n.id === focusId ? 95 : 70;
   return `hsl(${n.categoryHue} ${s}% ${l}%)`;
 }
 
 function nodeSize(n: CanvasNode): number {
+  if (n.nebula) return 1.4;
   if (n.star) return 3;
   if (n.kind === 'category') return 9;
   if (n.kind === 'subcategory') return 4 + Math.min(n.childCount / 6, 3);
@@ -92,7 +98,7 @@ export default function GraphCanvas({ nodes, links, is3D, focusId, onNodeClick, 
         const linkForce = ref.d3Force('link');
         if (linkForce) {
           linkForce.distance((l: any) =>
-            l.semantic ? 90 + (l.distance ?? 0.5) * 260 : l.target?.star ? 55 : 38,
+            l.semantic ? 90 + (l.distance ?? 0.5) * 260 : l.nebula ? 20 : l.target?.star ? 55 : 38,
           );
         }
         // Breathing room: stronger repulsion + a collide force so sibling

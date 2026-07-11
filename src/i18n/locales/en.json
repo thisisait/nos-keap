@@ -56,8 +56,31 @@
     "settings": "Settings",
     "tabs": {
       "captures": "Captured pages",
+      "objects": "Knowledge objects",
       "homepage": "Homepage",
       "taxonomy": "Taxonomy"
+    },
+    "objects": {
+      "title": "Knowledge objects",
+      "new": "New object",
+      "type": "Type",
+      "typePlaceholder": "note, query, recipe, …",
+      "name": "Title",
+      "description": "Description",
+      "resource": "Resource (service:path or URL)",
+      "resourceHint": "Where the real asset lives. Available: {{list}}",
+      "tags": "Tags (comma-separated)",
+      "body": "Body (markdown)",
+      "bodyPlaceholder": "Markdown text… [[01.02]] anchors the object to a taxonomy node.",
+      "bodyHint": "[[node-id]] and [text](ref) links become edges in the explorer.",
+      "empty": "No objects yet.",
+      "emptyHint": "Knowledge objects are index cards for anything — notes, queries, recipes, tables.",
+      "linkCount": "{{count}} links",
+      "saved": "Object saved.",
+      "deleted": "Object deleted.",
+      "saveFailed": "Could not save the object.",
+      "deleteFailed": "Could not delete the object.",
+      "typeTitleRequired": "Type and title are required."
     },
     "captures": {
       "title": "Captured page metadata",
@@ -187,7 +210,8 @@
     "kind": {
       "taxonomy": "Taxonomy",
       "capture": "Captured pages",
-      "note": "Curated notes"
+      "note": "Curated notes",
+      "object": "Knowledge objects"
     },
     "panel": {
       "title": "Constellation",
