@@ -117,9 +117,11 @@ nOS-side counterparts flagged **[nOS]**).
 
 ### Track U — Universe (from graph to flyable space)
 
-> Today: `/explore` renders 2.5D force-graph constellations with a semantic star field.
-> Target: a persistent 3D universe you fly through — eventually No Man's Sky-grade
-> exploration gameplay. Gamification backlog (Phase G) merges into this track.
+> Today: `/explore` renders the 3D radial constellation with a semantic star field and
+> the object nebula layer (the 2D renderer was retired 2026-07-11 — **observer mode**,
+> the orbit camera, is the baseline; rocketship mode in U3 swaps the camera controller,
+> not the scene). Target: a persistent 3D universe you fly through — eventually No Man's
+> Sky-grade exploration gameplay. Gamification backlog (Phase G) merges into this track.
 
 - **U1 — deterministic layout bake**: seeded 3D layout (golden-angle spirals per level,
   hash-jitter per node id) → `taxonomy_layout` table (`node_id, x, y, z, layout_version`).
