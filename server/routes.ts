@@ -19,6 +19,7 @@ import { listContentServices } from './content-links';
 import { extractRefs } from './objects';
 import { markCorpusDirty } from './search';
 import { runLint, lastLintReport } from './lint';
+import { propose, vote, decide, moderationPolicy } from './promotions';
 import { normalizeAndSaveCapture } from './intake';
 
 const ok = (res: Response, data?: unknown) => res.json({ success: true, data });
@@ -176,6 +177,42 @@ export function registerApiRoutes(app: Express) {
 
   // App metadata (global)
   app.get('/api/app-metadata', (_req, res) => ok(res, db.getAppMetadata()));
+
+  // Promotion moderation — the operator's FINAL WORD on what enters the
+  // curated corpus. Votes are the MMO seed (advisory under policy=local).
+  app.get('/api/promotions', (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const status = req.query.status ? String(req.query.status) : undefined;
+    ok(res, { policy: moderationPolicy(), items: db.listPromotions(status) });
+  });
+  app.post('/api/promotions', (req, res) => {
+    // Humans may propose too (non-admin users included — moderation gates).
+    const { captureId, object, rationale } = req.body ?? {};
+    if (typeof captureId !== 'string' || !object) return fail(res, 400, 'captureId + object draft required');
+    try {
+      ok(res, propose(captureId, object, rationale, req.user.id));
+    } catch (err) {
+      return fail(res, 400, (err as Error).message);
+    }
+  });
+  app.post('/api/promotions/:id/vote', (req, res) => {
+    const value = req.body?.value === -1 ? -1 : 1;
+    try {
+      ok(res, vote(req.params.id, req.user.id, value));
+    } catch (err) {
+      return fail(res, 400, (err as Error).message);
+    }
+  });
+  app.post('/api/promotions/:id/decide', (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const decision = req.body?.decision;
+    if (decision !== 'approve' && decision !== 'reject') return fail(res, 400, 'decision approve|reject required');
+    try {
+      ok(res, decide(req.params.id, decision, req.user.username));
+    } catch (err) {
+      return fail(res, 400, (err as Error).message);
+    }
+  });
 
   // Knowledge lint (admin) — standing findings for the future Admin tab;
   // POST re-runs the checks on demand (same engine the nightly job uses).

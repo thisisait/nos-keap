@@ -59,7 +59,8 @@
       "objects": "Knowledge objects",
       "homepage": "Homepage",
       "taxonomy": "Taxonomy",
-      "lint": "Lint"
+      "lint": "Lint",
+      "moderation": "Moderation"
     },
     "objects": {
       "title": "Knowledge objects",
@@ -148,6 +149,18 @@
         "duplicate": "Duplicate",
         "contradiction": "Contradiction"
       }
+    },
+    "moderation": {
+      "title": "Knowledge moderation",
+      "policy": "policy: {{policy}}",
+      "pending": "{{count}} pending",
+      "empty": "No proposals — the librarian has nothing pending.",
+      "proposedBy": "proposed by {{by}}",
+      "votes": "votes: {{net}}",
+      "approve": "Approve",
+      "reject": "Reject",
+      "rationale": "Rationale",
+      "recentlyDecided": "Recently decided"
     }
   },
   "settings": {

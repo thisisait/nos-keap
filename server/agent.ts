@@ -26,6 +26,7 @@ import { pendingEmbeddings, EMBED_MODEL, EMBED_DIM } from './embeddings';
 import { extractRefs } from './objects';
 import { hybridSearch, markCorpusDirty } from './search';
 import { runLint, lastLintReport } from './lint';
+import { propose, moderationPolicy } from './promotions';
 import { normalizeAndSaveCapture, parseEnvelope } from './intake';
 import { TOKEN_RO, TOKEN_RW, tokenEquals } from './tokens';
 
@@ -342,6 +343,53 @@ export function registerAgentRoutes(app: Express) {
     ok(res, { id, submittedBy: `agent:${req.agentName}` });
   });
 
+  // Read the review queue (the librarian's promotion intake). unpromoted=1
+  // filters to datapoints no proposal/approval has touched yet.
+  app.get('/agent/v1/captures', agentAuth('ro'), (req, res) => {
+    const limit = Math.min(Number(req.query.limit) || 20, MAX_LIMIT);
+    const source = req.query.source ? String(req.query.source) : undefined;
+    let items = db.getAllMetadataApi('', true);
+    if (source) items = items.filter((c) => c.source === source);
+    if (req.query.unpromoted === '1') {
+      const proposedCaptures = new Set(db.listPromotions().map((p) => p.captureId));
+      items = items.filter((c) => !c.metadata?.promotedTo && !proposedCaptures.has(c.id));
+    }
+    ok(res, {
+      total: items.length,
+      items: items.slice(0, limit).map((c) => ({
+        id: c.id,
+        title: c.title,
+        description: trim(c.description),
+        url: c.url,
+        source: c.source,
+        modality: c.modality,
+        attribution: c.userId,
+        metadata: c.metadata,
+      })),
+    });
+  });
+
+  // Promotion proposals — the librarian PROPOSES, the moderator DECIDES.
+  // No agent path can approve; the curated corpus stays human-gated
+  // (or quorum-gated in the future democratic/MMO policy).
+  app.get('/agent/v1/promotions', agentAuth('ro'), (req, res) => {
+    const status = req.query.status ? String(req.query.status) : undefined;
+    ok(res, { policy: moderationPolicy(), items: db.listPromotions(status, 100) });
+  });
+
+  app.post('/agent/v1/promotions', agentAuth('rw'), (req, res) => {
+    const { captureId, object, rationale } = req.body ?? {};
+    if (typeof captureId !== 'string' || !object) {
+      return fail(res, 400, 'captureId + object draft required');
+    }
+    try {
+      const { id } = propose(captureId, object, rationale, `agent:${req.agentName}`);
+      ok(res, { id, status: 'proposed', submittedBy: `agent:${req.agentName}` });
+    } catch (err) {
+      return fail(res, 400, (err as Error).message);
+    }
+  });
+
   // Agents PRESERVE knowledge: submit a capture into the Admin review queue.
   // Same shape as the companion userscript's POST /api/metadata; attributed
   // to the calling agent (user_id = "agent:<name>").
@@ -408,6 +456,69 @@ const OPENAPI_SPEC = {
           { name: 'kinds', in: 'query', schema: { type: 'string' }, description: 'Comma list of kinds to include (default all): taxonomy,capture,note,object' },
           { name: 'limit', in: 'query', schema: { type: 'integer', maximum: 50, default: 20 } },
         ],
+      },
+    },
+    '/agent/v1/captures': {
+      get: {
+        summary: 'Read the review queue (promotion intake); ?unpromoted=1 filters untouched datapoints',
+        parameters: [
+          { name: 'unpromoted', in: 'query', schema: { type: 'string', enum: ['1'] } },
+          { name: 'source', in: 'query', schema: { type: 'string' } },
+          { name: 'limit', in: 'query', schema: { type: 'integer', maximum: 50, default: 20 } },
+        ],
+      },
+      post: {
+        summary: 'Preserve knowledge: submit a capture into the Admin review queue (write scope)',
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['title'],
+                properties: {
+                  id: { type: 'string' },
+                  title: { type: 'string' },
+                  description: { type: 'string' },
+                  url: { type: 'string' },
+                  domain: { type: 'string' },
+                  metadata: { type: 'object' },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/agent/v1/promotions': {
+      get: { summary: 'List promotion proposals + moderation policy' },
+      post: {
+        summary: 'Propose promoting a capture into a knowledge object (write scope). The MODERATOR decides — agents can never approve.',
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['captureId', 'object'],
+                properties: {
+                  captureId: { type: 'string' },
+                  object: {
+                    type: 'object',
+                    required: ['type', 'title'],
+                    properties: {
+                      type: { type: 'string' },
+                      title: { type: 'string' },
+                      description: { type: 'string' },
+                      body: { type: 'string', description: '[[node-id]] refs anchor the object' },
+                      resource: { type: 'string' },
+                      tags: { type: 'array', items: { type: 'string' } },
+                    },
+                  },
+                  rationale: { type: 'string', maxLength: 1000 },
+                },
+              },
+            },
+          },
+        },
       },
     },
     '/agent/v1/lint': {
@@ -521,29 +632,6 @@ const OPENAPI_SPEC = {
       get: {
         summary: 'Object detail: full card + resolved content link',
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
-      },
-    },
-    '/agent/v1/captures': {
-      post: {
-        summary: 'Preserve knowledge: submit a capture into the Admin review queue (write scope)',
-        requestBody: {
-          content: {
-            'application/json': {
-              schema: {
-                type: 'object',
-                required: ['title'],
-                properties: {
-                  id: { type: 'string' },
-                  title: { type: 'string' },
-                  description: { type: 'string' },
-                  url: { type: 'string' },
-                  domain: { type: 'string' },
-                  metadata: { type: 'object' },
-                },
-              },
-            },
-          },
-        },
       },
     },
   },

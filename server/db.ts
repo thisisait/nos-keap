@@ -132,6 +132,26 @@ const SCHEMA = [
      created_at INTEGER DEFAULT (strftime('%s','now')),
      updated_at INTEGER DEFAULT (strftime('%s','now'))
    )`,
+  // Promotion proposals (server/promotions.ts) — the moderated bridge from
+  // the review queue into the curated corpus. An agent (librarian) or a user
+  // PROPOSES turning a capture into a knowledge object; the MODERATOR has
+  // the final word. votes is the MMO seed: local policy = one admin decision,
+  // democratic policy = quorum over votes (deferred to the sharing phase,
+  // same doctrine as the spatial-memory consensus note).
+  `CREATE TABLE IF NOT EXISTS promotions (
+     id TEXT PRIMARY KEY,
+     capture_id TEXT NOT NULL,
+     proposed_by TEXT NOT NULL,
+     rationale TEXT,
+     object_json TEXT NOT NULL,
+     status TEXT NOT NULL DEFAULT 'proposed',
+     votes TEXT NOT NULL DEFAULT '[]',
+     decided_by TEXT,
+     decided_at INTEGER,
+     object_id TEXT,
+     created_at INTEGER DEFAULT (strftime('%s','now'))
+   )`,
+
   // Knowledge-lint findings (server/lint.ts). One row per (check, refs)
   // finding with a lifecycle: first_seen on discovery, last_seen refreshed
   // every run that still observes it, resolved_at stamped by the run that
@@ -1090,4 +1110,96 @@ export function applyLintVerdict(
     );
   }
   return mapLintRow(d.prepare('SELECT * FROM lint_findings WHERE id = ?').get(findingId));
+}
+
+// ── Promotion proposals (server/promotions.ts) ────────────────────────────────
+
+export interface PromotionRow {
+  id: string;
+  captureId: string;
+  proposedBy: string;
+  rationale?: string;
+  object: any;
+  status: 'proposed' | 'approved' | 'rejected';
+  votes: Array<{ by: string; value: 1 | -1; at: number }>;
+  decidedBy?: string;
+  decidedAt?: number;
+  objectId?: string;
+  createdAt: number;
+}
+
+function mapPromotionRow(row: any): PromotionRow {
+  return {
+    id: row.id,
+    captureId: row.capture_id,
+    proposedBy: row.proposed_by,
+    rationale: row.rationale ?? undefined,
+    object: JSON.parse(row.object_json),
+    status: row.status,
+    votes: JSON.parse(row.votes || '[]'),
+    decidedBy: row.decided_by ?? undefined,
+    decidedAt: row.decided_at ?? undefined,
+    objectId: row.object_id ?? undefined,
+    createdAt: row.created_at,
+  };
+}
+
+export function upsertPromotion(p: {
+  id: string;
+  captureId: string;
+  proposedBy: string;
+  rationale?: string;
+  object: any;
+}): void {
+  getDb()
+    .prepare(
+      `INSERT INTO promotions (id, capture_id, proposed_by, rationale, object_json)
+       VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET
+         rationale = excluded.rationale,
+         object_json = excluded.object_json,
+         proposed_by = excluded.proposed_by`,
+    )
+    .run(p.id, p.captureId, p.proposedBy, p.rationale ?? null, JSON.stringify(p.object));
+}
+
+export function getPromotion(id: string): PromotionRow | null {
+  const row = getDb().prepare('SELECT * FROM promotions WHERE id = ?').get(id) as any;
+  return row ? mapPromotionRow(row) : null;
+}
+
+export function listPromotions(status?: string, limit = 200): PromotionRow[] {
+  const d = getDb();
+  const rows = status
+    ? d.prepare('SELECT * FROM promotions WHERE status = ? ORDER BY created_at DESC LIMIT ?').all(status, limit)
+    : d.prepare('SELECT * FROM promotions ORDER BY created_at DESC LIMIT ?').all(limit);
+  return (rows as any[]).map(mapPromotionRow);
+}
+
+export function setPromotionVotes(id: string, votes: unknown[]): void {
+  getDb().prepare('UPDATE promotions SET votes = ? WHERE id = ?').run(JSON.stringify(votes), id);
+}
+
+export function setPromotionDecision(
+  id: string,
+  status: 'approved' | 'rejected',
+  decidedBy: string,
+  objectId: string | null,
+): void {
+  getDb()
+    .prepare(
+      "UPDATE promotions SET status = ?, decided_by = ?, decided_at = strftime('%s','now'), object_id = ? WHERE id = ?",
+    )
+    .run(status, decidedBy, objectId, id);
+}
+
+/** Provenance back-link on the source capture: metadata.promotedTo. */
+export function markCapturePromoted(captureId: string, objectId: string): void {
+  const d = getDb();
+  const row = d.prepare('SELECT metadata FROM api_taxonomy_metadata WHERE id = ?').get(captureId) as any;
+  if (!row) return;
+  const meta = row.metadata ? JSON.parse(row.metadata) : {};
+  meta.promotedTo = objectId;
+  d.prepare("UPDATE api_taxonomy_metadata SET metadata = ?, updated_at = strftime('%s','now') WHERE id = ?")
+    .run(JSON.stringify(meta), captureId);
 }

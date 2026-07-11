@@ -17,6 +17,7 @@ import { useNosConfig } from '@/config/nos';
 import ObjectsTab from '@/components/admin/ObjectsTab';
 import type { ApiTaxonomyMetadata } from '@/types/database';
 import { LintPanel } from '@/components/admin/LintPanel';
+import { ModerationPanel } from '@/components/admin/ModerationPanel';
 
 const TILE_TYPES = ['recent-pages', 'recent-cities', 'custom-todo', 'progress-stats', 'explore-map'] as const;
 
@@ -171,7 +172,12 @@ export default function Admin() {
             <TabsTrigger value="homepage" className="flex-1">{t('admin.tabs.homepage')}</TabsTrigger>
             <TabsTrigger value="taxonomy" className="flex-1">{t('admin.tabs.taxonomy')}</TabsTrigger>
             <TabsTrigger value="lint" className="flex-1">{t('admin.tabs.lint')}</TabsTrigger>
+            <TabsTrigger value="moderation" className="flex-1">{t('admin.tabs.moderation')}</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="moderation" className="space-y-6">
+            <ModerationPanel />
+          </TabsContent>
 
           <TabsContent value="lint" className="space-y-6">
             <LintPanel />

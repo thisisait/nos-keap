@@ -59,7 +59,8 @@
       "objects": "Znalostní objekty",
       "homepage": "Úvodní stránka",
       "taxonomy": "Taxonomie",
-      "lint": "Lint"
+      "lint": "Lint",
+      "moderation": "Moderace"
     },
     "objects": {
       "title": "Znalostní objekty",
@@ -148,6 +149,18 @@
         "duplicate": "Duplikát",
         "contradiction": "Kontradikce"
       }
+    },
+    "moderation": {
+      "title": "Moderace znalostí",
+      "policy": "politika: {{policy}}",
+      "pending": "{{count}} čeká",
+      "empty": "Žádné návrhy — librarian zatím nic nenavrhl.",
+      "proposedBy": "navrhl {{by}}",
+      "votes": "hlasy: {{net}}",
+      "approve": "Schválit",
+      "reject": "Zamítnout",
+      "rationale": "Zdůvodnění",
+      "recentlyDecided": "Nedávno rozhodnuto"
     }
   },
   "settings": {
