@@ -18,6 +18,7 @@ import { generateTaxonomyOptions } from './taxonomy';
 import { listContentServices } from './content-links';
 import { extractRefs } from './objects';
 import { markCorpusDirty } from './search';
+import { runLint, lastLintReport } from './lint';
 
 const ok = (res: Response, data?: unknown) => res.json({ success: true, data });
 const fail = (res: Response, status: number, error: string) =>
@@ -171,6 +172,17 @@ export function registerApiRoutes(app: Express) {
 
   // App metadata (global)
   app.get('/api/app-metadata', (_req, res) => ok(res, db.getAppMetadata()));
+
+  // Knowledge lint (admin) — standing findings for the future Admin tab;
+  // POST re-runs the checks on demand (same engine the nightly job uses).
+  app.get('/api/lint', (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    ok(res, lastLintReport());
+  });
+  app.post('/api/lint/run', (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    ok(res, runLint());
+  });
 
   // Settings (per-user)
   app.post('/api/settings', (req, res) => {

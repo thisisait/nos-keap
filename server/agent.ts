@@ -25,6 +25,7 @@ import { resolveContentRef, listContentServices } from './content-links';
 import { pendingEmbeddings, EMBED_MODEL, EMBED_DIM } from './embeddings';
 import { extractRefs } from './objects';
 import { hybridSearch, markCorpusDirty } from './search';
+import { runLint, lastLintReport } from './lint';
 
 const ok = (res: Response, data?: unknown) => res.json({ success: true, data });
 const fail = (res: Response, status: number, error: string) =>
@@ -245,6 +246,26 @@ export function registerAgentRoutes(app: Express) {
     ok(res, { upserted, submittedBy: `agent:${req.agentName}` });
   });
 
+  // ── Knowledge lint (server/lint.ts) — the cortex's periodic health check ───
+  // GET returns the standing findings (cheap, no recompute); POST /run
+  // executes all checks and reconciles the findings lifecycle. The nOS
+  // keap-lint Pulse job POSTs nightly and notifies only on NEW findings.
+  app.get('/agent/v1/lint', agentAuth('ro'), (req, res) => {
+    const report = lastLintReport();
+    const limit = Math.min(Number(req.query.limit) || 100, 500);
+    ok(res, { ...report, findings: report.findings.slice(0, limit) });
+  });
+
+  app.post('/agent/v1/lint/run', agentAuth('rw'), (req, res) => {
+    const report = runLint();
+    const limit = Math.min(Number(req.body?.limit) || 100, 500);
+    ok(res, {
+      ...report,
+      findings: report.findings.slice(0, limit),
+      submittedBy: `agent:${req.agentName}`,
+    });
+  });
+
   // ── Knowledge objects — OKF index cards (ROADMAP S1) ───────────────────────
   // Agents read the shared card corpus and PRESERVE durable findings as new
   // cards (Karpathy's "query writes valuable answers back as new pages").
@@ -371,6 +392,19 @@ const OPENAPI_SPEC = {
           { name: 'kinds', in: 'query', schema: { type: 'string' }, description: 'Comma list of kinds to include (default all): taxonomy,capture,note,object' },
           { name: 'limit', in: 'query', schema: { type: 'integer', maximum: 50, default: 20 } },
         ],
+      },
+    },
+    '/agent/v1/lint': {
+      get: {
+        summary: 'Standing knowledge-lint findings (broken refs, duplicates, deserts, substrate drift)',
+        parameters: [
+          { name: 'limit', in: 'query', schema: { type: 'integer', maximum: 500, default: 100 } },
+        ],
+      },
+    },
+    '/agent/v1/lint/run': {
+      post: {
+        summary: 'Run all lint checks now and reconcile the findings lifecycle (write scope; nightly keap-lint job)',
       },
     },
     '/agent/v1/embeddings/pending': {

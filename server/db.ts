@@ -130,6 +130,23 @@ const SCHEMA = [
      created_at INTEGER DEFAULT (strftime('%s','now')),
      updated_at INTEGER DEFAULT (strftime('%s','now'))
    )`,
+  // Knowledge-lint findings (server/lint.ts). One row per (check, refs)
+  // finding with a lifecycle: first_seen on discovery, last_seen refreshed
+  // every run that still observes it, resolved_at stamped by the run that
+  // no longer does. The lint job notifies only on NEW rows, so a standing
+  // finding never spams the A9 channel twice.
+  `CREATE TABLE IF NOT EXISTS lint_findings (
+     id TEXT PRIMARY KEY,
+     check_id TEXT NOT NULL,
+     severity TEXT NOT NULL,
+     ref_kind TEXT,
+     ref_id TEXT,
+     message TEXT NOT NULL,
+     data TEXT,
+     first_seen INTEGER DEFAULT (strftime('%s','now')),
+     last_seen INTEGER DEFAULT (strftime('%s','now')),
+     resolved_at INTEGER
+   )`,
 ];
 
 // ── Vector layer (libSQL native) ──────────────────────────────────────────────
@@ -863,4 +880,147 @@ export function vectorNeighborsOf(
   return rows
     .filter((r) => !(exclude && r.kind === exclude.kind && r.refId === exclude.refId))
     .slice(0, limit);
+}
+
+// ── Lint findings (server/lint.ts) ────────────────────────────────────────────
+
+export interface LintFindingRow {
+  id: string;
+  checkId: string;
+  severity: string;
+  refKind?: string;
+  refId?: string;
+  message: string;
+  data?: any;
+  firstSeen: number;
+  lastSeen: number;
+  resolvedAt: number | null;
+}
+
+function mapLintRow(row: any): LintFindingRow {
+  return {
+    id: row.id,
+    checkId: row.check_id,
+    severity: row.severity,
+    refKind: row.ref_kind ?? undefined,
+    refId: row.ref_id ?? undefined,
+    message: row.message,
+    data: row.data ? JSON.parse(row.data) : undefined,
+    firstSeen: row.first_seen,
+    lastSeen: row.last_seen,
+    resolvedAt: row.resolved_at ?? null,
+  };
+}
+
+/**
+ * Reconcile a full lint run against the stored findings:
+ *   - unknown id            -> insert (NEW finding)
+ *   - known, open           -> refresh last_seen
+ *   - known, was resolved   -> reopen (resolved_at = NULL, new first_seen)
+ *   - open but not in run   -> stamp resolved_at
+ * Returns the ids that are new/reopened this run and those just resolved.
+ */
+export function syncLintFindings(
+  findings: Array<{
+    id: string;
+    checkId: string;
+    severity: string;
+    refKind?: string;
+    refId?: string;
+    message: string;
+    data?: any;
+  }>,
+): { newIds: string[]; resolvedIds: string[] } {
+  const d = getDb();
+  const newIds: string[] = [];
+  const resolvedIds: string[] = [];
+  const tx = d.transaction(() => {
+    const openRows = d
+      .prepare('SELECT id FROM lint_findings WHERE resolved_at IS NULL')
+      .all() as any[];
+    const open = new Set(openRows.map((r) => r.id));
+    const seen = new Set<string>();
+    const insert = d.prepare(
+      `INSERT INTO lint_findings (id, check_id, severity, ref_kind, ref_id, message, data)
+       VALUES (?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(id) DO UPDATE SET
+         severity = excluded.severity,
+         message = excluded.message,
+         data = excluded.data,
+         last_seen = strftime('%s','now'),
+         first_seen = CASE WHEN lint_findings.resolved_at IS NOT NULL
+                           THEN strftime('%s','now') ELSE lint_findings.first_seen END,
+         resolved_at = NULL`,
+    );
+    const wasKnown = d.prepare('SELECT resolved_at FROM lint_findings WHERE id = ?');
+    for (const f of findings) {
+      if (seen.has(f.id)) continue; // a check may emit the same pair twice
+      seen.add(f.id);
+      const prior = wasKnown.get(f.id) as any;
+      if (!prior || prior.resolved_at !== null) newIds.push(f.id);
+      insert.run(
+        f.id, f.checkId, f.severity, f.refKind ?? null, f.refId ?? null,
+        f.message, f.data === undefined ? null : JSON.stringify(f.data),
+      );
+    }
+    const resolve = d.prepare(
+      "UPDATE lint_findings SET resolved_at = strftime('%s','now') WHERE id = ?",
+    );
+    for (const id of open) {
+      if (!seen.has(id)) {
+        resolve.run(id);
+        resolvedIds.push(id);
+      }
+    }
+  });
+  tx();
+  return { newIds, resolvedIds };
+}
+
+export function getLintFindings(includeResolved = false, limit = 500): LintFindingRow[] {
+  const d = getDb();
+  // Semantic severity ranking — a bare ORDER BY severity is alphabetical
+  // (critical, high, info, low, medium) and buries low under info.
+  const rank =
+    "CASE severity WHEN 'critical' THEN 0 WHEN 'high' THEN 1 WHEN 'medium' THEN 2 WHEN 'low' THEN 3 ELSE 4 END";
+  const rows = includeResolved
+    ? d.prepare(`SELECT * FROM lint_findings ORDER BY resolved_at IS NULL DESC, ${rank}, last_seen DESC LIMIT ?`).all(limit)
+    : d.prepare(`SELECT * FROM lint_findings WHERE resolved_at IS NULL ORDER BY ${rank}, last_seen DESC LIMIT ?`).all(limit);
+  return (rows as any[]).map(mapLintRow);
+}
+
+/**
+ * Pairwise near-neighbour scan for the lint duplicate checks. O(n²) in SQL,
+ * which is fine for the non-taxonomy corpus (tens–hundreds of rows) and
+ * acceptable for the 790-node taxonomy sweep inside a nightly job. rowid
+ * ordering dedupes the symmetric pair.
+ */
+export function nearPairs(
+  kinds: EmbeddingKind[],
+  maxDistance: number,
+  limit: number,
+): Array<{ aKind: string; aRefId: string; bKind: string; bRefId: string; distance: number }> {
+  if (!vectorsOk || kinds.length === 0) return [];
+  const kindList = kinds.map(() => '?').join(',');
+  return getDb()
+    .prepare(
+      `SELECT a.kind AS aKind, a.ref_id AS aRefId,
+              b.kind AS bKind, b.ref_id AS bRefId,
+              vector_distance_cos(a.vector, b.vector) AS distance
+       FROM embeddings a
+       JOIN embeddings b ON a.rowid < b.rowid
+       WHERE a.kind IN (${kindList}) AND b.kind IN (${kindList})
+         AND vector_distance_cos(a.vector, b.vector) < ?
+       ORDER BY distance ASC
+       LIMIT ?`,
+    )
+    .all(...kinds, ...kinds, maxDistance, limit) as any[];
+}
+
+export function countRows(table: 'taxonomy_fts' | 'taxonomy_layout'): number {
+  try {
+    return (getDb().prepare(`SELECT COUNT(*) AS c FROM ${table}`).get() as any).c;
+  } catch {
+    return -1;
+  }
 }
