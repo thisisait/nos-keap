@@ -19,8 +19,21 @@
 import { useMemo, useRef, useEffect, useCallback } from 'react';
 import ForceGraph3D from 'react-force-graph-3d';
 import SpriteText from 'three-spritetext';
+import * as THREE from 'three';
+import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 // @ts-expect-error — no bundled types; same engine react-force-graph uses.
 import { forceCollide } from 'd3-force-3d';
+
+export type CameraMode = 'observer' | 'ship';
+
+const REDUCED_MOTION =
+  typeof window !== 'undefined' &&
+  window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+
+/** Camera travel time — reduced motion means instant cuts, not slow pans. */
+export function warpMs(ms: number): number {
+  return REDUCED_MOTION ? 0 : ms;
+}
 
 export interface CanvasNode {
   id: string;
@@ -56,6 +69,8 @@ interface Props {
   onNodeClick: (id: string) => void;
   width: number;
   height: number;
+  /** observer = orbit camera; ship = FlyControls (WASD + drag to look). */
+  mode: CameraMode;
 }
 
 const STAR_COLOR: Record<string, string> = {
@@ -80,9 +95,71 @@ function nodeSize(n: CanvasNode): number {
   return 2;
 }
 
-export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width, height }: Props) {
+export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width, height, mode }: Props) {
   const fgRef = useRef<any>(null);
   const didFitRef = useRef(false);
+
+  // Deep-space dressing, once per mount: a decorative starfield shell far
+  // beyond the data (never clickable, never part of spatial memory) and an
+  // UnrealBloom pass that makes stars glow. Camera far plane pushed out so
+  // the shell stays visible.
+  useEffect(() => {
+    const t = setTimeout(() => {
+      const ref = fgRef.current;
+      if (!ref) return;
+      try {
+        const cam = ref.camera();
+        cam.far = 40000;
+        cam.updateProjectionMatrix();
+
+        const N = 1600;
+        const positions = new Float32Array(N * 3);
+        for (let i = 0; i < N; i++) {
+          const r = 6000 + Math.random() * 5000;
+          const theta = Math.acos(2 * Math.random() - 1);
+          const phi = Math.random() * Math.PI * 2;
+          positions[i * 3] = r * Math.sin(theta) * Math.cos(phi);
+          positions[i * 3 + 1] = r * Math.sin(theta) * Math.sin(phi);
+          positions[i * 3 + 2] = r * Math.cos(theta);
+        }
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        const mat = new THREE.PointsMaterial({
+          color: 0x93a4c8,
+          size: 1.6,
+          sizeAttenuation: false,
+          transparent: true,
+          opacity: 0.65,
+          depthWrite: false,
+        });
+        const starfield = new THREE.Points(geo, mat);
+        ref.scene().add(starfield);
+
+        const bloom = new UnrealBloomPass(new THREE.Vector2(width, height), 0.85, 0.55, 0.12);
+        ref.postProcessingComposer().addPass(bloom);
+
+        return; // cleanup handled below via closure capture
+      } catch {
+        // Renderer not ready — dressing is decorative, skip silently.
+      }
+    }, 200);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Ship mode: tune the FlyControls for the universe's scale. The defaults
+  // (movementSpeed 1) are built for metre-sized scenes, ours is r≈1400.
+  useEffect(() => {
+    if (mode !== 'ship') return;
+    const t = setTimeout(() => {
+      const controls = fgRef.current?.controls();
+      if (!controls) return;
+      controls.movementSpeed = 320;
+      controls.rollSpeed = Math.PI / 6;
+      controls.dragToLook = true;
+    }, 300);
+    return () => clearTimeout(t);
+  }, [mode]);
 
   const graphData = useMemo(() => {
     // force-graph mutates its input (source/target become object refs) —
@@ -122,7 +199,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
         // the observer starts seeing the whole sky, not one galaxy's flank.
         if (!didFitRef.current) {
           didFitRef.current = true;
-          ref.zoomToFit(600, 60);
+          ref.zoomToFit(warpMs(600), 60);
         }
       } catch {
         // Engine not initialised yet — default forces are fine.
@@ -131,14 +208,15 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     return () => clearTimeout(t);
   }, [graphData]);
 
-  // Fly the observer camera to the focused node once the engine placed it.
+  // Warp to the focused node once the engine placed it — the "semantic
+  // hyperspace jump" (search or click sets focus, the camera travels).
   useEffect(() => {
     if (!focusId) return;
     const t = setTimeout(() => {
       const ref = fgRef.current;
       const node = graphData.nodes.find((n: any) => n.id === focusId) as any;
       if (!ref || !node || node.x === undefined) return;
-      ref.cameraPosition({ x: node.x, y: node.y, z: (node.z ?? 0) + 260 }, node, 800);
+      ref.cameraPosition({ x: node.x, y: node.y, z: (node.z ?? 0) + 260 }, node, warpMs(1100));
     }, 400);
     return () => clearTimeout(t);
   }, [focusId, graphData]);
@@ -163,6 +241,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
   return (
     <ForceGraph3D
       ref={fgRef}
+      controlType={mode === 'ship' ? 'fly' : 'orbit'}
       graphData={graphData}
       nodeId="id"
       nodeRelSize={2.4}

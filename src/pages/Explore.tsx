@@ -12,9 +12,15 @@
 import { useMemo, useState, useRef, useLayoutEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Rocket, Orbit, Search } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import GraphCanvas, { type CanvasNode, type CanvasLink } from '@/components/explorer/GraphCanvas';
+import { Input } from '@/components/ui/input';
+import { apiFetch } from '@/services/api/client';
+import GraphCanvas, {
+  type CanvasNode,
+  type CanvasLink,
+  type CameraMode,
+} from '@/components/explorer/GraphCanvas';
 import SidePanel from '@/components/explorer/SidePanel';
 import NodeDetailDrawer, { type DrawerTarget } from '@/components/explorer/NodeDetailDrawer';
 import {
@@ -33,6 +39,33 @@ export default function Explore() {
   const [kinds, setKinds] = useState<string[]>(['taxonomy', 'capture', 'note', 'object']);
   const [typeFilter, setTypeFilter] = useState<Set<string>>(new Set());
   const [drawer, setDrawer] = useState<DrawerTarget | null>(null);
+  const [cameraMode, setCameraMode] = useState<CameraMode>('observer');
+  const [jumpQuery, setJumpQuery] = useState('');
+  const [jumpMiss, setJumpMiss] = useState(false);
+
+  // Semantic hyperspace jump: hybrid search → plot course to the best hit's
+  // star (objects/captures resolve to their anchor node). Focus does the
+  // actual warp (GraphCanvas flies the camera on focus change).
+  const hyperspaceJump = async () => {
+    const q = jumpQuery.trim();
+    if (!q) return;
+    try {
+      const res = await apiFetch<{ items: Array<{ kind: string; refId: string; nodeId?: string }> }>(
+        `/api/search/semantic?q=${encodeURIComponent(q)}&limit=5`,
+      );
+      const target = res.items.find((i) => i.nodeId || i.kind === 'taxonomy');
+      const nodeId = target?.nodeId ?? (target?.kind === 'taxonomy' ? target.refId : null);
+      if (nodeId) {
+        setJumpMiss(false);
+        setFocusId(null); // re-trigger the warp even when jumping to the same star
+        requestAnimationFrame(() => setFocusId(nodeId));
+      } else {
+        setJumpMiss(true);
+      }
+    } catch {
+      setJumpMiss(true);
+    }
+  };
 
   const neighbors = useNeighbors(focusId, mode, kinds);
 
@@ -206,6 +239,31 @@ export default function Explore() {
               })
             : '…'}
         </span>
+        <div className="ml-auto flex items-center gap-2">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              value={jumpQuery}
+              onChange={(e) => {
+                setJumpQuery(e.target.value);
+                setJumpMiss(false);
+              }}
+              onKeyDown={(e) => e.key === 'Enter' && hyperspaceJump()}
+              placeholder={t('explore.jump.placeholder')}
+              className={`h-8 w-56 pl-7 text-xs ${jumpMiss ? 'border-destructive' : ''}`}
+              aria-label={t('explore.jump.placeholder')}
+            />
+          </div>
+          <Button
+            variant={cameraMode === 'ship' ? 'default' : 'outline'}
+            size="sm"
+            className="h-8 gap-1.5 text-xs"
+            onClick={() => setCameraMode((m) => (m === 'ship' ? 'observer' : 'ship'))}
+          >
+            {cameraMode === 'ship' ? <Orbit className="h-3.5 w-3.5" /> : <Rocket className="h-3.5 w-3.5" />}
+            {t(cameraMode === 'ship' ? 'explore.camera.observer' : 'explore.camera.ship')}
+          </Button>
+        </div>
       </header>
 
       <div className="flex min-h-0 flex-1">
@@ -216,13 +274,26 @@ export default function Explore() {
             </div>
           ) : (
             <GraphCanvas
+              key={cameraMode} // controlType is init-only — remount on mode change
               nodes={canvasNodes}
               links={canvasLinks}
               focusId={focusId}
               onNodeClick={openTarget}
               width={size.w}
               height={size.h}
+              mode={cameraMode}
             />
+          )}
+          {cameraMode === 'ship' && (
+            <>
+              {/* Ship HUD: crosshair + control hints. Pure overlay, no logic. */}
+              <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white/40 text-lg select-none">
+                +
+              </div>
+              <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/50 px-3 py-1 text-[11px] text-white/70 backdrop-blur-sm">
+                {t('explore.camera.shipHint')}
+              </div>
+            </>
           )}
         </div>
         <SidePanel

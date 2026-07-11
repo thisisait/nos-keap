@@ -78,11 +78,17 @@ curl -s $B/agent/v1/health | python3 -c "import json,sys; \
 ## 6. Explorer (browser, the fun part)
 
 1. `https://keap.pazny.lab/explore` — 3D universe: 12 labelled galaxies on a ring,
-   constellation shells around each. **No 2D toggle** (retired).
+   constellation shells around each, faint starfield backdrop, glow (bloom).
+   **No 2D toggle** (retired).
 2. The smoke object from step 3 appears as a small teal dust dot near node `01.01`.
 3. Click any node → side panel shows the semantic neighbourhood (needs step 5;
    until then the tree + panel work, `semantic: false`).
 4. Reload the page — every star is exactly where it was. That's M2.
+5. **Hyperspace jump** (header search): type `quantum`, Enter → the camera warps
+   to the best hit's star. A miss turns the input red.
+6. **Ship mode** (Loď button): crosshair HUD appears; drag to look, WASD to fly,
+   R/F for up/down. Toggle back to Pozorovatel for orbit. Reduced-motion OS
+   setting makes all warps instant cuts.
 
 ## 7. Admin CRUD
 

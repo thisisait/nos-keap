@@ -213,6 +213,14 @@
       "note": "Curated notes",
       "object": "Knowledge objects"
     },
+    "camera": {
+      "observer": "Observer",
+      "ship": "Ship",
+      "shipHint": "Drag to look around · WASD to fly · R/F up & down"
+    },
+    "jump": {
+      "placeholder": "Hyperspace jump…"
+    },
     "panel": {
       "title": "Constellation",
       "focusOn": "Focus: {{name}}",

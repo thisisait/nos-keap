@@ -213,6 +213,14 @@
       "note": "Kurátorské poznámky",
       "object": "Znalostní objekty"
     },
+    "camera": {
+      "observer": "Pozorovatel",
+      "ship": "Loď",
+      "shipHint": "Tahem myši se rozhlížíš · WASD let · R/F stoupání a klesání"
+    },
+    "jump": {
+      "placeholder": "Hyperprostorový skok…"
+    },
     "panel": {
       "title": "Souhvězdí",
       "focusOn": "Fokus: {{name}}",
