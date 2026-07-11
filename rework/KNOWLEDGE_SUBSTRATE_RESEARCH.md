@@ -165,3 +165,158 @@ Why this shape wins:
   object links = untyped, descriptions everywhere — a defensible middle point.
 - Bi-temporal facts on a file-native substrate is unsolved in the wild (Graphiti needs a
   graph DB). Our libSQL rows + `invalidated_at` may be the pragmatic hybrid.
+
+---
+
+# Round 2 (2026-07-11): heterogeneous datapoints, md-as-main-index, capture overlay
+
+*Owner directive: datapoints may be whole DBs, tables, saved queries, files, data lakes —
+with a markdown file as the "main" index for fastest similarity search. The capture overlay
+will be a browser extension, probably paired with a native app. Lighter research round —
+5 parallel scouts, sources cited inline; not adversarially verified like Round 1.*
+
+## R2.1 Datapoints beyond notes — what mature catalogs teach
+
+All living metadata catalogs (DataHub, OpenMetadata, Apache Gravitino, Unity Catalog OSS)
+converged in 2025 on the same move: **catalog = context layer for agents, served over
+MCP** ([DataHub MCP](https://docs.datahub.com/docs/features/feature-guides/mcp),
+[OpenMetadata MCP embedded by default since v1.8](https://open-metadata.org/mcp),
+[Gravitino MCP](https://gravitino.apache.org/docs/next/gravitino-mcp-server/)). Amundsen is
+dormant. Their infra (Kafka, ingestion frameworks, RBAC, column lineage) is overkill for a
+personal system; the **minimal transferable core** is:
+
+1. **One stable URN per datapoint** encoding `type + source + path` (DataHub-style
+   `urn:li:dataset:(platform,db.table,PROD)` or OpenMetadata FQN `service.db.schema.table`).
+2. **Small typed asset enum** (~7 kinds: `database, table, query, file, lake, page, note`)
+   — Gravitino/Unity's fixed hierarchy with a handful of types is the simplest model worth
+   copying.
+3. **Aspect-style attachments** keyed by URN (description, tags, schema card, AI docs) —
+   separate optional records, not columns on the asset row.
+4. **Coarse lineage as typed edges** between URNs (query→table, table→database).
+5. An MCP/agent surface of 3–4 tools (search, get-by-URN, lineage, query) replicates ~80 %
+   of what the big catalogs ship.
+
+## R2.2 Markdown as the main index — the pattern is real, with one famous failure
+
+- **llms.txt** ([spec](https://llmstxt.org)) is *dead as a crawler/SEO standard* — Google
+  publicly declined it, ~0.1 % of AI-bot requests touch it
+  ([state of adoption 6/2026](https://caseyrb.com/blog/state-of-llms-txt-adoption/),
+  [aeo.press](https://www.aeo.press/ai/the-state-of-llms-txt-in-2026)) — but *alive as an
+  agent-facing index*: Cursor/Claude Code/Windsurf/Cline fetch it when pointed at docs.
+  **Lesson: build the consumer first; an index nobody's retrieval loop consults is dead.**
+- **AGENTS.md** (60k+ repos, Linux Foundation stewardship) validates schema-free markdown;
+  **Claude Skills / SKILL.md** is the strongest architectural precedent: YAML frontmatter +
+  three-tier **progressive disclosure** (metadata always searchable → body on relevance →
+  referenced heavy assets on demand)
+  ([docs](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview)).
+- **Retrieval evidence**: RAPTOR ([arXiv:2401.18059](https://arxiv.org/abs/2401.18059))
+  shows retrieval over recursive *summaries* beats flat chunks (+20 % abs. on QuALITY);
+  LlamaIndex DocumentSummaryIndex codifies "embed the summary, route to the doc". Small
+  markdown index cards over heavy assets is the RAG-proven shape, not just a convention.
+
+## R2.3 Queries and DBs as datapoints — the grounding numbers
+
+- Raw text-to-SQL collapses at real-world scale: **Spider 2.0** (632 enterprise workflows)
+  — GPT-4o 10.1 %, o1-preview 21.3 %, best agent 17 %
+  ([arXiv:2411.07763](https://arxiv.org/abs/2411.07763)). With a modeled semantic layer,
+  paired benchmarks jump to **73–100 % vs 33–40 % on raw schemas**
+  ([arXiv:2604.25149](https://arxiv.org/pdf/2604.25149),
+  [dbt writeup](https://docs.getdbt.com/blog/semantic-layer-vs-text-to-sql-2026)).
+- What works: per-column descriptions + sample values (schema cards), **verified saved
+  queries as few-shot exemplars** ([arXiv:2606.00547](https://arxiv.org/pdf/2606.00547)),
+  live explore-then-query tools instead of giant schema dumps, execution-feedback loops.
+- Tooling: [dbt-mcp](https://github.com/dbt-labs/dbt-mcp) (list_metrics → query),
+  [Boring Semantic Layer](https://github.com/boringdata/boring-semantic-layer) (thin,
+  Ibis-based, MCP-friendly — right size for us; LLM writes *semantic* queries, never SQL),
+  [Turso MCP built into `tursodb --mcp`](https://turso.tech/blog/introducing-the-turso-database-mcp-server),
+  [MotherDuck MCP + agent skills](https://github.com/motherduckdb/agent-skills).
+
+## R2.4 Query-in-place federation
+
+- **DuckDB is the federator**: ATTACH live SQLite/Postgres/MySQL, scan Parquet/CSV/JSON/
+  Iceberg/Delta locally or over HTTP, join across all of it in one query
+  ([the great federator](https://motherduck.com/blog/duckdb-the-great-federator/)).
+  Trino confirmed overkill (JVM cluster, amortizes at 4+ nodes).
+- **DuckLake v1.0** (4/2026): lakehouse whose *entire catalog is ordinary SQL tables* in
+  SQLite/Postgres/DuckDB + Parquet data files ([ducklake.select](https://ducklake.select/)).
+  A libSQL-compatible file can literally be the lakehouse catalog.
+- **libSQL stays the system of record + index** (vectors, FTS5) — it cannot read
+  Parquet/Postgres/lakes; DuckDB does the reaching-out. Natural split.
+- Closest existing analog to our UX: **Datasette Agent** (Willison, 5/2026) — NL questions
+  → SQLite queries over a registry of personal databases
+  ([writeup](https://simonwillison.net/2026/May/21/datasette-agent/)).
+- The universal agent pattern: **(a) one catalog/schema-inspection tool + (b) one SQL
+  execution tool over a federating engine** — not per-source tools.
+
+## R2.5 Capture overlay: extension + (maybe) native app
+
+Landscape (all self-hosted unless noted): Karakeep (AGPL, thin extension → REST, archival
+server-side via headless Chromium), Linkwarden (AGPL, same shape), Wallabag (extension sends
+URL, server fetches), **Readeck** (AGPL — extension extracts content *in-browser* and pushes
+into a server cache: solves paywalled/logged-in pages — closest to our companion approach),
+Obsidian Web Clipper (MIT, no server: `obsidian://` URI into the local vault; the only tool
+with **schema.org/JSON-LD template variables**), Anytype (extension ↔ local desktop app via
+gRPC), agentic: Nanobrowser (Apache-2.0, in-browser LLM agents), BrowserOS (extension ↔
+local app over MCP).
+
+- **Dominant pattern: thin MV3 WebExtension → REST with API token to the self-hosted
+  server.** Server-side re-fetch for archival; client-side extraction (Readeck-style) when
+  the server can't see what the user sees.
+- **Native app is needed only for**: local file writes, OS hooks/clipboard, local LLM
+  bridge. The mechanism is the [Native Messaging API](https://developer.chrome.com/docs/extensions/develop/concepts/native-messaging)
+  (browser spawns registered host process, JSON over stdio, 1 MB→ext / 64 MiB→host limits)
+  — or Obsidian's trick of a custom URI scheme, which avoids native messaging entirely.
+- MV3 constraints to design around: ephemeral service worker (30 s idle kill, no DOM —
+  Offscreen API for DOM work), no remote code, state in `chrome.storage`.
+- **Open niche**: nobody auto-harvests structured data (JSON-LD/microdata — recipes,
+  events, products) at capture time; Obsidian only does it via hand-written per-site
+  templates. Libraries exist server-side ([extruct](https://github.com/scrapinghub/extruct)).
+  A capture panel that auto-lifts schema.org objects into typed `knowledge_objects` would
+  be genuinely novel.
+
+## R2.6 Synthesis — how it clicks together with Round 1
+
+The knowledge-object overlay from Round 1 and the heterogeneous datapoints from Round 2 are
+**the same thing**: a `knowledge_object` IS the markdown index card for an asset that lives
+elsewhere.
+
+```
+knowledge_objects (= OKF docs = index cards)          ← libSQL: FTS5 + vectors + graph
+  type: 'note' | 'page' | 'query' | 'table' | 'database' | 'file' | 'lake' | …
+  resource: URN → where the real asset lives
+     keap:node:<taxonomy-id>            kiwix:<path>          nextcloud:<path>
+     db:<conn>/<schema>/<table>         query:<saved-query>   duckdb:<attach-spec>
+     file:<path>                        lake:<ducklake-spec>  https://…
+  frontmatter: per-type structured payload
+     table  → schema card (columns, descriptions, sample values, join hints)
+     query  → SQL text + verified-example flag + target URNs (lineage edge)
+     lake   → DuckLake catalog pointer
+  body: markdown — the human/agent-readable summary the index searches over
+```
+
+- **Progressive disclosure** (SKILL.md pattern): similarity/FTS search hits index cards
+  (cheap, always in reach) → agent reads the card → follows `resource` to the heavy asset
+  → for DB-kind assets, a DuckDB-backed `execute_query` tool queries in place.
+- **The consumer exists on day one** (avoiding llms.txt's fate): our own `/agent/v1`
+  search + the explorer are the retrieval loops that consult the index.
+- **Grounding recipe** for DB datapoints: schema cards + saved queries as exemplars +
+  explore-then-query tools — the combination the research shows lifting accuracy from
+  ~10–40 % to 73–100 %.
+- **Overlay architecture**: thin MV3 extension → `POST /api/metadata` (existing) and new
+  `POST /api/objects`; in-browser extraction incl. auto-harvest of JSON-LD/microdata into
+  typed objects (the open niche). Native app deferred until a concrete need (local files,
+  OS hooks) — URI-scheme or native messaging when it comes. The current userscript
+  companion remains the interim.
+
+### Proposed sequencing update (extends O1–O4 from Round 1)
+
+1. **O1** objects table + CRUD + agent API + embed kind *(unchanged — now explicitly with
+   `type` + `resource` URN + per-type frontmatter)*
+2. **O2** explorer integration *(unchanged)*
+3. **O3** OKF bundle export/import *(unchanged)*
+4. **O4** RRF hybrid search *(unchanged)*
+5. **O5** capture extension (MV3, replaces userscript; JSON-LD auto-harvest)
+6. **O6** DuckDB sidecar + `execute_query` agent tool over registered `db:`/`file:`/`lake:`
+   URNs; schema-card generator (DESCRIBE → frontmatter)
+7. Backlog: native companion app, BSL-style thin semantic layer, DuckLake catalog-in-libSQL
+   experiment.
