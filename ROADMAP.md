@@ -237,3 +237,41 @@ Dependencies, not dates. Each milestone ends in something demoable.
   arrive as nOS role/plugin changes **[nOS]**, keeping KEAP itself a single container.
 - Dual-surface security model stays as designed (header-OIDC humans / bearer-token agents;
   `KEAP_TRUSTED_PROXY=1`; scopes ro/rw).
+
+## Track T — Topology doctrine: hardcoded core, free-growing depth (road to v1.0)
+
+Owner decision (2026-07-12). The taxonomy is NOT one uniform tree — it has
+three governance zones, mirroring the universe metaphor's scale ladder
+("a frog in a lake, on a planet, in a star system, in a galaxy, in a galaxy
+group" — most datapoints live at frog depth, not galaxy depth):
+
+| Zone | Topological levels | Governance | Universe scale |
+|---|---|---|---|
+| **Anchor core** | 0–1 | **HARDCODED** — ships with KEAP, changes only by release (an owner-approved breaking change, like the U1 layout algo bump) | galaxy groups + galaxies |
+| **Votable core** | ~2–4 | seeded hardcoded, evolvable by **moderated proposals** — local admin today, MMO quorum later (the promotions machinery is already built for exactly this shape) | star systems + planets |
+| **Free zone** | 5+ | grows organically: users/agents propose new nodes as easily as knowledge objects; most datapoints anchor HERE, at the most specific node that fits | lakes, frogs, and everything between |
+
+Consequences to implement:
+
+1. **Node-level provenance** — every taxonomy node carries a zone marker
+   (derivable from depth for now; explicit once free-zone nodes exist,
+   because a deep hardcoded node must stay distinguishable from a grown one).
+2. **Taxonomy extension proposals** — the promotions flow generalized:
+   `propose node` (parent, name, description) → moderator/quorum decides →
+   node materializes + layout bake extends (U1's Fibonacci-sphere placement
+   already handles arbitrary depth; LEVEL_RADIUS gets a decaying tail).
+   Anchor-core parents refuse proposals; votable-core parents require them.
+3. **Spatial-memory contract per zone** — anchor core NEVER moves (the sky's
+   constants); votable core moves only on approved proposals (one atomic,
+   versioned event, same doctrine as the layout bake); free zone placement is
+   deterministic-per-node but new siblings may appear any night.
+4. **Game layer retired** (done, this commit) — /game redirects to /explore.
+   The universe IS the game; "locked pages" made no sense without content.
+   Progression mechanics, if they return, hang off real corpus coverage
+   (deserts shrinking), not hardcoded card grids.
+
+The current 12-category / 790-node tree becomes the seed: categories =
+galaxies (anchor core level 0; a future "galaxy group" super-level is
+reserved for federating multiple KEAP instances), level-1 subcategories =
+anchor core, levels 2+ = votable core seed, free zone opens with the
+extension-proposal machinery.

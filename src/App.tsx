@@ -3,10 +3,9 @@ import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Index from './pages/Index';
 import Admin from './pages/Admin';
-import Game from './pages/Game';
 import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
 
@@ -32,10 +31,11 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/admin" element={<Admin />} />
-            <Route path="/game" element={<Game />} />
-            <Route path="/game/island/:id" element={<Game />} />
-            <Route path="/game/city/:id" element={<Game />} />
-            <Route path="/game/building/:id" element={<Game />} />
+            {/* The card-grid game layer is retired (locked pages made no
+                sense pre-content); the universe explorer IS the game now.
+                Old bookmarks land in the explorer. */}
+            <Route path="/game/*" element={<Navigate to="/explore" replace />} />
+            <Route path="/game" element={<Navigate to="/explore" replace />} />
             <Route
               path="/explore"
               element={

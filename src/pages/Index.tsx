@@ -16,7 +16,6 @@ import type { HomepageTile } from '../types/database';
 const DEFAULT_TILES: HomepageTile[] = [
   { id: 'default-progress', type: 'progress-stats', title: '', position: 0, visible: true },
   { id: 'default-pages', type: 'recent-pages', title: '', position: 1, visible: true },
-  { id: 'default-activity', type: 'recent-cities', title: '', position: 2, visible: true },
   { id: 'default-todos', type: 'custom-todo', title: '', position: 3, visible: true },
   { id: 'default-explore', type: 'explore-map', title: '', position: 4, visible: true },
 ];
@@ -79,7 +78,7 @@ const Index = () => {
           </div>
 
           <div className="flex items-center gap-2">
-            <Link to="/game">
+            <Link to="/explore">
               <Button className="flex items-center gap-2">
                 <Play className="w-4 h-4" />
                 {t('index.startExploring')}
