@@ -1,19 +1,23 @@
 /**
- * The 2.5D canvas: one merged force-graph rendered flat (2D, radial dag) by
- * default, lifting into full 3D on demand. Both renderers consume the SAME
- * node/link arrays, so the toggle is purely a camera/dimension change —
- * that is the "plane that goes into more dimensions on interaction".
+ * The universe canvas — 3D only (ROADMAP Track U; the 2.5D/2D renderer was
+ * retired 2026-07-11 by owner decision: one renderer, one force config).
  *
- * Stars (semantic hits that are captures/notes, i.e. NOT part of the
+ * This is the OBSERVER mode: orbit camera around the radial constellation
+ * DAG. The future rocketship mode (U3) swaps the camera controller, not the
+ * scene. Until the deterministic layout bake (U1) lands, the radial DAG +
+ * seeded force sim is the layout.
+ *
+ * Stars (semantic hits that are captures/notes/objects, i.e. NOT part of the
  * hard-coded taxonomy) arrive as extra nodes with star=true, linked to the
  * focus by a semantic link whose rest-length grows with vector distance —
  * the force engine then naturally places them "in the distance" behind the
  * focused constellation. Taxonomy hits reuse their existing tree node and
- * only gain the dashed semantic link.
+ * only gain the dashed semantic link. Nebula nodes are anchored knowledge
+ * objects orbiting their taxonomy star on a short leash.
  */
 import { useMemo, useRef, useEffect, useCallback } from 'react';
-import ForceGraph2D from 'react-force-graph-2d';
 import ForceGraph3D from 'react-force-graph-3d';
+import SpriteText from 'three-spritetext';
 // @ts-expect-error — no bundled types; same engine react-force-graph uses.
 import { forceCollide } from 'd3-force-3d';
 
@@ -43,7 +47,6 @@ export interface CanvasLink {
 interface Props {
   nodes: CanvasNode[];
   links: CanvasLink[];
-  is3D: boolean;
   focusId: string | null;
   onNodeClick: (id: string) => void;
   width: number;
@@ -72,9 +75,8 @@ function nodeSize(n: CanvasNode): number {
   return 2;
 }
 
-export default function GraphCanvas({ nodes, links, is3D, focusId, onNodeClick, width, height }: Props) {
-  const fg2dRef = useRef<any>(null);
-  const fg3dRef = useRef<any>(null);
+export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width, height }: Props) {
+  const fgRef = useRef<any>(null);
 
   const graphData = useMemo(() => {
     // force-graph mutates its input (source/target become object refs) —
@@ -86,13 +88,12 @@ export default function GraphCanvas({ nodes, links, is3D, focusId, onNodeClick, 
   }, [nodes, links]);
 
   // Semantic links pull stars to rest at a radius proportional to vector
-  // distance; tree links keep the constellation tight. Deferred + guarded:
-  // right after the 2D↔3D toggle the newly mounted renderer's simulation is
-  // not ready yet and touching it throws (`… reading 'tick'`), which kills
-  // the render loop (black canvas).
+  // distance; tree links keep the constellation tight; nebula dust sits on a
+  // short leash. Deferred + guarded: right after mount the simulation is not
+  // ready yet and touching it throws, which kills the render loop.
   useEffect(() => {
     const t = setTimeout(() => {
-      const ref = is3D ? fg3dRef.current : fg2dRef.current;
+      const ref = fgRef.current;
       if (!ref) return;
       try {
         const linkForce = ref.d3Force('link');
@@ -116,75 +117,61 @@ export default function GraphCanvas({ nodes, links, is3D, focusId, onNodeClick, 
       }
     }, 300);
     return () => clearTimeout(t);
-  }, [is3D, graphData]);
+  }, [graphData]);
 
-  // Center the camera on the focused node once the engine has placed it.
+  // Fly the observer camera to the focused node once the engine placed it.
   useEffect(() => {
     if (!focusId) return;
     const t = setTimeout(() => {
-      const ref = is3D ? fg3dRef.current : fg2dRef.current;
+      const ref = fgRef.current;
       const node = graphData.nodes.find((n: any) => n.id === focusId) as any;
       if (!ref || !node || node.x === undefined) return;
-      if (is3D) {
-        ref.cameraPosition({ x: node.x, y: node.y, z: (node.z ?? 0) + 260 }, node, 800);
-      } else {
-        ref.centerAt(node.x, node.y, 800);
-        ref.zoom(3, 800);
-      }
+      ref.cameraPosition({ x: node.x, y: node.y, z: (node.z ?? 0) + 260 }, node, 800);
     }, 400);
     return () => clearTimeout(t);
-  }, [focusId, is3D, graphData]);
+  }, [focusId, graphData]);
 
   const handleClick = useCallback((node: any) => onNodeClick(node.id), [onNodeClick]);
 
-  const common = {
-    graphData,
-    nodeId: 'id',
-    nodeRelSize: 2.4,
-    nodeLabel: (n: any) =>
-      n.star ? `☆ ${n.name}${n.distance ? ` · d=${n.distance.toFixed(2)}` : ''}` : n.name,
-    nodeVal: (n: any) => nodeSize(n),
-    nodeColor: (n: any) => nodeColor(n, focusId),
-    linkColor: (l: any) => (l.semantic ? 'rgba(251,191,36,0.55)' : 'rgba(120,130,150,0.25)'),
-    linkWidth: (l: any) => (l.semantic ? 1.2 : 0.4),
-    onNodeClick: handleClick,
-    backgroundColor: 'rgba(0,0,0,0)',
-    width,
-    height,
-  } as const;
-
-  if (is3D) {
-    return (
-      <ForceGraph3D
-        ref={fg3dRef}
-        {...common}
-        linkOpacity={0.4}
-        nodeOpacity={0.92}
-        showNavInfo={false}
-      />
-    );
-  }
+  // Always-on labels: galaxy names (categories) so the observer never loses
+  // orientation, and star names so semantic hits are readable at a glance.
+  // Everything else keeps the hover tooltip only. Returning a falsy object
+  // with nodeThreeObjectExtend keeps the default sphere; the sprite is
+  // ADDED next to it, not a replacement.
+  const nodeThreeObject = useCallback((node: any) => {
+    if (node.kind !== 'category' && !node.star) return false as any;
+    const sprite = new SpriteText(node.name);
+    sprite.color = node.star ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.92)';
+    sprite.textHeight = node.kind === 'category' ? 7 : 3.5;
+    sprite.position.y = -(Math.sqrt(nodeSize(node)) * 2.4 + 6);
+    sprite.material.depthWrite = false;
+    return sprite;
+  }, []);
 
   return (
-    <ForceGraph2D
-      ref={fg2dRef}
-      {...common}
+    <ForceGraph3D
+      ref={fgRef}
+      graphData={graphData}
+      nodeId="id"
+      nodeRelSize={2.4}
+      nodeLabel={(n: any) =>
+        n.star ? `☆ ${n.name}${n.distance ? ` · d=${n.distance.toFixed(2)}` : ''}` : n.name
+      }
+      nodeVal={(n: any) => nodeSize(n)}
+      nodeColor={(n: any) => nodeColor(n, focusId)}
+      nodeThreeObject={nodeThreeObject}
+      nodeThreeObjectExtend={true}
+      linkColor={(l: any) => (l.semantic ? 'rgba(251,191,36,0.55)' : 'rgba(120,130,150,0.25)')}
+      linkWidth={(l: any) => (l.semantic ? 1.2 : 0.4)}
+      onNodeClick={handleClick}
+      backgroundColor="rgba(0,0,0,0)"
+      width={width}
+      height={height}
       dagMode="radialout"
       dagLevelDistance={80}
-      linkLineDash={(l: any) => (l.semantic ? [3, 3] : null)}
-      nodeCanvasObjectMode={() => 'after'}
-      nodeCanvasObject={(node: any, ctx, globalScale) => {
-        // Labels: categories always; the rest only when zoomed in enough.
-        const show =
-          node.kind === 'category' || node.star ? globalScale > 0.9 : globalScale > 2.2;
-        if (!show) return;
-        const fontSize = Math.max(10 / globalScale, 1.6);
-        ctx.font = `${node.kind === 'category' ? '600 ' : ''}${fontSize}px Inter, sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'top';
-        ctx.fillStyle = node.star ? 'rgba(251,191,36,0.9)' : 'rgba(226,232,240,0.85)';
-        ctx.fillText(node.name, node.x, node.y + nodeSize(node) / 2 + 1.5);
-      }}
+      linkOpacity={0.4}
+      nodeOpacity={0.92}
+      showNavInfo={false}
     />
   );
 }

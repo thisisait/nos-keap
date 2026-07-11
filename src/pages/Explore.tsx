@@ -12,9 +12,8 @@
 import { useMemo, useState, useRef, useLayoutEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Box, Square } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Switch } from '@/components/ui/switch';
 import GraphCanvas, { type CanvasNode, type CanvasLink } from '@/components/explorer/GraphCanvas';
 import SidePanel from '@/components/explorer/SidePanel';
 import NodeDetailDrawer, { type DrawerTarget } from '@/components/explorer/NodeDetailDrawer';
@@ -33,7 +32,6 @@ export default function Explore() {
   const [mode, setMode] = useState<NeighborMode>('related');
   const [kinds, setKinds] = useState<string[]>(['taxonomy', 'capture', 'note', 'object']);
   const [typeFilter, setTypeFilter] = useState<Set<string>>(new Set());
-  const [is3D, setIs3D] = useState(false);
   const [drawer, setDrawer] = useState<DrawerTarget | null>(null);
 
   const neighbors = useNeighbors(focusId, mode, kinds);
@@ -203,12 +201,6 @@ export default function Explore() {
               })
             : '…'}
         </span>
-        <div className="ml-auto flex items-center gap-2 text-xs">
-          <Square className="h-3.5 w-3.5" />
-          <Switch checked={is3D} onCheckedChange={setIs3D} aria-label="2D/3D" />
-          <Box className="h-3.5 w-3.5" />
-          <span className="text-muted-foreground">{is3D ? '3D' : '2D'}</span>
-        </div>
       </header>
 
       <div className="flex min-h-0 flex-1">
@@ -221,7 +213,6 @@ export default function Explore() {
             <GraphCanvas
               nodes={canvasNodes}
               links={canvasLinks}
-              is3D={is3D}
               focusId={focusId}
               onNodeClick={openTarget}
               width={size.w}
