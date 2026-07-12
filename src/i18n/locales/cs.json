@@ -167,7 +167,11 @@
       "descKind": "popis uzlu",
       "bulkDescHint": "Čeká {{count}} návrhů popisů uzlů (taxonomy-describe).",
       "bulkApproveDesc": "Schválit všechny popisy",
-      "bulkRejectDesc": "Zamítnout všechny popisy"
+      "bulkRejectDesc": "Zamítnout všechny popisy",
+      "briefKind": "článek uzlu",
+      "bulkBriefHint": "Čeká {{count}} návrhů článků uzlů (taxonomy-brief).",
+      "bulkApproveBrief": "Schválit všechny články",
+      "bulkRejectBrief": "Zamítnout všechny články"
     }
   },
   "settings": {
@@ -293,7 +297,8 @@
       "growProposed": "Návrh odeslán — čeká na moderátora.",
       "descProposed": "Popis navržen — čeká na moderátora.",
       "children": "Poduzly ({{count}})",
-      "anchored": "Ukotvené znalosti ({{count}})"
+      "anchored": "Ukotvené znalosti ({{count}})",
+      "brief": "Článek"
     }
   }
 }

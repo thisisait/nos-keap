@@ -10,9 +10,9 @@
  * growth actions: propose a child node and propose a description, both
  * through the same moderated machinery agents use.
  */
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   ExternalLink,
   Crosshair,
@@ -67,6 +67,61 @@ const zoneVariant: Record<string, 'default' | 'secondary' | 'outline'> = {
   free: 'outline',
 };
 
+/**
+ * Markdown-lite for node briefs: paragraphs + two link forms. [[node-id]]
+ * becomes a clickable vazba into the universe (label = node name); standard
+ * [text](url) opens the external source. No markdown lib — briefs are
+ * validated server-side to exactly these shapes.
+ */
+function BriefBody({
+  md,
+  nodeById,
+  onSelect,
+}: {
+  md: string;
+  nodeById: Map<string, GraphNode>;
+  onSelect: (id: string) => void;
+}) {
+  const renderInline = (text: string): ReactNode[] => {
+    const out: ReactNode[] = [];
+    const re = /\[\[([^\]]+)\]\]|\[([^\]]*)\]\(([^)\s]+)\)/g;
+    let last = 0;
+    let m: RegExpExecArray | null;
+    let key = 0;
+    while ((m = re.exec(text))) {
+      if (m.index > last) out.push(text.slice(last, m.index));
+      if (m[1] !== undefined) {
+        const id = m[1];
+        out.push(
+          <button
+            key={key++}
+            className="text-primary underline decoration-dotted underline-offset-2 hover:decoration-solid"
+            onClick={() => onSelect(id)}
+          >
+            {nodeById.get(id)?.name ?? id}
+          </button>,
+        );
+      } else {
+        out.push(
+          <a key={key++} href={m[3]} target="_blank" rel="noreferrer" className="underline underline-offset-2">
+            {m[2] || m[3]}
+          </a>,
+        );
+      }
+      last = re.lastIndex;
+    }
+    if (last < text.length) out.push(text.slice(last));
+    return out;
+  };
+  return (
+    <div className="space-y-2">
+      {md.split(/\n\s*\n/).filter((p) => p.trim()).map((p, i) => (
+        <p key={i} className="text-xs leading-relaxed text-muted-foreground">{renderInline(p.trim())}</p>
+      ))}
+    </div>
+  );
+}
+
 export default function DetailPanel({ target, nodeById, objects, onClose, onFocus, onSelect }: Props) {
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
@@ -79,6 +134,16 @@ export default function DetailPanel({ target, nodeById, objects, onClose, onFocu
   const [notice, setNotice] = useState<string | null>(null);
 
   const node = target && !target.isStar ? nodeById.get(target.id) : null;
+  // Curated note layer — the node's brief (taxonomy-brief skill output).
+  const { data: curatedRow } = useQuery<{ data?: Record<string, unknown> } | null>({
+    queryKey: ['node-meta', node?.id],
+    queryFn: () => apiFetch(`/api/taxonomy-metadata/${node!.id}`),
+    enabled: Boolean(node),
+  });
+  const brief = curatedRow?.data
+    ? ((i18n.language?.startsWith('cs') && (curatedRow.data as any).briefCs) ||
+        (curatedRow.data as any).brief) as string | undefined
+    : undefined;
   const crumb = useMemo(() => (node ? ancestors(node.id, nodeById) : []), [node, nodeById]);
   const children = useMemo(() => {
     if (!node) return [];
@@ -178,6 +243,15 @@ export default function DetailPanel({ target, nodeById, objects, onClose, onFocu
             <p className="text-xs leading-relaxed text-muted-foreground">{description}</p>
           ) : (
             !target.isStar && <p className="text-xs italic text-muted-foreground/70">{t('explore.detail.noDescription')}</p>
+          )}
+
+          {node && brief && (
+            <div>
+              <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                {t('explore.detail.brief')}
+              </p>
+              <BriefBody md={brief} nodeById={nodeById} onSelect={onSelect} />
+            </div>
           )}
 
           <div className="flex flex-wrap gap-2">

@@ -167,7 +167,11 @@
       "descKind": "node description",
       "bulkDescHint": "{{count}} node-description proposals pending (taxonomy-describe).",
       "bulkApproveDesc": "Approve all descriptions",
-      "bulkRejectDesc": "Reject all descriptions"
+      "bulkRejectDesc": "Reject all descriptions",
+      "briefKind": "node brief",
+      "bulkBriefHint": "{{count}} node-brief proposals pending (taxonomy-brief).",
+      "bulkApproveBrief": "Approve all briefs",
+      "bulkRejectBrief": "Reject all briefs"
     }
   },
   "settings": {
@@ -293,7 +297,8 @@
       "growProposed": "Proposal submitted — awaits the moderator.",
       "descProposed": "Description proposed — awaits the moderator.",
       "children": "Sub-nodes ({{count}})",
-      "anchored": "Anchored knowledge ({{count}})"
+      "anchored": "Anchored knowledge ({{count}})",
+      "brief": "Brief"
     }
   }
 }

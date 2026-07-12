@@ -26,7 +26,7 @@ import { pendingEmbeddings, EMBED_MODEL, EMBED_DIM } from './embeddings';
 import { extractRefs } from './objects';
 import { hybridSearch, markCorpusDirty } from './search';
 import { runLint, lastLintReport } from './lint';
-import { propose, proposeNode, proposeDescription, moderationPolicy } from './promotions';
+import { propose, proposeNode, proposeDescription, proposeBrief, moderationPolicy } from './promotions';
 import { allNodes } from './taxonomy';
 import { normalizeAndSaveCapture, parseEnvelope } from './intake';
 import { TOKEN_RO, TOKEN_RW, tokenEquals } from './tokens';
@@ -444,6 +444,69 @@ export function registerAgentRoutes(app: Express) {
     ok(res, { proposed: proposed.length, errors, submittedBy: `agent:${req.agentName}` });
   });
 
+  // ── taxonomy-brief surface (Track K) — the node's ARTICLE where the K1
+  // description is its abstract. Root-first: intake orders by level so the
+  // anchor core gets its briefs before the depths. Briefs land in the
+  // curated note layer on approval (embeddings kind 'note' pick them up).
+  app.get('/agent/v1/taxonomy/brief/pending', agentAuth('ro'), (req, res) => {
+    const limit = Math.min(Number(req.query.limit) || 10, 20);
+    const maxLevel = req.query.maxLevel !== undefined ? Number(req.query.maxLevel) : Infinity;
+    const openBrief = new Set(
+      db.listPromotions('proposed').filter((p) => p.kind === 'brief').map((p) => p.object?.nodeId),
+    );
+    const curated = db.getTaxonomyMetadata();
+    const briefed = new Set(
+      (Array.isArray(curated) ? curated : []).filter((c) => c.data?.brief).map((c) => c.id),
+    );
+    const nodes = allNodes();
+    const byId = new Map(nodes.map((n) => [n.id, n]));
+    const level = (id: string) => getAncestors(id).length;
+    const pending = nodes
+      .filter((n) => !briefed.has(n.id) && !openBrief.has(n.id) && level(n.id) <= maxLevel)
+      .sort((a, b) => level(a.id) - level(b.id) || a.id.localeCompare(b.id));
+    ok(res, {
+      total: pending.length,
+      items: pending.slice(0, limit).map((n) => ({
+        id: n.id,
+        name: n.name,
+        path: n.path,
+        zone: n.zone,
+        level: level(n.id),
+        description: n.description ?? null,
+        childNames: n.childIds.slice(0, 15).map((cid) => byId.get(cid)?.name).filter(Boolean),
+        siblingNames: n.parentId
+          ? (byId.get(n.parentId)?.childIds ?? [])
+              .filter((sid) => sid !== n.id)
+              .slice(0, 15)
+              .map((sid) => byId.get(sid)?.name)
+              .filter(Boolean)
+          : [],
+      })),
+    });
+  });
+
+  app.post('/agent/v1/taxonomy/brief', agentAuth('rw'), (req, res) => {
+    const { items } = req.body ?? {};
+    if (!Array.isArray(items) || !items.length || items.length > 20) {
+      return fail(res, 400, 'items required (1-20 per batch)');
+    }
+    const proposed: string[] = [];
+    const errors: Array<{ nodeId: string; error: string }> = [];
+    for (const it of items) {
+      try {
+        proposeBrief(
+          { nodeId: it?.nodeId, briefEn: it?.briefEn, briefCs: it?.briefCs },
+          it?.rationale,
+          `agent:${req.agentName}`,
+        );
+        proposed.push(it.nodeId);
+      } catch (err) {
+        errors.push({ nodeId: String(it?.nodeId), error: (err as Error).message });
+      }
+    }
+    ok(res, { proposed: proposed.length, errors, submittedBy: `agent:${req.agentName}` });
+  });
+
   // Promotion proposals — the librarian PROPOSES, the moderator DECIDES.
   // No agent path can approve; the curated corpus stays human-gated
   // (or quorum-gated in the future democratic/MMO policy).
@@ -647,6 +710,48 @@ const OPENAPI_SPEC = {
                         nodeId: { type: 'string' },
                         descriptionEn: { type: 'string', minLength: 20, maxLength: 2000 },
                         descriptionCs: { type: 'string', minLength: 20, maxLength: 2000 },
+                        rationale: { type: 'string', maxLength: 1000 },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/agent/v1/taxonomy/brief/pending': {
+      get: {
+        summary:
+          'taxonomy-brief intake: nodes lacking an explanatory brief, root-first (ordered by level), with server-assembled context incl. the K1 description.',
+        parameters: [
+          { name: 'limit', in: 'query', schema: { type: 'integer', maximum: 20, default: 10 } },
+          { name: 'maxLevel', in: 'query', schema: { type: 'integer' } },
+        ],
+      },
+    },
+    '/agent/v1/taxonomy/brief': {
+      post: {
+        summary:
+          'Batch-propose node briefs (markdown paragraphs; [[node-id]] vazby validated, >=1 required; external links allowed). kind=brief promotions — the moderator disposes; approval merges into the curated note layer.',
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['items'],
+                properties: {
+                  items: {
+                    type: 'array',
+                    maxItems: 20,
+                    items: {
+                      type: 'object',
+                      required: ['nodeId', 'briefEn'],
+                      properties: {
+                        nodeId: { type: 'string' },
+                        briefEn: { type: 'string', minLength: 300, maxLength: 12000 },
+                        briefCs: { type: 'string', minLength: 200, maxLength: 12000 },
                         rationale: { type: 'string', maxLength: 1000 },
                       },
                     },

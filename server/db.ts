@@ -1155,7 +1155,7 @@ export function applyLintVerdict(
 
 export interface PromotionRow {
   id: string;
-  kind: 'object' | 'node' | 'desc';
+  kind: 'object' | 'node' | 'desc' | 'brief';
   captureId: string;
   proposedBy: string;
   rationale?: string;
@@ -1191,7 +1191,7 @@ export function upsertPromotion(p: {
   proposedBy: string;
   rationale?: string;
   object: any;
-  kind?: 'object' | 'node' | 'desc';
+  kind?: 'object' | 'node' | 'desc' | 'brief';
 }): void {
   getDb()
     .prepare(

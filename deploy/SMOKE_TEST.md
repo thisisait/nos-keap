@@ -162,3 +162,21 @@ curl -s -X POST -H "Authorization: Bearer $RW" -H 'content-type: application/jso
 # invariants: layout_version UNCHANGED (descriptions are metadata — stars
 # never move), override survives restart (node_descriptions table).
 ```
+
+## 11. taxonomy-brief (node articles with vazby, post-v0.7.1)
+
+```bash
+RO=<ro token>; RW=<rw token>; B=http://127.0.0.1:8091
+# intake root-first (anchor core = 107 nodes at maxLevel=1):
+curl -s -H "Authorization: Bearer $RO" "$B/agent/v1/taxonomy/brief/pending?limit=3&maxLevel=1"
+# propose: >=2 paragraphs, >=300 chars, >=1 [[node-id]] vazba (unknown ids refused,
+# zero vazby refused — "briefs carry the vazby"), external [text](url) allowed:
+curl -s -X POST -H "Authorization: Bearer $RW" -H 'content-type: application/json' \
+  $B/agent/v1/taxonomy/brief -d '{"items":[{"nodeId":"01","briefEn":"…\n\n… [[01.01]] …","briefCs":"…"}]}'
+# moderate: Admin › Moderation kind=brief rows + bulk bar
+# (POST /api/promotions/decide-desc-bulk {"decision":"approve","kind":"brief"}).
+# consumers: /api/taxonomy-metadata/<id> data.brief+briefCs+briefMeta;
+#   embeddings pending gains the note-kind row (NOTE: items are capped at 500 —
+#   check data.total, not the item list); DetailPanel renders the brief with
+#   clickable [[vazby]]; brief/pending total shrinks.
+```

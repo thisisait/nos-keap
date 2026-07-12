@@ -16,12 +16,12 @@ import { apiFetch } from '@/services/api/client';
 
 interface Promotion {
   id: string;
-  kind: 'object' | 'node' | 'desc';
+  kind: 'object' | 'node' | 'desc' | 'brief';
   captureId: string;
   proposedBy: string;
   rationale?: string;
   // kind=object: {type,title,body,…}; kind=node: {parentId,name,description};
-  // kind=desc: {nodeId,descriptionEn,descriptionCs}
+  // kind=desc: {nodeId,descriptionEn,descriptionCs}; kind=brief: {nodeId,briefEn,briefCs}
   object: any;
   status: string;
   votes: Array<{ by: string; value: number }>;
@@ -54,17 +54,18 @@ export function ModerationPanel() {
 
   // K1 batch relief: taxonomy-describe lands hundreds of desc proposals at
   // once — the honest review granularity is the rendered batch.
-  const bulkDescMut = useMutation({
-    mutationFn: (decision: 'approve' | 'reject') =>
+  const bulkMut = useMutation({
+    mutationFn: (v: { decision: 'approve' | 'reject'; kind: 'desc' | 'brief' }) =>
       apiFetch('/api/promotions/decide-desc-bulk', {
         method: 'POST',
-        body: JSON.stringify({ decision }),
+        body: JSON.stringify(v),
       }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['promotions'] }),
   });
 
   const open = (data?.items ?? []).filter((p) => p.status === 'proposed');
   const openDesc = open.filter((p) => p.kind === 'desc');
+  const openBrief = open.filter((p) => p.kind === 'brief');
   const decided = (data?.items ?? []).filter((p) => p.status !== 'proposed').slice(0, 10);
 
   return (
@@ -88,22 +89,24 @@ export function ModerationPanel() {
           <p className="py-6 text-center text-muted-foreground">{t('admin.moderation.empty')}</p>
         ) : (
           <>
-          {openDesc.length > 1 && (
-            <div className="flex items-center justify-between rounded-lg border border-dashed p-3">
-              <p className="text-sm text-muted-foreground">
-                {t('admin.moderation.bulkDescHint', { count: openDesc.length })}
-              </p>
-              <div className="flex shrink-0 gap-2">
-                <Button size="sm" onClick={() => bulkDescMut.mutate('approve')} disabled={bulkDescMut.isPending}>
-                  <Check className="mr-1 h-3.5 w-3.5" />
-                  {t('admin.moderation.bulkApproveDesc')}
-                </Button>
-                <Button size="sm" variant="outline" onClick={() => bulkDescMut.mutate('reject')} disabled={bulkDescMut.isPending}>
-                  <X className="mr-1 h-3.5 w-3.5" />
-                  {t('admin.moderation.bulkRejectDesc')}
-                </Button>
+          {([['desc', openDesc], ['brief', openBrief]] as const).map(([k, list]) =>
+            list.length > 1 ? (
+              <div key={k} className="flex items-center justify-between rounded-lg border border-dashed p-3">
+                <p className="text-sm text-muted-foreground">
+                  {t(k === 'desc' ? 'admin.moderation.bulkDescHint' : 'admin.moderation.bulkBriefHint', { count: list.length })}
+                </p>
+                <div className="flex shrink-0 gap-2">
+                  <Button size="sm" onClick={() => bulkMut.mutate({ decision: 'approve', kind: k })} disabled={bulkMut.isPending}>
+                    <Check className="mr-1 h-3.5 w-3.5" />
+                    {t(k === 'desc' ? 'admin.moderation.bulkApproveDesc' : 'admin.moderation.bulkApproveBrief')}
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => bulkMut.mutate({ decision: 'reject', kind: k })} disabled={bulkMut.isPending}>
+                    <X className="mr-1 h-3.5 w-3.5" />
+                    {t(k === 'desc' ? 'admin.moderation.bulkRejectDesc' : 'admin.moderation.bulkRejectBrief')}
+                  </Button>
+                </div>
               </div>
-            </div>
+            ) : null,
           )}
           <ul className="space-y-4">
             {open.map((p) => {
@@ -113,13 +116,15 @@ export function ModerationPanel() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <p className="font-medium">
-                        {p.kind === 'node' ? p.object.name : p.kind === 'desc' ? p.object.nodeId : p.object.title}{' '}
+                        {p.kind === 'node' ? p.object.name : p.kind === 'desc' || p.kind === 'brief' ? p.object.nodeId : p.object.title}{' '}
                         <Badge variant="secondary" className="ml-1">
                           {p.kind === 'node'
                             ? t('admin.moderation.nodeKind')
                             : p.kind === 'desc'
                               ? t('admin.moderation.descKind')
-                              : p.object.type}
+                              : p.kind === 'brief'
+                                ? t('admin.moderation.briefKind')
+                                : p.object.type}
                         </Badge>
                         {p.kind === 'node' && (
                           <span className="ml-2 text-xs font-normal text-muted-foreground">
@@ -157,11 +162,13 @@ export function ModerationPanel() {
                       <span className="font-medium">{t('admin.moderation.rationale')}:</span> {p.rationale}
                     </p>
                   )}
-                  {(p.object.body || p.object.description || p.object.descriptionEn) && (
+                  {(p.object.body || p.object.description || p.object.descriptionEn || p.object.briefEn) && (
                     <pre className="mt-2 max-h-40 overflow-auto whitespace-pre-wrap rounded bg-muted p-2 text-xs">
                       {p.kind === 'desc'
                         ? `en: ${p.object.descriptionEn}${p.object.descriptionCs ? `\ncs: ${p.object.descriptionCs}` : ''}`
-                        : (p.object.body ?? p.object.description)}
+                        : p.kind === 'brief'
+                          ? p.object.briefEn
+                          : (p.object.body ?? p.object.description)}
                     </pre>
                   )}
                 </li>
@@ -182,7 +189,7 @@ export function ModerationPanel() {
                   <Badge variant={p.status === 'approved' ? 'default' : 'outline'} className="mr-1 text-[10px]">
                     {p.status}
                   </Badge>
-                  {p.kind === 'node' ? p.object.name : p.kind === 'desc' ? p.object.nodeId : p.object.title} · {p.decidedBy}
+                  {p.kind === 'node' ? p.object.name : p.kind === 'desc' || p.kind === 'brief' ? p.object.nodeId : p.object.title} · {p.decidedBy}
                 </li>
               ))}
             </ul>

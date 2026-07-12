@@ -128,6 +128,11 @@ export function decide(
     return { status: 'approved', objectId: nodeId };
   }
 
+  if ((p as any).kind === 'brief') {
+    const { nodeId } = materializeBrief(promotionId, decidedBy);
+    return { status: 'approved', objectId: nodeId };
+  }
+
   // Approve: materialize the object through the standard write path.
   const draft = p.object as ObjectDraft;
   const broken = brokenAnchors(draft);
@@ -293,6 +298,88 @@ export function materializeDescription(promotionId: string, decidedBy: string): 
   // Consumer-first (llms.txt lesson): FTS + corpus flip in the same step;
   // the embeddings pending diff picks the changed content_hash up next sync.
   rebuildTaxonomyFts(allNodes());
+  markCorpusDirty();
+  db.setPromotionDecision(promotionId, 'approved', decidedBy, draft.nodeId);
+  return { nodeId: draft.nodeId };
+}
+
+// ── Node briefs (Track K, taxonomy-brief) ─────────────────────────────────────
+// Several explanatory PARAGRAPHS with LINKS per node — the node's article,
+// where the K1 description is its abstract. Briefs live in the curated note
+// layer (taxonomy_metadata.data.brief*), which the embeddings (kind 'note'),
+// the agent node detail and the lint already consume — no new read paths.
+// kind='brief' promotions: agents/humans propose, the moderator disposes.
+// [[node-id]] refs are the VAZBY: validated against the live tree, at least
+// one required, rendered clickable in the explorer's DetailPanel.
+
+export interface BriefDraft {
+  nodeId: string;
+  /** Markdown, >=2 paragraphs — canonical (en). */
+  briefEn: string;
+  /** Markdown, cs localization. */
+  briefCs?: string;
+}
+
+function briefRefs(md: string): string[] {
+  return anchorNodeIds(extractRefs(md, undefined) as ObjectRef[]);
+}
+
+export function proposeBrief(
+  draft: BriefDraft,
+  rationale: string | undefined,
+  proposedBy: string,
+): { id: string; status: string } {
+  const node = getNode(draft?.nodeId ?? '');
+  if (!node) throw new Error(`unknown node ${draft?.nodeId}`);
+  const en = (draft.briefEn ?? '').trim();
+  if (en.length < 300 || en.length > 12000) {
+    throw new Error('briefEn must be 300-12000 chars — several real paragraphs, not a caption');
+  }
+  if (en.split(/\n\s*\n/).filter((p) => p.trim()).length < 2) {
+    throw new Error('briefEn needs at least 2 paragraphs (blank-line separated)');
+  }
+  const cs = draft.briefCs?.trim();
+  if (cs !== undefined && (cs.length < 200 || cs.length > 12000)) {
+    throw new Error('briefCs, when given, must carry real paragraphs (200-12000 chars)');
+  }
+  const refs = briefRefs(en);
+  const broken = refs.filter((r) => !getNode(r));
+  if (broken.length) throw new Error(`brief links unknown taxonomy nodes: ${broken.join(', ')}`);
+  if (!refs.length) {
+    throw new Error('brief must link at least one related [[node-id]] — briefs carry the vazby');
+  }
+  const normalized: BriefDraft = { nodeId: node.id, briefEn: en, briefCs: cs };
+  const existing = db
+    .listPromotions('proposed')
+    .find((p) => (p as any).kind === 'brief' && p.object?.nodeId === node.id);
+  const id = existing?.id ?? crypto.randomUUID();
+  db.upsertPromotion({
+    id,
+    kind: 'brief',
+    captureId: `brief:${node.id}`,
+    proposedBy,
+    rationale: rationale?.slice(0, 1000),
+    object: normalized,
+  });
+  return { id, status: 'proposed' };
+}
+
+/** Approve side-effect for kind='brief': merge into the curated note layer. */
+export function materializeBrief(promotionId: string, decidedBy: string): { nodeId: string } {
+  const p = db.getPromotion(promotionId);
+  if (!p) throw new Error('unknown promotion');
+  const draft = p.object as BriefDraft;
+  const node = getNode(draft.nodeId);
+  if (!node) throw new Error(`node ${draft.nodeId} vanished`);
+  const broken = briefRefs(draft.briefEn).filter((r) => !getNode(r));
+  if (broken.length) throw new Error(`brief links vanished from taxonomy: ${broken.join(', ')}`);
+  const row = db.getTaxonomyMetadata(draft.nodeId);
+  const data = row && !Array.isArray(row) ? { ...(row.data ?? {}) } : {};
+  data.brief = draft.briefEn;
+  if (draft.briefCs) data.briefCs = draft.briefCs;
+  data.briefMeta = { proposedBy: p.proposedBy, approvedBy: decidedBy };
+  db.saveTaxonomyMetadata({ id: draft.nodeId, data }, p.proposedBy);
+  // The note-kind embedding goes stale via content_hash; search flips now.
   markCorpusDirty();
   db.setPromotionDecision(promotionId, 'approved', decidedBy, draft.nodeId);
   return { nodeId: draft.nodeId };

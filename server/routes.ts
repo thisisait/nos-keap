@@ -19,7 +19,7 @@ import { listContentServices } from './content-links';
 import { extractRefs } from './objects';
 import { markCorpusDirty } from './search';
 import { runLint, lastLintReport } from './lint';
-import { propose, proposeNode, proposeDescription, vote, decide, moderationPolicy } from './promotions';
+import { propose, proposeNode, proposeDescription, proposeBrief, vote, decide, moderationPolicy } from './promotions';
 import { exportBundle, importBundle } from './okf';
 import { normalizeAndSaveCapture } from './intake';
 
@@ -238,15 +238,26 @@ export function registerApiRoutes(app: Express) {
       return fail(res, 400, (err as Error).message);
     }
   });
-  // K1 batch relief: decide EVERY open kind='desc' proposal in one click.
-  // taxonomy-describe lands hundreds at once — the honest review granularity
-  // is the rendered batch, not one-by-one rubber-stamping. Desc only:
-  // object/node proposals change corpus/structure and stay individual.
+  // Human brief proposal — same moderated path as agents (DetailPanel later).
+  app.post('/api/taxonomy/brief', (req, res) => {
+    const { nodeId, briefEn, briefCs, rationale } = req.body ?? {};
+    try {
+      ok(res, proposeBrief({ nodeId, briefEn, briefCs }, rationale, req.user.id));
+    } catch (err) {
+      return fail(res, 400, (err as Error).message);
+    }
+  });
+  // Batch relief: decide EVERY open kind='desc' (default) or kind='brief'
+  // proposal in one click. The describe/brief skills land dozens-hundreds at
+  // once — the honest review granularity is the rendered batch, not
+  // one-by-one rubber-stamping. Object/node proposals change corpus/
+  // structure and stay individual.
   app.post('/api/promotions/decide-desc-bulk', (req, res) => {
     if (!requireAdmin(req, res)) return;
     const decision = req.body?.decision;
     if (decision !== 'approve' && decision !== 'reject') return fail(res, 400, 'decision approve|reject required');
-    const open = db.listPromotions('proposed', 1000).filter((p) => p.kind === 'desc');
+    const kind = req.body?.kind === 'brief' ? 'brief' : 'desc';
+    const open = db.listPromotions('proposed', 1000).filter((p) => p.kind === kind);
     let decided = 0;
     const errors: Array<{ id: string; error: string }> = [];
     for (const p of open) {
@@ -257,7 +268,7 @@ export function registerApiRoutes(app: Express) {
         errors.push({ id: p.id, error: (err as Error).message });
       }
     }
-    ok(res, { decision, decided, errors });
+    ok(res, { decision, kind, decided, errors });
   });
   app.post('/api/promotions/:id/vote', (req, res) => {
     const value = req.body?.value === -1 ? -1 : 1;
