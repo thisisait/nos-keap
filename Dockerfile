@@ -19,8 +19,13 @@ COPY package.json package-lock.json* ./
 # not part of the server image. `wxt build` (if ever run) does its own prepare.
 RUN npm ci --ignore-scripts
 COPY . .
-# Server image = SPA (vite) + compiled backend only; NOT the extension
-# (build:ext / wxt). Keeps the image independent of the extension toolchain.
+# tsconfig.json `references` tsconfig.extension.json, which `extends`
+# .wxt/tsconfig.json — a wxt-generated, git-ignored file. A fresh clone (the
+# deploy path) lacks it, so vite/esbuild's tsconfig resolver crashes in
+# parseExtends. `wxt prepare` regenerates .wxt/ from the source now present;
+# it does NOT build the extension (that stays a separate browser deliverable).
+RUN npx wxt prepare
+# Server image = SPA (vite) + compiled backend only; NOT the extension bundle.
 RUN npx vite build && npm run build:server   # -> dist/  +  dist-server/
 
 # ---- runtime ----
