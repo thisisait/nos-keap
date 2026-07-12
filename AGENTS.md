@@ -7,7 +7,8 @@
 - `npm run build:ext` — build the Chrome MV3 extension to `dist-extension/chrome-mv3`.
 - `npm run build:ext:firefox` — build the Firefox MV2 extension to `dist-extension/firefox-mv2`.
 - `npm run build:ext:safari` — build the Safari MV2 extension to `dist-extension/safari-mv2`.
-- `npm run package:safari` — build the Safari extension and convert it to an Xcode macOS app project (requires Xcode).
+- `npm run build:ext:safari-mv3` — build the Safari MV3 extension to `dist-extension/safari-mv3`.
+- `npm run package:safari` — build the Safari MV3 extension and convert it to an Xcode macOS app project (requires Xcode).
 - `npm run wxt:prepare` (also `postinstall`) — generate WXT `.wxt` types.
 - `npx tsc -p tsconfig.extension.json --noEmit` — typecheck the extension.
 - `npx eslint extension` — lint the extension source.
@@ -23,7 +24,7 @@
 2. Open Chrome / Edge, go to `chrome://extensions`, enable Developer mode, and Load unpacked:
    - Chrome: `dist-extension/chrome-mv3`
    - Firefox: `dist-extension/firefox-mv2` (use `about:debugging` → This Firefox → Load Temporary Add-on)
-   - Safari: requires full Xcode. Run `npm run package:safari`, then open the generated `KEAP/KEAP.xcodeproj`, build the project, and enable the extension in Safari → Settings → Extensions. For iOS, the generated project must be wrapped in an iOS app and distributed via the App Store.
+   - Safari: requires full Xcode.app (Command Line Tools are not enough). Run `npm run package:safari`, then open the generated `KEAP/KEAP.xcodeproj`, build the project, and enable the extension in Safari → Settings → Extensions. For iOS, the generated macOS project must be wrapped in an iOS app and distributed via the App Store.
 3. Click the extension toolbar icon to open the KEAP bottom bar.
 4. In the Settings tab, enter the KEAP instance URL (e.g. `http://localhost:8080`) and start pairing.
 5. Approve the pairing in the opened `/extension/pair?code=...` tab.
