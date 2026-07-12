@@ -345,6 +345,14 @@ export function proposeBrief(
   if (!refs.length) {
     throw new Error('brief must link at least one related [[node-id]] — briefs carry the vazby');
   }
+  // External [text](url) links must be http(s) — a `javascript:`/`data:` href
+  // would become an executable link in the article renderer once approved.
+  const badLink = [...en.matchAll(/\[[^\]]*\]\(([^)\s]+)\)/g)]
+    .map((mm) => mm[1])
+    .find((u) => !u.startsWith('[[') && !/^https?:\/\//i.test(u) && !u.startsWith('/'));
+  if (badLink) {
+    throw new Error(`brief external links must be http(s): rejected '${badLink}'`);
+  }
   const normalized: BriefDraft = { nodeId: node.id, briefEn: en, briefCs: cs };
   const existing = db.openPromotions()
     .find((p) => (p as any).kind === 'brief' && p.object?.nodeId === node.id);

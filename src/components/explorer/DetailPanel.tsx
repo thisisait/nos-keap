@@ -102,10 +102,19 @@ function BriefBody({
           </button>,
         );
       } else {
+        // Only http(s) links become anchors — a brief is untrusted LLM/user
+        // text, and React does not neutralize `javascript:` hrefs. Anything
+        // else renders as plain text (label + URL), never an executable link.
+        const href = m[3];
+        const safe = /^https?:\/\//i.test(href);
         out.push(
-          <a key={key++} href={m[3]} target="_blank" rel="noreferrer" className="underline underline-offset-2">
-            {m[2] || m[3]}
-          </a>,
+          safe ? (
+            <a key={key++} href={href} target="_blank" rel="noreferrer noopener" className="underline underline-offset-2">
+              {m[2] || href}
+            </a>
+          ) : (
+            <span key={key++}>{m[2] ? `${m[2]} (${href})` : href}</span>
+          ),
         );
       }
       last = re.lastIndex;

@@ -98,6 +98,19 @@ export function canReadTable(t: TableInfo, userId: string, seeAll: boolean): boo
   return seeAll || t.ownerId === userId || t.visibility === 'shared';
 }
 
+/**
+ * Row ids reach a RustFS object key (`tables/<id>/rows/<rowId>.json`) that is
+ * parsed as a URL — a `/`, `.` or `%` in a caller-supplied id lets `..`
+ * traverse out of the table (cross-table, or out of the bucket entirely).
+ * Every route that takes a caller-supplied row id MUST pass it through here
+ * before the driver sees it. Generated ids are UUIDs, which pass.
+ */
+const SAFE_ROW_ID = /^[A-Za-z0-9_-]{1,128}$/;
+export function assertRowId(rowId: string): string {
+  if (!SAFE_ROW_ID.test(rowId)) throw new Error('invalid row id');
+  return rowId;
+}
+
 function withCapabilities(t: Omit<TableInfo, 'capabilities'>): TableInfo {
   return { ...t, capabilities: storeFor(t.driver).capabilities };
 }

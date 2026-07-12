@@ -30,7 +30,7 @@ import {
   listCredentials,
   revokeCredential,
 } from './extension/store';
-import { listTables, getTable, canReadTable, storeFor, listDrivers } from './tables';
+import { listTables, getTable, canReadTable, storeFor, listDrivers, assertRowId } from './tables';
 import {
   createTableRequestSchema,
   listRowsQuerySchema,
@@ -44,6 +44,39 @@ const fail = (res: Response, status: number, error: string) =>
 function requireAdmin(req: Request, res: Response): boolean {
   if (!req.user.isAdmin) {
     fail(res, 403, 'admin privileges required');
+    return false;
+  }
+  return true;
+}
+
+/**
+ * CSRF guard for state-changing extension endpoints reached with the ambient
+ * Authentik forward-auth cookie. The old check only ran when KEAP_PUBLIC_URL
+ * was set — unset, a cross-site page could drive pairing-approval/revoke/draft
+ * deletion as the victim. This fails CLOSED behind the outpost:
+ *   - Sec-Fetch-Site (sent by every modern browser) must be same-origin,
+ *     same-site, or none (address-bar) — 'cross-site' is refused.
+ *   - if an Origin header is present and KEAP_PUBLIC_URL is known, it must match.
+ * A request lacking BOTH signals is allowed only when we are NOT behind the
+ * trusted proxy (local dev), never in production.
+ */
+function csrfOk(req: Request, res: Response): boolean {
+  const site = req.headers['sec-fetch-site'];
+  if (typeof site === 'string') {
+    if (site === 'same-origin' || site === 'same-site' || site === 'none') return true;
+    fail(res, 403, 'cross-site request refused');
+    return false;
+  }
+  const expectedOrigin = process.env.KEAP_PUBLIC_URL?.replace(/\/$/, '');
+  const origin = req.headers.origin;
+  if (expectedOrigin && typeof origin === 'string') {
+    if (origin === expectedOrigin) return true;
+    fail(res, 403, 'invalid request origin');
+    return false;
+  }
+  // No Sec-Fetch-Site and no verifiable Origin: safe only outside the outpost.
+  if (process.env.KEAP_TRUSTED_PROXY === '1') {
+    fail(res, 403, 'request origin could not be verified');
     return false;
   }
   return true;
@@ -70,15 +103,13 @@ export function registerApiRoutes(app: Express) {
     ok(res, pairing);
   });
   app.post('/api/extension/pairings/:code/approve', (req, res) => {
-    const expectedOrigin = process.env.KEAP_PUBLIC_URL?.replace(/\/$/, '');
-    if (expectedOrigin && req.headers.origin !== expectedOrigin) return fail(res, 403, 'invalid request origin');
+    if (!csrfOk(req, res)) return;
     if (!approvePairing(req.params.code, req.user)) return fail(res, 409, 'pairing is not pending or has expired');
     ok(res);
   });
   app.get('/api/extension/credentials', (req, res) => ok(res, listCredentials(req.user.id)));
   app.post('/api/extension/credentials/:id/revoke', (req, res) => {
-    const expectedOrigin = process.env.KEAP_PUBLIC_URL?.replace(/\/$/, '');
-    if (expectedOrigin && req.headers.origin !== expectedOrigin) return fail(res, 403, 'invalid request origin');
+    if (!csrfOk(req, res)) return;
     if (!revokeCredential(req.user.id, req.params.id)) return fail(res, 404, 'unknown active credential');
     ok(res);
   });
@@ -88,8 +119,7 @@ export function registerApiRoutes(app: Express) {
     ok(res, draft);
   });
   app.delete('/api/extension/drafts/:id', (req, res) => {
-    const expectedOrigin = process.env.KEAP_PUBLIC_URL?.replace(/\/$/, '');
-    if (expectedOrigin && req.headers.origin !== expectedOrigin) return fail(res, 403, 'invalid request origin');
+    if (!csrfOk(req, res)) return;
     if (!deleteDraft(req.params.id, req.user.id)) return fail(res, 404, 'unknown draft');
     ok(res);
   });
@@ -497,7 +527,7 @@ export function registerApiRoutes(app: Express) {
         res,
         await storeFor(t.driver).upsertRow(
           t.id,
-          req.body.id ? String(req.body.id) : undefined,
+          req.body.id ? assertRowId(String(req.body.id)) : undefined,
           values,
           req.user.id,
         ),
@@ -511,7 +541,7 @@ export function registerApiRoutes(app: Express) {
     const t = tableForWrite(req, res);
     if (!t) return;
     try {
-      await storeFor(t.driver).deleteRow(t.id, req.params.rowId, req.user.id);
+      await storeFor(t.driver).deleteRow(t.id, assertRowId(req.params.rowId), req.user.id);
       ok(res);
     } catch (e) {
       fail(res, 400, e instanceof Error ? e.message : 'delete failed');
@@ -524,7 +554,7 @@ export function registerApiRoutes(app: Express) {
     if (!t.capabilities.rowHistory) return fail(res, 400, 'driver has no row history');
     ok(
       res,
-      await storeFor(t.driver).rowHistory(t.id, req.params.rowId, Math.min(Number(req.query.limit) || 50, 200)),
+      await storeFor(t.driver).rowHistory(t.id, assertRowId(req.params.rowId), Math.min(Number(req.query.limit) || 50, 200)),
     );
   });
 
