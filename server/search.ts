@@ -46,6 +46,17 @@ export interface SearchHit {
 
 type LegHit = { kind: db.EmbeddingKind; refId: string };
 
+export interface SearchViewer {
+  userId: string;
+  seeAll: boolean;
+}
+
+function visibleTo(h: LegHit, viewer?: SearchViewer): boolean {
+  if (!viewer || h.kind === 'taxonomy' || h.kind === 'note') return true;
+  if (h.kind === 'capture') return db.canReadCapture(h.refId, viewer.userId, viewer.seeAll);
+  return db.canReadObject(h.refId, viewer.userId, viewer.seeAll);
+}
+
 function key(h: LegHit): string {
   return `${h.kind}:${h.refId}`;
 }
@@ -72,20 +83,23 @@ export async function hybridSearch(
   query: string,
   kinds: db.EmbeddingKind[],
   limit: number,
+  viewer?: SearchViewer,
 ): Promise<{ hits: SearchHit[]; legs: { lexical: boolean; vector: boolean; graph: boolean } }> {
   ensureCorpusFts();
 
   const legLists: Array<{ name: string; hits: LegHit[] }> = [];
 
   // Lexical leg — always available.
-  const lexical = db.searchCorpusFts(query, kinds, LEG_FETCH);
+  const lexical = db.searchCorpusFts(query, kinds, LEG_FETCH).filter((hit) => visibleTo(hit, viewer));
   legLists.push({ name: 'lexical', hits: lexical });
 
   // Vector leg — only when the operator wired a live embedder.
   let vectorOk = false;
   const vec = await embedText(query);
   if (vec) {
-    const hits = db.vectorNeighborsOf(JSON.stringify(vec), 'related', kinds, LEG_FETCH);
+    const hits = db
+      .vectorNeighborsOf(JSON.stringify(vec), 'related', kinds, LEG_FETCH)
+      .filter((hit) => visibleTo(hit, viewer));
     if (hits.length) {
       vectorOk = true;
       legLists.push({ name: 'vector', hits });
@@ -101,6 +115,7 @@ export async function hybridSearch(
   for (const seed of hopSeeds) {
     for (const n of hop(seed)) {
       if (n.kind !== 'taxonomy' && !kinds.includes(n.kind)) continue;
+      if (!visibleTo(n, viewer)) continue;
       if (seen.has(key(n))) continue;
       seen.add(key(n));
       hopHits.push(n);

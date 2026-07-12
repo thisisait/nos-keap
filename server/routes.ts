@@ -22,6 +22,20 @@ import { runLint, lastLintReport } from './lint';
 import { propose, proposeNode, proposeDescription, proposeBrief, vote, decide, moderationPolicy } from './promotions';
 import { exportBundle, importBundle } from './okf';
 import { normalizeAndSaveCapture } from './intake';
+import {
+  approvePairing,
+  deleteDraft,
+  getDraftForUser,
+  getPairingForApproval,
+  listCredentials,
+  revokeCredential,
+} from './extension/store';
+import { listTables, getTable, canReadTable, storeFor } from './tables';
+import {
+  createTableRequestSchema,
+  listRowsQuerySchema,
+  aggregateQuerySchema,
+} from '../shared/contracts/table';
 
 const ok = (res: Response, data?: unknown) => res.json({ success: true, data });
 const fail = (res: Response, status: number, error: string) =>
@@ -47,6 +61,38 @@ export function registerApiRoutes(app: Express) {
       isAdmin: req.user.isAdmin,
     }),
   );
+
+  app.get('/api/extension/pairings/:code', (req, res) => {
+    const pairing = getPairingForApproval(req.params.code);
+    if (!pairing || pairing.expiresAt <= Math.floor(Date.now() / 1000)) {
+      return fail(res, 404, 'unknown or expired pairing');
+    }
+    ok(res, pairing);
+  });
+  app.post('/api/extension/pairings/:code/approve', (req, res) => {
+    const expectedOrigin = process.env.KEAP_PUBLIC_URL?.replace(/\/$/, '');
+    if (expectedOrigin && req.headers.origin !== expectedOrigin) return fail(res, 403, 'invalid request origin');
+    if (!approvePairing(req.params.code, req.user)) return fail(res, 409, 'pairing is not pending or has expired');
+    ok(res);
+  });
+  app.get('/api/extension/credentials', (req, res) => ok(res, listCredentials(req.user.id)));
+  app.post('/api/extension/credentials/:id/revoke', (req, res) => {
+    const expectedOrigin = process.env.KEAP_PUBLIC_URL?.replace(/\/$/, '');
+    if (expectedOrigin && req.headers.origin !== expectedOrigin) return fail(res, 403, 'invalid request origin');
+    if (!revokeCredential(req.user.id, req.params.id)) return fail(res, 404, 'unknown active credential');
+    ok(res);
+  });
+  app.get('/api/extension/drafts/:id', (req, res) => {
+    const draft = getDraftForUser(req.params.id, req.user.id);
+    if (!draft) return fail(res, 404, 'unknown or expired draft');
+    ok(res, draft);
+  });
+  app.delete('/api/extension/drafts/:id', (req, res) => {
+    const expectedOrigin = process.env.KEAP_PUBLIC_URL?.replace(/\/$/, '');
+    if (expectedOrigin && req.headers.origin !== expectedOrigin) return fail(res, 403, 'invalid request origin');
+    if (!deleteDraft(req.params.id, req.user.id)) return fail(res, 404, 'unknown draft');
+    ok(res);
+  });
 
   // Taxonomy options (static dataset, global)
   app.get('/api/taxonomy', (_req, res) => ok(res, generateTaxonomyOptions()));
@@ -364,6 +410,118 @@ export function registerApiRoutes(app: Express) {
     db.deleteObject(req.params.id);
     markCorpusDirty();
     ok(res);
+  });
+
+  // Data tables (Track R2′) — TableStore behind shared/contracts/table.ts.
+  // Reads: owner, admin, or visibility=shared. Writes: owner or admin.
+  const tableForWrite = (req: Request, res: Response) => {
+    const t = getTable(req.params.id);
+    if (!t || !canReadTable(t, req.user.id, req.user.isAdmin)) {
+      fail(res, 404, 'unknown table');
+      return null;
+    }
+    if (t.ownerId !== req.user.id && !req.user.isAdmin) {
+      fail(res, 403, 'not your table');
+      return null;
+    }
+    return t;
+  };
+
+  app.get('/api/tables', (req, res) => ok(res, listTables(req.user.id, req.user.isAdmin)));
+
+  app.post('/api/tables', (req, res) => {
+    const parsed = createTableRequestSchema.safeParse(req.body ?? {});
+    if (!parsed.success) return fail(res, 400, parsed.error.issues[0]?.message ?? 'invalid table');
+    try {
+      const t = storeFor(parsed.data.driver).createTable(req.user.id, parsed.data);
+      ok(res, t);
+    } catch (e) {
+      fail(res, 400, e instanceof Error ? e.message : 'create failed');
+    }
+  });
+
+  app.get('/api/tables/:id', (req, res) => {
+    const t = getTable(req.params.id);
+    if (!t || !canReadTable(t, req.user.id, req.user.isAdmin)) return fail(res, 404, 'unknown table');
+    ok(res, t);
+  });
+
+  app.delete('/api/tables/:id', (req, res) => {
+    const t = tableForWrite(req, res);
+    if (!t) return;
+    storeFor(t.driver).dropTable(t.id);
+    ok(res);
+  });
+
+  app.get('/api/tables/:id/rows', (req, res) => {
+    const t = getTable(req.params.id);
+    if (!t || !canReadTable(t, req.user.id, req.user.isAdmin)) return fail(res, 404, 'unknown table');
+    let parsedFilter: unknown = [];
+    try {
+      parsedFilter = req.query.filter ? JSON.parse(String(req.query.filter)) : [];
+    } catch {
+      return fail(res, 400, 'filter must be JSON');
+    }
+    const parsed = listRowsQuerySchema.safeParse({
+      filter: parsedFilter,
+      sort: req.query.sort_column
+        ? { column: String(req.query.sort_column), dir: req.query.sort_dir === 'desc' ? 'desc' : 'asc' }
+        : undefined,
+      cursor: req.query.cursor ? String(req.query.cursor) : undefined,
+      limit: req.query.limit ? Number(req.query.limit) : undefined,
+    });
+    if (!parsed.success) return fail(res, 400, parsed.error.issues[0]?.message ?? 'invalid query');
+    try {
+      ok(res, storeFor(t.driver).listRows(t.id, parsed.data));
+    } catch (e) {
+      fail(res, 400, e instanceof Error ? e.message : 'query failed');
+    }
+  });
+
+  app.post('/api/tables/:id/rows', (req, res) => {
+    const t = tableForWrite(req, res);
+    if (!t) return;
+    const values = req.body?.values;
+    if (!values || typeof values !== 'object') return fail(res, 400, 'values object required');
+    try {
+      ok(
+        res,
+        storeFor(t.driver).upsertRow(t.id, req.body.id ? String(req.body.id) : undefined, values, req.user.id),
+      );
+    } catch (e) {
+      fail(res, 400, e instanceof Error ? e.message : 'write failed');
+    }
+  });
+
+  app.delete('/api/tables/:id/rows/:rowId', (req, res) => {
+    const t = tableForWrite(req, res);
+    if (!t) return;
+    storeFor(t.driver).deleteRow(t.id, req.params.rowId, req.user.id);
+    ok(res);
+  });
+
+  app.get('/api/tables/:id/rows/:rowId/history', (req, res) => {
+    const t = getTable(req.params.id);
+    if (!t || !canReadTable(t, req.user.id, req.user.isAdmin)) return fail(res, 404, 'unknown table');
+    if (!t.capabilities.rowHistory) return fail(res, 400, 'driver has no row history');
+    ok(
+      res,
+      storeFor(t.driver).rowHistory(t.id, req.params.rowId, Math.min(Number(req.query.limit) || 50, 200)),
+    );
+  });
+
+  // The OLAP slice: GROUP BY dimensions × aggregated measures.
+  app.post('/api/tables/:id/aggregate', (req, res) => {
+    const t = getTable(req.params.id);
+    if (!t || !canReadTable(t, req.user.id, req.user.isAdmin)) return fail(res, 404, 'unknown table');
+    if (!t.capabilities.aggregate) return fail(res, 400, 'driver cannot aggregate');
+    const parsed = aggregateQuerySchema.safeParse(req.body ?? {});
+    if (!parsed.success) return fail(res, 400, parsed.error.issues[0]?.message ?? 'invalid aggregate query');
+    try {
+      ok(res, storeFor(t.driver).aggregate(t.id, parsed.data));
+    } catch (e) {
+      fail(res, 400, e instanceof Error ? e.message : 'aggregate failed');
+    }
   });
 
   // Todos (per-user)

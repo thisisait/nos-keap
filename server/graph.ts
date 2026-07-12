@@ -50,7 +50,10 @@ interface EnrichedHit {
   nodeId?: string;
 }
 
-function enrich(hits: db.NeighborHit[]): EnrichedHit[] {
+function enrich(
+  hits: db.NeighborHit[],
+  viewer?: { userId: string; seeAll: boolean },
+): EnrichedHit[] {
   const out: EnrichedHit[] = [];
   for (const h of hits) {
     if (h.kind === 'taxonomy') {
@@ -69,8 +72,8 @@ function enrich(hits: db.NeighborHit[]): EnrichedHit[] {
         nodeId: n.id,
       });
     } else if (h.kind === 'capture') {
-      const rows = db.getAllMetadataApi('', true).filter((c) => c.id === h.refId);
-      const c = rows[0];
+      if (viewer && !db.canReadCapture(h.refId, viewer.userId, viewer.seeAll)) continue;
+      const c = db.getMetadataApi(h.refId);
       if (!c) continue;
       out.push({
         ...h,
@@ -80,6 +83,7 @@ function enrich(hits: db.NeighborHit[]): EnrichedHit[] {
         url: c.url ?? undefined,
       });
     } else if (h.kind === 'object') {
+      if (viewer && !db.canReadObject(h.refId, viewer.userId, viewer.seeAll)) continue;
       const o = db.getObject(h.refId);
       if (!o) continue;
       const anchors = anchorNodeIds((o.links ?? []) as ObjectRef[]);
@@ -198,7 +202,12 @@ export function registerGraphRoutes(app: Express) {
       // No vector layer or the anchor isn't embedded yet.
       return ok(res, { id, mode, semantic: false, items: [] });
     }
-    ok(res, { id, mode, semantic: true, items: enrich(hits) });
+    ok(res, {
+      id,
+      mode,
+      semantic: true,
+      items: enrich(hits, { userId: req.user.id, seeAll: req.user.isAdmin }),
+    });
   });
 
   // Free-text hybrid search (human twin of /agent/v1/search/semantic).
@@ -209,8 +218,12 @@ export function registerGraphRoutes(app: Express) {
     if (!q) return fail(res, 400, 'q required');
     const limit = Math.min(Number(req.query.limit) || 20, MAX_NEIGHBORS);
     const kinds = parseKinds(req.query.kinds);
-    const { hits, legs } = await hybridSearch(q, kinds, limit);
-    const enriched = enrich(hits.map((h) => ({ kind: h.kind, refId: h.refId, distance: 0 })));
+    const viewer = { userId: req.user.id, seeAll: req.user.isAdmin };
+    const { hits, legs } = await hybridSearch(q, kinds, limit, viewer);
+    const enriched = enrich(
+      hits.map((h) => ({ kind: h.kind, refId: h.refId, distance: 0 })),
+      viewer,
+    );
     const byKey = new Map(hits.map((h) => [`${h.kind}:${h.refId}`, h]));
     const items = enriched.map(({ distance: _d, ...e }) => ({
       ...e,

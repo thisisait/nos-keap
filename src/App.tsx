@@ -8,6 +8,8 @@ import Index from './pages/Index';
 import Admin from './pages/Admin';
 import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
+import ExtensionPair from './pages/ExtensionPair';
+import ComposeDraft from './pages/ComposeDraft';
 
 // Lazy: the explorer pulls in three.js/WebGL — keep it out of the main chunk.
 const Explore = lazy(() => import('./pages/Explore'));
@@ -45,6 +47,8 @@ const App = () => {
               }
             />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/extension/pair" element={<ExtensionPair />} />
+            <Route path="/compose/:id" element={<ComposeDraft />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

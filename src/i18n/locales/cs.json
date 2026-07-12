@@ -224,6 +224,39 @@
       "Hluboké odkazy do Kiwix, Calibre-Web, Nextcloudu a Open WebUI"
     ]
   },
+  "extensionPair": {
+    "title": "Propojit KEAP extension",
+    "client": "Instalace extension",
+    "code": "Párovací kód",
+    "permissions": "Požadovaná oprávnění",
+    "approve": "Povolit tuto extension",
+    "approved": "Extension je propojena",
+    "return": "Tuto stránku můžeš zavřít a vrátit se do extension.",
+    "invalid": "Párovací kód chybí nebo není platný.",
+    "scope": {
+      "context:read": "Hledat související znalosti pro aktuální kontext",
+      "capture:write": "Přidávat záchyty do inboxu",
+      "objects:read": "Číst tvoje znalostní objekty",
+      "objects:write": "Vytvářet a upravovat tvoje znalostní objekty",
+      "types:read": "Číst tvoje typy objektů",
+      "types:write": "Vytvářet a upravovat tvoje typy objektů",
+      "taxonomy:read": "Procházet a hledat v taxonomii",
+      "taxonomy:propose": "Navrhovat změny taxonomie",
+      "drafts:write": "Vytvářet dočasné rozpracované formuláře"
+    }
+  },
+  "composeDraft": {
+    "title": "Dokončit v KEAP",
+    "expires": "Vyprší {{date}}",
+    "foundation": "Bezpečné předání draftu je připravené. Editor podle typu a connectory externích služeb přijdou v následujícím implementačním řezu.",
+    "kind": {
+      "object": "Znalostní objekt",
+      "capture": "Záchyt",
+      "taxonomy-node": "Návrh uzlu taxonomie",
+      "taxonomy-description": "Návrh popisu",
+      "taxonomy-brief": "Návrh článku"
+    }
+  },
   "notFound": {
     "message": "Tahle stránka neexistuje.",
     "backHome": "Zpět na přehled"

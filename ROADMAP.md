@@ -163,6 +163,15 @@ nOS-side counterparts flagged **[nOS]**).
   created in the same action, pre-anchored to the taxonomy node the user started
   from. Needs a service account credential (`KEAP_NEXTCLOUD_URL/USER/TOKEN`) —
   provisioned by the nOS role **[nOS]**.
+- **R2′ — TableStore abstraction (DONE 2026-07-12)**: `shared/contracts/table.ts`
+  (column kinds incl. file-by-ref/vector/taxonomyRef; OLAP roles dimension/measure
+  on every column; `AggregateQuery` = group-by dimensions × aggregated measures;
+  capability-declaring drivers) + `server/tables.ts` with the **libsql** driver
+  (transactions, append-only row history = the event log, json_extract
+  aggregation) + `/api/tables*` REST. Every table lives as a `knowledge_object`
+  card (`keaptable:<id>`, schema card in frontmatter) — searchable, anchorable,
+  OKF-exportable. Next drivers on the same contract: **rustfs** (S3 snapshots +
+  object versioning, parquet → the DuckDB/OLAP-cube path), postgres, grist.
 - **R2 — structured tables (SharePoint-style)**: recommend **Grist** as the nOS
   table service — SQLite-native documents (each Grist doc IS a SQLite file →
   DuckDB/S6 can query it in place, embeddings can index it), REST API, self-hosted

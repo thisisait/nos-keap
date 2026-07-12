@@ -224,6 +224,39 @@
       "Deep links into Kiwix, Calibre-Web, Nextcloud and Open WebUI"
     ]
   },
+  "extensionPair": {
+    "title": "Connect KEAP extension",
+    "client": "Extension installation",
+    "code": "Pairing code",
+    "permissions": "Requested permissions",
+    "approve": "Allow this extension",
+    "approved": "Extension connected",
+    "return": "You can close this page and return to the extension.",
+    "invalid": "The pairing code is missing or invalid.",
+    "scope": {
+      "context:read": "Find related knowledge for the current context",
+      "capture:write": "Add captures to your inbox",
+      "objects:read": "Read your knowledge objects",
+      "objects:write": "Create and edit your knowledge objects",
+      "types:read": "Read your object types",
+      "types:write": "Create and edit your object types",
+      "taxonomy:read": "Browse and search the taxonomy",
+      "taxonomy:propose": "Propose taxonomy changes",
+      "drafts:write": "Create short-lived compose drafts"
+    }
+  },
+  "composeDraft": {
+    "title": "Complete in KEAP",
+    "expires": "Expires {{date}}",
+    "foundation": "The secure draft handoff is ready. Type-specific editing and external service connectors follow in the next implementation slice.",
+    "kind": {
+      "object": "Knowledge object",
+      "capture": "Capture",
+      "taxonomy-node": "Taxonomy node proposal",
+      "taxonomy-description": "Description proposal",
+      "taxonomy-brief": "Brief proposal"
+    }
+  },
   "notFound": {
     "message": "This page doesn't exist.",
     "backHome": "Back to overview"

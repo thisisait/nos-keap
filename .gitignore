@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# WXT extension build output and generated types
+.wxt
+dist-extension
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -26,3 +30,6 @@ dist-ssr
 # Backend build output + runtime data volume
 dist-server
 data
+
+# TypeScript incremental build info
+*.tsbuildinfo

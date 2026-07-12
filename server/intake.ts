@@ -46,7 +46,7 @@ const ok = (res: Response, data?: unknown) => res.json({ success: true, data });
 const fail = (res: Response, status: number, error: string) =>
   res.status(status).json({ success: false, error });
 
-export type SourceKind = 'device' | 'app' | 'userscript' | 'agent' | 'web';
+export type SourceKind = 'device' | 'app' | 'userscript' | 'agent' | 'web' | 'extension';
 
 export interface CaptureEnvelope {
   id?: string;
@@ -63,7 +63,7 @@ export interface CaptureEnvelope {
   metadata?: Record<string, unknown>;
 }
 
-const SOURCE_KINDS: SourceKind[] = ['device', 'app', 'userscript', 'agent', 'web'];
+const SOURCE_KINDS: SourceKind[] = ['device', 'app', 'userscript', 'agent', 'web', 'extension'];
 const MODALITIES = ['url', 'text', 'geo', 'media', 'audio-transcript'];
 
 function inferModality(e: CaptureEnvelope): string {

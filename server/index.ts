@@ -19,6 +19,7 @@ import { registerApiRoutes } from './routes';
 import { registerAgentRoutes } from './agent';
 import { registerGraphRoutes } from './graph';
 import { registerIngestRoutes } from './intake';
+import { registerExtensionRoutes } from './extension/routes';
 import { identityMiddleware } from './identity';
 import { initDb, rebuildTaxonomyFts } from './db';
 import * as dbmod from './db';
@@ -64,6 +65,7 @@ async function main() {
   // headers, mounted before the identity middleware so the public bearer-only
   // Traefik route works without SSO. See server/intake.ts.
   registerIngestRoutes(app);
+  registerExtensionRoutes(app);
 
   // Resolve X-Authentik-Uid / -Username / -Email into req.user
   // (401 without headers when KEAP_TRUSTED_PROXY=1 — see identity.ts).

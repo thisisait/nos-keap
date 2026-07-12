@@ -19,6 +19,7 @@
 import Database from 'libsql';
 import fs from 'node:fs';
 import path from 'node:path';
+import { runMigrations } from './migrations';
 
 let db: Database.Database | null = null;
 let vectorsOk = false;
@@ -233,6 +234,7 @@ export async function initDb(): Promise<void> {
   db = new Database(DB_PATH);
   db.pragma('journal_mode = WAL');
   for (const stmt of SCHEMA) db.exec(stmt);
+  runMigrations(db);
   // Vector tables degrade gracefully: if the runtime lacks the libSQL vector
   // functions (e.g. a stock-SQLite build), semantic features stay off and the
   // FTS/tree surfaces keep working — same pattern as the agent-token 503s.
@@ -400,6 +402,18 @@ export function getAllMetadataApi(userId: string, seeAll: boolean): ApiTaxonomyM
     ? d.prepare('SELECT * FROM api_taxonomy_metadata ORDER BY updated_at DESC').all()
     : d.prepare('SELECT * FROM api_taxonomy_metadata WHERE user_id = ? ORDER BY updated_at DESC').all(userId);
   return (rows as any[]).map(mapCaptureRow);
+}
+
+export function getMetadataApi(id: string): ApiTaxonomyMetadata | null {
+  const row = getDb().prepare('SELECT * FROM api_taxonomy_metadata WHERE id = ?').get(id) as any;
+  return row ? mapCaptureRow(row) : null;
+}
+
+export function canReadCapture(id: string, userId: string, seeAll: boolean): boolean {
+  if (seeAll) return Boolean(getDb().prepare('SELECT 1 FROM api_taxonomy_metadata WHERE id = ?').get(id));
+  return Boolean(
+    getDb().prepare('SELECT 1 FROM api_taxonomy_metadata WHERE id = ? AND user_id = ?').get(id, userId),
+  );
 }
 
 export function getMetadataByDomainApi(userId: string, seeAll: boolean, domain: string): ApiTaxonomyMetadata[] {
@@ -649,6 +663,15 @@ export function getObjects(userId: string, seeAll: boolean, type?: string): Know
 export function getObject(id: string): KnowledgeObject | null {
   const row = getDb().prepare('SELECT * FROM knowledge_objects WHERE id = ?').get(id) as any;
   return row ? mapObjectRow(row) : null;
+}
+
+export function canReadObject(id: string, userId: string, seeAll: boolean): boolean {
+  if (seeAll) return Boolean(getDb().prepare('SELECT 1 FROM knowledge_objects WHERE id = ?').get(id));
+  return Boolean(
+    getDb()
+      .prepare("SELECT 1 FROM knowledge_objects WHERE id = ? AND (user_id = ? OR visibility = 'shared')")
+      .get(id, userId),
+  );
 }
 
 export function saveObject(

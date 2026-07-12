@@ -8,9 +8,17 @@
     "dev": "concurrently -n web,api -c blue,green \"vite\" \"npm run dev:api\"",
     "dev:web": "vite",
     "dev:api": "PORT=8081 tsx watch server/index.ts",
-    "build": "vite build && npm run build:server",
+    "dev:ext": "wxt",
+    "dev:ext:firefox": "wxt -b firefox",
+    "build": "vite build && npm run build:server && npm run build:ext",
+    "build:ext": "wxt build",
+    "build:ext:firefox": "wxt build -b firefox",
     "build:server": "tsc -p tsconfig.server.json && esbuild server/index.ts --bundle --platform=node --format=esm --packages=external --outfile=dist-server/index.js",
     "build:dev": "vite build --mode development",
+    "zip:ext": "wxt zip",
+    "zip:ext:firefox": "wxt zip -b firefox",
+    "wxt:prepare": "wxt prepare",
+    "postinstall": "wxt prepare",
     "start": "node dist-server/index.js",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -102,6 +110,8 @@
     "tsx": "^4.19.0",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.0.1",
-    "vite": "^5.4.1"
+    "vite": "^5.4.1",
+    "vitest": "^4.1.9",
+    "wxt": "0.19.29"
   }
 }
