@@ -33,6 +33,10 @@
 
 `npm run lint` still reports pre-existing `any` / react-hooks warnings in `server/db.ts` and `src/`. The `extension/` and `server/extension/` source directories are clean.
 
+## nOS deployment
+
+The local nOS runs `iiab-keap-1` from `nos/keap:0.7.3` and exposes the container on `127.0.0.1:8091` (→ container `:8080`). The latest build in this repo is not automatically deployed to that container; it must be rebuilt into the `nos/keap` image or the new `dist/` and `dist-server/` must be mounted into the container.
+
 ## Project layout
 
 - `extension/` — WXT extension source (background, content script, React panel UI, API broker utilities).
