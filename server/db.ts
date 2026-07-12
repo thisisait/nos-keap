@@ -258,6 +258,19 @@ export async function initDb(): Promise<void> {
   } catch {
     /* duplicate column — already migrated */
   }
+  // Dedupe open desc/brief proposals (newest per node wins). The dup-guards
+  // used to read open rows through listPromotions' LIMIT 200 — past 200 open
+  // proposals they went blind and re-proposals landed as duplicate rows.
+  // Idempotent: a clean queue deletes nothing.
+  db.exec(`DELETE FROM promotions WHERE status = 'proposed' AND kind IN ('desc','brief') AND id NOT IN (
+    SELECT id FROM (
+      SELECT id, ROW_NUMBER() OVER (
+        PARTITION BY kind, json_extract(object_json, '$.nodeId')
+        ORDER BY created_at DESC, id DESC
+      ) AS rn
+      FROM promotions WHERE status = 'proposed' AND kind IN ('desc','brief')
+    ) WHERE rn = 1
+  )`);
   initializeAppMetadata();
 }
 
@@ -1215,6 +1228,19 @@ export function listPromotions(status?: string, limit = 200): PromotionRow[] {
   const rows = status
     ? d.prepare('SELECT * FROM promotions WHERE status = ? ORDER BY created_at DESC LIMIT ?').all(status, limit)
     : d.prepare('SELECT * FROM promotions ORDER BY created_at DESC LIMIT ?').all(limit);
+  return (rows as any[]).map(mapPromotionRow);
+}
+
+/**
+ * ALL open proposals, uncapped. The dup-guards in promotions.ts and the
+ * pending-exclusion sets in agent.ts MUST see every open row — reading them
+ * through listPromotions' LIMIT 200 made the guards blind past 200 open
+ * proposals (duplicate desc rows, re-served pending nodes).
+ */
+export function openPromotions(): PromotionRow[] {
+  const rows = getDb()
+    .prepare("SELECT * FROM promotions WHERE status = 'proposed' ORDER BY created_at DESC")
+    .all();
   return (rows as any[]).map(mapPromotionRow);
 }
 

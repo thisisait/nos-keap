@@ -393,7 +393,7 @@ export function registerAgentRoutes(app: Express) {
   app.get('/agent/v1/taxonomy/describe/pending', agentAuth('ro'), (req, res) => {
     const limit = Math.min(Number(req.query.limit) || 40, 100);
     const openDesc = new Set(
-      db.listPromotions('proposed').filter((p) => p.kind === 'desc').map((p) => p.object?.nodeId),
+      db.openPromotions().filter((p) => p.kind === 'desc').map((p) => p.object?.nodeId),
     );
     const nodes = allNodes();
     const byId = new Map(nodes.map((n) => [n.id, n]));
@@ -452,7 +452,7 @@ export function registerAgentRoutes(app: Express) {
     const limit = Math.min(Number(req.query.limit) || 10, 20);
     const maxLevel = req.query.maxLevel !== undefined ? Number(req.query.maxLevel) : Infinity;
     const openBrief = new Set(
-      db.listPromotions('proposed').filter((p) => p.kind === 'brief').map((p) => p.object?.nodeId),
+      db.openPromotions().filter((p) => p.kind === 'brief').map((p) => p.object?.nodeId),
     );
     const curated = db.getTaxonomyMetadata();
     const briefed = new Set(

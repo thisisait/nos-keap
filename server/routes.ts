@@ -208,7 +208,9 @@ export function registerApiRoutes(app: Express) {
   app.get('/api/promotions', (req, res) => {
     if (!requireAdmin(req, res)) return;
     const status = req.query.status ? String(req.query.status) : undefined;
-    ok(res, { policy: moderationPolicy(), items: db.listPromotions(status) });
+    // Moderation must see the WHOLE queue — a bulk sweep past the default
+    // 200-row cap would silently hide the tail from the operator.
+    ok(res, { policy: moderationPolicy(), items: db.listPromotions(status, 5000) });
   });
   app.post('/api/promotions', (req, res) => {
     // Humans may propose too (non-admin users included — moderation gates).
