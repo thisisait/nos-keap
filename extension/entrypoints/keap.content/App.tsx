@@ -7,6 +7,7 @@ import {
   sendClearState,
   sendGetState,
   sendOpenTab,
+  sendSetState,
   sendStartPairing,
 } from '~/utils/api';
 
@@ -66,6 +67,9 @@ export default function App() {
   const [pairForm, setPairForm] = useState({ instanceUrl: '', clientName: 'KEAP Companion' });
   const [pairing, setPairing] = useState<PairingResponse | null>(null);
   const [pollId, setPollId] = useState<number | null>(null);
+  const [panelHeight, setPanelHeight] = useState(320);
+  const [panelMode, setPanelMode] = useState<ExtensionState['panelMode']>('overlay');
+  const [isDragging, setIsDragging] = useState(false);
 
   const tabs = useMemo(
     () => [
@@ -83,7 +87,10 @@ export default function App() {
     try {
       const next = await sendGetState();
       setState(next);
-      setPairForm((prev) => ({ ...prev, instanceUrl: next.instanceUrl || prev.instanceUrl || '' }));
+      // Only seed the instance URL input if the user hasn't typed anything yet.
+      setPairForm((prev) => ({ ...prev, instanceUrl: prev.instanceUrl || next.instanceUrl || '' }));
+      setPanelHeight(next.panelHeight ?? 320);
+      setPanelMode(next.panelMode ?? 'overlay');
     } catch (err) {
       setError(formatError(err));
     }
@@ -182,6 +189,25 @@ export default function App() {
       if (pollId) window.clearInterval(pollId);
     };
   }, [pollId]);
+
+  // Apply panel mode to the host page: inlay and padded reserve space at the
+  // bottom so the page's own sticky footer stays visible / scrollable.
+  useEffect(() => {
+    if (!open) {
+      document.body.style.paddingBottom = '';
+      return;
+    }
+    if (panelMode === 'overlay') {
+      document.body.style.paddingBottom = '';
+    } else if (panelMode === 'inlay') {
+      document.body.style.paddingBottom = `${panelHeight}px`;
+    } else if (panelMode === 'padded') {
+      document.body.style.paddingBottom = `${panelHeight + 160}px`;
+    }
+    return () => {
+      document.body.style.paddingBottom = '';
+    };
+  }, [open, panelMode, panelHeight]);
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -323,14 +349,67 @@ export default function App() {
     await sendOpenTab(url);
   };
 
+  const handleDragStart = (e: React.MouseEvent | React.TouchEvent) => {
+    setIsDragging(true);
+    const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+    const startY = clientY;
+    const startHeight = panelHeight;
+
+    const handleMove = (ev: MouseEvent | TouchEvent) => {
+      const y = 'touches' in ev ? ev.touches[0].clientY : ev.clientY;
+      const delta = startY - y;
+      const next = Math.min(Math.max(startHeight + delta, 160), Math.round(window.innerHeight * 0.85));
+      setPanelHeight(next);
+    };
+
+    const handleUp = async () => {
+      setIsDragging(false);
+      window.removeEventListener('mousemove', handleMove);
+      window.removeEventListener('mouseup', handleUp);
+      window.removeEventListener('touchmove', handleMove);
+      window.removeEventListener('touchend', handleUp);
+      try {
+        await sendSetState({ panelHeight });
+      } catch {
+        // ignore storage errors
+      }
+    };
+
+    window.addEventListener('mousemove', handleMove);
+    window.addEventListener('mouseup', handleUp);
+    window.addEventListener('touchmove', handleMove);
+    window.addEventListener('touchend', handleUp);
+  };
+
+  const handleModeChange = async (mode: ExtensionState['panelMode']) => {
+    setPanelMode(mode);
+    try {
+      await sendSetState({ panelMode: mode });
+    } catch {
+      // ignore
+    }
+  };
+
   if (!open) return null;
 
   return (
     <div
       id="keap-panel-root"
-      className="fixed bottom-0 left-0 z-[2147483647] flex h-[320px] w-screen flex-col border-t border-slate-200 bg-white text-sm text-slate-900 shadow-2xl"
+      style={{ height: panelHeight }}
+      className="fixed bottom-0 left-0 z-[2147483647] flex w-screen flex-col border-t border-white/30 bg-gradient-to-t from-white/40 via-white/20 to-white/10 text-sm text-slate-900 shadow-[0_-8px_32px_rgba(0,0,0,0.12)] backdrop-blur-2xl transition-[height] duration-75 ease-out"
     >
-      <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-3 py-2">
+      {/* Draggable resize handle */}
+      <div
+        role="slider"
+        aria-label="Resize panel"
+        onMouseDown={handleDragStart}
+        onTouchStart={handleDragStart}
+        className={`absolute -top-3 left-0 right-0 z-10 flex h-6 cursor-ns-resize items-center justify-center ${isDragging ? 'cursor-grabbing' : ''}`}
+      >
+        <div className="h-1.5 w-10 rounded-full bg-slate-400/50 shadow-sm" />
+      </div>
+
+      <div className="flex items-center justify-between border-b border-white/20 bg-white/10 px-3 py-2">
         <div className="flex items-center gap-2">
           <span className="font-semibold text-slate-800">KEAP Companion</span>
           {state?.token && state.user && (
@@ -343,7 +422,7 @@ export default function App() {
           <button
             type="button"
             onClick={() => setTab('settings')}
-            className="rounded p-1 text-slate-500 hover:bg-slate-200 hover:text-slate-800"
+            className="rounded p-1 text-slate-600 hover:bg-white/20 hover:text-slate-900"
             title="Settings"
           >
             <Settings className="h-4 w-4" />
@@ -351,7 +430,7 @@ export default function App() {
           <button
             type="button"
             onClick={() => setOpen(false)}
-            className="rounded p-1 text-slate-500 hover:bg-slate-200 hover:text-slate-800"
+            className="rounded p-1 text-slate-600 hover:bg-white/20 hover:text-slate-900"
             title="Close"
           >
             <X className="h-4 w-4" />
@@ -363,12 +442,12 @@ export default function App() {
 
       <div className="flex-1 overflow-auto p-3">
         {error && (
-          <div className="mb-2 rounded border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+          <div className="mb-2 rounded border border-red-300/50 bg-red-50/80 px-3 py-2 text-xs text-red-700">
             {error}
           </div>
         )}
         {message && (
-          <div className="mb-2 rounded border border-green-200 bg-green-50 px-3 py-2 text-xs text-green-700">
+          <div className="mb-2 rounded border border-green-300/50 bg-green-50/80 px-3 py-2 text-xs text-green-700">
             {message}
           </div>
         )}
@@ -416,6 +495,8 @@ export default function App() {
             onUnpair={handleUnpair}
             onOpen={openKeap}
             loading={loading}
+            panelMode={panelMode}
+            onPanelModeChange={handleModeChange}
           />
         )}
       </div>
@@ -712,6 +793,8 @@ function SettingsTab({
   onUnpair,
   onOpen,
   loading,
+  panelMode,
+  onPanelModeChange,
 }: {
   state: ExtensionState | null;
   pairForm: { instanceUrl: string; clientName: string };
@@ -722,6 +805,8 @@ function SettingsTab({
   onUnpair: () => void;
   onOpen: (path: string) => void;
   loading: boolean;
+  panelMode: ExtensionState['panelMode'];
+  onPanelModeChange: (mode: ExtensionState['panelMode']) => void;
 }) {
   const pending = state?.pendingPairing || pairing;
 
@@ -815,6 +900,32 @@ function SettingsTab({
           </button>
         </form>
       )}
+
+      <div className="space-y-2">
+        <div className="text-xs font-medium text-slate-700">Panel mode</div>
+        <div className="space-y-1">
+          {[
+            { value: 'overlay', label: 'Overlay', hint: 'panel floats over the page' },
+            { value: 'inlay', label: 'Inlay', hint: 'page content ends above the panel' },
+            { value: 'padded', label: 'Padded', hint: 'extra bottom padding so you can scroll past the panel' },
+          ].map((option) => (
+            <label key={option.value} className="flex cursor-pointer items-center gap-2">
+              <input
+                type="radio"
+                name="panelMode"
+                value={option.value}
+                checked={panelMode === option.value}
+                onChange={() => onPanelModeChange(option.value as ExtensionState['panelMode'])}
+                className="h-3.5 w-3.5 border-slate-300 text-blue-600 focus:ring-blue-500"
+              />
+              <span className="text-xs text-slate-700">
+                {option.label}
+                <span className="ml-1 text-slate-400">— {option.hint}</span>
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
 
       <div className="text-[10px] text-slate-400">
         Tip: approve the pairing in the KEAP tab opened by the extension.

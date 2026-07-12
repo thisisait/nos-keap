@@ -18,6 +18,10 @@ export async function sendGetState() {
   return sendMessage<import('./storage').ExtensionState>('GET_STATE');
 }
 
+export async function sendSetState(state: Partial<import('./storage').ExtensionState>) {
+  return sendMessage<import('./storage').ExtensionState>('SET_STATE', { state });
+}
+
 export async function sendClearState() {
   return sendMessage<null>('CLEAR_STATE');
 }

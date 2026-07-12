@@ -21,6 +21,8 @@ export interface ExtensionUser {
   scopes?: string[];
 }
 
+export type PanelMode = 'overlay' | 'inlay' | 'padded';
+
 export interface ExtensionState {
   instanceUrl: string;
   token: string | null;
@@ -30,6 +32,8 @@ export interface ExtensionState {
   pairedAt: number | null;
   expiresAt: number | null;
   pendingPairing: PendingPairing | null;
+  panelHeight: number;
+  panelMode: PanelMode;
 }
 
 export const defaultState: ExtensionState = {
@@ -41,6 +45,8 @@ export const defaultState: ExtensionState = {
   pairedAt: null,
   expiresAt: null,
   pendingPairing: null,
+  panelHeight: 320,
+  panelMode: 'overlay',
 };
 
 export async function getState(): Promise<ExtensionState> {
