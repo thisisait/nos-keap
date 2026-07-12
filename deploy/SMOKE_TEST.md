@@ -141,3 +141,24 @@ node deploy/smoke-okf-roundtrip.mjs   # SOURCE=… TARGET=… env-overridable
 # Bundle layout objects/<type>/<slug>-<id8>.md is OKF v0.1 conformant
 # (only required key: type) — readable by the openknowledge CLI.
 ```
+
+## 10. K1 taxonomy-describe (curated descriptions, post-v0.6.0)
+
+```bash
+RO=<ro token>; RW=<rw token>; B=http://127.0.0.1:8091
+# intake: server-assembled context, 778 nodes lacked descriptions at ship
+curl -s -H "Authorization: Bearer $RO" "$B/agent/v1/taxonomy/describe/pending?limit=3"
+  # → {total, items:[{id,name,path,zone,childNames,siblingNames}]}
+# batch propose (en canonical + cs localization; <20 chars → per-item error):
+curl -s -X POST -H "Authorization: Bearer $RW" -H 'content-type: application/json' \
+  $B/agent/v1/taxonomy/describe -d '{"items":[{"nodeId":"01.01","descriptionEn":"…20+ chars…","descriptionCs":"…20+ chars…"}]}'
+# moderate: Admin › Moderation shows kind=desc rows + a BULK approve bar
+# (or POST /api/promotions/decide-desc-bulk {"decision":"approve"}).
+# consumers flip in the same step (llms.txt lesson):
+#   /api/graph node carries description + descriptionCs,
+#   /agent/v1/taxonomy/search finds words FROM the description,
+#   /agent/v1/embeddings/pending marks the node stale (content_hash),
+#   describe/pending total shrinks.
+# invariants: layout_version UNCHANGED (descriptions are metadata — stars
+# never move), override survives restart (node_descriptions table).
+```

@@ -162,7 +162,11 @@
       "rationale": "Rationale",
       "recentlyDecided": "Recently decided",
       "nodeKind": "new node",
-      "underParent": "under {{parent}}"
+      "underParent": "under {{parent}}",
+      "descKind": "node description",
+      "bulkDescHint": "{{count}} node-description proposals pending (taxonomy-describe).",
+      "bulkApproveDesc": "Approve all descriptions",
+      "bulkRejectDesc": "Reject all descriptions"
     }
   },
   "settings": {

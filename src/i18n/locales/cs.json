@@ -162,7 +162,11 @@
       "rationale": "Zdůvodnění",
       "recentlyDecided": "Nedávno rozhodnuto",
       "nodeKind": "nový uzel",
-      "underParent": "pod {{parent}}"
+      "underParent": "pod {{parent}}",
+      "descKind": "popis uzlu",
+      "bulkDescHint": "Čeká {{count}} návrhů popisů uzlů (taxonomy-describe).",
+      "bulkApproveDesc": "Schválit všechny popisy",
+      "bulkRejectDesc": "Zamítnout všechny popisy"
     }
   },
   "settings": {

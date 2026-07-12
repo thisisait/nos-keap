@@ -19,6 +19,9 @@ export interface GraphNode {
   childCount: number;
   hasNote: boolean;
   dataType?: string;
+  /** K1 curated description (en canonical) + cs localization. */
+  description?: string;
+  descriptionCs?: string;
   /** Baked star position (U1) — present once the server has a layout. */
   x?: number;
   y?: number;

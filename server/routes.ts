@@ -228,6 +228,27 @@ export function registerApiRoutes(app: Express) {
       return fail(res, 400, (err as Error).message);
     }
   });
+  // K1 batch relief: decide EVERY open kind='desc' proposal in one click.
+  // taxonomy-describe lands hundreds at once — the honest review granularity
+  // is the rendered batch, not one-by-one rubber-stamping. Desc only:
+  // object/node proposals change corpus/structure and stay individual.
+  app.post('/api/promotions/decide-desc-bulk', (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const decision = req.body?.decision;
+    if (decision !== 'approve' && decision !== 'reject') return fail(res, 400, 'decision approve|reject required');
+    const open = db.listPromotions('proposed', 1000).filter((p) => p.kind === 'desc');
+    let decided = 0;
+    const errors: Array<{ id: string; error: string }> = [];
+    for (const p of open) {
+      try {
+        decide(p.id, decision, req.user.username);
+        decided++;
+      } catch (err) {
+        errors.push({ id: p.id, error: (err as Error).message });
+      }
+    }
+    ok(res, { decision, decided, errors });
+  });
   app.post('/api/promotions/:id/vote', (req, res) => {
     const value = req.body?.value === -1 ? -1 : 1;
     try {

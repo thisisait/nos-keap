@@ -123,6 +123,11 @@ export function decide(
     return { status: 'approved', objectId: nodeId };
   }
 
+  if ((p as any).kind === 'desc') {
+    const { nodeId } = materializeDescription(promotionId, decidedBy);
+    return { status: 'approved', objectId: nodeId };
+  }
+
   // Approve: materialize the object through the standard write path.
   const draft = p.object as ObjectDraft;
   const broken = brokenAnchors(draft);
@@ -157,7 +162,7 @@ export function decide(
 // votable core requires moderation, free zone approves lightly (auto —
 // append-only depth where most datapoints live).
 
-import { registerExtNode, nodeLevel, zoneOfLevel, allNodes } from './taxonomy';
+import { registerExtNode, nodeLevel, zoneOfLevel, allNodes, applyDescriptionOverride } from './taxonomy';
 import { appendExtNodeToLayout } from './layout';
 import { rebuildTaxonomyFts } from './db';
 
@@ -217,6 +222,80 @@ export function proposeNode(
     return { id, status: 'approved', nodeId };
   }
   return { id, status: 'proposed' };
+}
+
+// ── Curated node descriptions (Track K, K1 taxonomy-describe) ─────────────────
+// Same moderated machinery, kind='desc'. Descriptions are METADATA, not
+// structure: they never move stars (the layout version hashes id>parent
+// only), so they are proposable for EVERY zone including the anchor core —
+// but always moderated (LLM writes propose, humans dispose). The Admin
+// bulk-approve exists because K1 lands hundreds at once.
+
+export interface DescDraft {
+  nodeId: string;
+  descriptionEn: string;
+  descriptionCs?: string;
+}
+
+export function proposeDescription(
+  draft: DescDraft,
+  rationale: string | undefined,
+  proposedBy: string,
+): { id: string; status: string } {
+  const node = getNode(draft?.nodeId ?? '');
+  if (!node) throw new Error(`unknown node ${draft?.nodeId}`);
+  // DescGraph doctrine: the description IS the node's retrieval text.
+  if (!draft.descriptionEn || draft.descriptionEn.trim().length < 20) {
+    throw new Error('descriptionEn is required (min 20 chars): it becomes the node\'s search/embedding text');
+  }
+  if (draft.descriptionCs !== undefined && draft.descriptionCs.trim().length < 20) {
+    throw new Error('descriptionCs, when given, must carry real text (min 20 chars)');
+  }
+  const normalized: DescDraft = {
+    nodeId: node.id,
+    descriptionEn: draft.descriptionEn.trim().slice(0, 2000),
+    descriptionCs: draft.descriptionCs?.trim().slice(0, 2000),
+  };
+  if (normalized.descriptionEn === node.description) {
+    throw new Error('identical to the current description — nothing to propose');
+  }
+  // One open desc proposal per node — a re-proposal updates it.
+  const existing = db
+    .listPromotions('proposed')
+    .find((p) => (p as any).kind === 'desc' && p.object?.nodeId === node.id);
+  const id = existing?.id ?? crypto.randomUUID();
+  db.upsertPromotion({
+    id,
+    kind: 'desc',
+    captureId: `desc:${node.id}`,
+    proposedBy,
+    rationale: rationale?.slice(0, 1000),
+    object: normalized,
+  });
+  return { id, status: 'proposed' };
+}
+
+/** Approve side-effect for kind='desc': override + re-wire every consumer. */
+export function materializeDescription(promotionId: string, decidedBy: string): { nodeId: string } {
+  const p = db.getPromotion(promotionId);
+  if (!p) throw new Error('unknown promotion');
+  const draft = p.object as DescDraft;
+  const node = getNode(draft.nodeId);
+  if (!node) throw new Error(`node ${draft.nodeId} vanished`);
+  db.upsertNodeDescription({
+    nodeId: draft.nodeId,
+    descriptionEn: draft.descriptionEn,
+    descriptionCs: draft.descriptionCs,
+    proposedBy: p.proposedBy,
+    approvedBy: decidedBy,
+  });
+  applyDescriptionOverride({ nodeId: draft.nodeId, descriptionEn: draft.descriptionEn, descriptionCs: draft.descriptionCs });
+  // Consumer-first (llms.txt lesson): FTS + corpus flip in the same step;
+  // the embeddings pending diff picks the changed content_hash up next sync.
+  rebuildTaxonomyFts(allNodes());
+  markCorpusDirty();
+  db.setPromotionDecision(promotionId, 'approved', decidedBy, draft.nodeId);
+  return { nodeId: draft.nodeId };
 }
 
 /** Approve side-effect for kind='node': grow the tree + wire every consumer. */

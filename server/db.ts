@@ -149,6 +149,22 @@ const SCHEMA = [
      created_at INTEGER DEFAULT (strftime('%s','now'))
    )`,
 
+  // Curated node descriptions (Track K, K1 taxonomy-describe) — the moderated
+  // OVERRIDE layer on top of the seed taxonomy's (mostly missing) descriptions.
+  // Descriptions are load-bearing (DescGraph): they ARE the node's search/
+  // embedding text. LLM skills propose them (promotions kind='desc'); approval
+  // upserts here and the in-memory tree, FTS and the embeddings pending diff
+  // pick the change up in the same step. en is canonical (embed/FTS text);
+  // cs is the UI localization.
+  `CREATE TABLE IF NOT EXISTS node_descriptions (
+     node_id TEXT PRIMARY KEY,
+     description_en TEXT NOT NULL,
+     description_cs TEXT,
+     proposed_by TEXT NOT NULL,
+     approved_by TEXT NOT NULL,
+     updated_at INTEGER DEFAULT (strftime('%s','now'))
+   )`,
+
   // Promotion proposals (server/promotions.ts) — the moderated bridge from
   // the review queue into the curated corpus. An agent (librarian) or a user
   // PROPOSES turning a capture into a knowledge object; the MODERATOR has
@@ -1139,7 +1155,7 @@ export function applyLintVerdict(
 
 export interface PromotionRow {
   id: string;
-  kind: 'object' | 'node';
+  kind: 'object' | 'node' | 'desc';
   captureId: string;
   proposedBy: string;
   rationale?: string;
@@ -1175,7 +1191,7 @@ export function upsertPromotion(p: {
   proposedBy: string;
   rationale?: string;
   object: any;
-  kind?: 'object' | 'node';
+  kind?: 'object' | 'node' | 'desc';
 }): void {
   getDb()
     .prepare(
@@ -1267,6 +1283,43 @@ export function insertExtNode(n: Omit<ExtNodeRow, 'createdAt'>): void {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .run(n.id, n.parentId, n.name, n.description, n.zone, n.ordinal, n.proposedBy, n.approvedBy);
+}
+
+// ── Curated node descriptions (Track K, K1) ───────────────────────────────────
+
+export interface NodeDescriptionRow {
+  nodeId: string;
+  descriptionEn: string;
+  descriptionCs?: string;
+  proposedBy: string;
+  approvedBy: string;
+  updatedAt: number;
+}
+
+export function listNodeDescriptions(): NodeDescriptionRow[] {
+  return (getDb().prepare('SELECT * FROM node_descriptions').all() as any[]).map((r) => ({
+    nodeId: r.node_id,
+    descriptionEn: r.description_en,
+    descriptionCs: r.description_cs ?? undefined,
+    proposedBy: r.proposed_by,
+    approvedBy: r.approved_by,
+    updatedAt: r.updated_at,
+  }));
+}
+
+export function upsertNodeDescription(row: Omit<NodeDescriptionRow, 'updatedAt'>): void {
+  getDb()
+    .prepare(
+      `INSERT INTO node_descriptions (node_id, description_en, description_cs, proposed_by, approved_by)
+       VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT(node_id) DO UPDATE SET
+         description_en = excluded.description_en,
+         description_cs = excluded.description_cs,
+         proposed_by = excluded.proposed_by,
+         approved_by = excluded.approved_by,
+         updated_at = strftime('%s','now')`,
+    )
+    .run(row.nodeId, row.descriptionEn, row.descriptionCs ?? null, row.proposedBy, row.approvedBy);
 }
 
 /** How many ext children a parent already has — the next append ordinal. */

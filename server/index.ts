@@ -22,7 +22,7 @@ import { registerIngestRoutes } from './intake';
 import { identityMiddleware } from './identity';
 import { initDb, rebuildTaxonomyFts } from './db';
 import * as dbmod from './db';
-import { allNodes, registerExtNode } from './taxonomy';
+import { allNodes, registerExtNode, applyDescriptionOverride } from './taxonomy';
 import { ensureLayout } from './layout';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -34,6 +34,9 @@ async function main() {
   // Track T: merge approved grown nodes into the tree BEFORE the FTS
   // rebuild + layout ensure, so search and the universe see them.
   for (const ext of dbmod.listExtNodes()) registerExtNode(ext);
+  // K1: curated description overrides layer onto the tree next, so the FTS
+  // rebuild (and the embeddings pending diff) read the curated text.
+  for (const row of dbmod.listNodeDescriptions()) applyDescriptionOverride(row);
   rebuildTaxonomyFts(allNodes());
   ensureLayout(); // U1: bake star positions iff the root index changed
 

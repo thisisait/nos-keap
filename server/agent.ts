@@ -26,7 +26,8 @@ import { pendingEmbeddings, EMBED_MODEL, EMBED_DIM } from './embeddings';
 import { extractRefs } from './objects';
 import { hybridSearch, markCorpusDirty } from './search';
 import { runLint, lastLintReport } from './lint';
-import { propose, proposeNode, moderationPolicy } from './promotions';
+import { propose, proposeNode, proposeDescription, moderationPolicy } from './promotions';
+import { allNodes } from './taxonomy';
 import { normalizeAndSaveCapture, parseEnvelope } from './intake';
 import { TOKEN_RO, TOKEN_RW, tokenEquals } from './tokens';
 
@@ -385,6 +386,64 @@ export function registerAgentRoutes(app: Express) {
     }
   });
 
+  // ── K1 taxonomy-describe surface (Track K) ────────────────────────────────
+  // Same trust split as embeddings: the container decides WHAT needs a
+  // description (server-assembled context per node — the skill stays dumb);
+  // the host-side LLM ceremony decides the WORDS and proposes them back.
+  app.get('/agent/v1/taxonomy/describe/pending', agentAuth('ro'), (req, res) => {
+    const limit = Math.min(Number(req.query.limit) || 40, 100);
+    const openDesc = new Set(
+      db.listPromotions('proposed').filter((p) => p.kind === 'desc').map((p) => p.object?.nodeId),
+    );
+    const nodes = allNodes();
+    const byId = new Map(nodes.map((n) => [n.id, n]));
+    // Pending = no curated override AND seed description missing/too thin to
+    // carry retrieval. Refresh of curated text happens via re-proposal, not here.
+    const pending = nodes.filter(
+      (n) => !n.descCurated && (n.description ?? '').trim().length < 20 && !openDesc.has(n.id),
+    );
+    ok(res, {
+      total: pending.length,
+      items: pending.slice(0, limit).map((n) => ({
+        id: n.id,
+        name: n.name,
+        path: n.path,
+        zone: n.zone,
+        currentDescription: n.description ?? null,
+        childNames: n.childIds.slice(0, 12).map((cid) => byId.get(cid)?.name).filter(Boolean),
+        siblingNames: n.parentId
+          ? (byId.get(n.parentId)?.childIds ?? [])
+              .filter((sid) => sid !== n.id)
+              .slice(0, 12)
+              .map((sid) => byId.get(sid)?.name)
+              .filter(Boolean)
+          : [],
+      })),
+    });
+  });
+
+  app.post('/agent/v1/taxonomy/describe', agentAuth('rw'), (req, res) => {
+    const { items } = req.body ?? {};
+    if (!Array.isArray(items) || !items.length || items.length > 50) {
+      return fail(res, 400, 'items required (1-50 per batch)');
+    }
+    const proposed: string[] = [];
+    const errors: Array<{ nodeId: string; error: string }> = [];
+    for (const it of items) {
+      try {
+        proposeDescription(
+          { nodeId: it?.nodeId, descriptionEn: it?.descriptionEn, descriptionCs: it?.descriptionCs },
+          it?.rationale,
+          `agent:${req.agentName}`,
+        );
+        proposed.push(it.nodeId);
+      } catch (err) {
+        errors.push({ nodeId: String(it?.nodeId), error: (err as Error).message });
+      }
+    }
+    ok(res, { proposed: proposed.length, errors, submittedBy: `agent:${req.agentName}` });
+  });
+
   // Promotion proposals — the librarian PROPOSES, the moderator DECIDES.
   // No agent path can approve; the curated corpus stays human-gated
   // (or quorum-gated in the future democratic/MMO policy).
@@ -551,6 +610,47 @@ const OPENAPI_SPEC = {
                   name: { type: 'string', maxLength: 120 },
                   description: { type: 'string', minLength: 20, maxLength: 2000 },
                   rationale: { type: 'string', maxLength: 1000 },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/agent/v1/taxonomy/describe/pending': {
+      get: {
+        summary:
+          'K1 taxonomy-describe intake: nodes lacking a load-bearing description, with server-assembled context (path, children, siblings). Consumed by the describe ceremony.',
+        parameters: [
+          { name: 'limit', in: 'query', schema: { type: 'integer', maximum: 100, default: 40 } },
+        ],
+      },
+    },
+    '/agent/v1/taxonomy/describe': {
+      post: {
+        summary:
+          'K1: batch-propose curated node descriptions (en canonical + cs localization). Every item lands as a kind=desc promotion — the moderator approves; nothing writes the tree directly.',
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['items'],
+                properties: {
+                  items: {
+                    type: 'array',
+                    maxItems: 50,
+                    items: {
+                      type: 'object',
+                      required: ['nodeId', 'descriptionEn'],
+                      properties: {
+                        nodeId: { type: 'string' },
+                        descriptionEn: { type: 'string', minLength: 20, maxLength: 2000 },
+                        descriptionCs: { type: 'string', minLength: 20, maxLength: 2000 },
+                        rationale: { type: 'string', maxLength: 1000 },
+                      },
+                    },
+                  },
                 },
               },
             },

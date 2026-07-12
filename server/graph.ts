@@ -145,6 +145,9 @@ export function registerGraphRoutes(app: Express) {
         dataType: nodeDataType(ref),
         zone: n.zone,
         ext: n.ext ?? false,
+        // K1 curated descriptions — en is canonical, cs is the UI locale.
+        description: n.description,
+        descriptionCs: n.descriptionCs,
         x: p?.x,
         y: p?.y,
         z: p?.z,

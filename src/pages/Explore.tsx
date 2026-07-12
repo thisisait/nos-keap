@@ -31,7 +31,7 @@ import {
 } from '@/hooks/useExplorerData';
 
 export default function Explore() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { data: graph, isLoading } = useGraph();
 
   const [focusId, setFocusId] = useState<string | null>(null);
@@ -190,7 +190,15 @@ export default function Explore() {
     }
     const n = nodeById.get(id);
     if (!n) return;
-    setDrawer({ id, name: n.name, kind: n.kind, dataType: n.dataType, isStar: false });
+    setDrawer({
+      id,
+      name: n.name,
+      kind: n.kind,
+      dataType: n.dataType,
+      // K1: prefer the cs localization when the UI runs Czech.
+      description: (i18n.language?.startsWith('cs') && n.descriptionCs) || n.description,
+      isStar: false,
+    });
     setFocusId(id);
   };
 

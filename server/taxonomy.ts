@@ -24,7 +24,13 @@ export type TaxonomyZone = 'anchor' | 'votable' | 'free';
 export interface FlatNode {
   id: string;
   name: string;
+  /** Canonical (en) description — seed text or the curated K1 override.
+   *  This is what FTS, embeddings and hybrid search read. */
   description?: string;
+  /** Czech localization of the curated description (UI-only). */
+  descriptionCs?: string;
+  /** True when description comes from node_descriptions (K1 override). */
+  descCurated?: boolean;
   kind: 'category' | 'subcategory' | 'item';
   parentId: string | null;
   /** Human-readable ancestry, e.g. "Natural Sciences > Physics > Kinematics" */
@@ -205,4 +211,24 @@ export function registerExtNode(row: {
 
 export function taxonomyNodeCount(): number {
   return nodesById.size;
+}
+
+/**
+ * Apply one curated description override (node_descriptions row) onto the
+ * live tree. Idempotent; called at startup for every stored row and right
+ * after a kind='desc' promotion approval. Mutating FlatNode.description is
+ * the whole trick: FTS rebuild + the embeddings pending diff (content_hash
+ * of name+path+description) + hybrid search all read this field.
+ */
+export function applyDescriptionOverride(row: {
+  nodeId: string;
+  descriptionEn: string;
+  descriptionCs?: string;
+}): boolean {
+  const node = nodesById.get(row.nodeId);
+  if (!node) return false;
+  node.description = row.descriptionEn;
+  node.descriptionCs = row.descriptionCs;
+  node.descCurated = true;
+  return true;
 }
