@@ -333,5 +333,73 @@
       "anchored": "Ukotvené znalosti ({{count}})",
       "brief": "Článek"
     }
+  },
+  "tables": {
+    "title": "Datové tabulky",
+    "new": "Nová tabulka",
+    "name": "Název",
+    "anchor": "Kotva (id uzlu taxonomie)",
+    "storage": "Úložiště",
+    "unavailable": "nedostupné",
+    "columns": "Sloupce",
+    "colKey": "klíč (snake_case)",
+    "colLabel": "Popisek",
+    "colOptions": "možnosti (čárkou)",
+    "colRequired": "povinný",
+    "addColumn": "Přidat sloupec",
+    "addRow": "Přidat řádek",
+    "created": "Tabulka vytvořena.",
+    "createFailed": "Tabulku se nepodařilo vytvořit.",
+    "deleted": "Tabulka smazána.",
+    "empty": "Zatím žádné tabulky.",
+    "emptyHint": "Vytvoř první — sharepoint-list s výběrem úložiště.",
+    "meta": "{{rows}} řádků · {{cols}} sloupců",
+    "noRows": "Žádné řádky — přidej první ve formuláři nahoře.",
+    "badJson": "Neplatný JSON ve složeném sloupci.",
+    "summary": "Souhrn",
+    "byDimension": "podle: {{dim}}",
+    "drivers": {
+      "libsql": {
+        "name": "KEAP SQL (libSQL)",
+        "pitch": "Transakce a okamžité eventy — každá změna se ihned propíše do aktivit, lintu i vyhledávání. Výchozí volba pro živé seznamy."
+      },
+      "rustfs": {
+        "name": "RustFS (S3)",
+        "pitch": "Nativní verzování objektů a lifecycle rutiny objektového úložiště. Historie řádků zdarma; cesta k parquet/OLAP kostkám."
+      },
+      "postgres": {
+        "name": "PostgreSQL",
+        "pitch": "Triggery a rutiny databáze, sdílení s dalšími službami."
+      },
+      "grist": {
+        "name": "Grist",
+        "pitch": "Plnohodnotný tabulkový editor jako služba."
+      }
+    },
+    "caps": {
+      "transactions": "transakce",
+      "history": "historie řádků",
+      "versioning": "verzování",
+      "aggregate": "agregace",
+      "events": "eventy"
+    },
+    "kinds": {
+      "text": "text",
+      "number": "číslo",
+      "boolean": "ano/ne",
+      "date": "datum",
+      "select": "výběr",
+      "json": "JSON",
+      "file": "soubor (odkaz)",
+      "vector": "vektor",
+      "taxonomyRef": "uzel taxonomie",
+      "objectRef": "znalostní objekt",
+      "user": "uživatel"
+    },
+    "roles": {
+      "attribute": "atribut",
+      "dimension": "dimenze",
+      "measure": "míra"
+    }
   }
 }

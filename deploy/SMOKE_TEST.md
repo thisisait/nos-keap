@@ -180,3 +180,20 @@ curl -s -X POST -H "Authorization: Bearer $RW" -H 'content-type: application/jso
 #   check data.total, not the item list); DetailPanel renders the brief with
 #   clickable [[vazby]]; brief/pending total shrinks.
 ```
+
+## 8. Data tables (R2′)
+
+`https://keap.pazny.lab/tables` (Table2 icon on the homepage header):
+1. "Nová tabulka" — the storage picker lists **KEAP SQL (libSQL)** always and
+   **RustFS (S3)** only when the role wired `KEAP_RUSTFS_*` env (otherwise
+   disabled with "nedostupné"). Capability badges come from `/api/tables/drivers`.
+2. Create a table with a `dimension` text column + a `measure` number column,
+   anchor `01.01` → it appears as a `table` card in search and as dust in the
+   universe.
+3. In the grid: add rows via the top form row, edit a cell inline, click a
+   header to sort. With measures defined, the **Σ summary bar** shows live
+   aggregates grouped by the first dimension.
+4. API check: `curl -s $B/api/tables/drivers` → both drivers with capabilities;
+   rustfs tables keep working after container restart (data is in the bucket,
+   registry in libSQL).
+

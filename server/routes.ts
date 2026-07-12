@@ -30,7 +30,7 @@ import {
   listCredentials,
   revokeCredential,
 } from './extension/store';
-import { listTables, getTable, canReadTable, storeFor } from './tables';
+import { listTables, getTable, canReadTable, storeFor, listDrivers } from './tables';
 import {
   createTableRequestSchema,
   listRowsQuerySchema,
@@ -429,11 +429,14 @@ export function registerApiRoutes(app: Express) {
 
   app.get('/api/tables', (req, res) => ok(res, listTables(req.user.id, req.user.isAdmin)));
 
-  app.post('/api/tables', (req, res) => {
+  // Storage picker: which drivers this deployment offers (register BEFORE :id).
+  app.get('/api/tables/drivers', (_req, res) => ok(res, listDrivers()));
+
+  app.post('/api/tables', async (req, res) => {
     const parsed = createTableRequestSchema.safeParse(req.body ?? {});
     if (!parsed.success) return fail(res, 400, parsed.error.issues[0]?.message ?? 'invalid table');
     try {
-      const t = storeFor(parsed.data.driver).createTable(req.user.id, parsed.data);
+      const t = await storeFor(parsed.data.driver).createTable(req.user.id, parsed.data);
       ok(res, t);
     } catch (e) {
       fail(res, 400, e instanceof Error ? e.message : 'create failed');
@@ -446,14 +449,18 @@ export function registerApiRoutes(app: Express) {
     ok(res, t);
   });
 
-  app.delete('/api/tables/:id', (req, res) => {
+  app.delete('/api/tables/:id', async (req, res) => {
     const t = tableForWrite(req, res);
     if (!t) return;
-    storeFor(t.driver).dropTable(t.id);
-    ok(res);
+    try {
+      await storeFor(t.driver).dropTable(t.id);
+      ok(res);
+    } catch (e) {
+      fail(res, 400, e instanceof Error ? e.message : 'drop failed');
+    }
   });
 
-  app.get('/api/tables/:id/rows', (req, res) => {
+  app.get('/api/tables/:id/rows', async (req, res) => {
     const t = getTable(req.params.id);
     if (!t || !canReadTable(t, req.user.id, req.user.isAdmin)) return fail(res, 404, 'unknown table');
     let parsedFilter: unknown = [];
@@ -472,13 +479,13 @@ export function registerApiRoutes(app: Express) {
     });
     if (!parsed.success) return fail(res, 400, parsed.error.issues[0]?.message ?? 'invalid query');
     try {
-      ok(res, storeFor(t.driver).listRows(t.id, parsed.data));
+      ok(res, await storeFor(t.driver).listRows(t.id, parsed.data));
     } catch (e) {
       fail(res, 400, e instanceof Error ? e.message : 'query failed');
     }
   });
 
-  app.post('/api/tables/:id/rows', (req, res) => {
+  app.post('/api/tables/:id/rows', async (req, res) => {
     const t = tableForWrite(req, res);
     if (!t) return;
     const values = req.body?.values;
@@ -486,39 +493,48 @@ export function registerApiRoutes(app: Express) {
     try {
       ok(
         res,
-        storeFor(t.driver).upsertRow(t.id, req.body.id ? String(req.body.id) : undefined, values, req.user.id),
+        await storeFor(t.driver).upsertRow(
+          t.id,
+          req.body.id ? String(req.body.id) : undefined,
+          values,
+          req.user.id,
+        ),
       );
     } catch (e) {
       fail(res, 400, e instanceof Error ? e.message : 'write failed');
     }
   });
 
-  app.delete('/api/tables/:id/rows/:rowId', (req, res) => {
+  app.delete('/api/tables/:id/rows/:rowId', async (req, res) => {
     const t = tableForWrite(req, res);
     if (!t) return;
-    storeFor(t.driver).deleteRow(t.id, req.params.rowId, req.user.id);
-    ok(res);
+    try {
+      await storeFor(t.driver).deleteRow(t.id, req.params.rowId, req.user.id);
+      ok(res);
+    } catch (e) {
+      fail(res, 400, e instanceof Error ? e.message : 'delete failed');
+    }
   });
 
-  app.get('/api/tables/:id/rows/:rowId/history', (req, res) => {
+  app.get('/api/tables/:id/rows/:rowId/history', async (req, res) => {
     const t = getTable(req.params.id);
     if (!t || !canReadTable(t, req.user.id, req.user.isAdmin)) return fail(res, 404, 'unknown table');
     if (!t.capabilities.rowHistory) return fail(res, 400, 'driver has no row history');
     ok(
       res,
-      storeFor(t.driver).rowHistory(t.id, req.params.rowId, Math.min(Number(req.query.limit) || 50, 200)),
+      await storeFor(t.driver).rowHistory(t.id, req.params.rowId, Math.min(Number(req.query.limit) || 50, 200)),
     );
   });
 
   // The OLAP slice: GROUP BY dimensions × aggregated measures.
-  app.post('/api/tables/:id/aggregate', (req, res) => {
+  app.post('/api/tables/:id/aggregate', async (req, res) => {
     const t = getTable(req.params.id);
     if (!t || !canReadTable(t, req.user.id, req.user.isAdmin)) return fail(res, 404, 'unknown table');
     if (!t.capabilities.aggregate) return fail(res, 400, 'driver cannot aggregate');
     const parsed = aggregateQuerySchema.safeParse(req.body ?? {});
     if (!parsed.success) return fail(res, 400, parsed.error.issues[0]?.message ?? 'invalid aggregate query');
     try {
-      ok(res, storeFor(t.driver).aggregate(t.id, parsed.data));
+      ok(res, await storeFor(t.driver).aggregate(t.id, parsed.data));
     } catch (e) {
       fail(res, 400, e instanceof Error ? e.message : 'aggregate failed');
     }

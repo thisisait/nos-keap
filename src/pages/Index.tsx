@@ -9,7 +9,7 @@ import { RecentCitiesTile } from '@/components/homepage/RecentCitiesTile';
 import { CustomTodoTile } from '@/components/homepage/CustomTodoTile';
 import { ProgressStatsTile } from '@/components/homepage/ProgressStatsTile';
 import { ExploreMapTile } from '@/components/homepage/ExploreMapTile';
-import { Settings, Play, Globe } from 'lucide-react';
+import { Settings, Play, Globe, Table2 } from 'lucide-react';
 import type { HomepageTile } from '../types/database';
 
 /** Shown until the user configures their own set in Administration. */
@@ -82,6 +82,11 @@ const Index = () => {
               <Button className="flex items-center gap-2">
                 <Play className="w-4 h-4" />
                 {t('index.startExploring')}
+              </Button>
+            </Link>
+            <Link to="/tables" aria-label={t('tables.title')}>
+              <Button variant="outline" size="icon">
+                <Table2 className="w-4 h-4" />
               </Button>
             </Link>
             <Link to="/admin" aria-label={t('index.administration')}>

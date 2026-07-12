@@ -23,6 +23,7 @@ import crypto from 'node:crypto';
 import * as db from './db';
 import { markCorpusDirty } from './search';
 import { extractRefs } from './objects';
+import { rustfsStore } from './tables-rustfs';
 
 type ObjectRefLike = { kind: string; ref: string };
 import {
@@ -38,21 +39,30 @@ import {
   validateRowValues,
 } from '../shared/contracts/table';
 
+/** All methods are async — network-backed drivers (rustfs/postgres/grist)
+ *  need it, the libsql driver just resolves synchronously. */
 export interface TableStore {
   driver: TableDriver;
   capabilities: TableCapabilities;
-  createTable(ownerId: string, req: CreateTableRequest): TableInfo;
-  dropTable(id: string): void;
-  listRows(id: string, q: ListRowsQuery): { rows: TableRow[]; nextCursor?: string };
-  upsertRow(id: string, rowId: string | undefined, values: Record<string, unknown>, actor: string): TableRow;
-  deleteRow(id: string, rowId: string, actor: string): void;
-  rowHistory(id: string, rowId: string, limit: number): unknown[];
-  aggregate(id: string, q: AggregateQuery): Array<Record<string, unknown>>;
+  /** false when the driver's backing service isn't configured/reachable. */
+  available(): boolean;
+  createTable(ownerId: string, req: CreateTableRequest): Promise<TableInfo>;
+  dropTable(id: string): Promise<void>;
+  listRows(id: string, q: ListRowsQuery): Promise<{ rows: TableRow[]; nextCursor?: string }>;
+  upsertRow(
+    id: string,
+    rowId: string | undefined,
+    values: Record<string, unknown>,
+    actor: string,
+  ): Promise<TableRow>;
+  deleteRow(id: string, rowId: string, actor: string): Promise<void>;
+  rowHistory(id: string, rowId: string, limit: number): Promise<unknown[]>;
+  aggregate(id: string, q: AggregateQuery): Promise<Array<Record<string, unknown>>>;
 }
 
 // ── Registry (driver-independent) ─────────────────────────────────────────────
 
-function mapTable(row: any): Omit<TableInfo, 'capabilities'> {
+export function mapTable(row: any): Omit<TableInfo, 'capabilities'> {
   return {
     id: row.id,
     title: row.title,
@@ -94,12 +104,25 @@ function withCapabilities(t: Omit<TableInfo, 'capabilities'>): TableInfo {
 
 export function storeFor(driver: TableDriver): TableStore {
   if (driver === 'libsql') return libsqlStore;
+  if (driver === 'rustfs') return rustfsStore;
   throw new Error(`table driver not available yet: ${driver}`);
+}
+
+/** Storage picker data: which drivers this deployment can actually offer. */
+export function listDrivers(): Array<{
+  driver: TableDriver;
+  available: boolean;
+  capabilities: TableCapabilities;
+}> {
+  return (['libsql', 'rustfs'] as TableDriver[]).map((d) => {
+    const s = storeFor(d);
+    return { driver: d, available: s.available(), capabilities: s.capabilities };
+  });
 }
 
 // ── Card sync: the table's knowledge_object index card ───────────────────────
 
-function syncCard(t: Omit<TableInfo, 'capabilities'>, anchors: string[] = []): void {
+export function syncCard(t: Omit<TableInfo, 'capabilities'>, anchors: string[] = []): void {
   // Re-syncs (row-count bumps) must not lose the anchors the card already
   // has — merge them in from the existing card's extracted links.
   const existing = db.getObject(`table-${t.id}`);
@@ -144,7 +167,7 @@ const FILTER_SQL: Record<RowFilter['op'], string> = {
 
 /** WHERE fragment over json_extract'd columns. Column keys are validated
  *  against the schema BEFORE this runs — never raw user input. */
-function filterClause(schema: TableSchema, filters: RowFilter[]): { sql: string; params: unknown[] } {
+export function filterClause(schema: TableSchema, filters: RowFilter[]): { sql: string; params: unknown[] } {
   const keys = new Set(schema.columns.map((c) => c.key));
   const parts: string[] = [];
   const params: unknown[] = [];
@@ -176,7 +199,7 @@ function mapRow(r: any): TableRow {
   };
 }
 
-function refreshRowCount(tableId: string): number {
+export function refreshRowCount(tableId: string): number {
   const d = db.getDb();
   const c = (d.prepare('SELECT COUNT(*) AS c FROM table_rows WHERE table_id = ?').get(tableId) as any).c;
   d.prepare("UPDATE data_tables SET row_count = ?, updated_at = strftime('%s','now') WHERE id = ?").run(
@@ -188,6 +211,8 @@ function refreshRowCount(tableId: string): number {
 
 const libsqlStore: TableStore = {
   driver: 'libsql',
+
+  available: () => true,
   capabilities: {
     transactions: true,
     rowHistory: true,
@@ -197,7 +222,7 @@ const libsqlStore: TableStore = {
     events: true, // append-only history IS the event log (consumers poll it)
   },
 
-  createTable(ownerId, req) {
+  async createTable(ownerId, req) {
     const id = req.id ?? crypto.randomUUID();
     db.getDb()
       .prepare(
@@ -210,7 +235,7 @@ const libsqlStore: TableStore = {
     return t;
   },
 
-  dropTable(id) {
+  async dropTable(id) {
     const d = db.getDb();
     const tx = d.transaction(() => {
       d.prepare('DELETE FROM table_rows WHERE table_id = ?').run(id);
@@ -222,7 +247,7 @@ const libsqlStore: TableStore = {
     markCorpusDirty();
   },
 
-  listRows(id, q) {
+  async listRows(id, q) {
     const t = getTable(id);
     if (!t) throw new Error('unknown table');
     const { sql, params } = filterClause(t.schema, q.filter);
@@ -244,7 +269,7 @@ const libsqlStore: TableStore = {
     };
   },
 
-  upsertRow(id, rowId, values, actor) {
+  async upsertRow(id, rowId, values, actor) {
     const t = getTable(id);
     if (!t) throw new Error('unknown table');
     const rid = rowId ?? crypto.randomUUID();
@@ -278,7 +303,7 @@ const libsqlStore: TableStore = {
     return mapRow(saved);
   },
 
-  deleteRow(id, rowId, actor) {
+  async deleteRow(id, rowId, actor) {
     const t = getTable(id);
     if (!t) throw new Error('unknown table');
     const d = db.getDb();
@@ -293,7 +318,7 @@ const libsqlStore: TableStore = {
     syncCard({ ...t, rowCount });
   },
 
-  rowHistory(id, rowId, limit) {
+  async rowHistory(id, rowId, limit) {
     return db
       .getDb()
       .prepare(
@@ -303,7 +328,7 @@ const libsqlStore: TableStore = {
       .map((r: any) => ({ op: r.op, values: r.data ? JSON.parse(r.data) : null, actor: r.actor, at: r.at }));
   },
 
-  aggregate(id, q) {
+  async aggregate(id, q) {
     const t = getTable(id);
     if (!t) throw new Error('unknown table');
     const byKey = new Map(t.schema.columns.map((c) => [c.key, c]));

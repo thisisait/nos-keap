@@ -10,6 +10,8 @@ import Settings from './pages/Settings';
 import NotFound from './pages/NotFound';
 import ExtensionPair from './pages/ExtensionPair';
 import ComposeDraft from './pages/ComposeDraft';
+import Tables from './pages/Tables';
+import TableEditor from './pages/TableEditor';
 
 // Lazy: the explorer pulls in three.js/WebGL — keep it out of the main chunk.
 const Explore = lazy(() => import('./pages/Explore'));
@@ -46,6 +48,8 @@ const App = () => {
                 </Suspense>
               }
             />
+            <Route path="/tables" element={<Tables />} />
+            <Route path="/tables/:id" element={<TableEditor />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/extension/pair" element={<ExtensionPair />} />
             <Route path="/compose/:id" element={<ComposeDraft />} />

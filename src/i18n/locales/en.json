@@ -333,5 +333,73 @@
       "anchored": "Anchored knowledge ({{count}})",
       "brief": "Brief"
     }
+  },
+  "tables": {
+    "title": "Data tables",
+    "new": "New table",
+    "name": "Title",
+    "anchor": "Anchor (taxonomy node id)",
+    "storage": "Storage",
+    "unavailable": "unavailable",
+    "columns": "Columns",
+    "colKey": "key (snake_case)",
+    "colLabel": "Label",
+    "colOptions": "options (comma)",
+    "colRequired": "required",
+    "addColumn": "Add column",
+    "addRow": "Add row",
+    "created": "Table created.",
+    "createFailed": "Could not create the table.",
+    "deleted": "Table deleted.",
+    "empty": "No tables yet.",
+    "emptyHint": "Create the first one — a SharePoint-style list with selectable storage.",
+    "meta": "{{rows}} rows · {{cols}} columns",
+    "noRows": "No rows — add the first one in the form above.",
+    "badJson": "Invalid JSON in a complex column.",
+    "summary": "Summary",
+    "byDimension": "by {{dim}}",
+    "drivers": {
+      "libsql": {
+        "name": "KEAP SQL (libSQL)",
+        "pitch": "Transactions and instant events — every change flows straight into activity, lint and search. The default for living lists."
+      },
+      "rustfs": {
+        "name": "RustFS (S3)",
+        "pitch": "Native object versioning and lifecycle routines of the object store. Row history for free; the road to parquet/OLAP cubes."
+      },
+      "postgres": {
+        "name": "PostgreSQL",
+        "pitch": "Database triggers and routines, shared with other services."
+      },
+      "grist": {
+        "name": "Grist",
+        "pitch": "A full spreadsheet editor as a service."
+      }
+    },
+    "caps": {
+      "transactions": "transactions",
+      "history": "row history",
+      "versioning": "versioning",
+      "aggregate": "aggregation",
+      "events": "events"
+    },
+    "kinds": {
+      "text": "text",
+      "number": "number",
+      "boolean": "yes/no",
+      "date": "date",
+      "select": "select",
+      "json": "JSON",
+      "file": "file (by ref)",
+      "vector": "vector",
+      "taxonomyRef": "taxonomy node",
+      "objectRef": "knowledge object",
+      "user": "user"
+    },
+    "roles": {
+      "attribute": "attribute",
+      "dimension": "dimension",
+      "measure": "measure"
+    }
   }
 }

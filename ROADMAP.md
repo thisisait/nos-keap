@@ -170,8 +170,18 @@ nOS-side counterparts flagged **[nOS]**).
   (transactions, append-only row history = the event log, json_extract
   aggregation) + `/api/tables*` REST. Every table lives as a `knowledge_object`
   card (`keaptable:<id>`, schema card in frontmatter) — searchable, anchorable,
-  OKF-exportable. Next drivers on the same contract: **rustfs** (S3 snapshots +
-  object versioning, parquet → the DuckDB/OLAP-cube path), postgres, grist.
+  OKF-exportable.
+  **Update (same day): rustfs driver + grid UI DONE.** `server/tables-rustfs.ts`
+  — rows as S3 objects (aws4fetch SigV4, path-style), bucket versioning enabled
+  on first use → row history from ListObjectVersions with no history table;
+  bounded in-memory filter/sort/aggregate (SCAN_CAP) until the DuckDB leg (S6)
+  takes over. Verified E2E against MinIO. Needs `KEAP_RUSTFS_ENDPOINT/ACCESS_KEY/
+  SECRET_KEY` (+ optional `_BUCKET`) from the role **[nOS]**; `/api/tables/drivers`
+  tells the UI what this deployment offers. `/tables` list + storage picker
+  (capability badges, honest per-driver pitch) and `/tables/:id` TanStack grid:
+  inline cell editing by kind, add-row form, server-side sort, **OLAP summary
+  bar** (live Σ measures × first dimension). Remaining on this contract:
+  postgres, grist drivers.
 - **R2 — structured tables (SharePoint-style)**: recommend **Grist** as the nOS
   table service — SQLite-native documents (each Grist doc IS a SQLite file →
   DuckDB/S6 can query it in place, embeddings can index it), REST API, self-hosted
