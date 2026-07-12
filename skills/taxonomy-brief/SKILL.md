@@ -52,6 +52,24 @@ clickable vazby.
    a brief that references non-existent subfields fails the vazba check
    anyway.
 
+## House style
+
+The corpus reads as ONE reference work, not 790 separate essays. Same
+grammar, register and structure everywhere:
+
+- Encyclopedic register: present tense, active voice, no hedging, no
+  meta-language ("This node covers...") — the first sentence names the
+  concept and its genus directly.
+- Fixed terminology: one term per concept, reused verbatim across nodes;
+  siblings use the SAME term for a shared boundary on both sides. Czech
+  uses established Czech terminology, never calques.
+- Markdown structure: plain paragraphs separated by blank lines — no
+  headings, bullet lists, tables or blockquotes. `[[node-id]]` vazby sit
+  inline in the sentence stating the relation (never a "see also" tail);
+  external links carry the source's proper name as link text — never
+  "here"/"zde" or a bare URL.
+- No rhetorical questions, no direct reader address, no exclamation marks.
+
 ## Batch discipline
 
 - Default batch: 10 nodes per run (paragraphs are long; keep the session

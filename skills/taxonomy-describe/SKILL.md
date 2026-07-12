@@ -54,6 +54,20 @@ weight: 778 of the 790 seed nodes shipped without one.
 6. **Rationale ≤ 1 sentence** naming the evidence used (children, siblings,
    domain knowledge).
 
+## House style
+
+The corpus reads as ONE reference work — descriptions share a single
+grammar and register with the briefs (see skills/taxonomy-brief):
+
+- Encyclopedic register: present tense, active voice, no hedging, no
+  meta-language ("This node covers...") — the first sentence names the
+  concept and its genus directly ("Kinematics is the geometry of
+  motion...").
+- Fixed terminology: one term per concept, reused verbatim across nodes;
+  siblings use the SAME term for a shared boundary on both sides. Czech
+  uses established Czech terminology, never calques.
+- No rhetorical questions, no direct reader address, no exclamation marks.
+
 ## Batch discipline
 
 - Default batch: 40 nodes per run (one LLM session, one review batch).
