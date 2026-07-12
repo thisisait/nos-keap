@@ -69,8 +69,7 @@ export function propose(
   const broken = brokenAnchors(draft);
   if (broken.length) throw new Error(`draft anchors unknown taxonomy nodes: ${broken.join(', ')}`);
   // One open proposal per capture — a re-proposal updates it.
-  const existing = db
-    .listPromotions('proposed')
+  const existing = db.openPromotions()
     .find((p) => p.captureId === captureId);
   const id = existing?.id ?? crypto.randomUUID();
   db.upsertPromotion({
@@ -213,8 +212,7 @@ export function proposeNode(
     description: draft.description.trim().slice(0, 2000),
   };
 
-  const existing = db
-    .listPromotions('proposed')
+  const existing = db.openPromotions()
     .find((p) => (p as any).kind === 'node' && p.object?.parentId === parent.id
       && String(p.object?.name).toLowerCase() === name.toLowerCase());
   const id = existing?.id ?? crypto.randomUUID();
@@ -265,8 +263,7 @@ export function proposeDescription(
     throw new Error('identical to the current description — nothing to propose');
   }
   // One open desc proposal per node — a re-proposal updates it.
-  const existing = db
-    .listPromotions('proposed')
+  const existing = db.openPromotions()
     .find((p) => (p as any).kind === 'desc' && p.object?.nodeId === node.id);
   const id = existing?.id ?? crypto.randomUUID();
   db.upsertPromotion({
@@ -349,8 +346,7 @@ export function proposeBrief(
     throw new Error('brief must link at least one related [[node-id]] — briefs carry the vazby');
   }
   const normalized: BriefDraft = { nodeId: node.id, briefEn: en, briefCs: cs };
-  const existing = db
-    .listPromotions('proposed')
+  const existing = db.openPromotions()
     .find((p) => (p as any).kind === 'brief' && p.object?.nodeId === node.id);
   const id = existing?.id ?? crypto.randomUUID();
   db.upsertPromotion({

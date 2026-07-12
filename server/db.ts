@@ -1241,6 +1241,19 @@ export function listPromotions(status?: string, limit = 200): PromotionRow[] {
   return (rows as any[]).map(mapPromotionRow);
 }
 
+/**
+ * ALL open proposals, uncapped. The dup-guards in promotions.ts and the
+ * pending-exclusion sets in agent.ts MUST see every open row — reading them
+ * through listPromotions' LIMIT 200 made the guards blind past 200 open
+ * proposals (duplicate desc rows, re-served pending nodes).
+ */
+export function openPromotions(): PromotionRow[] {
+  const rows = getDb()
+    .prepare("SELECT * FROM promotions WHERE status = 'proposed' ORDER BY created_at DESC")
+    .all();
+  return (rows as any[]).map(mapPromotionRow);
+}
+
 export function setPromotionVotes(id: string, votes: unknown[]): void {
   getDb().prepare('UPDATE promotions SET votes = ? WHERE id = ?').run(JSON.stringify(votes), id);
 }

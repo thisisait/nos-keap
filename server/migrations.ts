@@ -130,6 +130,25 @@ const MIGRATIONS: Migration[] = [
       CREATE INDEX IF NOT EXISTS table_row_history_idx ON table_row_history(table_id, row_id, at);
     `,
   },
+  {
+    // The K1/brief dup-guards read open proposals through listPromotions'
+    // default LIMIT 200 — beyond 200 open rows the guard went blind and
+    // re-proposals landed as duplicate rows instead of superseding. The
+    // guards now read uncapped (db.openPromotions); this clears the rows
+    // the blind window let in, keeping the newest proposal per node.
+    id: '003-dedupe-open-desc-brief-promotions',
+    sql: `
+      DELETE FROM promotions WHERE status = 'proposed' AND kind IN ('desc','brief') AND id NOT IN (
+        SELECT id FROM (
+          SELECT id, ROW_NUMBER() OVER (
+            PARTITION BY kind, json_extract(object_json, '$.nodeId')
+            ORDER BY created_at DESC, id DESC
+          ) AS rn
+          FROM promotions WHERE status = 'proposed' AND kind IN ('desc','brief')
+        ) WHERE rn = 1
+      );
+    `,
+  },
 ];
 
 export function runMigrations(db: Database.Database): void {
