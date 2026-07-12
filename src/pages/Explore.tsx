@@ -22,7 +22,7 @@ import GraphCanvas, {
   type CameraMode,
 } from '@/components/explorer/GraphCanvas';
 import SidePanel from '@/components/explorer/SidePanel';
-import NodeDetailDrawer, { type DrawerTarget } from '@/components/explorer/NodeDetailDrawer';
+import DetailPanel, { type DrawerTarget } from '@/components/explorer/DetailPanel';
 import {
   useGraph,
   useNeighbors,
@@ -292,6 +292,17 @@ export default function Explore() {
               mode={cameraMode}
             />
           )}
+          <DetailPanel
+            target={drawer}
+            nodeById={nodeById}
+            objects={graph?.objects ?? []}
+            onClose={() => setDrawer(null)}
+            onFocus={(id) => {
+              setDrawer(null);
+              setFocusId(id);
+            }}
+            onSelect={openTarget}
+          />
           {cameraMode === 'ship' && (
             <>
               {/* Ship HUD: crosshair + control hints. Pure overlay, no logic. */}
@@ -327,15 +338,6 @@ export default function Explore() {
         />
       </div>
 
-      <NodeDetailDrawer
-        target={drawer}
-        nodeById={nodeById}
-        onClose={() => setDrawer(null)}
-        onFocus={(id) => {
-          setDrawer(null);
-          setFocusId(id);
-        }}
-      />
     </div>
   );
 }

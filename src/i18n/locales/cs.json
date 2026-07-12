@@ -15,7 +15,8 @@
     "home": "Domů",
     "error": "Chyba",
     "success": "Hotovo",
-    "loading": "Načítání…"
+    "loading": "Načítání…",
+    "close": "Zavřít"
   },
   "index": {
     "heading": "Přehled",
@@ -267,6 +268,32 @@
     "drawer": {
       "open": "Otevřít obsah",
       "focus": "Zaměřit v grafu"
+    },
+    "detail": {
+      "zone": {
+        "anchor": "kotevní jádro",
+        "votable": "hlasovatelné jádro",
+        "free": "volná zóna"
+      },
+      "grown": "dorostlý",
+      "noDescription": "Zatím bez popisu — doplní ho skill taxonomy-describe (nebo ty přes Popsat).",
+      "describe": "Popsat",
+      "grow": "Nový poduzel",
+      "anchorLocked": "Kotevní jádro — konstanty oblohy se mění jen releasem.",
+      "growHintFree": "Volná zóna: schválený návrh se materializuje okamžitě (auditovaně).",
+      "growHintVotable": "Hlasovatelné jádro: návrh jde k moderátorovi.",
+      "childName": "Název uzlu",
+      "childDesc": "Popis (min 20 znaků) — stane se vyhledávacím textem uzlu (nosný).",
+      "submitGrow": "Navrhnout uzel",
+      "descHint": "Popisy jsou nosné: angličtina je kanonický text pro vyhledávání/embeddingy, čeština je lokalizace UI.",
+      "descEn": "Description (anglicky, kanonický, min 20 znaků)",
+      "descCs": "Popis (česky, volitelný)",
+      "submitDesc": "Navrhnout popis",
+      "growApproved": "Uzel {{id}} materializován — hvězda je ve vesmíru.",
+      "growProposed": "Návrh odeslán — čeká na moderátora.",
+      "descProposed": "Popis navržen — čeká na moderátora.",
+      "children": "Poduzly ({{count}})",
+      "anchored": "Ukotvené znalosti ({{count}})"
     }
   }
 }

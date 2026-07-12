@@ -133,6 +133,7 @@ export function registerGraphRoutes(app: Express) {
     const nodes = allNodes().map((n) => {
       const cur = curatedById.get(n.id);
       const ref = cur?.requiredData ?? n.requiredData;
+      const resolved = resolveContentRef(ref);
       const p = layout.get(n.id);
       return {
         id: n.id,
@@ -142,7 +143,9 @@ export function registerGraphRoutes(app: Express) {
         level: nodeLevel(n.id),
         childCount: n.childIds.length,
         hasNote: curatedById.has(n.id),
-        dataType: nodeDataType(ref),
+        dataType: resolved?.type,
+        // Resolved content link — the DetailPanel's "open in service" action.
+        url: resolved?.url,
         zone: n.zone,
         ext: n.ext ?? false,
         // K1 curated descriptions — en is canonical, cs is the UI locale.

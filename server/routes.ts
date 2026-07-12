@@ -19,7 +19,7 @@ import { listContentServices } from './content-links';
 import { extractRefs } from './objects';
 import { markCorpusDirty } from './search';
 import { runLint, lastLintReport } from './lint';
-import { propose, proposeNode, vote, decide, moderationPolicy } from './promotions';
+import { propose, proposeNode, proposeDescription, vote, decide, moderationPolicy } from './promotions';
 import { exportBundle, importBundle } from './okf';
 import { normalizeAndSaveCapture } from './intake';
 
@@ -224,6 +224,16 @@ export function registerApiRoutes(app: Express) {
     const { parentId, name, description, rationale } = req.body ?? {};
     try {
       ok(res, proposeNode({ parentId, name, description }, rationale, req.user.id));
+    } catch (err) {
+      return fail(res, 400, (err as Error).message);
+    }
+  });
+  // K1 human surface: any signed-in user may propose a curated description
+  // from the explorer's DetailPanel — moderated like every desc proposal.
+  app.post('/api/taxonomy/describe', (req, res) => {
+    const { nodeId, descriptionEn, descriptionCs, rationale } = req.body ?? {};
+    try {
+      ok(res, proposeDescription({ nodeId, descriptionEn, descriptionCs }, rationale, req.user.id));
     } catch (err) {
       return fail(res, 400, (err as Error).message);
     }

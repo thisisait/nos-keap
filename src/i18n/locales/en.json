@@ -15,7 +15,8 @@
     "home": "Home",
     "error": "Error",
     "success": "Done",
-    "loading": "Loading…"
+    "loading": "Loading…",
+    "close": "Close"
   },
   "index": {
     "heading": "Overview",
@@ -267,6 +268,32 @@
     "drawer": {
       "open": "Open content",
       "focus": "Focus in graph"
+    },
+    "detail": {
+      "zone": {
+        "anchor": "anchor core",
+        "votable": "votable core",
+        "free": "free zone"
+      },
+      "grown": "grown",
+      "noDescription": "No description yet — the taxonomy-describe skill (or you, via Describe) will fill it.",
+      "describe": "Describe",
+      "grow": "New sub-node",
+      "anchorLocked": "Anchor core — the sky’s constants change only by release.",
+      "growHintFree": "Free zone: an approved proposal materializes immediately (audited).",
+      "growHintVotable": "Votable core: the proposal goes to the moderator.",
+      "childName": "Node name",
+      "childDesc": "Description (min 20 chars) — it becomes the node’s search text (load-bearing).",
+      "submitGrow": "Propose node",
+      "descHint": "Descriptions are load-bearing: English is the canonical search/embedding text, Czech is the UI localization.",
+      "descEn": "Description (English, canonical, min 20 chars)",
+      "descCs": "Popis (česky, volitelný)",
+      "submitDesc": "Propose description",
+      "growApproved": "Node {{id}} materialized — the star is in the universe.",
+      "growProposed": "Proposal submitted — awaits the moderator.",
+      "descProposed": "Description proposed — awaits the moderator.",
+      "children": "Sub-nodes ({{count}})",
+      "anchored": "Anchored knowledge ({{count}})"
     }
   }
 }

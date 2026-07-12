@@ -19,6 +19,11 @@ export interface GraphNode {
   childCount: number;
   hasNote: boolean;
   dataType?: string;
+  /** Resolved content link — the DetailPanel's "open in service" action. */
+  url?: string;
+  /** Track T zone + provenance. */
+  zone?: 'anchor' | 'votable' | 'free';
+  ext?: boolean;
   /** K1 curated description (en canonical) + cs localization. */
   description?: string;
   descriptionCs?: string;
