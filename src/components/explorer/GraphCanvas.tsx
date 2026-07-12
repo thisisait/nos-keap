@@ -296,68 +296,83 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
   const handleClick = useCallback((node: any) => onNodeClick(node.id), [onNodeClick]);
 
   // Per-frame update in ship mode: physics, animation, camera, trail.
-  const handleEngineTick = useCallback(() => {
+  const updateFrame = useCallback(
+    (dt: number) => {
+      const ref = fgRef.current;
+      const model = modelRef.current;
+      if (!ref || !model) return;
+
+      tick(dt);
+
+      const ship = shipRef.current;
+      const group = model.group;
+      const flame = model.flame;
+      const trail = model.trail;
+
+      group.position.copy(ship.position);
+      group.quaternion.copy(ship.quaternion);
+
+      // Animate flame length/width by thrust + boost.
+      const baseFlame = 0.4;
+      const thrust = ship.thrust;
+      const boosting = ship.boosting;
+      const now = performance.now();
+      const pulse = 1 + Math.sin(now * 0.02) * 0.08;
+      const flameLen = (baseFlame + thrust * 1.2 + (boosting ? 1.4 : 0)) * pulse;
+      const flameWidth = baseFlame + thrust * 0.4 + (boosting ? 0.3 : 0);
+      flame.scale.set(flameWidth, flameWidth, flameLen);
+      flame.position.z = -2.6 - flameLen * 0.5;
+      flame.material.opacity = 0.7 + thrust * 0.2 + (boosting ? 0.1 : 0);
+
+      // Trail length and color from speed.
+      const speedRatio = Math.min(ship.speed / 240, 1);
+      const trailLen = 1 + ship.speed * 0.025;
+      trail.scale.set(1 + speedRatio * 0.5, 1 + speedRatio * 0.5, trailLen);
+      trail.position.z = -3.0 - trailLen * 0.5;
+      trail.material.opacity = 0.25 + speedRatio * 0.55;
+      trail.material.color.setHex(boosting ? 0xfacc15 : 0x67e8f9);
+
+      // Third-person camera: smooth follow behind the ship.
+      const cam = ref.camera();
+      _camOffset.set(0, 3.5, -14).applyQuaternion(ship.quaternion);
+      _targetPos.copy(ship.position).add(_camOffset);
+      cam.position.lerp(_targetPos, 1 - Math.exp(-2.5 * dt));
+
+      _forward.set(0, 0, 1).applyQuaternion(ship.quaternion);
+      _lookTarget.copy(ship.position).addScaledVector(_forward, 8).add(_lookOffset);
+      cam.lookAt(_lookTarget);
+
+      const targetFov = 60 + (boosting ? 12 : 0) + speedRatio * 6;
+      cam.fov = THREE.MathUtils.lerp(cam.fov, targetFov, 0.1);
+      cam.updateProjectionMatrix();
+
+      onShipUpdate?.({ speed: ship.speed, boosting, thrust });
+    },
+    [tick, shipRef, _camOffset, _lookOffset, _targetPos, _lookTarget, _forward, onShipUpdate],
+  );
+
+  // Drive the ship with our own requestAnimationFrame loop so it keeps
+  // running even after the d3-force simulation has cooled down.
+  useEffect(() => {
     if (mode !== 'ship') {
       lastTimeRef.current = null;
       return;
     }
-    const ref = fgRef.current;
-    const model = modelRef.current;
-    if (!ref || !model) return;
-
-    const now = performance.now();
-    if (lastTimeRef.current == null) {
+    let raf = 0;
+    const loop = (now: number) => {
+      if (lastTimeRef.current != null) {
+        const dt = Math.min((now - lastTimeRef.current) / 1000, 0.1);
+        updateFrame(dt);
+      }
       lastTimeRef.current = now;
-      return;
-    }
-    const dt = Math.min((now - lastTimeRef.current) / 1000, 0.1);
-    lastTimeRef.current = now;
-
-    tick(dt);
-
-    const ship = shipRef.current;
-    const group = model.group;
-    const flame = model.flame;
-    const trail = model.trail;
-
-    group.position.copy(ship.position);
-    group.quaternion.copy(ship.quaternion);
-
-    // Animate flame length/width by thrust + boost.
-    const baseFlame = 0.4;
-    const thrust = ship.thrust;
-    const boosting = ship.boosting;
-    const pulse = 1 + Math.sin(now * 0.02) * 0.08;
-    const flameLen = (baseFlame + thrust * 1.2 + (boosting ? 1.4 : 0)) * pulse;
-    const flameWidth = baseFlame + thrust * 0.4 + (boosting ? 0.3 : 0);
-    flame.scale.set(flameWidth, flameWidth, flameLen);
-    flame.position.z = -2.6 - flameLen * 0.5;
-    flame.material.opacity = 0.7 + thrust * 0.2 + (boosting ? 0.1 : 0);
-
-    // Trail length and color from speed.
-    const speedRatio = Math.min(ship.speed / 240, 1);
-    const trailLen = 1 + ship.speed * 0.025;
-    trail.scale.set(1 + speedRatio * 0.5, 1 + speedRatio * 0.5, trailLen);
-    trail.position.z = -3.0 - trailLen * 0.5;
-    trail.material.opacity = 0.25 + speedRatio * 0.55;
-    trail.material.color.setHex(boosting ? 0xfacc15 : 0x67e8f9);
-
-    // Third-person camera: smooth follow behind the ship.
-    const cam = ref.camera();
-    _camOffset.set(0, 3.5, -14).applyQuaternion(ship.quaternion);
-    _targetPos.copy(ship.position).add(_camOffset);
-    cam.position.lerp(_targetPos, 1 - Math.exp(-2.5 * dt));
-
-    _forward.set(0, 0, 1).applyQuaternion(ship.quaternion);
-    _lookTarget.copy(ship.position).addScaledVector(_forward, 8).add(_lookOffset);
-    cam.lookAt(_lookTarget);
-
-    const targetFov = 60 + (boosting ? 12 : 0) + speedRatio * 6;
-    cam.fov = THREE.MathUtils.lerp(cam.fov, targetFov, 0.1);
-    cam.updateProjectionMatrix();
-
-    onShipUpdate?.({ speed: ship.speed, boosting, thrust });
-  }, [mode, tick, shipRef, _camOffset, _lookOffset, _targetPos, _lookTarget, _forward, onShipUpdate]);
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+    return () => {
+      cancelAnimationFrame(raf);
+      lastTimeRef.current = null;
+    };
+  }, [mode, updateFrame]);
 
   // Always-on labels: galaxy names (categories) so the observer never loses
   // orientation, and star names so semantic hits are readable at a glance.
@@ -399,7 +414,6 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       showNavInfo={false}
       enablePointerInteraction={mode !== 'ship'}
       enableNodeDrag={mode !== 'ship'}
-      onEngineTick={handleEngineTick}
     />
   );
 }
