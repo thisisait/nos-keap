@@ -5,8 +5,8 @@
  * This is the OBSERVER mode: orbit camera over the baked universe. Taxonomy
  * stars arrive PINNED (fx/fy/fz from the U1 layout bake — the spatial-memory
  * contract); the force engine only places free bodies (semantic stars,
- * nebula dust) around them. The future rocketship mode (U3) swaps the camera
- * controller, not the scene.
+ * nebula dust) around them. Ship mode swaps the camera controller for a
+ * third-person low-poly rocket with custom physics, not the scene.
  *
  * Stars (semantic hits that are captures/notes/objects, i.e. NOT part of the
  * hard-coded taxonomy) arrive as extra nodes with star=true, linked to the
@@ -21,8 +21,9 @@ import ForceGraph3D from 'react-force-graph-3d';
 import SpriteText from 'three-spritetext';
 import * as THREE from 'three';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
-// @ts-expect-error — no bundled types; same engine react-force-graph uses.
 import { forceCollide } from 'd3-force-3d';
+import { createShipModel, type ShipModelParts } from './ShipModel';
+import { useShipController } from './useShipController';
 
 export type CameraMode = 'observer' | 'ship';
 
@@ -69,8 +70,10 @@ interface Props {
   onNodeClick: (id: string) => void;
   width: number;
   height: number;
-  /** observer = orbit camera; ship = FlyControls (WASD + drag to look). */
+  /** observer = orbit camera; ship = 3rd-person low-poly rocket. */
   mode: CameraMode;
+  /** Called every engine tick with the current ship telemetry (ship mode only). */
+  onShipUpdate?: (state: { speed: number; boosting: boolean; thrust: number }) => void;
 }
 
 const STAR_COLOR: Record<string, string> = {
@@ -95,9 +98,18 @@ function nodeSize(n: CanvasNode): number {
   return 2;
 }
 
-export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width, height, mode }: Props) {
+export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width, height, mode, onShipUpdate }: Props) {
   const fgRef = useRef<any>(null);
   const didFitRef = useRef(false);
+  const modelRef = useRef<ShipModelParts | null>(null);
+  const lastTimeRef = useRef<number | null>(null);
+  const { shipRef, tick, reset } = useShipController(mode === 'ship');
+
+  const _camOffset = useMemo(() => new THREE.Vector3(0, 3.5, -14), []);
+  const _lookOffset = useMemo(() => new THREE.Vector3(0, 1.5, 8), []);
+  const _targetPos = useMemo(() => new THREE.Vector3(), []);
+  const _lookTarget = useMemo(() => new THREE.Vector3(), []);
+  const _forward = useMemo(() => new THREE.Vector3(), []);
 
   // Deep-space dressing, once per mount: a decorative starfield shell far
   // beyond the data (never clickable, never part of spatial memory) and an
@@ -147,19 +159,78 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Ship mode: tune the FlyControls for the universe's scale. The defaults
-  // (movementSpeed 1) are built for metre-sized scenes, ours is r≈1400.
+  // Ship mode: mount the player model, disable built-in controls, lock the
+  // pointer, and start from the current camera orientation.
   useEffect(() => {
     if (mode !== 'ship') return;
     const t = setTimeout(() => {
-      const controls = fgRef.current?.controls();
-      if (!controls) return;
-      controls.movementSpeed = 320;
-      controls.rollSpeed = Math.PI / 6;
-      controls.dragToLook = true;
-    }, 300);
-    return () => clearTimeout(t);
-  }, [mode]);
+      const ref = fgRef.current;
+      if (!ref) return;
+      try {
+        const cam = ref.camera();
+        const scene = ref.scene();
+        const model = createShipModel();
+        modelRef.current = model;
+        scene.add(model.group);
+
+        // Start the ship where the camera is, facing the same way.
+        reset(cam.position, cam.quaternion);
+
+        // Disable the graph's camera controls so we own the camera.
+        if (typeof ref.enableNavigationControls === 'function') {
+          ref.enableNavigationControls(false);
+        }
+        const controls = ref.controls();
+        if (controls && typeof controls.enabled === 'boolean') {
+          controls.enabled = false;
+        }
+
+        // Pointer lock for smooth mouse look.
+        const canvas = ref.renderer()?.domElement;
+        if (canvas && document.pointerLockElement !== canvas) {
+          canvas.requestPointerLock?.();
+        }
+      } catch {
+        // Renderer not ready yet.
+      }
+    }, 100);
+
+    return () => {
+      clearTimeout(t);
+      try {
+        const ref = fgRef.current;
+        if (!ref) return;
+        const model = modelRef.current;
+        if (model) {
+          ref.scene().remove(model.group);
+          model.group.traverse((obj: THREE.Object3D) => {
+            if (obj instanceof THREE.Mesh) {
+              obj.geometry?.dispose();
+              const material = obj.material;
+              if (Array.isArray(material)) {
+                material.forEach((m) => m.dispose());
+              } else {
+                material?.dispose();
+              }
+            }
+          });
+          modelRef.current = null;
+        }
+        if (typeof ref.enableNavigationControls === 'function') {
+          ref.enableNavigationControls(true);
+        }
+        const controls = ref.controls();
+        if (controls && typeof controls.enabled === 'boolean') {
+          controls.enabled = true;
+        }
+        if (document.pointerLockElement) {
+          document.exitPointerLock?.();
+        }
+      } catch {
+        // Ignore cleanup errors.
+      }
+    };
+  }, [mode, reset]);
 
   const graphData = useMemo(() => {
     // force-graph mutates its input (source/target become object refs) —
@@ -210,8 +281,9 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
 
   // Warp to the focused node once the engine placed it — the "semantic
   // hyperspace jump" (search or click sets focus, the camera travels).
+  // In ship mode we own the camera, so skip the warp.
   useEffect(() => {
-    if (!focusId) return;
+    if (!focusId || mode === 'ship') return;
     const t = setTimeout(() => {
       const ref = fgRef.current;
       const node = graphData.nodes.find((n: any) => n.id === focusId) as any;
@@ -219,9 +291,73 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       ref.cameraPosition({ x: node.x, y: node.y, z: (node.z ?? 0) + 260 }, node, warpMs(1100));
     }, 400);
     return () => clearTimeout(t);
-  }, [focusId, graphData]);
+  }, [focusId, graphData, mode]);
 
   const handleClick = useCallback((node: any) => onNodeClick(node.id), [onNodeClick]);
+
+  // Per-frame update in ship mode: physics, animation, camera, trail.
+  const handleEngineTick = useCallback(() => {
+    if (mode !== 'ship') {
+      lastTimeRef.current = null;
+      return;
+    }
+    const ref = fgRef.current;
+    const model = modelRef.current;
+    if (!ref || !model) return;
+
+    const now = performance.now();
+    if (lastTimeRef.current == null) {
+      lastTimeRef.current = now;
+      return;
+    }
+    const dt = Math.min((now - lastTimeRef.current) / 1000, 0.1);
+    lastTimeRef.current = now;
+
+    tick(dt);
+
+    const ship = shipRef.current;
+    const group = model.group;
+    const flame = model.flame;
+    const trail = model.trail;
+
+    group.position.copy(ship.position);
+    group.quaternion.copy(ship.quaternion);
+
+    // Animate flame length/width by thrust + boost.
+    const baseFlame = 0.4;
+    const thrust = ship.thrust;
+    const boosting = ship.boosting;
+    const pulse = 1 + Math.sin(now * 0.02) * 0.08;
+    const flameLen = (baseFlame + thrust * 1.2 + (boosting ? 1.4 : 0)) * pulse;
+    const flameWidth = baseFlame + thrust * 0.4 + (boosting ? 0.3 : 0);
+    flame.scale.set(flameWidth, flameWidth, flameLen);
+    flame.position.z = -2.6 - flameLen * 0.5;
+    flame.material.opacity = 0.7 + thrust * 0.2 + (boosting ? 0.1 : 0);
+
+    // Trail length and color from speed.
+    const speedRatio = Math.min(ship.speed / 240, 1);
+    const trailLen = 1 + ship.speed * 0.025;
+    trail.scale.set(1 + speedRatio * 0.5, 1 + speedRatio * 0.5, trailLen);
+    trail.position.z = -3.0 - trailLen * 0.5;
+    trail.material.opacity = 0.25 + speedRatio * 0.55;
+    trail.material.color.setHex(boosting ? 0xfacc15 : 0x67e8f9);
+
+    // Third-person camera: smooth follow behind the ship.
+    const cam = ref.camera();
+    _camOffset.set(0, 3.5, -14).applyQuaternion(ship.quaternion);
+    _targetPos.copy(ship.position).add(_camOffset);
+    cam.position.lerp(_targetPos, 1 - Math.exp(-2.5 * dt));
+
+    _forward.set(0, 0, 1).applyQuaternion(ship.quaternion);
+    _lookTarget.copy(ship.position).addScaledVector(_forward, 8).add(_lookOffset);
+    cam.lookAt(_lookTarget);
+
+    const targetFov = 60 + (boosting ? 12 : 0) + speedRatio * 6;
+    cam.fov = THREE.MathUtils.lerp(cam.fov, targetFov, 0.1);
+    cam.updateProjectionMatrix();
+
+    onShipUpdate?.({ speed: ship.speed, boosting, thrust });
+  }, [mode, tick, shipRef, _camOffset, _lookOffset, _targetPos, _lookTarget, _forward, onShipUpdate]);
 
   // Always-on labels: galaxy names (categories) so the observer never loses
   // orientation, and star names so semantic hits are readable at a glance.
@@ -230,7 +366,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
   // ADDED next to it, not a replacement.
   const nodeThreeObject = useCallback((node: any) => {
     if (node.kind !== 'category' && !node.star) return false as any;
-    const sprite = new SpriteText(node.name);
+    const sprite = new SpriteText(node.name) as THREE.Sprite;
     sprite.color = node.star ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.92)';
     sprite.textHeight = node.kind === 'category' ? 7 : 3.5;
     sprite.position.y = -(Math.sqrt(nodeSize(node)) * 2.4 + 6);
@@ -241,7 +377,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
   return (
     <ForceGraph3D
       ref={fgRef}
-      controlType={mode === 'ship' ? 'fly' : 'orbit'}
+      controlType="orbit"
       graphData={graphData}
       nodeId="id"
       nodeRelSize={2.4}
@@ -261,6 +397,9 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       linkOpacity={0.4}
       nodeOpacity={0.92}
       showNavInfo={false}
+      enablePointerInteraction={mode !== 'ship'}
+      enableNodeDrag={mode !== 'ship'}
+      onEngineTick={handleEngineTick}
     />
   );
 }

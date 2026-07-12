@@ -42,6 +42,7 @@ export default function Explore() {
   const [cameraMode, setCameraMode] = useState<CameraMode>('observer');
   const [jumpQuery, setJumpQuery] = useState('');
   const [jumpMiss, setJumpMiss] = useState(false);
+  const [shipHud, setShipHud] = useState({ speed: 0, boosting: false, thrust: 0 });
 
   // Semantic hyperspace jump: hybrid search → plot course to the best hit's
   // star (objects/captures resolve to their anchor node). Focus does the
@@ -282,7 +283,6 @@ export default function Explore() {
             </div>
           ) : (
             <GraphCanvas
-              key={cameraMode} // controlType is init-only — remount on mode change
               nodes={canvasNodes}
               links={canvasLinks}
               focusId={focusId}
@@ -290,6 +290,7 @@ export default function Explore() {
               width={size.w}
               height={size.h}
               mode={cameraMode}
+              onShipUpdate={setShipHud}
             />
           )}
           <DetailPanel
@@ -309,8 +310,23 @@ export default function Explore() {
               <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white/40 text-lg select-none">
                 +
               </div>
-              <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-black/50 px-3 py-1 text-[11px] text-white/70 backdrop-blur-sm">
-                {t('explore.camera.shipHint')}
+              <div className="pointer-events-none absolute bottom-6 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2 rounded-md bg-black/60 px-4 py-2 text-white/90 backdrop-blur-sm">
+                <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-white/50">
+                  <span>SPD</span>
+                  <span className="font-mono text-cyan-300">{Math.round(shipHud.speed)}</span>
+                </div>
+                <div className="h-1.5 w-32 overflow-hidden rounded-full bg-white/10">
+                  <div
+                    className="h-full bg-cyan-400 transition-[width] duration-75"
+                    style={{ width: `${Math.min((shipHud.speed / 520) * 100, 100)}%` }}
+                  />
+                </div>
+                <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider">
+                  <span className={shipHud.boosting ? 'text-yellow-300' : 'text-white/30'}>
+                    {shipHud.boosting ? 'BOOST' : 'boost'}
+                  </span>
+                </div>
+                <div className="text-[10px] text-white/60">{t('explore.camera.shipHint')}</div>
               </div>
             </>
           )}

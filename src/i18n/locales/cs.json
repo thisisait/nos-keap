@@ -287,7 +287,7 @@
     "camera": {
       "observer": "Pozorovatel",
       "ship": "Loď",
-      "shipHint": "Tahem myši se rozhlížíš · WASD let · R/F stoupání a klesání"
+      "shipHint": "Myš: rozhled · WASD: let · R/F: výška · Mezerník: boost"
     },
     "jump": {
       "placeholder": "Hyperprostorový skok…"

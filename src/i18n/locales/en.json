@@ -287,7 +287,7 @@
     "camera": {
       "observer": "Observer",
       "ship": "Ship",
-      "shipHint": "Drag to look around · WASD to fly · R/F up & down"
+      "shipHint": "Mouse: look · WASD: fly · R/F: up/down · Space: boost"
     },
     "jump": {
       "placeholder": "Hyperspace jump…"
