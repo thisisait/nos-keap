@@ -171,9 +171,9 @@ function nebulaSprite(hue: number): THREE.Sprite {
   const s = new THREE.Sprite(
     new THREE.SpriteMaterial({
       map: _nebulaTex,
-      color: new THREE.Color(`hsl(${hue}, 60%, 55%)`),
+      color: new THREE.Color(`hsl(${hue}, 45%, 48%)`),
       transparent: true,
-      opacity: 0.16,
+      opacity: 0.09,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
     }),
@@ -186,9 +186,9 @@ function galaxyDisc(hue: number): THREE.Sprite {
   const s = new THREE.Sprite(
     new THREE.SpriteMaterial({
       map: _discTex,
-      color: new THREE.Color(`hsl(${hue}, 65%, 60%)`),
+      color: new THREE.Color(`hsl(${hue}, 55%, 52%)`),
       transparent: true,
-      opacity: 0.5,
+      opacity: 0.3,
       depthWrite: false,
       blending: THREE.AdditiveBlending,
     }),
@@ -283,7 +283,11 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
         const starfield = new THREE.Points(geo, mat);
         ref.scene().add(starfield);
 
-        const bloom = new UnrealBloomPass(new THREE.Vector2(width, height), 0.85, 0.55, 0.12);
+        // Subtle bloom only — a faint core glow on the brightest stars, not a
+        // scene-wide neon wash (scientific, not sci-fi). High threshold so most
+        // pixels (and text labels) stay crisp; low strength/radius so the halo
+        // is tight. (strength, radius, threshold)
+        const bloom = new UnrealBloomPass(new THREE.Vector2(width, height), 0.22, 0.18, 0.75);
         ref.postProcessingComposer().addPass(bloom);
 
         return; // cleanup handled below via closure capture
@@ -524,13 +528,17 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     if (node.level === 1) g.add(galaxyDisc(node.categoryHue));
     if (node.level <= 1 || node.star) {
       const sprite = new SpriteText(node.name);
-      sprite.color = 'rgba(255,255,255,0.96)';
-      sprite.textHeight = node.level <= 1 ? 7 : 3.5;
-      // Dark pill behind the text so white labels stay legible over bright
-      // stars, nebulae and galaxy discs.
-      sprite.backgroundColor = 'rgba(0,0,0,0.6)';
-      sprite.padding = node.level <= 1 ? 2 : 1.2;
-      sprite.borderRadius = 2;
+      sprite.color = '#e9eefc';
+      sprite.textHeight = node.level <= 1 ? 6 : 3.2;
+      sprite.fontSize = 110; // higher-res canvas → sharper, less blur when scaled
+      sprite.fontWeight = '600';
+      // Solid dark plate + hairline border so labels read as data annotations,
+      // not glowing sci-fi text — legible over bright stars/nebulae.
+      sprite.backgroundColor = 'rgba(8,12,22,0.86)';
+      sprite.padding = node.level <= 1 ? 2.5 : 1.6;
+      sprite.borderRadius = 1.5;
+      sprite.borderWidth = 0.4;
+      sprite.borderColor = 'rgba(180,195,225,0.35)';
       const label = sprite as unknown as THREE.Sprite;
       label.position.y = -(Math.sqrt(nodeSize(node)) * 2.4 + 6);
       label.material.depthWrite = false;
