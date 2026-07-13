@@ -65,7 +65,23 @@ export interface CanvasLink {
   semantic?: boolean;
   nebula?: boolean;
   distance?: number;
+  /** Typed concept relation (imported research graph overlay, e.g. ToE). */
+  relation?: boolean;
+  relType?: string;
+  explored?: string | null;
 }
+
+// Concept-relation edge palette (ToE research edges). Generic 'related-concept'
+// is a muted slate; the typed research edges each get a hue.
+const REL_COLOR: Record<string, string> = {
+  duality: '#f472b6',
+  conflict: '#f87171',
+  conjecture: '#fbbf24',
+  limit: '#22d3ee',
+  'shared-math': '#a78bfa',
+  'shared-structure': '#34d399',
+  'related-concept': 'rgba(120,130,150,0.30)',
+};
 
 interface Props {
   nodes: CanvasNode[];
@@ -562,8 +578,26 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       nodeColor={(n: any) => nodeColor(n, focusId)}
       nodeThreeObject={nodeThreeObject}
       nodeThreeObjectExtend={(n: any) => !n.object}
-      linkColor={(l: any) => (l.semantic ? 'rgba(251,191,36,0.55)' : 'rgba(120,130,150,0.25)')}
-      linkWidth={(l: any) => (l.semantic ? 1.2 : 0.4)}
+      linkColor={(l: any) =>
+        l.relation
+          ? REL_COLOR[l.relType] ?? 'rgba(148,163,184,0.5)'
+          : l.semantic
+            ? 'rgba(251,191,36,0.55)'
+            : 'rgba(120,130,150,0.25)'
+      }
+      linkWidth={(l: any) =>
+        l.relation
+          ? l.explored === 'barely'
+            ? 1.8 // research frontier — brightest/thickest
+            : l.explored === 'partially'
+              ? 1.1
+              : l.explored === 'well'
+                ? 0.6
+                : 0.8
+          : l.semantic
+            ? 1.2
+            : 0.4
+      }
       onNodeClick={handleClick}
       backgroundColor="rgba(0,0,0,0)"
       width={width}

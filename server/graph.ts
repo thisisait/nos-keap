@@ -186,10 +186,19 @@ export function registerGraphRoutes(app: Express) {
         };
       })
       .filter((o) => o.anchors.length > 0);
+    // Concept-relation overlay (imported research graphs, e.g. ToE) — a SEPARATE
+    // typed-edge layer, NOT folded into the parent-child `links` skeleton. Typed
+    // research edges by default; `?relations=all` adds the generic related-concept.
+    const typedOnly = req.query.relations !== 'all';
+    const relations = db
+      .listConceptRelations(typedOnly)
+      .filter((r) => getNode(r.from) && getNode(r.to))
+      .map((r) => ({ source: r.from, target: r.to, type: r.type, explored: r.explored }));
     ok(res, {
       nodes,
       links,
       objects,
+      relations,
       meta: {
         vectors: db.vectorSearchAvailable(),
         embeddings: db.embeddingStats(),

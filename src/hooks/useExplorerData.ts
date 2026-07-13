@@ -50,11 +50,21 @@ export interface GraphObject {
   anchors: string[];
 }
 
+/** A typed cross-node relation (imported research graph overlay, e.g. ToE). */
+export interface GraphRelation {
+  source: string;
+  target: string;
+  type: string;
+  explored: string | null;
+}
+
 export interface GraphPayload {
   nodes: GraphNode[];
   links: GraphLink[];
   /** The user's knowledge objects anchored to taxonomy nodes — the nebula layer. */
   objects: GraphObject[];
+  /** Typed concept-relation overlay (beyond parent-child) — rendered behind a toggle. */
+  relations?: GraphRelation[];
   meta: {
     vectors: boolean;
     embeddings: { total: number; byKind: Record<string, number>; model: string | null };

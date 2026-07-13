@@ -49,6 +49,12 @@ COPY --from=build /app/dist-server ./dist-server
 # Opt-in fixture seed (run by the nOS keap role via `docker exec`, gated on
 # keap_seed_fixtures) — a standalone .mjs, no deps beyond global fetch.
 COPY --from=build /app/deploy/seed-fixtures.mjs ./deploy/seed-fixtures.mjs
+# One-time Theory-of-Everything import (raw-SQL, run via `docker exec node
+# deploy/import-toe.mjs` then a container restart to materialize). Ships its
+# source graph + the consolidated blocks alongside.
+COPY --from=build /app/deploy/import-toe.mjs ./deploy/import-toe.mjs
+COPY --from=build /app/deploy/toe-concept-graph.json ./deploy/toe-concept-graph.json
+COPY --from=build /app/deploy/toe-blocks.json ./deploy/toe-blocks.json
 # /data must exist and belong to the runtime user BEFORE the VOLUME
 # declaration — an anonymous volume inherits these permissions; without the
 # chown the non-root process gets SQLITE_CANTOPEN on first boot.

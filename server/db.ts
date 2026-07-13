@@ -204,6 +204,22 @@ const SCHEMA = [
      last_seen INTEGER DEFAULT (strftime('%s','now')),
      resolved_at INTEGER
    )`,
+
+  // Concept relations — typed cross-node edges BEYOND the parent-child tree
+  // (imported research graphs, e.g. Theory-of-Everything: shared-structure,
+  // shared-math, conjecture, limit, conflict, duality, related-concept). The
+  // taxonomy tree stays the skeleton (graph.ts links); these are a SEPARATE
+  // overlay (data.relations) the explorer renders as vazby behind a toggle.
+  // `explored` carries the research rating (well|partially|barely) — the
+  // frontier (barely) is what the explorer highlights.
+  `CREATE TABLE IF NOT EXISTS concept_relations (
+     from_id TEXT NOT NULL,
+     to_id TEXT NOT NULL,
+     type TEXT NOT NULL,
+     explored TEXT,
+     source TEXT DEFAULT 'toe',
+     PRIMARY KEY (from_id, to_id, type)
+   )`,
 ];
 
 // ── Vector layer (libSQL native) ──────────────────────────────────────────────
@@ -1361,6 +1377,37 @@ export function upsertNodeDescription(row: Omit<NodeDescriptionRow, 'updatedAt'>
 /** How many ext children a parent already has — the next append ordinal. */
 export function extChildCount(parentId: string): number {
   return (getDb().prepare('SELECT COUNT(*) AS c FROM taxonomy_nodes_ext WHERE parent_id = ?').get(parentId) as any).c;
+}
+
+export interface ConceptRelation {
+  from: string;
+  to: string;
+  type: string;
+  explored: string | null;
+}
+
+/** Upsert one typed concept relation (idempotent on from,to,type). */
+export function insertConceptRelation(r: ConceptRelation & { source?: string }): void {
+  getDb()
+    .prepare(
+      `INSERT INTO concept_relations (from_id, to_id, type, explored, source)
+       VALUES (?, ?, ?, ?, ?)
+       ON CONFLICT(from_id, to_id, type) DO UPDATE SET explored = excluded.explored`,
+    )
+    .run(r.from, r.to, r.type, r.explored ?? null, r.source ?? 'toe');
+}
+
+/** All concept relations. `typedOnly` drops the generic 'related-concept' edges. */
+export function listConceptRelations(typedOnly = true): ConceptRelation[] {
+  const sql = typedOnly
+    ? `SELECT from_id, to_id, type, explored FROM concept_relations WHERE type != 'related-concept'`
+    : `SELECT from_id, to_id, type, explored FROM concept_relations`;
+  return (getDb().prepare(sql).all() as any[]).map((r) => ({
+    from: r.from_id,
+    to: r.to_id,
+    type: r.type,
+    explored: r.explored ?? null,
+  }));
 }
 
 /** Append one star to the baked layout under the CURRENT version (U1 append). */

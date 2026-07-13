@@ -12,7 +12,7 @@
 import { useMemo, useState, useRef, useLayoutEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Rocket, Orbit, Search } from 'lucide-react';
+import { ArrowLeft, Rocket, Orbit, Search, Waypoints } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { apiFetch } from '@/services/api/client';
@@ -42,6 +42,7 @@ export default function Explore() {
   const [typeFilter, setTypeFilter] = useState<Set<string>>(new Set());
   const [drawer, setDrawer] = useState<DrawerTarget | null>(null);
   const [cameraMode, setCameraMode] = useState<CameraMode>('observer');
+  const [showRelations, setShowRelations] = useState(true);
   const [jumpQuery, setJumpQuery] = useState('');
   const [jumpMiss, setJumpMiss] = useState(false);
   const [shipHud, setShipHud] = useState({ speed: 0, boosting: false, thrust: 0 });
@@ -152,6 +153,22 @@ export default function Explore() {
         });
       });
     }
+    // Concept-relation overlay (imported research graph, e.g. ToE) — typed
+    // cross-node edges between taxonomy stars, gated by the toggle. Both
+    // endpoints are pinned taxonomy nodes, so these are pure drawn edges.
+    if (showRelations) {
+      for (const r of graph.relations ?? []) {
+        if (nodeById.has(r.source) && nodeById.has(r.target)) {
+          links.push({
+            source: r.source,
+            target: r.target,
+            relation: true,
+            relType: r.type,
+            explored: r.explored,
+          });
+        }
+      }
+    }
     if (focusId) {
       for (const item of starItems) {
         if (item.kind === 'taxonomy' && item.nodeId && nodeById.has(item.nodeId)) {
@@ -176,7 +193,7 @@ export default function Explore() {
       }
     }
     return { canvasNodes: nodes, canvasLinks: links };
-  }, [graph, focusId, starItems, hueByCategory, nodeById]);
+  }, [graph, focusId, starItems, hueByCategory, nodeById, showRelations]);
 
   const availableTypes = useMemo(
     () => [...new Set((neighbors.data?.items ?? []).map((i) => i.dataType).filter(Boolean))] as string[],
@@ -300,6 +317,16 @@ export default function Explore() {
           >
             {cameraMode === 'ship' ? <Orbit className="h-3.5 w-3.5" /> : <Rocket className="h-3.5 w-3.5" />}
             {t(cameraMode === 'ship' ? 'explore.camera.observer' : 'explore.camera.ship')}
+          </Button>
+          <Button
+            variant={showRelations ? 'default' : 'outline'}
+            size="sm"
+            className="h-8 gap-1.5 text-xs"
+            onClick={() => setShowRelations((v) => !v)}
+            title="Toggle typed concept-relation edges (research web)"
+          >
+            <Waypoints className="h-3.5 w-3.5" />
+            Vazby
           </Button>
         </div>
       </header>

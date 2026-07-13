@@ -1,0 +1,1817 @@
+{
+ "pillars": [
+  {
+   "id": "asymptotic-safety",
+   "name": "Asymptotic Safety",
+   "blocks": [
+    {
+     "slug": "rg-flow-formalism",
+     "name": "RG Flow Formalism",
+     "description": "Covers the core machinery of functional renormalization group quantum gravity: the exact Wetterich equation, the coarse-grained effective average action it governs, the IR regulator that implements Wilsonian mode suppression, the split Ward identities needed to restore background independence in the fluctuation expansion, and the background-independence requirement itself.",
+     "conceptIds": [
+      "wetterich-equation",
+      "effective-average-action",
+      "functional-renormalization-group",
+      "ir-regulator",
+      "split-ward-identities",
+      "background-independence"
+     ]
+    },
+    {
+     "slug": "reuter-fixed-point-and-truncations",
+     "name": "Reuter Fixed Point and Truncations",
+     "description": "Groups the non-Gaussian UV fixed point discovered by Reuter with the truncation schemes and coupling variables used to locate it: the Einstein-Hilbert ansatz, dimensionless Newton/cosmological couplings, their beta functions, the general notion of an RG fixed point, higher-derivative f(R) truncations, and Weinberg's original 2+epsilon perturbative evidence.",
+     "conceptIds": [
+      "reuter-fixed-point",
+      "einstein-hilbert-truncation",
+      "dimensionless-couplings",
+      "beta-functions",
+      "renormalization-group-fixed-point",
+      "f-R-truncation",
+      "two-plus-epsilon-expansion"
+     ]
+    },
+    {
+     "slug": "critical-exponents-and-predictivity",
+     "name": "Critical Exponents and Predictivity",
+     "description": "Concerns the stability analysis around the fixed point: critical exponents, the finite-dimensional UV critical surface and its relevant directions, the near-canonical scaling that keeps this surface small, the resulting predictivity of the theory, and the scheme/truncation dependence that limits which quantities are robustly universal.",
+     "conceptIds": [
+      "critical-exponents",
+      "uv-critical-surface",
+      "relevant-directions",
+      "predictivity",
+      "near-canonical-scaling",
+      "scheme-dependence"
+     ]
+    },
+    {
+     "slug": "dimensional-reduction-and-spectral-geometry",
+     "name": "Dimensional Reduction and Spectral Geometry",
+     "description": "Addresses how the graviton's anomalous scaling at the fixed point softens the UV propagator and drives an effective lowering of spacetime dimensionality, captured by the spectral-dimension diagnostic and the broader dimensional-reduction phenomenon shared across quantum-gravity approaches.",
+     "conceptIds": [
+      "graviton-anomalous-dimension",
+      "spectral-dimension",
+      "dimensional-reduction"
+     ]
+    },
+    {
+     "slug": "matter-coupling-and-sm-predictions",
+     "name": "Matter Coupling and Standard Model Predictions",
+     "description": "Covers how asymptotically safe gravity couples to matter: the weak-gravity bound constraining admissible matter content, general matter-gravity systems, gravity-induced anomalous dimensions rendering matter couplings irrelevant, and the resulting phenomenological retrodictions of the Higgs mass, top mass, and fine-structure constant, together with the Standard Model stub they target.",
+     "conceptIds": [
+      "weak-gravity-bound",
+      "matter-gravity-systems",
+      "gravity-induced-anomalous-dimension",
+      "higgs-mass-retrodiction",
+      "top-mass-prediction",
+      "fine-structure-constant-prediction",
+      "standard-model"
+     ]
+    },
+    {
+     "slug": "unitarity-and-lorentzian-approaches",
+     "name": "Unitarity and Lorentzian Approaches",
+     "description": "Focuses on the open question of unitarity in asymptotic safety and the real-time Lorentzian reformulations and graviton spectral-function computations that provide non-perturbative evidence for a ghost-free, probability-conserving theory.",
+     "conceptIds": [
+      "graviton-spectral-function",
+      "lorentzian-asymptotic-safety",
+      "unitarity"
+     ]
+    },
+    {
+     "slug": "uv-completion-and-related-frameworks",
+     "name": "UV Completion and Related Gravity Frameworks",
+     "description": "Collects the general notion of UV completion together with quadratic gravity, a related higher-derivative theory sharing much of its perturbative and non-perturbative mathematical structure with asymptotic safety, as flagged by the pillar's shared-math research edges.",
+     "conceptIds": [
+      "uv-completion",
+      "quadratic-gravity"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "black-holes-information",
+   "name": "Black Hole Thermodynamics & the Information Paradox",
+   "blocks": [
+    {
+     "slug": "black-hole-thermodynamics-foundations",
+     "name": "Black Hole Thermodynamics Foundations",
+     "description": "Covers the semiclassical laws governing black holes as thermodynamic objects: Bekenstein-Hawking entropy, Hawking radiation and its temperature, the Unruh effect underlying its derivation, the four laws of black hole mechanics, and the generalized entropy and second law extending ordinary thermodynamics to horizons.",
+     "conceptIds": [
+      "bekenstein-hawking-entropy",
+      "hawking-radiation",
+      "four-laws-black-hole-mechanics",
+      "generalized-second-law",
+      "generalized-entropy",
+      "hawking-temperature",
+      "unruh-effect"
+     ]
+    },
+    {
+     "slug": "string-microstate-counting",
+     "name": "String Microstate Counting",
+     "description": "Microscopic, string-theoretic accounts of black hole entropy and structure: the Strominger-Vafa D-brane state count that reproduces the Bekenstein-Hawking formula, and Mathur's fuzzball proposal that replaces the horizon with a superposition of horizonless microstate geometries.",
+     "conceptIds": [
+      "fuzzball",
+      "strominger-vafa-counting"
+     ]
+    },
+    {
+     "slug": "information-paradox-and-unitarity",
+     "name": "Information Paradox and Unitarity",
+     "description": "The core statement of the black hole information paradox and its sharpest formulations, including Mathur's theorem on unavoidable horizon-scale corrections, the Page curve and Page time describing unitary evaporation, and the central dogma that a black hole is, from outside, a unitary quantum system with A/4G degrees of freedom.",
+     "conceptIds": [
+      "information-paradox",
+      "page-curve",
+      "page-time",
+      "central-dogma",
+      "mathur-theorem"
+     ]
+    },
+    {
+     "slug": "firewalls-complementarity-and-horizon-locality",
+     "name": "Firewalls, Complementarity and Horizon Locality",
+     "description": "Competing pictures of what infalling versus external observers experience at the horizon, including black hole complementarity, the AMPS firewall argument built on monogamy of entanglement, the stretched-horizon membrane paradigm, and the ER=EPR conjecture proposed to dissolve the firewall tension.",
+     "conceptIds": [
+      "black-hole-complementarity",
+      "firewall-paradox",
+      "er-epr",
+      "stretched-horizon",
+      "monogamy-of-entanglement"
+     ]
+    },
+    {
+     "slug": "islands-extremal-surfaces-and-path-integral",
+     "name": "Islands, Extremal Surfaces and Path Integral",
+     "description": "The modern semiclassical derivation of the Page curve via the gravitational path integral, spanning quantum extremal surfaces, the island formula for radiation entropy, and the replica-wormhole saddles found through the replica trick that make islands dominate after the Page time.",
+     "conceptIds": [
+      "quantum-extremal-surface",
+      "island-formula",
+      "replica-wormholes",
+      "gravitational-path-integral",
+      "replica-trick"
+     ]
+    },
+    {
+     "slug": "holographic-reconstruction-and-encoding",
+     "name": "Holographic Reconstruction and Encoding",
+     "description": "How black-hole-interior information is encoded in and reconstructed from boundary or radiation degrees of freedom, spanning entanglement wedge reconstruction, bulk quantum error correction, the holography-of-information principle, state-dependent and mirror operators, the Python's lunch obstruction, the split property, and tensor-network models of bulk locality.",
+     "conceptIds": [
+      "entanglement-wedge-reconstruction",
+      "state-dependence",
+      "holography-of-information",
+      "quantum-error-correction",
+      "pythons-lunch",
+      "mirror-operators",
+      "split-property",
+      "tensor-networks"
+     ]
+    },
+    {
+     "slug": "scrambling-chaos-and-complexity-growth",
+     "name": "Scrambling, Chaos and Complexity Growth",
+     "description": "Dynamical aspects of how black holes process information: the fast-scrambling time scale, the Hayden-Preskill decoding protocol for information recovery, and holographic complexity together with its conjectured second law describing late-time growth of the Einstein-Rosen bridge.",
+     "conceptIds": [
+      "holographic-complexity",
+      "scrambling-time",
+      "second-law-of-complexity",
+      "hayden-preskill"
+     ]
+    },
+    {
+     "slug": "ensemble-averaging-and-baby-universes",
+     "name": "Ensemble Averaging and Baby Universes",
+     "description": "The puzzle raised by wormhole topologies in the gravitational path integral, which appear to compute ensemble averages over theories rather than a single boundary theory, illustrated by JT gravity's duality to a matrix integral and the resulting factorization puzzle for baby-universe Hilbert spaces.",
+     "conceptIds": [
+      "ensemble-averaging",
+      "factorization-puzzle",
+      "jt-gravity"
+     ]
+    },
+    {
+     "slug": "soft-hair-and-asymptotic-symmetries",
+     "name": "Soft Hair and Asymptotic Symmetries",
+     "description": "The proposal that infinitely many BMS asymptotic-symmetry charges generate zero-energy soft hair on the horizon, offering a candidate mechanism for storing information beyond the black hole's classical no-hair parameters.",
+     "conceptIds": [
+      "soft-hair",
+      "asymptotic-symmetries"
+     ]
+    },
+    {
+     "slug": "evaporation-endpoint-and-remnants",
+     "name": "Evaporation Endpoint and Remnants",
+     "description": "The final stage of black hole evaporation and the hypothesis that information survives in a stable or long-lived Planck-scale remnant, a scenario challenged by infinite pair-production and degeneracy problems.",
+     "conceptIds": [
+      "black-hole-remnant",
+      "evaporation-endpoint"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "causal-dynamical-triangulations",
+   "name": "Causal Dynamical Triangulations",
+   "blocks": [
+    {
+     "slug": "simplicial-spacetime-causal-structure",
+     "name": "Simplicial Spacetime & Causal Structure",
+     "description": "Describes how CDT builds spacetime from causally glued simplicial building blocks and enforces a global proper-time foliation, the discrete geometric and causality conditions that distinguish causal from ordinary dynamical triangulations.",
+     "conceptIds": [
+      "causal-triangulation",
+      "global-time-foliation",
+      "causality",
+      "dynamical-triangulations"
+     ]
+    },
+    {
+     "slug": "regge-calculus-action-couplings",
+     "name": "Regge Calculus & CDT Action",
+     "description": "Covers the discretized Einstein-Hilbert action of Regge calculus adapted to CDT, including the deficit-angle curvature concentration, the two causal four-simplex types, and the bare couplings (asymmetry Delta) that parametrize the CDT Regge action.",
+     "conceptIds": [
+      "regge-calculus",
+      "deficit-angle",
+      "regge-action",
+      "simplex-types-41-32",
+      "asymmetry-parameter-delta"
+     ]
+    },
+    {
+     "slug": "path-integral-monte-carlo-methods",
+     "name": "Path Integral & Monte Carlo Methods",
+     "description": "Groups the nonperturbative gravitational path integral, its Wick rotation to a sign-problem-free Euclidean sum, and the Monte Carlo machinery (Pachner moves) used to sample causal triangulations numerically.",
+     "conceptIds": [
+      "partition-function-path-integral",
+      "wick-rotation",
+      "monte-carlo-quantum-gravity",
+      "pachner-moves"
+     ]
+    },
+    {
+     "slug": "euclidean-precursor-pathological-phases",
+     "name": "Euclidean Precursor & Pathological Phases",
+     "description": "Covers the Euclidean Dynamical Triangulations precursor to CDT and the degenerate crumpled and branched-polymer geometries it produces, rooted in the conformal-mode instability of the unconstrained Euclidean path integral.",
+     "conceptIds": [
+      "euclidean-dynamical-triangulations",
+      "crumpled-phase",
+      "branched-polymer-phase",
+      "conformal-mode-problem"
+     ]
+    },
+    {
+     "slug": "cdt-phase-diagram-critical-points",
+     "name": "CDT Phase Diagram & Critical Points",
+     "description": "Maps the space of bare CDT couplings into distinct geometric phases distinguished by Hausdorff dimension, and the transition lines between them that are candidate renormalization-group trajectories toward a UV fixed point.",
+     "conceptIds": [
+      "phase-diagram-cdt",
+      "bifurcation-phase",
+      "hausdorff-dimension",
+      "lines-of-constant-physics",
+      "uv-fixed-point"
+     ]
+    },
+    {
+     "slug": "emergent-de-sitter-universe",
+     "name": "Emergent de Sitter Universe",
+     "description": "Covers CDT's signature result: a macroscopic, semiclassical de Sitter-like universe with Hartle-Hawking-consistent geometry emerging dynamically from Planckian quantum fluctuations of the path integral.",
+     "conceptIds": [
+      "de-sitter-phase",
+      "de-sitter-universe-emergence",
+      "emergent-spacetime",
+      "hartle-hawking"
+     ]
+    },
+    {
+     "slug": "effective-dynamics-minisuperspace-transfer-matrix",
+     "name": "Effective Dynamics: Minisuperspace & Transfer Matrix",
+     "description": "Covers the reduced effective description of CDT's global volume dynamics via the minisuperspace action and the transfer matrix that evolves spatial 3-geometries between adjacent time slices.",
+     "conceptIds": [
+      "minisuperspace-action",
+      "transfer-matrix"
+     ]
+    },
+    {
+     "slug": "quantum-geometric-observables",
+     "name": "Quantum Geometric Observables",
+     "description": "Covers coordinate-free observables developed to probe CDT's quantum geometry beyond simple dimension counting, including a curvature measure built from distances and volumes and a topological-data-analysis fingerprint of fluctuating geometry.",
+     "conceptIds": [
+      "quantum-ricci-curvature",
+      "effective-topology"
+     ]
+    },
+    {
+     "slug": "matter-coupling-diffeomorphism-observables",
+     "name": "Matter Coupling & Diffeomorphism-Invariant Observables",
+     "description": "Covers how scalar and gauge fields are coupled to dynamical CDT geometry, and the diffeomorphism-invariance principle that forces physical observables in quantum gravity to be global or relational rather than local field values.",
+     "conceptIds": [
+      "matter-coupling-cdt",
+      "diffeomorphism-invariance"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "causal-sets",
+   "name": "Causal Set Theory",
+   "blocks": [
+    {
+     "slug": "causal-set-foundations-discreteness",
+     "name": "Causal Set Foundations & Discreteness",
+     "description": "Defines the causal set itself as a locally finite partial order together with the discreteness axioms — local finiteness, Planck-scale spacetime atomicity, and the order interval — that make it a rigorous microscopic model of spacetime causal structure.",
+     "conceptIds": [
+      "causal-set",
+      "local-finiteness",
+      "spacetime-discreteness",
+      "causal-structure",
+      "order-interval"
+     ]
+    },
+    {
+     "slug": "order-geometry-correspondence-dimension",
+     "name": "Order-Geometry Correspondence & Dimension",
+     "description": "Covers Sorkin's 'order plus number equals geometry' program, spanning the Hawking-Malament theorem, the number-volume correspondence, the Hauptvermutung, and the Myrheim-Meyer dimension estimator, through which a causal set's order relation is shown to encode and reconstruct continuum Lorentzian geometry.",
+     "conceptIds": [
+      "order-plus-number-equals-geometry",
+      "malament-theorem",
+      "number-volume-correspondence",
+      "hauptvermutung",
+      "myrheim-meyer-dimension"
+     ]
+    },
+    {
+     "slug": "sprinkling-lorentz-invariant-discreteness",
+     "name": "Sprinkling & Lorentz-Invariant Discreteness",
+     "description": "Treats the Poisson sprinkling procedure that embeds a causal set into a spacetime manifold, the resulting Poisson statistics of element counts, and the proof that such random discretization preserves local Lorentz invariance, unlike a regular lattice.",
+     "conceptIds": [
+      "sprinkling",
+      "lorentz-invariance-discreteness",
+      "poisson-distribution"
+     ]
+    },
+    {
+     "slug": "discrete-action-curvature-nonlocality",
+     "name": "Discrete Action, Curvature & Nonlocality",
+     "description": "Groups the Benincasa-Dowker discrete action and the nonlocal d'Alembertian operator that recover the Einstein-Hilbert action and Ricci scalar in the continuum limit, alongside the inherent nonlocality that Lorentz invariance forces on any covariant causal-set operator.",
+     "conceptIds": [
+      "benincasa-dowker-action",
+      "discrete-dalembertian",
+      "nonlocality-causal-set",
+      "ricci-scalar",
+      "einstein-hilbert-action"
+     ]
+    },
+    {
+     "slug": "classical-sequential-growth-dynamics",
+     "name": "Classical Sequential Growth Dynamics",
+     "description": "Covers the Rideout-Sorkin stochastic process by which causal sets grow element by element, its transitive-percolation testbed, and the discrete general covariance and Bell causality constraints, together with the resulting covariant-observables problem, that shape admissible growth rules.",
+     "conceptIds": [
+      "classical-sequential-growth",
+      "transitive-percolation",
+      "discrete-general-covariance",
+      "bell-causality",
+      "covariant-observables"
+     ]
+    },
+    {
+     "slug": "cosmological-constant-causal-set-cosmology",
+     "name": "Cosmological Constant & Causal Set Cosmology",
+     "description": "Addresses Sorkin's 'everpresent Lambda' prediction that Poisson volume fluctuations drive a fluctuating cosmological constant, its unimodular-gravity underpinning, and the cyclic bounce cosmologies built from classical sequential growth dynamics.",
+     "conceptIds": [
+      "cosmological-constant-fluctuation",
+      "unimodular-gravity",
+      "causal-set-cosmology"
+     ]
+    },
+    {
+     "slug": "path-integral-dynamics-entropy-problem",
+     "name": "Path-Integral Dynamics & the Entropy Problem",
+     "description": "Concerns the causal set path integral, a sum over causal sets weighted by the discrete action, and Sorkin's quantum-measure / anhomomorphic-logic framework for histories-based dynamics, together with the Kleitman-Rothschild entropy problem and the effort to show manifoldlike causal sets dynamically dominate.",
+     "conceptIds": [
+      "quantum-measure",
+      "causal-set-path-integral",
+      "kleitman-rothschild-order",
+      "continuum-emergence"
+     ]
+    },
+    {
+     "slug": "qft-entanglement-entropy-causal-sets",
+     "name": "QFT & Entanglement Entropy on Causal Sets",
+     "description": "Covers scalar quantum field theory built directly on a causal set via the Pauli-Jordan operator and the Sorkin-Johnston vacuum, the resulting spacetime entanglement entropy formulation, and the kinematic causal-link estimate of black-hole horizon entropy that reproduces the Bekenstein-Hawking area law.",
+     "conceptIds": [
+      "sorkin-johnston-vacuum",
+      "pauli-jordan-operator",
+      "qft-on-causal-set",
+      "spacetime-entanglement-entropy",
+      "black-hole-entropy-causal-links"
+     ]
+    },
+    {
+     "slug": "quantum-gravity-phenomenology-dark-matter",
+     "name": "Quantum Gravity Phenomenology & Dark Matter",
+     "description": "Groups observable low-energy signatures of causal-set discreteness, including Lorentz-invariant momentum diffusion ('swerves') and off-shell dark matter arising from the nonlocal d'Alembertian, within the broader quantum-gravity-phenomenology program of testing discreteness against astrophysical data.",
+     "conceptIds": [
+      "swerves",
+      "off-shell-dark-matter",
+      "quantum-gravity-phenomenology",
+      "dark-matter"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "conceptual-problems",
+   "name": "Conceptual Problems of Quantum Gravity",
+   "blocks": [
+    {
+     "slug": "problem-of-time-canonical-qg",
+     "name": "Problem of Time & Canonical Quantization",
+     "description": "The canonical Wheeler-DeWitt formulation of quantum gravity yields a Hamiltonian constraint that annihilates physical states, eliminating any external time parameter; minisuperspace models serve as the tractable arena for studying this problem of time and its formal structure.",
+     "conceptIds": [
+      "problem-of-time",
+      "wheeler-dewitt-equation",
+      "hamiltonian-constraint",
+      "minisuperspace"
+     ]
+    },
+    {
+     "slug": "relational-time-deparametrization",
+     "name": "Relational Time & Deparametrization",
+     "description": "Physical time can be recovered by selecting a material or scalar-field clock and solving the constraint for its conjugate momentum (deparametrization), or by conditioning a timeless global state on a clock subsystem (Page-Wootters); the trinity theorem shows these relational approaches to be equivalent formulations of the same dynamics.",
+     "conceptIds": [
+      "deparametrization",
+      "page-wootters-time",
+      "trinity-relational-dynamics"
+     ]
+    },
+    {
+     "slug": "diffeomorphism-invariance-quantum-frames",
+     "name": "Diffeomorphism Invariance & Quantum Reference Frames",
+     "description": "Because general covariance strips spacetime points and bare fields of independent physical meaning, as the hole argument shows, physical content must be encoded in gauge-invariant relational or dressed observables, including the partial-versus-complete observable distinction and reference frames that are themselves treated as quantum systems.",
+     "conceptIds": [
+      "hole-argument",
+      "relational-observables",
+      "partial-complete-observables",
+      "quantum-reference-frames"
+     ]
+    },
+    {
+     "slug": "observer-entropy-operator-algebras",
+     "name": "Observer-Dependent Entropy & Operator Algebras",
+     "description": "Adjoining an observer's clock to the type III von Neumann algebra of gravitational-subregion observables produces a type II crossed-product algebra with finite, observer-dependent entropy, a framework that also bears on the locality-versus-unitarity tension underlying the black-hole information paradox.",
+     "conceptIds": [
+      "crossed-product-algebra",
+      "von-neumann-algebra-type",
+      "observer-role-qg",
+      "locality-vs-unitarity"
+     ]
+    },
+    {
+     "slug": "measurement-problem-emergent-classicality",
+     "name": "Measurement Problem & Emergent Classicality",
+     "description": "In a closed quantum universe with no external observer, decoherence and the decoherent/consistent-histories formalism attempt to explain how definite, classical, geodesic spacetime emerges from an underlying timeless and nonlocal quantum description, without fully resolving the measurement problem itself.",
+     "conceptIds": [
+      "measurement-problem-qg",
+      "emergence-of-classicality",
+      "decoherence",
+      "decoherent-histories"
+     ]
+    },
+    {
+     "slug": "gravity-induced-wavefunction-collapse",
+     "name": "Gravity-Induced Wavefunction Collapse",
+     "description": "A family of models, including Penrose objective reduction, the Diosi-Penrose collapse model, and the Schroedinger-Newton equation, propose that a mass superposition's own gravitational self-energy triggers spontaneous localization, a hypothesis now constrained by non-interferometric spontaneous-emission experiments.",
+     "conceptIds": [
+      "gravitationally-induced-collapse",
+      "penrose-objective-reduction",
+      "diosi-penrose-model",
+      "spontaneous-emission-test",
+      "schrodinger-newton"
+     ]
+    },
+    {
+     "slug": "quantizing-gravity-entanglement-witnesses",
+     "name": "Quantizing Gravity: Arguments & Entanglement Witnesses",
+     "description": "Whether gravity must itself be a quantum field is probed both by thought experiments and no-go arguments such as Eppley-Hannah, and by proposed laboratory tests such as the BMV gravitationally-induced entanglement witness, whose interpretation is contested by an active 2025-26 debate over classical-gravity-mediated entanglement.",
+     "conceptIds": [
+      "does-gravity-need-quantizing",
+      "eppley-hannah",
+      "bmv-entanglement-witness",
+      "gravity-mediated-entanglement-debate"
+     ]
+    },
+    {
+     "slug": "classical-stochastic-gravity-diffusion",
+     "name": "Classical Stochastic Gravity & Spacetime Diffusion",
+     "description": "Alternative frameworks in which spacetime remains fundamentally classical but stochastically fluctuating, such as stochastic gravity and post-quantum classical gravity, predict metric diffusion bounded below by decoherence rates, generating experimentally testable noise signatures in interferometers and mechanical resonators.",
+     "conceptIds": [
+      "stochastic-gravity",
+      "post-quantum-classical-gravity",
+      "decoherence-diffusion-tradeoff",
+      "spacetime-diffusion"
+     ]
+    },
+    {
+     "slug": "cosmological-constant-problem",
+     "name": "Cosmological Constant Problem",
+     "description": "Quantum field theory's vacuum-energy predictions overshoot the observed dark-energy density by dozens of orders of magnitude, a naturalness crisis sharpened by Weinberg's no-go theorem, which shows that no simple dynamical adjustment mechanism can generically restore a flat solution.",
+     "conceptIds": [
+      "cosmological-constant-problem",
+      "vacuum-energy",
+      "weinberg-no-go"
+     ]
+    },
+    {
+     "slug": "singularities-and-resolution",
+     "name": "Singularities & Their Resolution",
+     "description": "The Penrose-Hawking theorems show that generic classical spacetimes are geodesically incomplete, and quantum-gravity proposals such as the loop-quantum-cosmology big bounce aim to replace these singularities with finite, Planckian-curvature regions, though resolution in full inhomogeneous gravity remains open.",
+     "conceptIds": [
+      "singularity-theorems",
+      "geodesic-incompleteness",
+      "singularity-resolution",
+      "big-bounce"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "emergent-gravity",
+   "name": "Emergent & Entropic Gravity",
+   "blocks": [
+    {
+     "slug": "sakharov-induced-gravity",
+     "name": "Sakharov Induced Gravity",
+     "description": "Covers Sakharov's original 1967 proposal that the Einstein-Hilbert action is a one-loop effective term generated by quantum matter fields on a curved background, together with the metric-elasticity analogy that pictures curvature as inducing a stiffness (stress-strain response) of the vacuum.",
+     "conceptIds": [
+      "induced-gravity",
+      "metric-elasticity"
+     ]
+    },
+    {
+     "slug": "horizon-thermodynamics-and-einstein-equations",
+     "name": "Horizon Thermodynamics and Einstein's Equations",
+     "description": "Jacobson's derivation of the Einstein field equations as a thermodynamic equation of state, built from the Clausius relation applied across local Rindler causal horizons at Unruh temperature, and its non-equilibrium extension incorporating internal entropy production and viscosity.",
+     "conceptIds": [
+      "einstein-equation-of-state",
+      "clausius-relation",
+      "local-rindler-horizon",
+      "unruh-temperature",
+      "nonequilibrium-spacetime-thermodynamics"
+     ]
+    },
+    {
+     "slug": "holographic-principle-and-black-hole-entropy",
+     "name": "Holographic Principle and Black Hole Entropy",
+     "description": "The foundational holographic conjecture that a region's physical degrees of freedom scale with its boundary area rather than its volume, paired with black hole thermodynamics, the paradigm case establishing that horizons carry entropy and temperature.",
+     "conceptIds": [
+      "holographic-principle",
+      "black-hole-thermodynamics"
+     ]
+    },
+    {
+     "slug": "verlinde-padmanabhan-entropic-gravity",
+     "name": "Verlinde-Padmanabhan Entropic Gravity",
+     "description": "The entropic-force program in which gravity emerges from an equipartition of holographic surface degrees of freedom and their departure from bulk degrees of freedom, driving both Newtonian gravity and cosmic expansion, culminating in the CosMIn count that reproduces the observed cosmological constant.",
+     "conceptIds": [
+      "entropic-force",
+      "equipartition-law",
+      "holographic-equipartition",
+      "emergence-of-cosmic-space",
+      "cosmin"
+     ]
+    },
+    {
+     "slug": "entanglement-based-derivations-of-gravity",
+     "name": "Entanglement-Based Derivations of Gravity",
+     "description": "Approaches deriving semiclassical gravity from the structure of quantum entanglement itself: Jacobson's entanglement-equilibrium hypothesis, the modular Hamiltonian formalism underlying entanglement temperature and the first law, and Bianconi's quantum-relative-entropy action for the metric.",
+     "conceptIds": [
+      "entanglement-equilibrium",
+      "modular-hamiltonian",
+      "gravity-from-quantum-relative-entropy"
+     ]
+    },
+    {
+     "slug": "emergent-dark-matter-and-mond-phenomenology",
+     "name": "Emergent Dark Matter and MOND Phenomenology",
+     "description": "Verlinde's 2016 proposal that dark-matter effects arise from the volume-law entanglement entropy of de Sitter space acting elastically on baryonic matter, its connection to and empirical tension with MOND and the observed radial acceleration relation in galaxies.",
+     "conceptIds": [
+      "apparent-dark-matter",
+      "mond",
+      "radial-acceleration-relation",
+      "volume-law-entropy-de-sitter"
+     ]
+    },
+    {
+     "slug": "analogue-and-condensed-matter-gravity",
+     "name": "Analogue and Condensed-Matter Gravity",
+     "description": "Laboratory and condensed-matter analogues of curved spacetime — sonic dumb-hole horizons, superfluid Fermi-point defects, and the broader hydrodynamic view that general relativity is the emergent long-wavelength limit of an underlying many-body quantum system.",
+     "conceptIds": [
+      "analogue-gravity",
+      "acoustic-metric",
+      "fermi-point",
+      "gravity-as-hydrodynamics"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "entanglement-spacetime",
+   "name": "Entanglement & Emergence of Spacetime (It from Qubit)",
+   "blocks": [
+    {
+     "slug": "holographic-entanglement-entropy-formulas",
+     "name": "Holographic Entanglement Entropy Formulas",
+     "description": "The core dictionary translating boundary entanglement entropy into bulk geometry: the Ryu-Takayanagi minimal-surface prescription, its covariant HRT extension to time-dependent states, and the FLM one-loop correction that adds bulk entanglement across the surface.",
+     "conceptIds": [
+      "entanglement-entropy",
+      "ryu-takayanagi-formula",
+      "hrt-formula",
+      "flm-correction"
+     ]
+    },
+    {
+     "slug": "gravity-from-entanglement-thermodynamics",
+     "name": "Gravity from Entanglement Thermodynamics",
+     "description": "The thesis, spanning Van Raamsdonk's qualitative argument and Jacobson-style derivations, that classical spacetime connectivity and the Einstein equations themselves emerge from the thermodynamics of entanglement, with the first law of entanglement providing the precise quantum analog of dE = T dS.",
+     "conceptIds": [
+      "first-law-of-entanglement",
+      "linearized-einstein-from-entanglement",
+      "van-raamsdonk-emergence",
+      "emergent-gravity-jacobson"
+     ]
+    },
+    {
+     "slug": "algebraic-quantum-gravity-and-modular-theory",
+     "name": "Algebraic Quantum Gravity & Modular Theory",
+     "description": "A von Neumann algebra reformulation of holography in which the JLMS relation, entanglement-wedge reconstruction, and the type III-to-type II crossed-product transition together recast generalized entropy and subregion duality as statements about modular flow and operator algebras.",
+     "conceptIds": [
+      "jlms-relation",
+      "von-neumann-algebra-crossed-product",
+      "subregion-subalgebra-duality"
+     ]
+    },
+    {
+     "slug": "emergent-time-and-pseudo-entropy",
+     "name": "Emergent Time & Pseudo-Entropy",
+     "description": "Approaches to deriving the time direction itself from quantum information, using tools like half-sided modular flow and the complex-valued pseudo-entropy of timelike entanglement to probe temporal emergence in cosmological and de Sitter holography.",
+     "conceptIds": [
+      "emergent-time",
+      "pseudo-entropy"
+     ]
+    },
+    {
+     "slug": "holographic-tensor-networks-and-error-correction",
+     "name": "Holographic Tensor Networks & Error Correction",
+     "description": "Discrete and quantum-information-theoretic models of AdS/CFT, in which bulk logical qubits are redundantly encoded into boundary degrees of freedom via quantum error correction, and explicit tensor-network constructions like the HaPPY code and MERA realize emergent bulk geometry from entanglement structure.",
+     "conceptIds": [
+      "holographic-quantum-error-correction",
+      "happy-code",
+      "mera-tensor-network",
+      "tensor-network-holography"
+     ]
+    },
+    {
+     "slug": "entropy-inequalities-and-bit-threads",
+     "name": "Entropy Inequalities & Bit Threads",
+     "description": "The geometric and information-theoretic constraints obeyed by holographic entanglement entropy, encompassing the holographic entropy cone of realizable entropy vectors and its max-flow/min-cut reformulation via Planck-thickness bit threads.",
+     "conceptIds": [
+      "bit-threads",
+      "holographic-entropy-cone"
+     ]
+    },
+    {
+     "slug": "eternal-black-holes-complexity-and-wormholes",
+     "name": "Eternal Black Holes, Complexity & Wormholes",
+     "description": "The physics of the two-sided eternal AdS black hole dual to the thermofield double state, including the Wheeler-DeWitt patch underlying complexity=action/volume proposals and the Gao-Jafferis-Wall traversable wormhole realizing ER=EPR as quantum teleportation.",
+     "conceptIds": [
+      "thermofield-double",
+      "wheeler-dewitt-patch",
+      "traversable-wormhole"
+     ]
+    },
+    {
+     "slug": "quantum-focusing-and-entropy-bounds",
+     "name": "Quantum Focusing & Entropy Bounds",
+     "description": "Semiclassical generalized-entropy bounds on light-sheets and null congruences, running from the covariant Bousso bound through the quantum focusing conjecture that unifies it with classical focusing, down to the quantum null energy condition it implies.",
+     "conceptIds": [
+      "quantum-focusing-conjecture",
+      "quantum-null-energy-condition",
+      "bousso-bound"
+     ]
+    },
+    {
+     "slug": "syk-model-and-near-ads2-holography",
+     "name": "SYK Model & Near-AdS2 Holography",
+     "description": "The Sachdev-Ye-Kitaev model of random-interacting Majorana fermions and its low-energy Schwarzian effective dynamics, which saturate the maximal chaos bound and provide the best-controlled solvable dual to near-AdS2 Jackiw-Teitelboim gravity.",
+     "conceptIds": [
+      "syk-model",
+      "schwarzian-action",
+      "near-ads2-holography",
+      "chaos-bound"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "experimental-tests",
+   "name": "Quantum Gravity Phenomenology & Experimental Tests",
+   "blocks": [
+    {
+     "slug": "liv-dispersion-theory",
+     "name": "Lorentz Violation & Dispersion Theory",
+     "description": "Theoretical frameworks proposing quantum-gravity-induced departures from exact Lorentz invariance, including modified dispersion relations, explicit Lorentz Invariance Violation, doubly/deformed special relativity with its relative-locality consequence, and the Standard-Model Extension that parametrizes such operators by mass dimension.",
+     "conceptIds": [
+      "modified-dispersion-relation",
+      "lorentz-invariance-violation",
+      "deformed-special-relativity",
+      "relative-locality",
+      "standard-model-extension"
+     ]
+    },
+    {
+     "slug": "astrophysical-liv-tests",
+     "name": "Astrophysical Tests of Lorentz Violation",
+     "description": "Observational probes that constrain LIV/MDR using cosmic messengers, spanning photon time-of-flight delays, vacuum birefringence of polarized light, and reaction-threshold anomalies measured via gamma-ray bursts, ultra-high-energy cosmic rays, and neutrino spectra.",
+     "conceptIds": [
+      "time-of-flight-delay",
+      "vacuum-birefringence",
+      "threshold-anomaly",
+      "uhecr-liv"
+     ]
+    },
+    {
+     "slug": "gravitationally-induced-entanglement-theory",
+     "name": "Gravitationally Induced Entanglement Theory",
+     "description": "The theoretical machinery underlying gravity-mediated entanglement between spatially superposed masses: the entangling mechanism itself, the accumulated gravitational phase, the two-mode-squeezing Hamiltonian that generates it, and the witness observables used to certify entanglement without full tomography.",
+     "conceptIds": [
+      "gravitationally-induced-entanglement",
+      "gravitational-phase",
+      "two-mode-squeezing",
+      "entanglement-witness"
+     ]
+    },
+    {
+     "slug": "bmv-experimental-platforms",
+     "name": "BMV Experimental Platforms & Decoherence Limits",
+     "description": "Concrete experimental routes toward testing gravitationally induced entanglement and gravity quantization, from the Bose-Marletto-Vedral nanodiamond interferometer, levitated optomechanics, and atom interferometry (MAGIS-100) to single-graviton quantum sensing, together with the gravitational decoherence mechanisms that set the dominant sensitivity limits on such experiments.",
+     "conceptIds": [
+      "bmv-experiment",
+      "gravitational-decoherence",
+      "time-dilation-decoherence",
+      "levitated-optomechanics",
+      "atom-interferometry-magis",
+      "single-graviton-detection"
+     ]
+    },
+    {
+     "slug": "planck-scale-spacetime-fluctuations",
+     "name": "Planck-Scale Spacetime Fluctuations",
+     "description": "Phenomenology built around a fundamental minimal length at the Planck scale, including the generalized uncertainty principle and cross-theory minimal-length arguments, and the holographic and geontropic noise signatures searched for with precision interferometers such as the Holometer and GQuEST.",
+     "conceptIds": [
+      "holographic-noise",
+      "generalized-uncertainty-principle",
+      "minimal-length",
+      "planck-scale",
+      "geontropic-noise"
+     ]
+    },
+    {
+     "slug": "gravitational-wave-quantum-gravity-tests",
+     "name": "Gravitational-Wave Tests of Quantum Gravity",
+     "description": "Black-hole merger and gravitational-wave observables used to probe quantum-gravity and beyond-GR physics, including post-ringdown echoes from horizon-scale quantum structure, quasinormal-mode spectroscopy, graviton mass bounds from waveform dispersion, and the memory effect linked to the soft-graviton theorem and BMS supertranslation symmetry.",
+     "conceptIds": [
+      "gravitational-wave-echoes",
+      "ringdown-spectroscopy",
+      "graviton-mass",
+      "gravitational-wave-memory",
+      "soft-theorem-bms"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "group-field-theory",
+   "name": "Group Field Theory & Tensor Models",
+   "blocks": [
+    {
+     "slug": "matrix-tensor-model-foundations",
+     "name": "Matrix & Tensor Model Foundations",
+     "description": "The combinatorial ancestors of group field theory: random matrix models generate triangulated 2D surfaces and 2D quantum gravity via a genus expansion, while their rank-d generalization, tensor models (including the colored variant), produces random triangulations of higher-dimensional pseudomanifolds as the purely combinatorial skeleton of GFT.",
+     "conceptIds": [
+      "tensor-model",
+      "matrix-model",
+      "colored-tensor-model",
+      "two-d-quantum-gravity"
+     ]
+    },
+    {
+     "slug": "melonic-dominance-large-n-dynamics",
+     "name": "Melonic Dominance & Large-N Dynamics",
+     "description": "The topological expansion machinery that controls tensor and GFT models at large index N: the Gurau degree organizes the 1/N expansion, melonic graphs dominate at leading order and are resummable via Schwinger-Dyson gap equations, and the double-scaling limit and emergent conformal/maximally-chaotic dynamics link this structure to the SYK model.",
+     "conceptIds": [
+      "gurau-degree",
+      "melonic-dominance",
+      "large-n-expansion",
+      "double-scaling-limit",
+      "schwinger-dyson-equation",
+      "maximal-chaos"
+     ]
+    },
+    {
+     "slug": "spin-foam-simplicial-gravity",
+     "name": "Spin Foam & Simplicial Gravity Models",
+     "description": "Concrete geometric GFT models whose Feynman amplitudes reproduce spin-foam state sums for simplicial quantum gravity, from Boulatov's original SU(2) model and its Ooguri extension to the Ponzano-Regge 3D state sum and the 4D Barrett-Crane model built on simplicity-constrained BF theory.",
+     "conceptIds": [
+      "boulatov-ooguri-model",
+      "spin-foam",
+      "ponzano-regge-model",
+      "barrett-crane-model"
+     ]
+    },
+    {
+     "slug": "gft-condensate-cosmology",
+     "name": "GFT Condensate Cosmology",
+     "description": "The condensate-cosmology program built on GFT's reinterpretation as a second quantization of loop quantum gravity: coherent condensates of 'atoms of space' yield effective, relationally time-parametrized Friedmann dynamics that replace the classical big-bang singularity with a quantum bounce.",
+     "conceptIds": [
+      "gft-condensate",
+      "effective-friedmann-equation",
+      "quantum-bounce",
+      "relational-time",
+      "second-quantization-lqg"
+     ]
+    },
+    {
+     "slug": "emergent-spacetime-phase-transitions",
+     "name": "Emergent Spacetime & Phase Transitions",
+     "description": "The conceptual and thermodynamic framework for how continuum spacetime arises from pre-geometric GFT degrees of freedom, treating geometrogenesis and emergent cosmology as manifestations of a condensation or critical-point phase transition in the underlying quantum-gravity system.",
+     "conceptIds": [
+      "geometrogenesis",
+      "phase-transition-gft",
+      "emergent-cosmology"
+     ]
+    },
+    {
+     "slug": "tgft-renormalization-asymptotic-freedom",
+     "name": "TGFT Renormalization & Asymptotic Freedom",
+     "description": "The quantum-field-theoretic analysis of tensorial group field theories, covering the renormalizability of TGFT actions under multiscale power counting and the resulting asymptotic-freedom behavior of melonic couplings alongside infrared Wilson-Fisher-type fixed points.",
+     "conceptIds": [
+      "tensorial-gft",
+      "gft-renormalization",
+      "asymptotic-freedom"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "holography-adscft",
+   "name": "Holographic Principle & AdS/CFT",
+   "blocks": [
+    {
+     "slug": "entropy-bounds-holographic-principle",
+     "name": "Entropy Bounds & Holographic Principle",
+     "description": "The foundational information-theoretic bounds that motivate holography: the Bekenstein bound on entropy within a spherical region, its covariant (Bousso) generalization to light sheets in arbitrary spacetimes, and the light-sheet construction itself that makes the covariant bound geometrically precise.",
+     "conceptIds": [
+      "bekenstein-bound",
+      "covariant-entropy-bound",
+      "light-sheet"
+     ]
+    },
+    {
+     "slug": "adscft-dictionary-foundations",
+     "name": "AdS/CFT Dictionary Foundations",
+     "description": "The core statement and defining vocabulary of the Maldacena duality, including the GKP-Witten prescription equating bulk and boundary partition functions, the mass-dimension map between bulk fields and boundary operators, and the 't Hooft large-N coupling that controls the transition between weakly coupled gravity and strongly coupled gauge theory.",
+     "conceptIds": [
+      "adscft-correspondence",
+      "gkp-witten-dictionary",
+      "field-operator-map",
+      "thooft-coupling"
+     ]
+    },
+    {
+     "slug": "holographic-rg-flow-and-c-theorem",
+     "name": "Holographic RG Flow & c-Theorem",
+     "description": "Radial evolution in the AdS bulk reinterpreted as renormalization-group flow on the boundary theory, formalized by the holographic c-theorem's monotonicity result and illustrated by the T-Tbar deformation, which realizes a finite radial cutoff as an irrelevant boundary deformation.",
+     "conceptIds": [
+      "holographic-rg-flow",
+      "c-theorem",
+      "ttbar-deformation"
+     ]
+    },
+    {
+     "slug": "holographic-entanglement-and-bulk-reconstruction",
+     "name": "Holographic Entanglement & Bulk Reconstruction",
+     "description": "The 'spacetime from entanglement' program: the Ryu-Takayanagi formula geometrizes entanglement entropy, entanglement-wedge (subregion) duality sharpens which bulk region a boundary subregion encodes, HKLL bulk reconstruction and holographic quantum error correction explain how that encoding is redundant and protected, and tensor-network toy models (MERA, HaPPY codes) reproduce these features discretely.",
+     "conceptIds": [
+      "ryu-takayanagi",
+      "bulk-reconstruction",
+      "subregion-duality",
+      "holographic-error-correction",
+      "tensor-network"
+     ]
+    },
+    {
+     "slug": "flat-space-and-de-sitter-holography",
+     "name": "Flat-Space & de Sitter Holography",
+     "description": "Extensions of the holographic principle beyond anti-de Sitter space: dS/CFT and static-patch proposals for de Sitter, celestial holography recasting flat-space scattering as a 2D CFT, the soft-theorem/memory/BMS infrared triangle underlying it, and the Carrollian ultra-relativistic reformulation of the same physics.",
+     "conceptIds": [
+      "ds-cft",
+      "celestial-holography",
+      "soft-theorems",
+      "bms-symmetry",
+      "carrollian-holography"
+     ]
+    },
+    {
+     "slug": "integrability-and-exact-adscft-tests",
+     "name": "Integrability & Exact AdS/CFT Tests",
+     "description": "Exact, nonperturbative machinery that turns AdS/CFT into a precision-tested duality: integrability of planar N=4 SYM and its Quantum Spectral Curve solve the spectral problem at any coupling, supersymmetric localization reduces partition functions to matrix models, and the conformal bootstrap constrains CFT data via crossing and unitarity.",
+     "conceptIds": [
+      "integrability-n4-sym",
+      "quantum-spectral-curve",
+      "supersymmetric-localization",
+      "conformal-bootstrap"
+     ]
+    },
+    {
+     "slug": "holographic-thermal-and-transport-physics",
+     "name": "Holographic Thermal & Transport Physics",
+     "description": "Phenomenological applications of gauge/gravity duality to strongly coupled real-world matter: the KSS viscosity bound and its near-saturation by the quark-gluon plasma in heavy-ion collisions, and the broader AdS/CMT program modeling strange metals and holographic superconductors with charged black holes.",
+     "conceptIds": [
+      "kss-bound",
+      "quark-gluon-plasma",
+      "ads-cmt"
+     ]
+    },
+    {
+     "slug": "black-hole-microstates-chaos-and-information",
+     "name": "Black Hole Microstates, Chaos & Information",
+     "description": "Quantum-gravity puzzles probed through solvable models and counting arguments: Strominger-Vafa microstate counting explains Bekenstein-Hawking entropy statistically, the SYK/JT-gravity correspondence gives a solvable chaotic laboratory for near-extremal black holes, wedge (double) holography and braneworld constructions derive the Page curve, and the factorization/baby-universe problem exposes tension between wormhole-inclusive gravity path integrals and a single dual QFT.",
+     "conceptIds": [
+      "black-hole-microstates",
+      "syk-jt-gravity",
+      "wedge-holography",
+      "factorization-problem"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "loop-quantum-gravity",
+   "name": "Loop Quantum Gravity & Spin Foams",
+   "blocks": [
+    {
+     "slug": "canonical-lqg-framework",
+     "name": "Canonical LQG Framework",
+     "description": "Covers the Hamiltonian (canonical) formulation of loop quantum gravity: the Ashtekar-Barbero connection variables, the holonomy-flux algebra they generate, the LOST/Fleischhack theorem fixing its unique representation, the Barbero-Immirzi parameter that scales quantum geometry, and the master-constraint and graph-changing Hamiltonian dynamics that evolve states on the kinematical Hilbert space.",
+     "conceptIds": [
+      "ashtekar-barbero-variables",
+      "holonomy-flux-algebra",
+      "lost-uniqueness-theorem",
+      "barbero-immirzi-parameter",
+      "master-constraint",
+      "graph-changing-dynamics"
+     ]
+    },
+    {
+     "slug": "quantum-geometry-and-spin-networks",
+     "name": "Quantum Geometry and Spin Networks",
+     "description": "Concepts describing the discrete, granular structure of space predicted by LQG: spin networks as basis states of quantum geometry, their discrete area and volume spectra, the general 'quantum geometry' picture these imply, and the twisted-geometries/twistor reformulation of the same phase space on a fixed graph.",
+     "conceptIds": [
+      "spin-network",
+      "discrete-area-spectrum",
+      "discrete-volume-spectrum",
+      "quantum-geometry",
+      "twisted-geometries"
+     ]
+    },
+    {
+     "slug": "spin-foam-covariant-dynamics",
+     "name": "Spin Foam Covariant Dynamics",
+     "description": "The covariant path-integral formulation of LQG built by imposing simplicity constraints on topological BF theory: the EPRL-FK model and its Y-map embedding of SU(2) into SL(2,C), the resulting spin-foam partition function, and the topological field theory backdrop from which constrained-BF spin foams are derived.",
+     "conceptIds": [
+      "bf-theory",
+      "eprl-fk-model",
+      "y-map-simplicity-constraint",
+      "topological-field-theory",
+      "spin-foam-partition-function"
+     ]
+    },
+    {
+     "slug": "spin-foam-semiclassical-and-continuum-limits",
+     "name": "Spin Foam Semiclassical and Continuum Limits",
+     "description": "Open problems and techniques for recovering classical, continuum general relativity from spin foams: the flatness problem afflicting large-spin asymptotics, effective and numerical spin-foam models built to probe or avoid it, coarse-graining/renormalization approaches to the continuum limit, the broader semiclassical-limit problem, the graviton propagator extracted from spin-foam correlators, and the deformed Lorentz symmetry that emerges from the underlying discreteness.",
+     "conceptIds": [
+      "flatness-problem",
+      "effective-spin-foam",
+      "numerical-spin-foam",
+      "spin-foam-renormalization",
+      "continuum-limit",
+      "semiclassical-limit-problem",
+      "graviton-propagator",
+      "deformed-lorentz-symmetry"
+     ]
+    },
+    {
+     "slug": "black-hole-thermodynamics-in-lqg",
+     "name": "Black Hole Thermodynamics in LQG",
+     "description": "LQG's account of black-hole statistical mechanics via isolated horizons carrying an SU(2) Chern-Simons boundary theory, whose punctured-sphere microstate counting reproduces the Bekenstein-Hawking entropy and fixes the Barbero-Immirzi parameter.",
+     "conceptIds": [
+      "isolated-horizon",
+      "su2-chern-simons",
+      "black-hole-entropy"
+     ]
+    },
+    {
+     "slug": "loop-quantum-cosmology-and-planck-remnants",
+     "name": "Loop Quantum Cosmology and Planck Remnants",
+     "description": "Symmetry-reduced and astrophysical applications of loop quantum gravity: loop quantum cosmology's difference-equation replacement of the Wheeler-DeWitt equation yielding a big bounce, and Planck stars as Planck-density bounce remnants proposed as dark-matter candidates.",
+     "conceptIds": [
+      "loop-quantum-cosmology",
+      "planck-star"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "noncommutative-geometry",
+   "name": "Noncommutative Geometry",
+   "blocks": [
+    {
+     "slug": "spectral-triple-foundations",
+     "name": "Spectral Triple Foundations",
+     "description": "The axiomatic core of noncommutative geometry: a spectral triple (A, H, D) built from an algebra, Hilbert space, and Dirac operator recovers a Riemannian manifold's metric, dimension, and differential structure, with Connes' reconstruction theorem and the first-order condition delimiting exactly when this correspondence holds.",
+     "conceptIds": [
+      "spectral-triple",
+      "dirac-operator",
+      "connes-distance-formula",
+      "reconstruction-theorem",
+      "first-order-condition"
+     ]
+    },
+    {
+     "slug": "real-structure-and-ko-dimension",
+     "name": "Real Structure and KO-Dimension",
+     "description": "The real structure J, fixed by Bott-periodic KO-dimension mod 8, endows a spectral triple with charge conjugation and resolves the fermion doubling problem in noncommutative particle models; the unresolved Euclidean-to-Lorentzian Wick rotation problem is the open counterpart of this reality structure.",
+     "conceptIds": [
+      "real-structure-j",
+      "ko-dimension",
+      "fermion-doubling",
+      "wick-rotation-problem"
+     ]
+    },
+    {
+     "slug": "spectral-action-and-heat-kernel",
+     "name": "Spectral Action and Heat-Kernel Expansion",
+     "description": "The spectral action principle asserts that physics depends only on the Dirac operator's spectrum, and its Seeley-DeWitt heat-kernel expansion generates gravitational and gauge terms order by order in the cutoff, with the coefficients' shared mathematical structure linking to conformal-field-theoretic central charge.",
+     "conceptIds": [
+      "spectral-action",
+      "heat-kernel-expansion",
+      "central-charge"
+     ]
+    },
+    {
+     "slug": "almost-commutative-standard-model",
+     "name": "Almost-Commutative Standard Model",
+     "description": "Pairing a continuous spacetime manifold with a finite noncommutative factor (algebra C + H + M_3(C)) yields the Standard Model's gauge group and matter content, with inner fluctuations of the Dirac operator producing gauge bosons and the Higgs field as an internal connection.",
+     "conceptIds": [
+      "almost-commutative-geometry",
+      "finite-sm-algebra",
+      "inner-fluctuations",
+      "higgs-as-connection",
+      "standard-model-from-geometry"
+     ]
+    },
+    {
+     "slug": "grand-unification-and-volume-quantization",
+     "name": "Grand Unification and Volume Quantization",
+     "description": "Relaxing or extending the spectral Standard Model's algebraic constraints leads to Pati-Salam-type grand unification, while the quanta-of-geometry Heisenberg relation independently forces volume quantization and selects the very algebras underlying these unified gauge structures.",
+     "conceptIds": [
+      "pati-salam-spectral",
+      "grand-unification",
+      "quanta-of-geometry"
+     ]
+    },
+    {
+     "slug": "moyal-spacetime-and-nc-qft",
+     "name": "Moyal Spacetime and Noncommutative QFT",
+     "description": "Canonical noncommutative spacetime, formalized through the Moyal star product, supports a noncommutative quantum field theory with UV/IR mixing, and is linked back to ordinary commutative gauge theory via the Seiberg-Witten map arising in D-brane physics.",
+     "conceptIds": [
+      "noncommutative-spacetime",
+      "moyal-product",
+      "seiberg-witten-map",
+      "noncommutative-qft"
+     ]
+    },
+    {
+     "slug": "kappa-minkowski-and-dsr",
+     "name": "Kappa-Minkowski and Doubly Special Relativity",
+     "description": "Lie-algebra-type noncommutative spacetime (kappa-Minkowski), governed by the kappa-Poincare Hopf algebra, motivates doubly special relativity with its Planck-scale invariant, and finds a physical derivation in the Doplicher-Fredenhagen-Roberts spacetime-uncertainty relation tying minimal length to gravitational collapse.",
+     "conceptIds": [
+      "kappa-minkowski",
+      "kappa-poincare",
+      "doubly-special-relativity",
+      "dfr-quantum-spacetime",
+      "spacetime-uncertainty"
+     ]
+    },
+    {
+     "slug": "fuzzy-spaces-and-matrix-models",
+     "name": "Fuzzy Spaces and Matrix Models",
+     "description": "Finite matrix approximations of manifolds such as the fuzzy sphere are finite spectral triples whose continuum limit and quantum fluctuations connect to matrix models (IKKT/BFSS), random noncommutative geometry (Dirac ensembles), emergent geometry, and two-dimensional Liouville quantum gravity as related routes to geometry emerging from matrix degrees of freedom.",
+     "conceptIds": [
+      "fuzzy-spaces",
+      "fuzzy-sphere",
+      "matrix-models",
+      "random-ncg",
+      "emergent-geometry",
+      "liouville-quantum-gravity"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "quantum-cosmology",
+   "name": "Quantum Cosmology",
+   "blocks": [
+    {
+     "slug": "wave-function-and-boundary-proposals",
+     "name": "Wave Function & Boundary Proposals",
+     "description": "Covers the canonical quantum-cosmology formalism describing the universe's quantum state, including the DeWitt supermetric on superspace underlying the Wheeler-DeWitt equation, the Page-Wootters mechanism for relational time, and the Hartle-Hawking no-boundary and Vilenkin tunneling-from-nothing proposals for fixing its boundary conditions.",
+     "conceptIds": [
+      "wave-function-of-the-universe",
+      "no-boundary-proposal",
+      "tunneling-proposal",
+      "dewitt-supermetric",
+      "creation-from-nothing",
+      "page-wootters-mechanism"
+     ]
+    },
+    {
+     "slug": "gravitational-path-integrals-and-complex-saddles",
+     "name": "Gravitational Path Integrals & Complex Saddles",
+     "description": "Groups the mathematical machinery for defining gravitational path integrals in Euclidean and Lorentzian signature, the Picard-Lefschetz deformation onto steepest-descent contours, the resulting complex saddle points, and the Kontsevich-Segal criterion for which complex metrics are physically admissible.",
+     "conceptIds": [
+      "euclidean-path-integral",
+      "lorentzian-path-integral",
+      "picard-lefschetz-theory",
+      "kontsevich-segal-criterion",
+      "complex-saddle-points"
+     ]
+    },
+    {
+     "slug": "loop-quantum-cosmology-and-the-big-bounce",
+     "name": "Loop Quantum Cosmology & the Big Bounce",
+     "description": "Covers the loop-quantum-gravity resolution of the cosmological singularity: holonomy and inverse-volume quantum corrections, the discreteness-setting area gap, the resulting critical bounce density, and bouncing cosmology scenarios more generally.",
+     "conceptIds": [
+      "holonomy-corrections",
+      "area-gap",
+      "critical-density",
+      "bouncing-cosmology"
+     ]
+    },
+    {
+     "slug": "trans-planckian-physics-and-censorship",
+     "name": "Trans-Planckian Physics & Censorship",
+     "description": "Addresses the robustness of semiclassical cosmological predictions against unknown Planck-scale physics, spanning the trans-Planckian problem in Hawking radiation and the Trans-Planckian Censorship Conjecture that bounds inflationary expansion.",
+     "conceptIds": [
+      "trans-planckian-problem",
+      "trans-planckian-censorship"
+     ]
+    },
+    {
+     "slug": "eternal-inflation-multiverse-and-anthropics",
+     "name": "Eternal Inflation, Multiverse & Anthropics",
+     "description": "Covers the self-reproducing regime of eternal inflation, the resulting multiverse of causally disconnected pocket universes, the unresolved measure problem of assigning probabilities across it, anthropic reasoning used to interpret observed parameters, and the broader inflationary paradigm underlying them.",
+     "conceptIds": [
+      "eternal-inflation",
+      "measure-problem",
+      "multiverse",
+      "inflation",
+      "anthropic-reasoning"
+     ]
+    },
+    {
+     "slug": "string-and-alternative-early-universe-cosmologies",
+     "name": "String & Alternative Early-Universe Cosmologies",
+     "description": "Groups non-inflationary and string-theoretic early-universe scenarios -- ekpyrotic/cyclic contraction, the Hagedorn-phase string gas model, the dilaton-driven pre-big-bang scenario, and string cosmology broadly -- that exploit dualities and alternative dynamics to resolve the initial singularity and seed structure.",
+     "conceptIds": [
+      "ekpyrotic-cosmology",
+      "string-gas-cosmology",
+      "pre-big-bang",
+      "string-cosmology"
+     ]
+    },
+    {
+     "slug": "quantum-origin-of-cosmological-structure",
+     "name": "Quantum Origin of Cosmological Structure",
+     "description": "Covers how primordial quantum fluctuations become the classical seeds of cosmic structure, via the Mukhanov-Sasaki perturbation formalism, cosmic decoherence driving the quantum-to-classical transition, and the broader emergence of classical spacetime from quantum initial conditions.",
+     "conceptIds": [
+      "quantum-origin-of-structure",
+      "cosmic-decoherence",
+      "mukhanov-sasaki-spectrum",
+      "emergence-classical-spacetime"
+     ]
+    },
+    {
+     "slug": "holography-and-quantum-gravity-dark-energy",
+     "name": "Holography & Quantum-Gravity Dark Energy",
+     "description": "Covers attempts to reformulate quantum cosmology and dark energy through holographic dualities, including the dS/CFT-dual description of no-boundary saddles and quantum-gravity-motivated constraints on the cosmological constant and its possible time evolution.",
+     "conceptIds": [
+      "holographic-cosmology",
+      "dark-energy-quantum-gravity"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "semiclassical-gravity",
+   "name": "QFT in Curved Spacetime & Semiclassical Gravity",
+   "blocks": [
+    {
+     "slug": "qftcs-foundations-and-states",
+     "name": "QFTCS Foundations & Admissible States",
+     "description": "Establishes quantum field theory on a fixed curved background as an algebraic structure of observables, and the Hadamard/microlocal criteria that single out physically admissible states in the absence of a preferred vacuum.",
+     "conceptIds": [
+      "qft-in-curved-spacetime",
+      "algebraic-qft",
+      "hadamard-state",
+      "microlocal-spectrum-condition",
+      "vacuum-ambiguity"
+     ]
+    },
+    {
+     "slug": "particle-creation-and-thermality",
+     "name": "Particle Creation & Thermal Response",
+     "description": "Covers the Bogoliubov mode-mixing mechanism common to particle creation, its operational detection via an Unruh-DeWitt detector, and the KMS/modular-flow framework that identifies such particle baths as thermal equilibrium states.",
+     "conceptIds": [
+      "bogoliubov-transformation",
+      "unruh-dewitt-detector",
+      "kms-condition",
+      "modular-theory"
+     ]
+    },
+    {
+     "slug": "cosmological-particle-production-and-anomalies",
+     "name": "Cosmological Particle Production & Anomalies",
+     "description": "Treats particle creation by an expanding FLRW background, the adiabatic-vacuum construction used to define 'no particles' and regularize the stress tensor, and the conformal/trace and central-charge anomalies (including the a-theorem) that constrain conformally coupled field dynamics.",
+     "conceptIds": [
+      "cosmological-particle-production",
+      "adiabatic-vacuum",
+      "trace-anomaly",
+      "a-theorem"
+     ]
+    },
+    {
+     "slug": "renormalized-stress-tensor-and-fluctuations",
+     "name": "Renormalized Stress Tensor & Its Fluctuations",
+     "description": "Defines the renormalized expectation value of the stress-energy tensor via Wald's axioms and point-split regularization, together with the noise kernel that characterizes its quantum fluctuations as the stochastic source of the Einstein-Langevin equation.",
+     "conceptIds": [
+      "renormalized-stress-energy-tensor",
+      "wald-axioms",
+      "noise-kernel"
+     ]
+    },
+    {
+     "slug": "semiclassical-einstein-equation-and-validity",
+     "name": "Semiclassical Einstein Equation & Validity",
+     "description": "Covers the fourth-order semiclassical Einstein equation sourced by the expectation value of the stress tensor, the order-reduction prescription that removes its runaway solutions, and the criteria determining when the semiclassical approximation itself remains valid.",
+     "conceptIds": [
+      "semiclassical-einstein-equation",
+      "order-reduction",
+      "validity-of-semiclassical-gravity"
+     ]
+    },
+    {
+     "slug": "quantum-energy-conditions-and-singularities",
+     "name": "Quantum Energy Conditions & Singularity Theorems",
+     "description": "Gathers the rigorous QFT replacements for classical energy conditions -- quantum energy inequalities, the averaged null energy condition, and relative entropy via modular theory -- and their use in proving semiclassical singularity theorems.",
+     "conceptIds": [
+      "quantum-energy-inequalities",
+      "averaged-null-energy-condition",
+      "semiclassical-singularity-theorem",
+      "relative-entropy"
+     ]
+    },
+    {
+     "slug": "horizon-entropy-and-analogue-gravity",
+     "name": "Horizon Entropy & Analogue Gravity",
+     "description": "Spans the Noether-charge definition of black-hole (Wald) entropy in generally covariant gravity theories and analogue Hawking radiation in condensed-matter systems, both windows onto horizon thermodynamics short of full quantum gravity.",
+     "conceptIds": [
+      "wald-entropy",
+      "analogue-hawking-radiation"
+     ]
+    },
+    {
+     "slug": "gravity-induced-decoherence-and-superposition",
+     "name": "Gravity-Induced Decoherence & Superposition",
+     "description": "Examines whether spatial quantum superpositions of massive objects decohere via their own gravitational field, and whether such experiments can distinguish quantized from semiclassical gravity -- tying directly into the foundational quantum measurement problem.",
+     "conceptIds": [
+      "gravitationally-induced-decoherence",
+      "spacetime-superposition",
+      "measurement-problem"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "string-theory",
+   "name": "String Theory & M-theory",
+   "blocks": [
+    {
+     "slug": "worldsheet-foundations",
+     "name": "Worldsheet Foundations",
+     "description": "Covers the two-dimensional conformal field theory living on the string worldsheet and the basic kinematic quantities — critical dimension, conformal anomaly, tension, coupling, and Regge trajectories — that define how a fundamental string propagates and interacts.",
+     "conceptIds": [
+      "fundamental-string",
+      "worldsheet-cft",
+      "critical-dimension",
+      "conformal-anomaly",
+      "regge-trajectory",
+      "string-tension",
+      "string-coupling"
+     ]
+    },
+    {
+     "slug": "bosonic-superstring-spectra",
+     "name": "Bosonic vs. Superstring Spectra",
+     "description": "Contrasts the tachyonic bosonic string with the supersymmetric, GSO-projected superstring, and covers the second-quantized string field theory framework used to describe tachyon condensation and vacuum stability.",
+     "conceptIds": [
+      "bosonic-string",
+      "superstring",
+      "gso-projection",
+      "tachyon",
+      "string-field-theory"
+     ]
+    },
+    {
+     "slug": "five-superstrings-heterotic",
+     "name": "Five Superstring Theories & Heterotic Gauge Groups",
+     "description": "Groups the five consistent ten-dimensional superstring theories with the heterotic string's hybrid bosonic/supersymmetric construction and the Green-Schwarz anomaly cancellation mechanism that fixes its gauge group.",
+     "conceptIds": [
+      "five-superstring-theories",
+      "heterotic-string",
+      "anomaly-cancellation",
+      "gauge-group"
+     ]
+    },
+    {
+     "slug": "string-dualities",
+     "name": "String Dualities (T/S/U)",
+     "description": "Encompasses the web of T-, S-, and U-dualities that relate the different string theories and their coupling regimes, unifying them into a single underlying framework.",
+     "conceptIds": [
+      "string-dualities",
+      "t-duality",
+      "s-duality",
+      "u-duality"
+     ]
+    },
+    {
+     "slug": "d-branes-rr-charge",
+     "name": "D-branes & Ramond-Ramond Charge",
+     "description": "Covers D-branes as dynamical hypersurfaces carrying Ramond-Ramond charge, their worldvolume gauge dynamics described by the DBI action, and the BPS states whose protected degeneracies make D-brane physics tractable at strong coupling.",
+     "conceptIds": [
+      "d-brane",
+      "ramond-ramond-charge",
+      "dbi-action",
+      "bps-states"
+     ]
+    },
+    {
+     "slug": "m-theory-11d-supergravity",
+     "name": "M-theory & 11D Supergravity",
+     "description": "Covers the conjectured eleven-dimensional M-theory that unifies the five superstring theories in various limits, together with its low-energy effective description as maximal eleven-dimensional supergravity.",
+     "conceptIds": [
+      "m-theory",
+      "eleven-d-supergravity"
+     ]
+    },
+    {
+     "slug": "compactification-moduli",
+     "name": "Compactification & Moduli Stabilization",
+     "description": "Covers how extra dimensions are curled up — particularly on Calabi-Yau manifolds and with background fluxes — and how the resulting moduli fields are stabilized to fix four-dimensional couplings and gauge content.",
+     "conceptIds": [
+      "compactification",
+      "calabi-yau-compactification",
+      "moduli-stabilization",
+      "flux-compactification"
+     ]
+    },
+    {
+     "slug": "string-landscape-de-sitter",
+     "name": "String Landscape & de Sitter Vacua",
+     "description": "Covers the vast space of consistent low-energy effective theories arising from flux compactifications, including the debated construction and stability of positive-cosmological-constant de Sitter vacua.",
+     "conceptIds": [
+      "string-landscape",
+      "de-sitter-vacua"
+     ]
+    },
+    {
+     "slug": "swampland-conjectures",
+     "name": "Swampland Conjectures",
+     "description": "Groups the distance, weak gravity, emergent string, and species-scale conjectures that delineate which low-energy effective field theories can be consistently completed by quantum gravity.",
+     "conceptIds": [
+      "swampland-distance-conjecture",
+      "weak-gravity-conjecture",
+      "emergent-string-conjecture",
+      "species-scale"
+     ]
+    },
+    {
+     "slug": "black-hole-microstates-holography",
+     "name": "Black-Hole Microstates & Holography",
+     "description": "Covers the microscopic, string-theoretic accounting of black-hole entropy via D-brane bound states and the Cardy formula, alongside the AdS/CFT correspondence that provides a holographic, non-perturbative definition of quantum gravity.",
+     "conceptIds": [
+      "strominger-vafa-entropy",
+      "cardy-formula",
+      "ads-cft-correspondence"
+     ]
+    },
+    {
+     "slug": "matrix-model-definitions",
+     "name": "Matrix Model Definitions",
+     "description": "Covers the BFSS and IKKT matrix models, proposed non-perturbative formulations of M-theory and Type IIB string theory in which spacetime geometry emerges from matrix quantum mechanics.",
+     "conceptIds": [
+      "bfss-matrix-model",
+      "ikkt-matrix-model"
+     ]
+    },
+    {
+     "slug": "string-thermodynamics-hagedorn",
+     "name": "String Thermodynamics & Hagedorn Transition",
+     "description": "Covers the statistical mechanics of highly excited strings, dominated by the exponentially growing Hagedorn density of states, and its role in string-black-hole correspondence and early-universe cosmology.",
+     "conceptIds": [
+      "hagedorn-temperature",
+      "string-thermodynamics"
+     ]
+    },
+    {
+     "slug": "effective-gravity-fundamentals",
+     "name": "Effective Gravity & Fundamental Symmetries",
+     "description": "Covers the low-energy supergravity action obtained from string worldsheet consistency, together with the foundational notions of the massless graviton and spacetime supersymmetry that underlie string phenomenology.",
+     "conceptIds": [
+      "low-energy-effective-action",
+      "graviton",
+      "supersymmetry"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "supergravity-uv",
+   "name": "Supergravity & UV Behavior of Perturbative Gravity",
+   "blocks": [
+    {
+     "slug": "uv-divergence-structure",
+     "name": "UV Divergence Structure of Gravity",
+     "description": "Covers the power-counting argument that Newton's constant's negative mass dimension forces ever more counterterms at higher loop order, and the explicit two-loop Goroff-Sagnotti C^3 divergence that confirmed pure Einstein gravity is perturbatively non-renormalizable.",
+     "conceptIds": [
+      "perturbative-nonrenormalizability",
+      "goroff-sagnotti-term",
+      "power-counting"
+     ]
+    },
+    {
+     "slug": "gravity-as-effective-field-theory",
+     "name": "Gravity as Effective Field Theory",
+     "description": "Treats general relativity as a low-energy effective theory in which UV-sensitive divergences are absorbed into renormalized couplings while nonanalytic loop terms yield universal, UV-independent predictions, exemplified by the quantum correction to the Newtonian potential.",
+     "conceptIds": [
+      "effective-field-theory-gravity",
+      "nonanalytic-corrections",
+      "quantum-newtonian-potential"
+     ]
+    },
+    {
+     "slug": "supergravity-foundations",
+     "name": "Supergravity Foundations",
+     "description": "Establishes the basic supergravity framework, from the general N-extended locally supersymmetric extensions of GR to the maximal N=8 theory in four dimensions and its parent, eleven-dimensional supergravity obtained via M-theory's low-energy limit.",
+     "conceptIds": [
+      "supergravity",
+      "n8-supergravity",
+      "eleven-dimensional-supergravity"
+     ]
+    },
+    {
+     "slug": "n8-symmetry-constrained-finiteness",
+     "name": "N=8 Symmetry-Constrained UV Finiteness",
+     "description": "Examines how the exceptional E7(7) duality symmetry and the failure of BPS-protected superinvariants to respect it restrict the allowed counterterms of N=8 supergravity, fixing the critical spacetime dimension at which divergences can first appear at each loop order.",
+     "conceptIds": [
+      "e7-duality",
+      "n8-critical-dimension",
+      "bps-protected-operators"
+     ]
+    },
+    {
+     "slug": "enhanced-uv-cancellations",
+     "name": "Enhanced UV Cancellations Beyond Symmetry",
+     "description": "Documents loop-level cancellations in supergravity amplitudes—such as the finiteness of N=5 at four loops and unexpectedly good N=8 behavior—that exceed what known supersymmetry and duality arguments predict, with no confirmed symmetry-based explanation.",
+     "conceptIds": [
+      "enhanced-cancellations",
+      "n5-supergravity-finiteness"
+     ]
+    },
+    {
+     "slug": "on-shell-amplitude-methods",
+     "name": "On-Shell Amplitude Methods",
+     "description": "Groups the modern computational toolkit—color-kinematics duality and the double-copy relation between gauge and gravity amplitudes, paired with generalized unitarity cuts—that powers state-of-the-art multi-loop supergravity UV calculations.",
+     "conceptIds": [
+      "double-copy",
+      "generalized-unitarity"
+     ]
+    },
+    {
+     "slug": "higher-derivative-quadratic-gravity",
+     "name": "Higher-Derivative Quadratic Gravity",
+     "description": "Covers curvature-squared gravity actions that achieve power-counting renormalizability via a 1/p^4 propagator, the Ostrogradsky instability this introduces through extra time derivatives, and the scale-invariant Agravity model built on the same four-derivative kinetic structure.",
+     "conceptIds": [
+      "higher-derivative-gravity",
+      "ostrogradsky-ghost",
+      "agravity"
+     ]
+    },
+    {
+     "slug": "ghost-resolution-alternative-completions",
+     "name": "Ghost Resolution and Alternative UV Completions",
+     "description": "Surveys proposals for taming or eliminating the ghost degrees of freedom that plague renormalizable higher-derivative gravity, including nonlocal infinite-derivative kinetic operators, Weyl-invariant conformal gravity, Anselmi's fakeon quantization prescription, and the conformally reformulated shape dynamics.",
+     "conceptIds": [
+      "nonlocal-ghost-free-gravity",
+      "conformal-gravity",
+      "fakeons",
+      "shape-dynamics"
+     ]
+    },
+    {
+     "slug": "lorentz-violating-uv-completions",
+     "name": "Lorentz-Violating UV Completions",
+     "description": "Covers Horava-Lifshitz gravity's anisotropic UV scaling that trades Lorentz invariance for improved short-distance behavior, and the broader phenomenological and theoretical constraints on Lorentz-violating high-energy physics that such constructions must satisfy.",
+     "conceptIds": [
+      "horava-lifshitz-gravity",
+      "lorentz-violation"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "swampland",
+   "name": "Swampland Program & the String Landscape",
+   "blocks": [
+    {
+     "slug": "swampland-program-foundations",
+     "name": "Swampland Program Foundations",
+     "description": "The core landscape-versus-swampland framing that defines which low-energy effective field theories coupled to gravity fail to admit a UV completion, alongside the anthropic selection debate that motivated the program and the finiteness/tameness results that give it rigorous mathematical footing.",
+     "conceptIds": [
+      "swampland-region",
+      "anthropic-principle",
+      "finiteness-conjecture"
+     ]
+    },
+    {
+     "slug": "weak-gravity-and-black-hole-extremality",
+     "name": "Weak Gravity & Black Hole Extremality",
+     "description": "The Weak Gravity Conjecture's black-hole and EFT-consistency toolkit, spanning extremality bounds that guarantee charged black holes have an allowed decay channel, their multi-U(1) convex-hull generalization, and the positivity bounds derived from unitarity and causality in low-energy scattering amplitudes.",
+     "conceptIds": [
+      "convex-hull-condition",
+      "black-hole-extremality",
+      "positivity-bounds"
+     ]
+    },
+    {
+     "slug": "distance-conjecture-and-species-scale",
+     "name": "Distance Conjecture & Species Scale",
+     "description": "The Swampland Distance Conjecture and its recent sharpening: traversing infinite geodesic distances in moduli space triggers exponentially light towers of states, with the universal pattern relating the tower mass scale to the species scale that sets the true quantum-gravity cutoff.",
+     "conceptIds": [
+      "distance-conjecture",
+      "universal-pattern"
+     ]
+    },
+    {
+     "slug": "ads-distance-and-scale-separation",
+     "name": "AdS Distance Conjecture & Scale Separation",
+     "description": "The AdS-specific refinement of the distance conjecture, which forbids a smooth flat-space limit of anti-de Sitter vacua without an accompanying light tower of states, together with the associated ban on parametric scale separation between the AdS scale and the Kaluza-Klein scale.",
+     "conceptIds": [
+      "ads-distance-conjecture",
+      "scale-separation"
+     ]
+    },
+    {
+     "slug": "de-sitter-conjecture-and-dark-energy",
+     "name": "de Sitter Conjecture & Dark Energy",
+     "description": "Conjectures and bounds governing de Sitter and quasi-de Sitter physics: the gradient bound on scalar potentials that disfavors metastable positive vacuum energy and favors quintessence-like dark energy, together with the Festina Lente bound on charged-particle masses in de Sitter and the electroweak symmetry breaking it enforces.",
+     "conceptIds": [
+      "de-sitter-conjecture",
+      "dark-energy",
+      "festina-lente",
+      "electroweak-symmetry-breaking"
+     ]
+    },
+    {
+     "slug": "dark-dimension-and-neutrino-phenomenology",
+     "name": "Dark Dimension & Neutrino Phenomenology",
+     "description": "The dark dimension scenario, in which the observed small dark-energy scale predicts a mesoscopic extra dimension with a light Kaluza-Klein tower, tied phenomenologically to neutrino mass generation and sterile-neutrino or KK-graviton dark matter candidates.",
+     "conceptIds": [
+      "dark-dimension",
+      "neutrino-mass"
+     ]
+    },
+    {
+     "slug": "no-global-symmetries-and-charge-completeness",
+     "name": "No Global Symmetries & Charge Completeness",
+     "description": "The prohibition of exact global symmetries in quantum gravity, proven within AdS/CFT via quantum error correction, together with the completeness hypothesis requiring every allowed gauge charge to be realized by a physical state and the generalized higher-form symmetries whose absence these results encode.",
+     "conceptIds": [
+      "no-global-symmetries",
+      "completeness-hypothesis",
+      "generalized-symmetries"
+     ]
+    },
+    {
+     "slug": "cobordism-conjecture-and-spacetime-defects",
+     "name": "Cobordism Conjecture & Spacetime Defects",
+     "description": "The cobordism conjecture, which demands the triviality of all cobordism classes as a consequence of no exact global symmetries, forcing the existence of branes and domain walls—including end-of-the-world branes—that interpolate between distinct consistent quantum gravity vacua.",
+     "conceptIds": [
+      "cobordism-conjecture",
+      "end-of-world-brane"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "twistors-amplitudes",
+   "name": "Twistor Theory & the Amplitudes Program",
+   "blocks": [
+    {
+     "slug": "twistor-space-and-penrose-transform",
+     "name": "Twistor Space & Penrose Transform",
+     "description": "Penrose's twistor space PT = CP3 recodes spacetime points as holomorphic lines via the incidence relation, and the Penrose transform maps sheaf cohomology classes on PT to solutions of massless free-field equations; alpha-surfaces are the totally-null surfaces underlying this correspondence.",
+     "conceptIds": [
+      "twistor-space",
+      "incidence-relation",
+      "penrose-transform",
+      "alpha-surfaces",
+      "cohomology"
+     ]
+    },
+    {
+     "slug": "self-dual-sector-and-googly-problem",
+     "name": "Self-Dual Sector & Googly Problem",
+     "description": "The self-dual/anti-self-dual decomposition of Yang-Mills and gravitational curvature is the classically integrable half of these theories, realized twistorially by the Ward correspondence for instantons and the nonlinear graviton for anti-self-dual Einstein metrics; the decades-old googly problem of extending this to the opposite-helicity, fully interacting theory motivates Penrose's noncommutative palatial twistor theory.",
+     "conceptIds": [
+      "nonlinear-graviton",
+      "ward-correspondence",
+      "self-duality",
+      "integrability",
+      "googly-problem",
+      "palatial-twistor-theory"
+     ]
+    },
+    {
+     "slug": "spinor-helicity-and-on-shell-methods",
+     "name": "Spinor-Helicity & On-Shell Tree Methods",
+     "description": "The spinor-helicity formalism decomposes massless and massive momenta into angle and square spinor brackets that make little-group covariance manifest, underlying compact tree-level results such as the MHV/Parke-Taylor amplitude, CSW diagrammatic rules, and BCFW on-shell recursion, with generalized-unitarity on-shell methods extending the same philosophy to loop level.",
+     "conceptIds": [
+      "spinor-helicity",
+      "massive-spinor-helicity",
+      "mhv-amplitude",
+      "csw-rules",
+      "bcfw-recursion",
+      "on-shell-methods"
+     ]
+    },
+    {
+     "slug": "dual-conformal-symmetry-and-momentum-twistors",
+     "name": "Dual Conformal Symmetry & Momentum Twistors",
+     "description": "Momentum twistors make the hidden dual (super)conformal symmetry of planar N=4 super-Yang-Mills manifest; combined with ordinary superconformal symmetry it generates a Yangian algebra, and the associated cluster-algebra structure organizes the singularities and building blocks of the resulting scattering amplitudes.",
+     "conceptIds": [
+      "momentum-twistors",
+      "dual-conformal-symmetry",
+      "yangian",
+      "cluster-algebras"
+     ]
+    },
+    {
+     "slug": "positive-geometry-and-all-loop-integrands",
+     "name": "Positive Geometry & All-Loop Integrands",
+     "description": "The positive Grassmannian and its positroid cells underlie the amplituhedron, a positive geometry whose canonical form directly yields the planar N=4 SYM loop integrand without separately imposing locality or unitarity; cosmological polytopes extend this positive-geometry paradigm to inflationary wavefunctions, while surfaceology reformulates such integrands as combinatorial surface/curve integrals valid to all loop orders.",
+     "conceptIds": [
+      "positive-grassmannian",
+      "amplituhedron",
+      "positive-geometry",
+      "cosmological-polytopes",
+      "surfaceology"
+     ]
+    },
+    {
+     "slug": "twistor-and-ambitwistor-strings",
+     "name": "Twistor & Ambitwistor String Models",
+     "description": "Witten's twistor string theory equates perturbative N=4 super-Yang-Mills with a topological string on twistor space, though its closed-string sector carries a non-decoupling conformal supergravity contribution; the ambitwistor string and the CHY scattering-equations formalism generalize this holomorphic worldsheet approach to generic massless theories at tree and loop level.",
+     "conceptIds": [
+      "twistor-string",
+      "conformal-supergravity",
+      "ambitwistor-string",
+      "scattering-equations"
+     ]
+    },
+    {
+     "slug": "double-copy-and-color-kinematics-duality",
+     "name": "Double Copy & Color-Kinematics Duality",
+     "description": "BCJ color-kinematics duality reveals a hidden Jacobi-like structure in gauge-theory numerators that, via KLT-style squaring relations, produces gravity amplitudes as a 'double copy' of gauge-theory data; the construction extends to classical Kerr-Schild solutions used in gravitational-wave waveform modeling and underlies the enhanced ultraviolet cancellations found in N=8 supergravity loop amplitudes.",
+     "conceptIds": [
+      "bcj-duality",
+      "klt-relations",
+      "classical-double-copy",
+      "gravitational-waves",
+      "uv-finiteness-n8"
+     ]
+    },
+    {
+     "slug": "celestial-holography-and-asymptotic-symmetries",
+     "name": "Celestial Holography & Asymptotic Symmetries",
+     "description": "Celestial holography recasts 4D flat-space scattering amplitudes as correlators of a putative 2D conformal field theory living on the celestial sphere, with the infinite-dimensional w(1+infinity) symmetry organizing the entire tower of soft graviton theorems and linking the holographic program back to the self-dual sector and twistor space.",
+     "conceptIds": [
+      "celestial-amplitudes",
+      "w-infinity-symmetry"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "von-neumann-algebras",
+   "name": "Von Neumann Algebras & Modular Theory in Quantum Gravity",
+   "blocks": [
+    {
+     "slug": "type-classification-of-factors",
+     "name": "Factor Type Classification (II/III)",
+     "description": "Synthesizes the Murray-von Neumann/Connes classification distinguishing type III factors (no trace, no density matrices, UV-divergent entanglement entropy) from type II factors (finite or semifinite trace, well-defined but additively ambiguous entropy), including the continuum of III_lambda subtypes and the noncommutative-geometry framework that underlies this taxonomy.",
+     "conceptIds": [
+      "type-iii-factor",
+      "type-ii-factor",
+      "connes-classification",
+      "noncommutative-geometry-link"
+     ]
+    },
+    {
+     "slug": "type-iii1-structure-in-qft",
+     "name": "Type III_1 Structure in Local QFT",
+     "description": "Covers the foundational algebraic-QFT result that observable algebras of bounded regions or wedges are type III_1 factors, together with the Reeh-Schlieder theorem establishing vacuum entanglement and the Bisognano-Wichmann theorem identifying modular flow with the geometric Lorentz boost for wedge regions.",
+     "conceptIds": [
+      "type-iii1-local-qft",
+      "reeh-schlieder",
+      "bisognano-wichmann"
+     ]
+    },
+    {
+     "slug": "tomita-takesaki-modular-foundations",
+     "name": "Tomita-Takesaki Modular Theory Foundations",
+     "description": "Groups the core mathematical apparatus of modular theory -- the modular operator/conjugation and modular automorphism flow, the Connes cocycle relating two states' flows, and Araki relative entropy built from it -- which together supply an intrinsic, state-derived notion of time and a UV-finite entropy measure for operator algebras.",
+     "conceptIds": [
+      "tomita-takesaki",
+      "modular-flow",
+      "connes-cocycle",
+      "relative-entropy-algebraic"
+     ]
+    },
+    {
+     "slug": "crossed-product-constructions",
+     "name": "Crossed Product Constructions & Observer Algebras",
+     "description": "Covers the crossed-product mechanism by which adjoining a modular-flow-generating observer or clock converts a traceless type III_1 algebra into a type II algebra with a well-defined trace and renormalized entropy, including its concrete realizations for gravitationally dressed observers, the de Sitter static patch, and quantum reference frames.",
+     "conceptIds": [
+      "crossed-product",
+      "trace-and-entropy",
+      "crossed-product-observer",
+      "de-sitter-static-patch-algebra",
+      "qrf-crossed-product",
+      "relational-observables-link"
+     ]
+    },
+    {
+     "slug": "holographic-large-n-algebras",
+     "name": "Holographic Large-N Emergent Algebras",
+     "description": "Covers the large-N emergence of type III_1 (and, with 1/N corrections, type II) algebras in holographic CFTs, the resulting operator-algebraic derivation of the quantum-extremal-surface/generalized-area formula, and the algebraic reformulation of ER=EPR as an algebra-type transition at the Page time.",
+     "conceptIds": [
+      "large-n-emergent-algebra",
+      "qes-algebra",
+      "algebraic-er-epr",
+      "er-epr-link"
+     ]
+    },
+    {
+     "slug": "emergent-time-and-geometry-from-modular-data",
+     "name": "Emergent Time & Geometry from Modular Data",
+     "description": "Covers the program of recovering spacetime structure -- causal order, horizons, and fragments of the Poincare group -- purely from algebraic modular data, spanning half-sided modular inclusions, boundary-modular derivations of black-hole interiors, and the Connes-Rovelli thermal-time hypothesis identifying physical time with a state's own modular flow.",
+     "conceptIds": [
+      "half-sided-modular-inclusion",
+      "modular-inclusion-emergent-time",
+      "thermal-time-hypothesis",
+      "emergent-geometry-modular"
+     ]
+    },
+    {
+     "slug": "causal-set-and-spacetime-entanglement-links",
+     "name": "Causal-Set & Spacetime Entanglement Links",
+     "description": "Groups the causal-set-theoretic approach to entanglement entropy (Sorkin's spacetime entanglement entropy and the SJ vacuum state) with the dimensional analysis of modular-flow non-geometricity at entangling corners, connecting discrete causal structure to the algebraic entropy program.",
+     "conceptIds": [
+      "ssee-truncation-link",
+      "modular-flow-corner-nonlocality",
+      "causal-set-link"
+     ]
+    }
+   ]
+  }
+ ]
+}
