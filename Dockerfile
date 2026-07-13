@@ -46,6 +46,9 @@ COPY package.json package-lock.json* ./
 RUN npm ci --omit=dev --ignore-scripts
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/dist-server ./dist-server
+# Opt-in fixture seed (run by the nOS keap role via `docker exec`, gated on
+# keap_seed_fixtures) — a standalone .mjs, no deps beyond global fetch.
+COPY --from=build /app/deploy/seed-fixtures.mjs ./deploy/seed-fixtures.mjs
 # /data must exist and belong to the runtime user BEFORE the VOLUME
 # declaration — an anonymous volume inherits these permissions; without the
 # chown the non-root process gets SQLITE_CANTOPEN on first boot.
