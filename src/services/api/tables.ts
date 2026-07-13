@@ -5,6 +5,7 @@ import type {
   TableDriver,
   TableCapabilities,
   CreateTableRequest,
+  TableVisibilityContract,
   AggregateQuery,
 } from '../../../shared/contracts/table';
 
@@ -21,6 +22,11 @@ export const tablesApi = {
   create: (req: CreateTableRequest) =>
     apiFetch<TableInfo>('/api/tables', { method: 'POST', body: JSON.stringify(req) }),
   remove: (id: string) => apiFetch<void>(`/api/tables/${encodeURIComponent(id)}`, { method: 'DELETE' }),
+  setVisibility: (id: string, visibility: TableVisibilityContract) =>
+    apiFetch<TableInfo>(`/api/tables/${encodeURIComponent(id)}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ visibility }),
+    }),
 
   rows: (id: string, opts: { sortColumn?: string; sortDir?: 'asc' | 'desc'; cursor?: string; limit?: number } = {}) => {
     const p = new URLSearchParams();

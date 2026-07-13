@@ -30,9 +30,20 @@ import {
   listCredentials,
   revokeCredential,
 } from './extension/store';
-import { listTables, getTable, canReadTable, storeFor, listDrivers, assertRowId } from './tables';
+import {
+  listTables,
+  getTable,
+  canReadTable,
+  canWriteTable,
+  updateTableVisibility,
+  storeFor,
+  listDrivers,
+  assertRowId,
+} from './tables';
+import { tierRank, canCreateTables } from './rbac';
 import {
   createTableRequestSchema,
+  updateTableVisibilitySchema,
   listRowsQuerySchema,
   aggregateQuerySchema,
 } from '../shared/contracts/table';
@@ -448,23 +459,27 @@ export function registerApiRoutes(app: Express) {
   // Reads: owner, admin, or visibility=shared. Writes: owner or admin.
   const tableForWrite = (req: Request, res: Response) => {
     const t = getTable(req.params.id);
-    if (!t || !canReadTable(t, req.user.id, req.user.isAdmin)) {
+    if (!t || !canReadTable(t, req.user)) {
       fail(res, 404, 'unknown table');
       return null;
     }
-    if (t.ownerId !== req.user.id && !req.user.isAdmin) {
+    if (!canWriteTable(t, req.user)) {
       fail(res, 403, 'not your table');
       return null;
     }
     return t;
   };
 
-  app.get('/api/tables', (req, res) => ok(res, listTables(req.user.id, req.user.isAdmin)));
+  app.get('/api/tables', (req, res) => ok(res, listTables(req.user)));
 
   // Storage picker: which drivers this deployment offers (register BEFORE :id).
   app.get('/api/tables/drivers', (_req, res) => ok(res, listDrivers()));
 
   app.post('/api/tables', async (req, res) => {
+    // Guests (tier 4) are read-only — they may not create/own data tables.
+    if (!canCreateTables(tierRank(req.user.groups))) {
+      return fail(res, 403, 'your access tier is read-only for data tables');
+    }
     const parsed = createTableRequestSchema.safeParse(req.body ?? {});
     if (!parsed.success) return fail(res, 400, parsed.error.issues[0]?.message ?? 'invalid table');
     try {
@@ -477,8 +492,19 @@ export function registerApiRoutes(app: Express) {
 
   app.get('/api/tables/:id', (req, res) => {
     const t = getTable(req.params.id);
-    if (!t || !canReadTable(t, req.user.id, req.user.isAdmin)) return fail(res, 404, 'unknown table');
+    if (!t || !canReadTable(t, req.user)) return fail(res, 404, 'unknown table');
     ok(res, t);
+  });
+
+  // Change a table's share scope (owner/admin). The only way to move a table
+  // between private / tier-scopes / shared after creation.
+  app.patch('/api/tables/:id', (req, res) => {
+    const t = tableForWrite(req, res);
+    if (!t) return;
+    const parsed = updateTableVisibilitySchema.safeParse(req.body ?? {});
+    if (!parsed.success) return fail(res, 400, parsed.error.issues[0]?.message ?? 'invalid visibility');
+    updateTableVisibility(t.id, parsed.data.visibility);
+    ok(res, { ...t, visibility: parsed.data.visibility });
   });
 
   app.delete('/api/tables/:id', async (req, res) => {
@@ -494,7 +520,7 @@ export function registerApiRoutes(app: Express) {
 
   app.get('/api/tables/:id/rows', async (req, res) => {
     const t = getTable(req.params.id);
-    if (!t || !canReadTable(t, req.user.id, req.user.isAdmin)) return fail(res, 404, 'unknown table');
+    if (!t || !canReadTable(t, req.user)) return fail(res, 404, 'unknown table');
     let parsedFilter: unknown = [];
     try {
       parsedFilter = req.query.filter ? JSON.parse(String(req.query.filter)) : [];
@@ -550,7 +576,7 @@ export function registerApiRoutes(app: Express) {
 
   app.get('/api/tables/:id/rows/:rowId/history', async (req, res) => {
     const t = getTable(req.params.id);
-    if (!t || !canReadTable(t, req.user.id, req.user.isAdmin)) return fail(res, 404, 'unknown table');
+    if (!t || !canReadTable(t, req.user)) return fail(res, 404, 'unknown table');
     if (!t.capabilities.rowHistory) return fail(res, 400, 'driver has no row history');
     ok(
       res,
@@ -561,7 +587,7 @@ export function registerApiRoutes(app: Express) {
   // The OLAP slice: GROUP BY dimensions × aggregated measures.
   app.post('/api/tables/:id/aggregate', async (req, res) => {
     const t = getTable(req.params.id);
-    if (!t || !canReadTable(t, req.user.id, req.user.isAdmin)) return fail(res, 404, 'unknown table');
+    if (!t || !canReadTable(t, req.user)) return fail(res, 404, 'unknown table');
     if (!t.capabilities.aggregate) return fail(res, 400, 'driver cannot aggregate');
     const parsed = aggregateQuerySchema.safeParse(req.body ?? {});
     if (!parsed.success) return fail(res, 400, parsed.error.issues[0]?.message ?? 'invalid aggregate query');

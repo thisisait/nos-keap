@@ -18,7 +18,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { tablesApi } from '@/services/api/tables';
-import type { ColumnDef, ColumnKind, ColumnRole, TableDriver } from '../../shared/contracts/table';
+import type {
+  ColumnDef,
+  ColumnKind,
+  ColumnRole,
+  TableDriver,
+  TableVisibilityContract,
+} from '../../shared/contracts/table';
 
 const COLUMN_KINDS: ColumnKind[] = [
   'text',
@@ -34,6 +40,13 @@ const COLUMN_KINDS: ColumnKind[] = [
   'user',
 ];
 const ROLES: ColumnRole[] = ['attribute', 'dimension', 'measure'];
+const VISIBILITIES: TableVisibilityContract[] = [
+  'private',
+  'tier-managers',
+  'tier-users',
+  'tier-guests',
+  'shared',
+];
 
 interface DraftColumn {
   key: string;
@@ -63,6 +76,7 @@ export default function Tables() {
   const [title, setTitle] = useState('');
   const [driver, setDriver] = useState<TableDriver>('libsql');
   const [anchor, setAnchor] = useState('');
+  const [visibility, setVisibility] = useState<TableVisibilityContract>('private');
   const [columns, setColumns] = useState<DraftColumn[]>([{ ...EMPTY_COLUMN }]);
 
   const { data: tables = [] } = useQuery({ queryKey: ['tables'], queryFn: tablesApi.list });
@@ -86,7 +100,7 @@ export default function Tables() {
         driver,
         schema: { columns: schemaColumns },
         anchors: anchor.trim() ? [anchor.trim()] : [],
-        visibility: 'private',
+        visibility,
       });
     },
     onSuccess: () => {
@@ -94,6 +108,7 @@ export default function Tables() {
       queryClient.invalidateQueries({ queryKey: ['graph'] });
       setCreating(false);
       setTitle('');
+      setVisibility('private');
       setColumns([{ ...EMPTY_COLUMN }]);
       toast({ title: t('common.success'), description: t('tables.created') });
     },
@@ -107,6 +122,17 @@ export default function Tables() {
       queryClient.invalidateQueries({ queryKey: ['tables'] });
       toast({ title: t('common.success'), description: t('tables.deleted') });
     },
+  });
+
+  const share = useMutation({
+    mutationFn: ({ id, visibility }: { id: string; visibility: TableVisibilityContract }) =>
+      tablesApi.setVisibility(id, visibility),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tables'] });
+      toast({ title: t('common.success'), description: t('tables.shareUpdated') });
+    },
+    onError: (e) =>
+      toast({ title: t('common.error'), description: e instanceof Error ? e.message : t('tables.shareFailed'), variant: 'destructive' }),
   });
 
   const setCol = (i: number, patch: Partial<DraftColumn>) =>
@@ -232,6 +258,25 @@ export default function Tables() {
                 </Button>
               </div>
 
+              <div>
+                <Label htmlFor="tbl-visibility">{t('tables.shareScope')}</Label>
+                <select
+                  id="tbl-visibility"
+                  className="mt-1 h-10 w-full rounded-md border border-input bg-background px-2 text-sm md:w-72"
+                  value={visibility}
+                  onChange={(e) => setVisibility(e.target.value as TableVisibilityContract)}
+                >
+                  {VISIBILITIES.map((v) => (
+                    <option key={v} value={v}>
+                      {t(`tables.visibility.${v}`)}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {t(`tables.visibilityHint.${visibility}`)}
+                </p>
+              </div>
+
               <div className="flex gap-2">
                 <Button
                   disabled={create.isPending || !title.trim() || !columns.some((c) => c.key && c.label)}
@@ -269,9 +314,27 @@ export default function Tables() {
                       {t(`tables.drivers.${tbl.driver}.name`)}
                     </p>
                   </Link>
-                  <Button variant="ghost" size="sm" onClick={() => remove.mutate(tbl.id)}>
-                    <Trash className="h-4 w-4" />
-                  </Button>
+                  <div className="flex shrink-0 flex-col items-end gap-1">
+                    <Button variant="ghost" size="sm" onClick={() => remove.mutate(tbl.id)}>
+                      <Trash className="h-4 w-4" />
+                    </Button>
+                    {/* Owner/admin can re-scope sharing after creation (PATCH). */}
+                    <select
+                      className="h-7 max-w-[8.5rem] rounded-md border border-input bg-background px-1 text-xs"
+                      value={VISIBILITIES.includes(tbl.visibility as TableVisibilityContract) ? tbl.visibility : 'private'}
+                      onChange={(e) =>
+                        share.mutate({ id: tbl.id, visibility: e.target.value as TableVisibilityContract })
+                      }
+                      title={t('tables.shareScope')}
+                      aria-label={t('tables.shareScope')}
+                    >
+                      {VISIBILITIES.map((v) => (
+                        <option key={v} value={v}>
+                          {t(`tables.visibility.${v}`)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </CardContent>
               </Card>
             ))}

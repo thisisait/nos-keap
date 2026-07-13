@@ -24,6 +24,12 @@ import * as db from './db';
 import { markCorpusDirty } from './search';
 import { extractRefs } from './objects';
 import { rustfsStore } from './tables-rustfs';
+import {
+  tierRank,
+  visibilityGrantsRead,
+  readableVisibilities,
+  type TableVisibility,
+} from './rbac';
 
 type ObjectRefLike = { kind: string; ref: string };
 import {
@@ -77,15 +83,28 @@ export function mapTable(row: any): Omit<TableInfo, 'capabilities'> {
   };
 }
 
-export function listTables(userId: string, seeAll: boolean): TableInfo[] {
+/** The identity fields table access decisions need (subset of KeapUser). */
+export interface TableActor {
+  id: string;
+  isAdmin: boolean;
+  groups: string[];
+}
+
+export function listTables(actor: TableActor): TableInfo[] {
   const d = db.getDb();
-  const rows = seeAll
-    ? d.prepare('SELECT * FROM data_tables ORDER BY updated_at DESC').all()
-    : d
-        .prepare(
-          "SELECT * FROM data_tables WHERE user_id = ? OR visibility = 'shared' ORDER BY updated_at DESC",
-        )
-        .all(userId);
+  if (actor.isAdmin) {
+    const rows = d.prepare('SELECT * FROM data_tables ORDER BY updated_at DESC').all();
+    return (rows as any[]).map((r) => withCapabilities(mapTable(r)));
+  }
+  // Own tables OR any visibility scope the caller's tier is allowed to read
+  // ('shared' is always in the list, so the IN() is never empty).
+  const vis = readableVisibilities(tierRank(actor.groups));
+  const placeholders = vis.map(() => '?').join(',');
+  const rows = d
+    .prepare(
+      `SELECT * FROM data_tables WHERE user_id = ? OR visibility IN (${placeholders}) ORDER BY updated_at DESC`,
+    )
+    .all(actor.id, ...vis);
   return (rows as any[]).map((r) => withCapabilities(mapTable(r)));
 }
 
@@ -94,8 +113,21 @@ export function getTable(id: string): TableInfo | null {
   return row ? withCapabilities(mapTable(row)) : null;
 }
 
-export function canReadTable(t: TableInfo, userId: string, seeAll: boolean): boolean {
-  return seeAll || t.ownerId === userId || t.visibility === 'shared';
+export function canReadTable(t: TableInfo, actor: TableActor): boolean {
+  if (actor.isAdmin || t.ownerId === actor.id) return true;
+  return visibilityGrantsRead(t.visibility, tierRank(actor.groups));
+}
+
+/** Owner-or-admin — the write/delete gate (tiers govern read, not write). */
+export function canWriteTable(t: TableInfo, actor: TableActor): boolean {
+  return actor.isAdmin || t.ownerId === actor.id;
+}
+
+/** Persist a visibility change (owner/admin only — enforced at the route). */
+export function updateTableVisibility(id: string, visibility: TableVisibility): void {
+  db.getDb()
+    .prepare("UPDATE data_tables SET visibility = ?, updated_at = strftime('%s','now') WHERE id = ?")
+    .run(visibility, id);
 }
 
 /**

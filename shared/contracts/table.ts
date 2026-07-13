@@ -177,6 +177,18 @@ export interface TableCapabilities {
 export const tableDriverSchema = z.enum(['libsql', 'rustfs', 'postgres', 'grist']);
 export type TableDriver = z.infer<typeof tableDriverSchema>;
 
+// Share scope, mapped onto the nOS Authentik tiers (see server/rbac.ts):
+// private = owner+admin only; tier-* = that tier and every tier above it;
+// shared = every authenticated user in the tenant.
+export const tableVisibilitySchema = z.enum([
+  'private',
+  'tier-managers',
+  'tier-users',
+  'tier-guests',
+  'shared',
+]);
+export type TableVisibilityContract = z.infer<typeof tableVisibilitySchema>;
+
 export const createTableRequestSchema = z.object({
   id: z.string().uuid().optional(),
   title: z.string().min(1).max(160),
@@ -185,9 +197,15 @@ export const createTableRequestSchema = z.object({
   schema: tableSchemaSchema,
   /** taxonomy anchors — where the table's card hangs in the universe */
   anchors: z.array(z.string()).max(8).default([]),
-  visibility: z.enum(['private', 'shared']).default('private'),
+  visibility: tableVisibilitySchema.default('private'),
 });
 export type CreateTableRequest = z.infer<typeof createTableRequestSchema>;
+
+/** PATCH /api/tables/:id — move a table between share scopes after creation. */
+export const updateTableVisibilitySchema = z.object({
+  visibility: tableVisibilitySchema,
+});
+export type UpdateTableVisibility = z.infer<typeof updateTableVisibilitySchema>;
 
 export interface TableInfo {
   id: string;

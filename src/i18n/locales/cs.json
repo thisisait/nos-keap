@@ -403,6 +403,23 @@
       "attribute": "atribut",
       "dimension": "dimenze",
       "measure": "míra"
+    },
+    "shareScope": "Rozsah sdílení",
+    "shareUpdated": "Rozsah sdílení upraven",
+    "shareFailed": "Sdílení se nepodařilo změnit",
+    "visibility": {
+      "private": "Soukromé (jen ty + admini)",
+      "tier-managers": "Manažeři a výš",
+      "tier-users": "Uživatelé a výš",
+      "tier-guests": "Hosté a výš",
+      "shared": "Všichni (celý tenant)"
+    },
+    "visibilityHint": {
+      "private": "Tabulku vidíš jen ty a administrátoři.",
+      "tier-managers": "Viditelné manažerům a administrátorům.",
+      "tier-users": "Viditelné uživatelům, manažerům a administrátorům.",
+      "tier-guests": "Viditelné všem s přístupovým tierem včetně hostů.",
+      "shared": "Ke čtení pro každého přihlášeného uživatele v tomto tenantu."
     }
   }
 }

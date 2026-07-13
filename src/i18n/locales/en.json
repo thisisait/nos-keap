@@ -403,6 +403,23 @@
       "attribute": "attribute",
       "dimension": "dimension",
       "measure": "measure"
+    },
+    "shareScope": "Share scope",
+    "shareUpdated": "Share scope updated",
+    "shareFailed": "Could not change sharing",
+    "visibility": {
+      "private": "Private (only you + admins)",
+      "tier-managers": "Managers & up",
+      "tier-users": "Users & up",
+      "tier-guests": "Guests & up",
+      "shared": "Everyone (whole tenant)"
+    },
+    "visibilityHint": {
+      "private": "Only you and administrators can see this table.",
+      "tier-managers": "Visible to managers and administrators.",
+      "tier-users": "Visible to users, managers and administrators.",
+      "tier-guests": "Visible to everyone with an access tier, including guests.",
+      "shared": "Readable by every signed-in user in this tenant."
     }
   }
 }
