@@ -18,12 +18,15 @@ export interface TaxonomyMetadata {
   icon: string;
   links: string;
   translations: string;
+  /** Content ref into an nOS service, e.g. "kiwix:wikipedia_en" */
+  requiredData?: string;
   data?: any;
   updatedAt?: number;
 }
 
 export interface ApiTaxonomyMetadata {
   id: string;
+  userId?: string;
   title: string;
   description?: string;
   url?: string;
@@ -36,7 +39,7 @@ export interface ApiTaxonomyMetadata {
 export interface HomepageTile {
   id: string;
   title: string;
-  type: 'progress' | 'custom-todo' | 'recent-cities' | 'recent-pages' | 'progress-stats';
+  type: 'progress' | 'custom-todo' | 'recent-cities' | 'recent-pages' | 'progress-stats' | 'explore-map';
   position: number;
   visible: boolean;
   config?: any;
@@ -59,6 +62,22 @@ export interface TodoItem {
   id: string;
   title: string;
   completed: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
+export interface KnowledgeObject {
+  id: string;
+  userId?: string;
+  type: string;
+  title: string;
+  description?: string;
+  resource?: string;
+  tags?: string[];
+  frontmatter?: Record<string, unknown>;
+  body?: string;
+  links?: Array<{ kind: 'node' | 'object' | 'service' | 'url'; ref: string }>;
+  visibility?: string;
   createdAt: number;
   updatedAt: number;
 }

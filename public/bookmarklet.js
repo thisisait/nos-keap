@@ -3,8 +3,8 @@
 
 javascript:(function(){
     // Pokud už je script načten, jen znovu otevřeme panel
-    if(window.DataHoarderCompanion) {
-        const existing = document.getElementById('dh-companion-panel');
+    if(window.DataHoardingCompanion) {
+        const existing = document.getElementById('data-hoarding-companion');
         if(existing) {
             existing.style.display = existing.style.display === 'none' ? 'block' : 'none';
             return;
@@ -13,7 +13,7 @@ javascript:(function(){
     
     // Jinak načteme script z vaší aplikace
     const script = document.createElement('script');
-    script.src = 'http://localhost:42069/companion-script.js'; // Změňte na vaši doménu
+    script.src = 'http://localhost:8080/companion-script.js'; // Change to your KEAP host
     script.onload = function() {
         console.log('Data Hoarder Companion načten!');
     };

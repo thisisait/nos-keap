@@ -17,68 +17,23 @@ interface TaxonomySelectProps {
 export const TaxonomySelect: React.FC<TaxonomySelectProps> = ({
   value,
   onChange,
-  placeholder = 'Vyberte položku taxonomie...'
+  placeholder = 'Select a taxonomy item…'
 }) => {
-  // Generate hierarchical options with proper IDs
+  // Hierarchical options read the REAL node ids from the dataset — the old
+  // version re-derived ids from array indexes, which silently diverged from
+  // the canonical ids the rest of the app (and the agent API) use.
   const generateOptions = (): TaxonomyOption[] => {
     const options: TaxonomyOption[] = [];
-    let categoryIndex = 1;
 
-    Object.entries(taxonomyData).forEach(([categoryKey, category]) => {
-      const categoryId = String(categoryIndex).padStart(2, '0');
-      
-      options.push({
-        value: categoryId,
-        label: `${categoryId} - ${category.name}`,
-        level: 0
-      });
+    const walk = (node: any, level: number) => {
+      options.push({ value: node.id, label: `${node.id} - ${node.name}`, level });
+      Object.values(node.subcategories ?? {}).forEach((child: any) => walk(child, level + 1));
+      (node.items ?? []).forEach((item: any) =>
+        options.push({ value: item.id, label: `${item.id} - ${item.name}`, level: level + 1 }),
+      );
+    };
 
-      let subcategoryIndex = 1;
-      Object.entries(category.subcategories).forEach(([subcatKey, subcat]) => {
-        const subcatId = `${categoryId}.${String(subcategoryIndex).padStart(2, '0')}`;
-        
-        options.push({
-          value: subcatId,
-          label: `${subcatId} - ${subcat.name}`,
-          level: 1
-        });
-
-        if (subcat.subcategories) {
-          let subSubcategoryIndex = 1;
-          Object.entries(subcat.subcategories).forEach(([subSubcatKey, subSubcat]) => {
-            const subSubcatId = `${subcatId}.${String(subSubcategoryIndex).padStart(2, '0')}`;
-            
-            options.push({
-              value: subSubcatId,
-              label: `${subSubcatId} - ${subSubcat.name}`,
-              level: 2
-            });
-
-            if (subSubcat.items) {
-              let itemIndex = 1;
-              subSubcat.items.forEach((item) => {
-                const itemId = `${subSubcatId}.${String(itemIndex).padStart(2, '0')}`;
-                
-                options.push({
-                  value: itemId,
-                  label: `${itemId} - ${item.name}`,
-                  level: 3
-                });
-                
-                itemIndex++;
-              });
-            }
-
-            subSubcategoryIndex++;
-          });
-        }
-
-        subcategoryIndex++;
-      });
-
-      categoryIndex++;
-    });
-
+    Object.values(taxonomyData).forEach((category: any) => walk(category, 0));
     return options;
   };
 

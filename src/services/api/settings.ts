@@ -1,16 +1,7 @@
-export const settingsApi = {
-  saveSetting: async (key: string, value: string) => {
-    const response = await fetch('/api/settings', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ key, value })
-    });
-    if (!response.ok) throw new Error('Failed to save setting');
-  },
+import { apiFetch } from './client';
 
-  getSetting: async (key: string): Promise<string | null> => {
-    const response = await fetch(`/api/settings/${key}`);
-    if (!response.ok) throw new Error('Failed to get setting');
-    return response.json();
-  }
+export const settingsApi = {
+  saveSetting: (key: string, value: string) =>
+    apiFetch('/api/settings', { method: 'POST', body: JSON.stringify({ key, value }) }),
+  getSetting: (key: string) => apiFetch<string | null>(`/api/settings/${encodeURIComponent(key)}`),
 };

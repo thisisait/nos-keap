@@ -1,51 +1,33 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { StickyNote, Plus, X } from 'lucide-react';
-
-interface TodoItem {
-  id: string;
-  text: string;
-  completed: boolean;
-}
+import { todosApi } from '@/services/api/todos';
 
 interface CustomTodoTileProps {
   title?: string;
-  config?: any;
 }
 
-export const CustomTodoTile: React.FC<CustomTodoTileProps> = ({ 
-  title = 'TODO poznámky',
-  config = {}
-}) => {
-  const [todos, setTodos] = useState<TodoItem[]>([
-    { id: '1', text: 'Dokončit kapitolu o algebře', completed: false },
-    { id: '2', text: 'Přečíst článek o historii', completed: true },
-  ]);
+export const CustomTodoTile: React.FC<CustomTodoTileProps> = ({ title }) => {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
   const [newTodo, setNewTodo] = useState('');
 
+  const { data: todos = [] } = useQuery({ queryKey: ['todos'], queryFn: todosApi.getTodos });
+
+  const invalidate = () => queryClient.invalidateQueries({ queryKey: ['todos'] });
+  const save = useMutation({ mutationFn: todosApi.saveTodo, onSettled: invalidate });
+  const remove = useMutation({ mutationFn: todosApi.deleteTodo, onSettled: invalidate });
+
   const addTodo = () => {
-    if (newTodo.trim()) {
-      const todo: TodoItem = {
-        id: Date.now().toString(),
-        text: newTodo.trim(),
-        completed: false
-      };
-      setTodos([...todos, todo]);
-      setNewTodo('');
-    }
-  };
-
-  const toggleTodo = (id: string) => {
-    setTodos(prev => prev.map(todo => 
-      todo.id === id ? { ...todo, completed: !todo.completed } : todo
-    ));
-  };
-
-  const removeTodo = (id: string) => {
-    setTodos(prev => prev.filter(todo => todo.id !== id));
+    const text = newTodo.trim();
+    if (!text) return;
+    save.mutate({ id: crypto.randomUUID(), title: text, completed: false });
+    setNewTodo('');
   };
 
   return (
@@ -53,11 +35,14 @@ export const CustomTodoTile: React.FC<CustomTodoTileProps> = ({
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-base">
           <StickyNote className="w-4 h-4" />
-          {title}
+          {title ?? t('tiles.todos.title')}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="space-y-2">
+          {todos.length === 0 && (
+            <p className="text-sm text-muted-foreground py-2">{t('tiles.todos.empty')}</p>
+          )}
           {todos.map((todo) => (
             <div
               key={todo.id}
@@ -65,32 +50,37 @@ export const CustomTodoTile: React.FC<CustomTodoTileProps> = ({
             >
               <Checkbox
                 checked={todo.completed}
-                onCheckedChange={() => toggleTodo(todo.id)}
+                onCheckedChange={() =>
+                  save.mutate({ id: todo.id, title: todo.title, completed: !todo.completed })
+                }
               />
-              <span className={`flex-1 text-sm ${todo.completed ? 'line-through text-muted-foreground' : ''}`}>
-                {todo.text}
+              <span
+                className={`flex-1 text-sm ${todo.completed ? 'line-through text-muted-foreground' : ''}`}
+              >
+                {todo.title}
               </span>
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => removeTodo(todo.id)}
-                className="opacity-0 group-hover:opacity-100 h-6 w-6 p-0"
+                onClick={() => remove.mutate(todo.id)}
+                aria-label={t('common.delete')}
+                className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 h-6 w-6 p-0"
               >
                 <X className="w-3 h-3" />
               </Button>
             </div>
           ))}
         </div>
-        
+
         <div className="flex gap-2 pt-2 border-t border-border">
           <Input
-            placeholder="Nová poznámka..."
+            placeholder={t('tiles.todos.placeholder')}
             value={newTodo}
             onChange={(e) => setNewTodo(e.target.value)}
-            onKeyPress={(e) => e.key === 'Enter' && addTodo()}
+            onKeyDown={(e) => e.key === 'Enter' && addTodo()}
             className="text-sm"
           />
-          <Button onClick={addTodo} size="sm">
+          <Button onClick={addTodo} size="sm" aria-label={t('common.add')}>
             <Plus className="w-3 h-3" />
           </Button>
         </div>

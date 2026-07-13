@@ -1,0 +1,104 @@
+---
+# ==============================================================================
+# KEAP — nOS Tier-2 app manifest (drop into nOS `apps/keap.yml`).
+#
+# This is the FALLBACK fast-path (the destination is the Tier-1 role
+# `pazny.keap`, see ../plugin/ and rework/COMPLETION_PROPOSAL.md §4): onboarded
+# by nOS's `pazny.apps_runner` with zero changes to the nOS playbook. Traefik
+# routing, Authentik SSO, secrets, GDPR register entry, observability and
+# health-wait are all derived from this file. No registry image is published —
+# the compose fragment uses a `build:` context (operator-built images are
+# explicitly tolerated by nos_app_parser.py:382-384).
+#
+# Onboard on an nOS host:
+#   cp keap.yml <nOS>/apps/keap.yml
+#   python3 -m module_utils.nos_app_parser apps/keap.yml   # smoke-parse
+#   ansible-playbook main.yml --tags apps
+#
+# Schema: state/schema/app.schema.json   Parser: module_utils/nos_app_parser.py
+# ==============================================================================
+
+meta:
+  name: "keap"
+  version: "1.0.0"
+  summary: "Knowledge Explorer and Preserver — gamified taxonomy & knowledge management."
+  homepage: "https://github.com/budweis-dev/knowledge-explorer-and-preserver"
+  category: "knowledge"
+  ports: [8080]
+  tags: ["self-hosted", "knowledge", "taxonomy", "education"]
+
+# ── GDPR Article 30 — MANDATORY (parser rejects without a complete block) ─────
+gdpr:
+  purpose: |
+    Stores per-user knowledge-exploration progress: which taxonomy nodes a user
+    has completed, personal todos, saved page metadata (bookmarks captured via
+    the companion panel), and homepage layout preferences. Identity comes from
+    the nOS Authentik SSO session; KEAP stores no passwords.
+  legal_basis: "legitimate_interests"
+  data_categories:
+    - "email"              # from Authentik header, used as the user key
+    - "behavioural_data"   # completion/progress, saved bookmarks
+  data_subjects:
+    - "end_users"
+  retention_days: 365
+  processors: []
+  transfers_outside_eu: false
+  # Erasure hook: delete all rows for a user id (username/email) on DSAR.
+  # dsar_endpoint: "docker compose -p apps exec keap node dist-server/erase.js"
+
+# ── SSO — header-OIDC via Authentik forward-auth outpost ──────────────────────
+# `mode: header_oidc` so the outpost injects X-Authentik-Username/Email/Groups;
+# KEAP reads them (server/identity.ts) to scope progress per user. This is the
+# idiomatic choice for an app we control the source of AND that wants per-user
+# state, without maintaining a service-side OIDC client.
+authentik:
+  mode: header_oidc
+  provider_type: forward_auth
+  client_id: nos-keap
+  client_secret: "{{ global_password_prefix }}_pw_oidc_keap"
+  slug: keap
+  name: 'KEAP — Knowledge Explorer'
+  enabled: true
+  launch_url: "https://keap.apps.{{ tenant_domain | default('dev.local') }}"
+  tier: 3   # user-tier (any signed-in user gets their own knowledge space)
+
+# ── Compose fragment ──────────────────────────────────────────────────────────
+compose:
+  services:
+    keap:
+      # Built locally from a checkout of this repo (no registry publish).
+      # Adjust `context` to wherever the operator cloned the repo.
+      build:
+        context: "../files/keap"
+      image: "nos/keap:1.0.0"
+      container_name: keap
+      restart: unless-stopped
+      # Bind loopback only — Traefik is the sole edge and enforces the SSO gate.
+      ports:
+        - "127.0.0.1:8080:8080"
+      environment:
+        - "PORT=8080"
+        - "KEAP_DATA_DIR=/data"
+        - "KEAP_TENANT_DOMAIN=$SERVICE_FQDN_KEAP"
+      volumes:
+        - keap_data:/data
+      networks:
+        - apps_net
+      healthcheck:
+        test: ["CMD-SHELL", "wget -q -O - http://127.0.0.1:8080/api/health || exit 1"]
+        interval: 30s
+        timeout: 5s
+        retries: 5
+        start_period: 20s
+      mem_limit: 256m
+      cpus: 0.5
+
+  volumes:
+    keap_data:
+
+# ── Routing — Authentik forward-auth gate, user-tier ──────────────────────────
+nginx:
+  subdomain: "keap"
+  upstream_port: 8080
+  auth: "proxy"
+  rbac_tier: 3

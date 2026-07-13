@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "taxonomy-brief output contract",
+  "description": "Body of POST /agent/v1/taxonomy/brief. Every item becomes a promotions row kind='brief' — moderated; approval merges into the curated note layer (taxonomy_metadata.data.brief*).",
+  "type": "object",
+  "required": ["items"],
+  "additionalProperties": false,
+  "properties": {
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "required": ["nodeId", "briefEn", "briefCs"],
+        "additionalProperties": false,
+        "properties": {
+          "nodeId": {
+            "type": "string",
+            "pattern": "^[0-9]{2}(\\.[0-9]{2})*$"
+          },
+          "briefEn": {
+            "type": "string",
+            "minLength": 300,
+            "maxLength": 12000,
+            "description": "Markdown; >=2 blank-line-separated paragraphs; >=1 [[node-id]] vazba (validated against the live tree); external [text](url) links allowed"
+          },
+          "briefCs": {
+            "type": "string",
+            "minLength": 200,
+            "maxLength": 12000,
+            "description": "Czech translation carrying the same paragraphs, vazby and links"
+          },
+          "rationale": {
+            "type": "string",
+            "maxLength": 1000
+          }
+        }
+      }
+    }
+  }
+}
