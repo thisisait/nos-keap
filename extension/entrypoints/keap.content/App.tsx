@@ -13,6 +13,23 @@ import {
 
 import { ExternalLink, LogIn, LogOut, RefreshCw, Save, Search, Settings, X } from 'lucide-react';
 
+// Shared control styles — one source of truth for buttons/inputs so every
+// affordance is consistent and accessible: keyboard focus-visible rings
+// (never a bare outline:none), hover + active/pressed states, disabled
+// cursor, and smooth transitions.
+const UI = {
+  btn: 'inline-flex items-center justify-center gap-1 rounded-md text-xs font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60 disabled:opacity-50 disabled:cursor-not-allowed',
+  btnPrimary: 'bg-blue-600 px-3 py-1.5 text-white shadow-sm hover:bg-blue-700 active:bg-blue-800',
+  btnSecondary: 'bg-slate-200 px-3 py-1.5 text-slate-700 hover:bg-slate-300 active:bg-slate-400/70',
+  btnIcon:
+    'inline-flex items-center justify-center rounded-md p-1.5 text-slate-600 transition-colors hover:bg-white/30 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/60',
+  btnLink:
+    'inline-flex items-center gap-1 rounded text-blue-600 transition-colors hover:text-blue-700 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40',
+  input:
+    'w-full rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-900 transition-colors placeholder:text-slate-400 focus-visible:border-blue-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30 disabled:opacity-50',
+  label: 'mb-0.5 block text-xs font-medium text-slate-600',
+};
+
 type ExtensionState = import('~/utils/storage').ExtensionState;
 
 type PageContext = {
@@ -422,7 +439,7 @@ export default function App() {
           <button
             type="button"
             onClick={() => setTab('settings')}
-            className="rounded p-1 text-slate-600 hover:bg-white/20 hover:text-slate-900"
+            className={UI.btnIcon}
             title="Settings"
           >
             <Settings className="h-4 w-4" />
@@ -430,7 +447,7 @@ export default function App() {
           <button
             type="button"
             onClick={() => setOpen(false)}
-            className="rounded p-1 text-slate-600 hover:bg-white/20 hover:text-slate-900"
+            className={UI.btnIcon}
             title="Close"
           >
             <X className="h-4 w-4" />
@@ -538,7 +555,7 @@ function ContextTab({
           type="button"
           onClick={onResolve}
           disabled={loading || !state?.token}
-          className="flex items-center gap-1 rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className={`${UI.btn} ${UI.btnPrimary}`}
         >
           <Search className="h-3 w-3" /> Resolve context
         </button>
@@ -594,7 +611,7 @@ function ResultItem({ item, onOpen }: { item: KeapResult; onOpen: (url: string) 
         <button
           type="button"
           onClick={() => onOpen(url)}
-          className="mt-1 inline-flex items-center gap-1 text-blue-600 hover:underline"
+          className={`${UI.btnLink} mt-1`}
         >
           <ExternalLink className="h-3 w-3" /> Open
         </button>
@@ -619,40 +636,40 @@ function CaptureTab({
   return (
     <form onSubmit={onSubmit} className="space-y-2">
       <div>
-        <label className="block text-xs font-medium text-slate-700">Title</label>
+        <label className={UI.label}>Title</label>
         <input
           type="text"
           value={capture.title}
           onChange={(e) => setCapture({ ...capture, title: e.target.value })}
-          className="w-full rounded border border-slate-300 px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none"
+          className={UI.input}
           placeholder={page.title}
           required
         />
       </div>
       <div>
-        <label className="block text-xs font-medium text-slate-700">Text</label>
+        <label className={UI.label}>Text</label>
         <textarea
           value={capture.text}
           onChange={(e) => setCapture({ ...capture, text: e.target.value })}
-          className="h-20 w-full resize-none rounded border border-slate-300 px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none"
+          className={`${UI.input} h-20 resize-none`}
           placeholder="Text or selection"
           required
         />
       </div>
       <div>
-        <label className="block text-xs font-medium text-slate-700">Tags</label>
+        <label className={UI.label}>Tags</label>
         <input
           type="text"
           value={capture.tags}
           onChange={(e) => setCapture({ ...capture, tags: e.target.value })}
-          className="w-full rounded border border-slate-300 px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none"
+          className={UI.input}
           placeholder="comma, separated"
         />
       </div>
       <button
         type="submit"
         disabled={loading}
-        className="flex items-center gap-1 rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+        className={`${UI.btn} ${UI.btnPrimary}`}
       >
         <Save className="h-3 w-3" /> Save capture
       </button>
@@ -683,14 +700,14 @@ function SearchTab({
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="flex-1 rounded border border-slate-300 px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none"
+          className={`${UI.input} flex-1`}
           placeholder="Search KEAP..."
           required
         />
         <button
           type="submit"
           disabled={loading}
-          className="rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+          className={`${UI.btn} ${UI.btnPrimary}`}
         >
           <Search className="h-3 w-3" />
         </button>
@@ -825,7 +842,7 @@ function SettingsTab({
             <button
               type="button"
               onClick={onUnpair}
-              className="flex items-center gap-1 rounded bg-slate-200 px-2 py-1 text-xs text-slate-700 hover:bg-slate-300"
+              className={`${UI.btn} ${UI.btnSecondary}`}
             >
               <LogOut className="h-3 w-3" /> Unpair
             </button>
@@ -835,7 +852,7 @@ function SettingsTab({
           <button
             type="button"
             onClick={() => onOpen('')}
-            className="mt-2 inline-flex items-center gap-1 text-blue-600 hover:underline"
+            className={`${UI.btnLink} mt-2`}
           >
             <ExternalLink className="h-3 w-3" /> Open KEAP
           </button>
@@ -852,7 +869,7 @@ function SettingsTab({
             <button
               type="button"
               onClick={() => onOpen(pending.verificationPath)}
-              className="rounded bg-blue-600 px-2 py-1 text-xs text-white hover:bg-blue-700"
+              className={`${UI.btn} ${UI.btnPrimary}`}
             >
               Open KEAP
             </button>
@@ -860,7 +877,7 @@ function SettingsTab({
               type="button"
               onClick={onCheckPairing}
               disabled={loading}
-              className="flex items-center gap-1 rounded bg-slate-200 px-2 py-1 text-xs text-slate-700 hover:bg-slate-300 disabled:opacity-50"
+              className={`${UI.btn} ${UI.btnSecondary}`}
             >
               <RefreshCw className="h-3 w-3" /> Check approval
             </button>
@@ -871,30 +888,30 @@ function SettingsTab({
       {!state?.token && (
         <form onSubmit={onStartPairing} className="space-y-2">
           <div>
-            <label className="block text-xs font-medium text-slate-700">Instance URL</label>
+            <label className={UI.label}>Instance URL</label>
             <input
               type="text"
               value={pairForm.instanceUrl}
               onChange={(e) => setPairForm({ ...pairForm, instanceUrl: e.target.value })}
-              className="w-full rounded border border-slate-300 px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none"
+              className={UI.input}
               placeholder="https://keap.example.com or http://localhost:8080"
               required
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-slate-700">Client name</label>
+            <label className={UI.label}>Client name</label>
             <input
               type="text"
               value={pairForm.clientName}
               onChange={(e) => setPairForm({ ...pairForm, clientName: e.target.value })}
-              className="w-full rounded border border-slate-300 px-2 py-1.5 text-xs focus:border-blue-500 focus:outline-none"
+              className={UI.input}
               required
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="flex items-center gap-1 rounded bg-blue-600 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className={`${UI.btn} ${UI.btnPrimary}`}
           >
             <LogIn className="h-3 w-3" /> Start pairing
           </button>
