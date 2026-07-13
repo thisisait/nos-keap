@@ -55,6 +55,11 @@ COPY --from=build /app/deploy/seed-fixtures.mjs ./deploy/seed-fixtures.mjs
 COPY --from=build /app/deploy/import-toe.mjs ./deploy/import-toe.mjs
 COPY --from=build /app/deploy/toe-concept-graph.json ./deploy/toe-concept-graph.json
 COPY --from=build /app/deploy/toe-blocks.json ./deploy/toe-blocks.json
+# Generalized domain importer (`node deploy/import-domain.mjs <domain>` reads
+# deploy/<domain>-import.json) + the per-domain bundles it ingests. Same raw-SQL
+# + container-restart materialization contract as import-toe.mjs.
+COPY --from=build /app/deploy/import-domain.mjs ./deploy/import-domain.mjs
+COPY --from=build /app/deploy/math-import.json ./deploy/math-import.json
 # /data must exist and belong to the runtime user BEFORE the VOLUME
 # declaration — an anonymous volume inherits these permissions; without the
 # chown the non-root process gets SQLITE_CANTOPEN on first boot.

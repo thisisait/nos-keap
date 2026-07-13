@@ -1,0 +1,2690 @@
+{
+ "domain": "mathematics",
+ "ontology": "MSC2020",
+ "ontology_url": "https://msc2020.org/",
+ "license": "CC-BY-NC-SA (MSC2020, zbMATH+MR)",
+ "root": {
+  "id": "02.01.04",
+  "parent": "02.01",
+  "name": "Mathematical Disciplines (MSC2020)",
+  "description": "The mathematical sciences organized by the Mathematics Subject Classification 2020 — 52 core-mathematics disciplines from number theory and algebraic geometry through functional analysis, topology, probability and numerical analysis. Physics-applied MSC classes live in the Physics cluster; this branch is pure and applied mathematics proper."
+ },
+ "pillars": [
+  {
+   "id": "02.01.04.01",
+   "msc": "00-XX",
+   "name": "General and overarching topics; collections",
+   "scope": null,
+   "concepts": [
+    {
+     "msc": "00Axx",
+     "name": "General and miscellaneous specific topics",
+     "scope": null
+    },
+    {
+     "msc": "00Bxx",
+     "name": "Conference proceedings and collections of articles",
+     "scope": null
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.02",
+   "msc": "01-XX",
+   "name": "History and biography",
+   "scope": null,
+   "concepts": [
+    {
+     "msc": "01Axx",
+     "name": "History of mathematics and mathematicians",
+     "scope": null
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.03",
+   "msc": "03-XX",
+   "name": "Mathematical logic and foundations",
+   "scope": null,
+   "concepts": [
+    {
+     "msc": "03Axx",
+     "name": "Philosophical aspects of logic and foundations",
+     "scope": null
+    },
+    {
+     "msc": "03Bxx",
+     "name": "General logic",
+     "scope": null
+    },
+    {
+     "msc": "03Cxx",
+     "name": "Model theory",
+     "scope": null
+    },
+    {
+     "msc": "03Dxx",
+     "name": "Computability and recursion theory",
+     "scope": null
+    },
+    {
+     "msc": "03Exx",
+     "name": "Set theory",
+     "scope": null
+    },
+    {
+     "msc": "03Fxx",
+     "name": "Proof theory and constructive mathematics",
+     "scope": null
+    },
+    {
+     "msc": "03Gxx",
+     "name": "Algebraic logic",
+     "scope": null
+    },
+    {
+     "msc": "03Hxx",
+     "name": "Nonstandard models",
+     "scope": "Nonstandard models [See also 03C62]"
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.04",
+   "msc": "05-XX",
+   "name": "Combinatorics",
+   "scope": "Combinatorics \\\\{For finite fields, see 11Txx\\\\}",
+   "concepts": [
+    {
+     "msc": "05Axx",
+     "name": "Enumerative combinatorics",
+     "scope": "Enumerative combinatorics \\\\{For enumeration in graph theory, see 05C30\\\\}"
+    },
+    {
+     "msc": "05Bxx",
+     "name": "Designs and configurations",
+     "scope": "Designs and configurations \\\\{For applications of design theory, see 94C30\\\\}"
+    },
+    {
+     "msc": "05Cxx",
+     "name": "Graph theory",
+     "scope": "Graph theory \\\\{For applications of graphs, see 68R10, 81Q30, 81T15, 82B20, 82C20, 90C35, 92E10, 94C15\\\\}"
+    },
+    {
+     "msc": "05Dxx",
+     "name": "Extremal combinatorics",
+     "scope": null
+    },
+    {
+     "msc": "05Exx",
+     "name": "Algebraic combinatorics",
+     "scope": null
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.05",
+   "msc": "06-XX",
+   "name": "Order, lattices, ordered algebraic structures",
+   "scope": "Order, lattices, ordered algebraic structures [See also 18B35]",
+   "concepts": [
+    {
+     "msc": "06Axx",
+     "name": "Ordered sets",
+     "scope": null
+    },
+    {
+     "msc": "06Bxx",
+     "name": "Lattices",
+     "scope": "Lattices [See also 03G10]"
+    },
+    {
+     "msc": "06Cxx",
+     "name": "Modular lattices, complemented lattices",
+     "scope": null
+    },
+    {
+     "msc": "06Dxx",
+     "name": "Distributive lattices",
+     "scope": null
+    },
+    {
+     "msc": "06Exx",
+     "name": "Boolean algebras (Boolean rings)",
+     "scope": "Boolean algebras (Boolean rings) [See also 03G05]"
+    },
+    {
+     "msc": "06Fxx",
+     "name": "Ordered structures",
+     "scope": null
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.06",
+   "msc": "08-XX",
+   "name": "General algebraic systems",
+   "scope": null,
+   "concepts": [
+    {
+     "msc": "08Axx",
+     "name": "Algebraic structures",
+     "scope": "Algebraic structures [See also 03C05]"
+    },
+    {
+     "msc": "08Bxx",
+     "name": "Varieties",
+     "scope": "Varieties [See also 03C05]"
+    },
+    {
+     "msc": "08Cxx",
+     "name": "Other classes of algebras",
+     "scope": null
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.07",
+   "msc": "11-XX",
+   "name": "Number theory",
+   "scope": null,
+   "concepts": [
+    {
+     "msc": "11Axx",
+     "name": "Elementary number theory",
+     "scope": "Elementary number theory \\\\{For analogues in number fields, see 11R04\\\\}"
+    },
+    {
+     "msc": "11Bxx",
+     "name": "Sequences and sets",
+     "scope": null
+    },
+    {
+     "msc": "11Cxx",
+     "name": "Polynomials and matrices",
+     "scope": null
+    },
+    {
+     "msc": "11Dxx",
+     "name": "Diophantine equations",
+     "scope": "Diophantine equations [See also 11Gxx, 14Gxx]"
+    },
+    {
+     "msc": "11Exx",
+     "name": "Forms and linear algebraic groups",
+     "scope": "Forms and linear algebraic groups [See also 19Gxx] \\\\{For quadratic forms in linear algebra, see 15A63\\\\}"
+    },
+    {
+     "msc": "11Fxx",
+     "name": "Discontinuous groups and automorphic forms",
+     "scope": "Discontinuous groups and automorphic forms [See also 11R39, 11S37, 14Gxx, 14Kxx, 22E50, 22E55, 30F35, 32Nxx] \\\\{For relations with quadratic forms, see 11E45\\\\}"
+    },
+    {
+     "msc": "11Gxx",
+     "name": "Arithmetic algebraic geometry (Diophantine geometry)",
+     "scope": "Arithmetic algebraic geometry (Diophantine geometry) [See also 11Dxx, 14Gxx, 14Kxx]"
+    },
+    {
+     "msc": "11Hxx",
+     "name": "Geometry of numbers",
+     "scope": "Geometry of numbers \\\\{For applications in coding theory, see 94B75\\\\}"
+    },
+    {
+     "msc": "11Jxx",
+     "name": "Diophantine approximation, transcendental number theory",
+     "scope": "Diophantine approximation, transcendental number theory [See also 11K60]"
+    },
+    {
+     "msc": "11Kxx",
+     "name": "Probabilistic theory: distribution modulo \\\\(1\\\\); metric theory of algorithms",
+     "scope": null
+    },
+    {
+     "msc": "11Lxx",
+     "name": "Exponential sums and character sums",
+     "scope": "Exponential sums and character sums \\\\{For finite fields, see~11Txx\\\\}"
+    },
+    {
+     "msc": "11Mxx",
+     "name": "Zeta and \\\\(L\\\\)-functions: analytic theory",
+     "scope": null
+    },
+    {
+     "msc": "11Nxx",
+     "name": "Multiplicative number theory",
+     "scope": null
+    },
+    {
+     "msc": "11Pxx",
+     "name": "Additive number theory; partitions",
+     "scope": null
+    },
+    {
+     "msc": "11Rxx",
+     "name": "Algebraic number theory: global fields",
+     "scope": "Algebraic number theory: global fields \\\\{For complex multiplication, see 11G15\\\\}"
+    },
+    {
+     "msc": "11Sxx",
+     "name": "Algebraic number theory: local and \\\\(p\\\\)-adic fields",
+     "scope": null
+    },
+    {
+     "msc": "11Txx",
+     "name": "Finite fields and commutative rings (number-theoretic aspects)",
+     "scope": null
+    },
+    {
+     "msc": "11Uxx",
+     "name": "Connections of number theory and logic",
+     "scope": null
+    },
+    {
+     "msc": "11Yxx",
+     "name": "Computational number theory",
+     "scope": "Computational number theory \\\\{For software etc., see~11-04\\\\}"
+    },
+    {
+     "msc": "11Zxx",
+     "name": "Miscellaneous applications of number theory",
+     "scope": null
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.08",
+   "msc": "12-XX",
+   "name": "Field theory and polynomials",
+   "scope": null,
+   "concepts": [
+    {
+     "msc": "12Dxx",
+     "name": "Real and complex fields",
+     "scope": null
+    },
+    {
+     "msc": "12Exx",
+     "name": "General field theory",
+     "scope": null
+    },
+    {
+     "msc": "12Fxx",
+     "name": "Field extensions",
+     "scope": null
+    },
+    {
+     "msc": "12Gxx",
+     "name": "Homological methods (field theory)",
+     "scope": null
+    },
+    {
+     "msc": "12Hxx",
+     "name": "Differential and difference algebra",
+     "scope": null
+    },
+    {
+     "msc": "12Jxx",
+     "name": "Topological fields",
+     "scope": null
+    },
+    {
+     "msc": "12Kxx",
+     "name": "Generalizations of fields",
+     "scope": null
+    },
+    {
+     "msc": "12Lxx",
+     "name": "Connections between field theory and logic",
+     "scope": null
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.09",
+   "msc": "13-XX",
+   "name": "Commutative algebra",
+   "scope": null,
+   "concepts": [
+    {
+     "msc": "13Axx",
+     "name": "General commutative ring theory",
+     "scope": null
+    },
+    {
+     "msc": "13Bxx",
+     "name": "Commutative ring extensions and related topics",
+     "scope": null
+    },
+    {
+     "msc": "13Cxx",
+     "name": "Theory of modules and ideals in commutative rings",
+     "scope": null
+    },
+    {
+     "msc": "13Dxx",
+     "name": "Homological methods in commutative ring theory",
+     "scope": "Homological methods in commutative ring theory \\\\{For noncommutative rings, see 16Exx; for general categories, see 18Gxx\\\\}"
+    },
+    {
+     "msc": "13Exx",
+     "name": "Chain conditions, finiteness conditions in commutative ring theory",
+     "scope": null
+    },
+    {
+     "msc": "13Fxx",
+     "name": "Arithmetic rings and other special commutative rings",
+     "scope": null
+    },
+    {
+     "msc": "13Gxx",
+     "name": "Integral domains",
+     "scope": null
+    },
+    {
+     "msc": "13Hxx",
+     "name": "Local rings and semilocal rings",
+     "scope": null
+    },
+    {
+     "msc": "13Jxx",
+     "name": "Topological rings and modules",
+     "scope": "Topological rings and modules [See also 16W60, 16W80]"
+    },
+    {
+     "msc": "13Lxx",
+     "name": "Applications of logic to commutative algebra",
+     "scope": "Applications of logic to commutative algebra [See also 03Cxx, 03Hxx]"
+    },
+    {
+     "msc": "13Mxx",
+     "name": "Finite commutative rings",
+     "scope": "Finite commutative rings \\\\{For number-theoretic aspects, see 11Txx\\\\}"
+    },
+    {
+     "msc": "13Nxx",
+     "name": "Differential algebra",
+     "scope": "Differential algebra [See also 12H05, 14F10]"
+    },
+    {
+     "msc": "13Pxx",
+     "name": "Computational aspects and applications of commutative rings",
+     "scope": "Computational aspects and applications of commutative rings [See also 14Qxx, 68W30] \\\\{For software etc., see 13-04\\\\}"
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.10",
+   "msc": "14-XX",
+   "name": "Algebraic geometry",
+   "scope": null,
+   "concepts": [
+    {
+     "msc": "14Axx",
+     "name": "Foundations of algebraic geometry",
+     "scope": null
+    },
+    {
+     "msc": "14Bxx",
+     "name": "Local theory in algebraic geometry",
+     "scope": null
+    },
+    {
+     "msc": "14Cxx",
+     "name": "Cycles and subschemes",
+     "scope": null
+    },
+    {
+     "msc": "14Dxx",
+     "name": "Families, fibrations in algebraic geometry",
+     "scope": null
+    },
+    {
+     "msc": "14Exx",
+     "name": "Birational geometry",
+     "scope": null
+    },
+    {
+     "msc": "14Fxx",
+     "name": "(Co)homology theory in algebraic geometry",
+     "scope": "(Co)homology theory in algebraic geometry [See also 13Dxx]"
+    },
+    {
+     "msc": "14Gxx",
+     "name": "Arithmetic problems in algebraic geometry; Diophantine geometry",
+     "scope": "Arithmetic problems in algebraic geometry; Diophantine geometry [See also 11Dxx, 11Gxx]"
+    },
+    {
+     "msc": "14Hxx",
+     "name": "Curves in algebraic geometry",
+     "scope": null
+    },
+    {
+     "msc": "14Jxx",
+     "name": "Surfaces and higher-dimensional varieties",
+     "scope": "Surfaces and higher-dimensional varieties \\\\{For analytic theory, see 32Jxx\\\\}"
+    },
+    {
+     "msc": "14Kxx",
+     "name": "Abelian varieties and schemes",
+     "scope": null
+    },
+    {
+     "msc": "14Lxx",
+     "name": "Algebraic groups",
+     "scope": "Algebraic groups \\\\{For linear algebraic groups, see 20Gxx; for Lie algebras, see 17B45\\\\}"
+    },
+    {
+     "msc": "14Mxx",
+     "name": "Special varieties",
+     "scope": null
+    },
+    {
+     "msc": "14Nxx",
+     "name": "Projective and enumerative algebraic geometry",
+     "scope": "Projective and enumerative algebraic geometry [See also 51-XX]"
+    },
+    {
+     "msc": "14Pxx",
+     "name": "Real algebraic and real-analytic geometry",
+     "scope": null
+    },
+    {
+     "msc": "14Qxx",
+     "name": "Computational aspects in algebraic geometry",
+     "scope": "Computational aspects in algebraic geometry \\\\{For software etc., see 14-04\\\\} [See also 12-08, 13Pxx, 68W30]"
+    },
+    {
+     "msc": "14Rxx",
+     "name": "Affine geometry",
+     "scope": null
+    },
+    {
+     "msc": "14Txx",
+     "name": "Tropical geometry",
+     "scope": "Tropical geometry [See also 12K10, 14M25, 14N10, 52B20]"
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.11",
+   "msc": "15-XX",
+   "name": "Linear and multilinear algebra; matrix theory",
+   "scope": null,
+   "concepts": [
+    {
+     "msc": "15Axx",
+     "name": "Basic linear algebra",
+     "scope": null
+    },
+    {
+     "msc": "15Bxx",
+     "name": "Special matrices",
+     "scope": null
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.12",
+   "msc": "16-XX",
+   "name": "Associative rings and algebras",
+   "scope": "Associative rings and algebras \\\\{For the commutative case, see 13-XX\\\\}",
+   "concepts": [
+    {
+     "msc": "16Bxx",
+     "name": "General and miscellaneous",
+     "scope": null
+    },
+    {
+     "msc": "16Dxx",
+     "name": "Modules, bimodules and ideals in associative algebras",
+     "scope": null
+    },
+    {
+     "msc": "16Exx",
+     "name": "Homological methods in associative algebras",
+     "scope": "Homological methods in associative algebras \\\\{For commutative rings, see 13Dxx; for general categories, see 18Gxx\\\\}"
+    },
+    {
+     "msc": "16Gxx",
+     "name": "Representation theory of associative rings and algebras",
+     "scope": null
+    },
+    {
+     "msc": "16Hxx",
+     "name": "Associative algebras and orders",
+     "scope": "Associative algebras and orders \\\\{For arithmetic aspects, see 11R52, 11R54, 11S45; for representation theory, see 16G30\\\\}"
+    },
+    {
+     "msc": "16Kxx",
+     "name": "Division rings and semisimple Artin rings",
+     "scope": "Division rings and semisimple Artin rings [See also 12E15, 15A30]"
+    },
+    {
+     "msc": "16Lxx",
+     "name": "Local rings and generalizations",
+     "scope": null
+    },
+    {
+     "msc": "16Nxx",
+     "name": "Radicals and radical properties of associative rings",
+     "scope": null
+    },
+    {
+     "msc": "16Pxx",
+     "name": "Chain conditions, growth conditions, and other forms of finiteness for associative rings and algebras",
+     "scope": null
+    },
+    {
+     "msc": "16Rxx",
+     "name": "Rings with polynomial identity",
+     "scope": null
+    },
+    {
+     "msc": "16Sxx",
+     "name": "Associative rings and algebras arising under various constructions",
+     "scope": null
+    },
+    {
+     "msc": "16Txx",
+     "name": "Hopf algebras, quantum groups and related topics",
+     "scope": null
+    },
+    {
+     "msc": "16Uxx",
+     "name": "Conditions on elements",
+     "scope": null
+    },
+    {
+     "msc": "16Wxx",
+     "name": "Associative rings and algebras with additional structure",
+     "scope": null
+    },
+    {
+     "msc": "16Yxx",
+     "name": "Generalizations",
+     "scope": "Generalizations \\\\{For nonassociative rings, see 17-XX\\\\}"
+    },
+    {
+     "msc": "16Zxx",
+     "name": "Computational aspects of associative rings",
+     "scope": "Computational aspects of associative rings \\\\{For software etc., see 16-04\\\\}"
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.13",
+   "msc": "17-XX",
+   "name": "Nonassociative rings and algebras",
+   "scope": null,
+   "concepts": [
+    {
+     "msc": "17Axx",
+     "name": "General nonassociative rings",
+     "scope": null
+    },
+    {
+     "msc": "17Bxx",
+     "name": "Lie algebras and Lie superalgebras",
+     "scope": "Lie algebras and Lie superalgebras \\\\{For Lie groups, see 22Exx\\\\}"
+    },
+    {
+     "msc": "17Cxx",
+     "name": "Jordan algebras (algebras, triples and pairs)",
+     "scope": null
+    },
+    {
+     "msc": "17Dxx",
+     "name": "Other nonassociative rings and algebras",
+     "scope": null
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.14",
+   "msc": "18-XX",
+   "name": "Category theory; homological algebra",
+   "scope": "Category theory; homological algebra \\\\{For commutative rings, see 13Dxx; for associative rings, see 16Exx; for groups, see 20Jxx; for topological groups and related structures, see 57Txx; for algebraic topology, see also 55Nxx, 55Uxx\\\\}",
+   "concepts": [
+    {
+     "msc": "18Axx",
+     "name": "General theory of categories and functors",
+     "scope": null
+    },
+    {
+     "msc": "18Bxx",
+     "name": "Special categories",
+     "scope": null
+    },
+    {
+     "msc": "18Cxx",
+     "name": "Categories and theories",
+     "scope": null
+    },
+    {
+     "msc": "18Dxx",
+     "name": "Categorical structures",
+     "scope": null
+    },
+    {
+     "msc": "18Exx",
+     "name": "Categorical algebra",
+     "scope": null
+    },
+    {
+     "msc": "18Fxx",
+     "name": "Categories in geometry and topology",
+     "scope": null
+    },
+    {
+     "msc": "18Gxx",
+     "name": "Homological algebra in category theory, derived categories and functors",
+     "scope": "Homological algebra in category theory, derived categories and functors [See also 13Dxx, 16Exx, 20Jxx, 55Nxx, 55Uxx, 57Txx]"
+    },
+    {
+     "msc": "18Mxx",
+     "name": "Monoidal categories and operads",
+     "scope": null
+    },
+    {
+     "msc": "18Nxx",
+     "name": "Higher categories and homotopical algebra",
+     "scope": null
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.15",
+   "msc": "19-XX",
+   "name": "K-theory",
+   "scope": null,
+   "concepts": [
+    {
+     "msc": "19Axx",
+     "name": "Grothendieck groups and \\\\(K_0\\\\)",
+     "scope": "Grothendieck groups and \\\\(K_0\\\\) [See also 13D15, 18F30]"
+    },
+    {
+     "msc": "19Bxx",
+     "name": "Whitehead groups and \\\\(K_1\\\\)",
+     "scope": null
+    },
+    {
+     "msc": "19Cxx",
+     "name": "Steinberg groups and \\\\(K_2\\\\)",
+     "scope": null
+    },
+    {
+     "msc": "19Dxx",
+     "name": "Higher algebraic \\\\(K\\\\)-theory",
+     "scope": null
+    },
+    {
+     "msc": "19Exx",
+     "name": "\\\\(K\\\\)-theory in geometry",
+     "scope": null
+    },
+    {
+     "msc": "19Fxx",
+     "name": "\\\\(K\\\\)-theory in number theory",
+     "scope": "\\\\(K\\\\)-theory in number theory [See also 11R70, 11S70]"
+    },
+    {
+     "msc": "19Gxx",
+     "name": "\\\\(K\\\\)-theory of forms",
+     "scope": "\\\\(K\\\\)-theory of forms [See also 11Exx]"
+    },
+    {
+     "msc": "19Jxx",
+     "name": "Obstructions from topology",
+     "scope": null
+    },
+    {
+     "msc": "19Kxx",
+     "name": "\\\\(K\\\\)-theory and operator algebras",
+     "scope": "\\\\(K\\\\)-theory and operator algebras [See mainly 46L80, and also 46M20]"
+    },
+    {
+     "msc": "19Lxx",
+     "name": "Topological \\\\(K\\\\)-theory",
+     "scope": "Topological \\\\(K\\\\)-theory [See also 55N15, 55R50, 55S25]"
+    },
+    {
+     "msc": "19Mxx",
+     "name": "Miscellaneous applications of \\\\(K\\\\)-theory",
+     "scope": null
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.16",
+   "msc": "20-XX",
+   "name": "Group theory and generalizations",
+   "scope": null,
+   "concepts": [
+    {
+     "msc": "20Axx",
+     "name": "Foundations",
+     "scope": null
+    },
+    {
+     "msc": "20Bxx",
+     "name": "Permutation groups",
+     "scope": null
+    },
+    {
+     "msc": "20Cxx",
+     "name": "Representation theory of groups",
+     "scope": "Representation theory of groups \\\\{For representation rings and Burnside rings, see also 19A22\\\\}"
+    },
+    {
+     "msc": "20Dxx",
+     "name": "Abstract finite groups",
+     "scope": null
+    },
+    {
+     "msc": "20Exx",
+     "name": "Structure and classification of infinite or finite groups",
+     "scope": null
+    },
+    {
+     "msc": "20Fxx",
+     "name": "Special aspects of infinite or finite groups",
+     "scope": null
+    },
+    {
+     "msc": "20Gxx",
+     "name": "Linear algebraic groups and related topics",
+     "scope": "Linear algebraic groups and related topics \\\\{For arithmetic theory, see 11E57, 11H56; for geometric theory, see 14Lxx, 22Exx; for other methods in representation theory, see 15A30, 22E45, 22E46, 22E47, 22E50, 22E55\\\\}"
+    },
+    {
+     "msc": "20Hxx",
+     "name": "Other groups of matrices",
+     "scope": "Other groups of matrices [See also 15A30]"
+    },
+    {
+     "msc": "20Jxx",
+     "name": "Connections of group theory with homological algebra and category theory",
+     "scope": null
+    },
+    {
+     "msc": "20Kxx",
+     "name": "Abelian groups",
+     "scope": null
+    },
+    {
+     "msc": "20Lxx",
+     "name": "Groupoids (i.e. small categories in which all morphisms are isomorphisms)",
+     "scope": "Groupoids (i.e. small categories in which all morphisms are isomorphisms) \\\\{For sets with a single binary operation, see 20N02; for topological groupoids, see 22A22, 58H05\\\\}"
+    },
+    {
+     "msc": "20Mxx",
+     "name": "Semigroups",
+     "scope": null
+    },
+    {
+     "msc": "20Nxx",
+     "name": "Other generalizations of groups",
+     "scope": null
+    },
+    {
+     "msc": "20Pxx",
+     "name": "Probabilistic methods in group theory",
+     "scope": "Probabilistic methods in group theory [See also 60Bxx]"
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.17",
+   "msc": "22-XX",
+   "name": "Topological groups, Lie groups",
+   "scope": "Topological groups, Lie groups \\\\{For transformation groups, see 54H15, 57Sxx, 58-XX; for abstract harmonic analysis, see 43-XX\\\\}",
+   "concepts": [
+    {
+     "msc": "22Axx",
+     "name": "Topological and differentiable algebraic systems",
+     "scope": "Topological and differentiable algebraic systems \\\\{For topological rings and fields, see 12Jxx, 13Jxx, 16W80\\\\}"
+    },
+    {
+     "msc": "22Bxx",
+     "name": "Locally compact abelian groups (LCA groups)",
+     "scope": null
+    },
+    {
+     "msc": "22Cxx",
+     "name": "Compact groups",
+     "scope": null
+    },
+    {
+     "msc": "22Dxx",
+     "name": "Locally compact groups and their algebras",
+     "scope": null
+    },
+    {
+     "msc": "22Exx",
+     "name": "Lie groups",
+     "scope": "Lie groups \\\\{For the topology of Lie groups and homogeneous spaces, see 57Sxx, 57Txx; for analysis thereon, see 43A80, 43A85, 43A90\\\\}"
+    },
+    {
+     "msc": "22Fxx",
+     "name": "Noncompact transformation groups",
+     "scope": null
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.18",
+   "msc": "26-XX",
+   "name": "Real functions",
+   "scope": "Real functions [See also 54C30]",
+   "concepts": [
+    {
+     "msc": "26Axx",
+     "name": "Functions of one variable",
+     "scope": null
+    },
+    {
+     "msc": "26Bxx",
+     "name": "Functions of several variables",
+     "scope": null
+    },
+    {
+     "msc": "26Cxx",
+     "name": "Polynomials, rational functions in real analysis",
+     "scope": null
+    },
+    {
+     "msc": "26Dxx",
+     "name": "Inequalities in real analysis",
+     "scope": "Inequalities in real analysis \\\\{For maximal function inequalities, see 42B25; for functional inequalities, see 39B72; for probabilistic inequalities, see 60E15\\\\}"
+    },
+    {
+     "msc": "26Exx",
+     "name": "Miscellaneous topics in real functions",
+     "scope": "Miscellaneous topics in real functions [See also 58Cxx]"
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.19",
+   "msc": "28-XX",
+   "name": "Measure and integration",
+   "scope": "Measure and integration \\\\{For analysis on manifolds, see 58-XX\\\\}",
+   "concepts": [
+    {
+     "msc": "28Axx",
+     "name": "Classical measure theory",
+     "scope": null
+    },
+    {
+     "msc": "28Bxx",
+     "name": "Set functions, measures and integrals with values in abstract spaces",
+     "scope": null
+    },
+    {
+     "msc": "28Cxx",
+     "name": "Set functions and measures on spaces with additional structure",
+     "scope": "Set functions and measures on spaces with additional structure [See also 46G12, 58C35, 58D20]"
+    },
+    {
+     "msc": "28Dxx",
+     "name": "Measure-theoretic ergodic theory",
+     "scope": "Measure-theoretic ergodic theory [See also 11K50, 11K55, 22D40, 37Axx, 47A35, 60Fxx, 60G10]"
+    },
+    {
+     "msc": "28Exx",
+     "name": "Miscellaneous topics in measure theory",
+     "scope": null
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.20",
+   "msc": "30-XX",
+   "name": "Functions of a complex variable",
+   "scope": null,
+   "concepts": [
+    {
+     "msc": "30Axx",
+     "name": "General properties of functions of one complex variable",
+     "scope": null
+    },
+    {
+     "msc": "30Bxx",
+     "name": "Series expansions of functions of one complex variable",
+     "scope": null
+    },
+    {
+     "msc": "30Cxx",
+     "name": "Geometric function theory",
+     "scope": null
+    },
+    {
+     "msc": "30Dxx",
+     "name": "Entire and meromorphic functions of one complex variable, and related topics",
+     "scope": null
+    },
+    {
+     "msc": "30Exx",
+     "name": "Miscellaneous topics of analysis in the complex plane",
+     "scope": null
+    },
+    {
+     "msc": "30Fxx",
+     "name": "Riemann surfaces",
+     "scope": null
+    },
+    {
+     "msc": "30Gxx",
+     "name": "Generalized function theory",
+     "scope": null
+    },
+    {
+     "msc": "30Hxx",
+     "name": "Spaces and algebras of analytic functions of one complex variable",
+     "scope": null
+    },
+    {
+     "msc": "30Jxx",
+     "name": "Function theory on the disc",
+     "scope": null
+    },
+    {
+     "msc": "30Kxx",
+     "name": "Universal holomorphic functions of one complex variable",
+     "scope": null
+    },
+    {
+     "msc": "30Lxx",
+     "name": "Analysis on metric spaces",
+     "scope": null
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.21",
+   "msc": "31-XX",
+   "name": "Potential theory",
+   "scope": "Potential theory \\\\{For probabilistic potential theory, see 60J45\\\\}",
+   "concepts": [
+    {
+     "msc": "31Axx",
+     "name": "Two-dimensional potential theory",
+     "scope": null
+    },
+    {
+     "msc": "31Bxx",
+     "name": "Higher-dimensional potential theory",
+     "scope": null
+    },
+    {
+     "msc": "31Cxx",
+     "name": "Generalizations of potential theory",
+     "scope": null
+    },
+    {
+     "msc": "31Dxx",
+     "name": "Axiomatic potential theory",
+     "scope": null
+    },
+    {
+     "msc": "31Exx",
+     "name": "Potential theory on fractals and metric spaces",
+     "scope": null
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.22",
+   "msc": "32-XX",
+   "name": "Several complex variables and analytic spaces",
+   "scope": "Several complex variables and analytic spaces \\\\{For infinite-dimensional holomorphy, see also 46G20, 58B12\\\\}",
+   "concepts": [
+    {
+     "msc": "32Axx",
+     "name": "Holomorphic functions of several complex variables",
+     "scope": null
+    },
+    {
+     "msc": "32Bxx",
+     "name": "Local analytic geometry",
+     "scope": "Local analytic geometry [See also 13-XX, 14-XX]"
+    },
+    {
+     "msc": "32Cxx",
+     "name": "Analytic spaces",
+     "scope": null
+    },
+    {
+     "msc": "32Dxx",
+     "name": "Analytic continuation",
+     "scope": null
+    },
+    {
+     "msc": "32Exx",
+     "name": "Holomorphic convexity",
+     "scope": null
+    },
+    {
+     "msc": "32Fxx",
+     "name": "Geometric convexity in several complex variables",
+     "scope": null
+    },
+    {
+     "msc": "32Gxx",
+     "name": "Deformations of analytic structures",
+     "scope": null
+    },
+    {
+     "msc": "32Hxx",
+     "name": "Holomorphic mappings and correspondences",
+     "scope": null
+    },
+    {
+     "msc": "32Jxx",
+     "name": "Compact analytic spaces",
+     "scope": "Compact analytic spaces \\\\{For Riemann surfaces, see 14Hxx, 30Fxx; for algebraic theory, see 14Jxx\\\\}"
+    },
+    {
+     "msc": "32Kxx",
+     "name": "Generalizations of analytic spaces",
+     "scope": null
+    },
+    {
+     "msc": "32Lxx",
+     "name": "Holomorphic fiber spaces",
+     "scope": "Holomorphic fiber spaces [See also 55Rxx]"
+    },
+    {
+     "msc": "32Mxx",
+     "name": "Complex spaces with a group of automorphisms",
+     "scope": null
+    },
+    {
+     "msc": "32Nxx",
+     "name": "Automorphic functions",
+     "scope": "Automorphic functions [See also 11Fxx, 20H10, 22E40, 30F35]"
+    },
+    {
+     "msc": "32Pxx",
+     "name": "Non-Archimedean analysis (should also be assigned at least one other classification number from Section 32-XX describing the type of problem)",
+     "scope": null
+    },
+    {
+     "msc": "32Qxx",
+     "name": "Complex manifolds",
+     "scope": null
+    },
+    {
+     "msc": "32Sxx",
+     "name": "Complex singularities",
+     "scope": "Complex singularities [See also 58Kxx]"
+    },
+    {
+     "msc": "32Txx",
+     "name": "Pseudoconvex domains",
+     "scope": null
+    },
+    {
+     "msc": "32Uxx",
+     "name": "Pluripotential theory",
+     "scope": null
+    },
+    {
+     "msc": "32Vxx",
+     "name": "CR manifolds",
+     "scope": null
+    },
+    {
+     "msc": "32Wxx",
+     "name": "Differential operators in several variables",
+     "scope": null
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.23",
+   "msc": "33-XX",
+   "name": "Special functions",
+   "scope": "Special functions (33-XX deals with the properties of functions as functions) \\\\{For orthogonal functions, see 42Cxx; for aspects of combinatorics, see 05Axx; for number-theoretic aspects, see 11-XX; for representation theory, see 22Exx\\\\}",
+   "concepts": [
+    {
+     "msc": "33Bxx",
+     "name": "Elementary classical functions",
+     "scope": null
+    },
+    {
+     "msc": "33Cxx",
+     "name": "Hypergeometric functions",
+     "scope": null
+    },
+    {
+     "msc": "33Dxx",
+     "name": "Basic hypergeometric functions",
+     "scope": null
+    },
+    {
+     "msc": "33Exx",
+     "name": "Other special functions",
+     "scope": null
+    },
+    {
+     "msc": "33Fxx",
+     "name": "Computational aspects of special functions",
+     "scope": "Computational aspects of special functions \\\\{For software etc., see 33-04\\\\}"
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.24",
+   "msc": "34-XX",
+   "name": "Ordinary differential equations",
+   "scope": null,
+   "concepts": [
+    {
+     "msc": "34Axx",
+     "name": "General theory for ordinary differential equations",
+     "scope": null
+    },
+    {
+     "msc": "34Bxx",
+     "name": "Boundary value problems for ordinary differential equations",
+     "scope": "Boundary value problems for ordinary differential equations \\\\{For ordinary differential operators, see 34Lxx\\\\}"
+    },
+    {
+     "msc": "34Cxx",
+     "name": "Qualitative theory for ordinary differential equations",
+     "scope": "Qualitative theory for ordinary differential equations [See also 37-XX]"
+    },
+    {
+     "msc": "34Dxx",
+     "name": "Stability theory for ordinary differential equations",
+     "scope": "Stability theory for ordinary differential equations [See also 37C75, 93Dxx]"
+    },
+    {
+     "msc": "34Exx",
+     "name": "Asymptotic theory for ordinary differential equations",
+     "scope": null
+    },
+    {
+     "msc": "34Fxx",
+     "name": "Ordinary differential equations and systems with randomness",
+     "scope": "Ordinary differential equations and systems with randomness [See also 34K50, 60H10, 93E03]"
+    },
+    {
+     "msc": "34Gxx",
+     "name": "Differential equations in abstract spaces",
+     "scope": "Differential equations in abstract spaces [See also 34Lxx, 37Kxx, 47Dxx, 47Hxx, 47Jxx, 58D25]"
+    },
+    {
+     "msc": "34Hxx",
+     "name": "Control problems including ordinary differential equations",
+     "scope": "Control problems including ordinary differential equations [See also 49J15, 49K15, 93C15]"
+    },
+    {
+     "msc": "34Kxx",
+     "name": "Functional-differential equations (including equations with delayed, advanced or state-dependent argument)",
+     "scope": null
+    },
+    {
+     "msc": "34Lxx",
+     "name": "Ordinary differential operators",
+     "scope": "Ordinary differential operators [See also 47E05]"
+    },
+    {
+     "msc": "34Mxx",
+     "name": "Ordinary differential equations in the complex domain",
+     "scope": "Ordinary differential equations in the complex domain [See also 30Dxx, 32G34]"
+    },
+    {
+     "msc": "34Nxx",
+     "name": "Dynamic equations on time scales or measure chains",
+     "scope": "Dynamic equations on time scales or measure chains \\\\{For real analysis on time scales, see 26E70\\\\}"
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.25",
+   "msc": "35-XX",
+   "name": "Partial differential equations",
+   "scope": null,
+   "concepts": [
+    {
+     "msc": "35Axx",
+     "name": "General topics in partial differential equations",
+     "scope": null
+    },
+    {
+     "msc": "35Bxx",
+     "name": "Qualitative properties of solutions to partial differential equations",
+     "scope": null
+    },
+    {
+     "msc": "35Cxx",
+     "name": "Representations of solutions to partial differential equations",
+     "scope": null
+    },
+    {
+     "msc": "35Dxx",
+     "name": "Generalized solutions to partial differential equations",
+     "scope": null
+    },
+    {
+     "msc": "35Exx",
+     "name": "Partial differential equations and systems of partial differential equations with constant coefficients",
+     "scope": "Partial differential equations and systems of partial differential equations with constant coefficients [See also 35N05]"
+    },
+    {
+     "msc": "35Fxx",
+     "name": "General first-order partial differential equations and systems of first-order partial differential equations",
+     "scope": null
+    },
+    {
+     "msc": "35Gxx",
+     "name": "General higher-order partial differential equations and systems of higher-order partial differential equations",
+     "scope": null
+    },
+    {
+     "msc": "35Hxx",
+     "name": "Close-to-elliptic equations",
+     "scope": null
+    },
+    {
+     "msc": "35Jxx",
+     "name": "Elliptic equations and elliptic systems",
+     "scope": "Elliptic equations and elliptic systems \\\\{For global analysis, analysis on manifolds, see 58J10, 58J20\\\\}"
+    },
+    {
+     "msc": "35Kxx",
+     "name": "Parabolic equations and parabolic systems",
+     "scope": "Parabolic equations and parabolic systems \\\\{For global analysis, analysis on manifolds, see 58J35\\\\}"
+    },
+    {
+     "msc": "35Lxx",
+     "name": "Hyperbolic equations and hyperbolic systems",
+     "scope": "Hyperbolic equations and hyperbolic systems \\\\{For global analysis, see 58J45\\\\}"
+    },
+    {
+     "msc": "35Mxx",
+     "name": "Partial differential equations of mixed type and mixed-type systems of partial differential equations",
+     "scope": null
+    },
+    {
+     "msc": "35Nxx",
+     "name": "Overdetermined problems for partial differential equations and systems of partial differential equations",
+     "scope": "Overdetermined problems for partial differential equations and systems of partial differential equations \\\\{For global analysis, see 58Hxx, 58J10, 58J15\\\\}"
+    },
+    {
+     "msc": "35Pxx",
+     "name": "Spectral theory and eigenvalue problems for partial differential equations",
+     "scope": "Spectral theory and eigenvalue problems for partial differential equations \\\\{For operator theory, see 47Axx, 47Bxx, 47F05\\\\}"
+    },
+    {
+     "msc": "35Qxx",
+     "name": "Partial differential equations of mathematical physics and other areas of application",
+     "scope": "Partial differential equations of mathematical physics and other areas of application [See also 35J05, 35J10, 35K05, 35L05]"
+    },
+    {
+     "msc": "35Rxx",
+     "name": "Miscellaneous topics in partial differential equations",
+     "scope": "Miscellaneous topics in partial differential equations \\\\{For equations on manifolds, see 32Wxx, 58Jxx; for manifolds of solutions, see 58Bxx; for stochastic PDEs, see 60H15\\\\}"
+    },
+    {
+     "msc": "35Sxx",
+     "name": "Pseudodifferential operators and other generalizations of partial differential operators",
+     "scope": "Pseudodifferential operators and other generalizations of partial differential operators \\\\{For operator theory, see 47G30, 58J40\\\\}"
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.26",
+   "msc": "37-XX",
+   "name": "Dynamical systems and ergodic theory",
+   "scope": "Dynamical systems and ergodic theory [See also 26A18, 28Dxx, 34Cxx, 34Dxx, 35Bxx, 46Lxx, 58Jxx, 70-XX]",
+   "concepts": [
+    {
+     "msc": "37Axx",
+     "name": "Ergodic theory",
+     "scope": "Ergodic theory [See also 28Dxx]"
+    },
+    {
+     "msc": "37Bxx",
+     "name": "Topological dynamics",
+     "scope": null
+    },
+    {
+     "msc": "37Cxx",
+     "name": "Smooth dynamical systems: general theory",
+     "scope": "Smooth dynamical systems: general theory [See also 34Cxx, 34Dxx]"
+    },
+    {
+     "msc": "37Dxx",
+     "name": "Dynamical systems with hyperbolic behavior",
+     "scope": null
+    },
+    {
+     "msc": "37Exx",
+     "name": "Low-dimensional dynamical systems",
+     "scope": null
+    },
+    {
+     "msc": "37Fxx",
+     "name": "Dynamical systems over complex numbers",
+     "scope": "Dynamical systems over complex numbers [See also 30D05, 32H50]"
+    },
+    {
+     "msc": "37Gxx",
+     "name": "Local and nonlocal bifurcation theory for dynamical systems",
+     "scope": "Local and nonlocal bifurcation theory for dynamical systems [See also 34C23, 34K18]"
+    },
+    {
+     "msc": "37Hxx",
+     "name": "Random dynamical systems",
+     "scope": "Random dynamical systems [See also 15B52, 34D08, 34F05, 47B80, 70L05, 82C05, 93Exx]"
+    },
+    {
+     "msc": "37Jxx",
+     "name": "Dynamical aspects of finite-dimensional Hamiltonian and Lagrangian systems",
+     "scope": "Dynamical aspects of finite-dimensional Hamiltonian and Lagrangian systems [See also 53Dxx, 70Fxx, 70Hxx]"
+    },
+    {
+     "msc": "37Kxx",
+     "name": "Dynamical system aspects of infinite-dimensional Hamiltonian and Lagrangian systems",
+     "scope": "Dynamical system aspects of infinite-dimensional Hamiltonian and Lagrangian systems [See also 35Axx, 35Qxx]"
+    },
+    {
+     "msc": "37Lxx",
+     "name": "Infinite-dimensional dissipative dynamical systems",
+     "scope": "Infinite-dimensional dissipative dynamical systems [See also 35Bxx, 35Qxx]"
+    },
+    {
+     "msc": "37Mxx",
+     "name": "Approximation methods and numerical treatment of dynamical systems",
+     "scope": "Approximation methods and numerical treatment of dynamical systems \\\\{For numerical analysis, see also 65Pxx; for software etc., see 37-04\\\\}"
+    },
+    {
+     "msc": "37Nxx",
+     "name": "Applications of dynamical systems",
+     "scope": null
+    },
+    {
+     "msc": "37Pxx",
+     "name": "Arithmetic and non-Archimedean dynamical systems",
+     "scope": "Arithmetic and non-Archimedean dynamical systems [See also 11S82, 37A44]"
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.27",
+   "msc": "39-XX",
+   "name": "Difference and functional equations",
+   "scope": null,
+   "concepts": [
+    {
+     "msc": "39Axx",
+     "name": "Difference equations",
+     "scope": "Difference equations \\\\{For dynamic equations on time scales, see 34N05; for dynamical systems, see 37-XX\\\\}"
+    },
+    {
+     "msc": "39Bxx",
+     "name": "Functional equations and inequalities",
+     "scope": "Functional equations and inequalities [See also 30D05]"
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.28",
+   "msc": "40-XX",
+   "name": "Sequences, series, summability",
+   "scope": null,
+   "concepts": [
+    {
+     "msc": "40Axx",
+     "name": "Convergence and divergence of infinite limiting processes",
+     "scope": null
+    },
+    {
+     "msc": "40Bxx",
+     "name": "Multiple sequences and series",
+     "scope": null
+    },
+    {
+     "msc": "40Cxx",
+     "name": "General summability methods",
+     "scope": null
+    },
+    {
+     "msc": "40Dxx",
+     "name": "Direct theorems on summability",
+     "scope": null
+    },
+    {
+     "msc": "40Exx",
+     "name": "Inversion theorems",
+     "scope": null
+    },
+    {
+     "msc": "40Fxx",
+     "name": "Absolute and strong summability (should also be assigned at least one other classification number in Section 40-XX)",
+     "scope": null
+    },
+    {
+     "msc": "40Gxx",
+     "name": "Special methods of summability",
+     "scope": null
+    },
+    {
+     "msc": "40Hxx",
+     "name": "Functional analytic methods in summability",
+     "scope": null
+    },
+    {
+     "msc": "40Jxx",
+     "name": "Summability in abstract structures (should also be assigned at least one other classification number from Section 40-XX)",
+     "scope": "Summability in abstract structures (should also be assigned at least one other classification number from Section 40-XX) [See also 43A55, 46A35, 46B15]"
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.29",
+   "msc": "41-XX",
+   "name": "Approximations and expansions",
+   "scope": "Approximations and expansions \\\\{For approximation theory in the complex domain, see 30E05, 30E10; for trigonometric approximation and interpolation, see 42A10, 42A15; for numerical approximation, see 65Dxx\\\\}",
+   "concepts": [
+    {
+     "msc": "41Axx",
+     "name": "Approximations and expansions",
+     "scope": "Approximations and expansions \\\\{For approximation theory in the complex domain, see 30E05, 30E10; for trigonometric approximation and interpolation, see 42A10, 42A15; for numerical approximation, see 65Dxx\\\\}"
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.30",
+   "msc": "42-XX",
+   "name": "Harmonic analysis on Euclidean spaces",
+   "scope": null,
+   "concepts": [
+    {
+     "msc": "42Axx",
+     "name": "Harmonic analysis in one variable",
+     "scope": null
+    },
+    {
+     "msc": "42Bxx",
+     "name": "Harmonic analysis in several variables",
+     "scope": "Harmonic analysis in several variables \\\\{For automorphic theory, see mainly 11F30\\\\}"
+    },
+    {
+     "msc": "42Cxx",
+     "name": "Nontrigonometric harmonic analysis",
+     "scope": null
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.31",
+   "msc": "43-XX",
+   "name": "Abstract harmonic analysis",
+   "scope": "Abstract harmonic analysis \\\\{For other analysis on topological and Lie groups, see 22Exx\\\\}",
+   "concepts": [
+    {
+     "msc": "43Axx",
+     "name": "Abstract harmonic analysis",
+     "scope": "Abstract harmonic analysis \\\\{For other analysis on topological and Lie groups, see 22Exx\\\\}"
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.32",
+   "msc": "44-XX",
+   "name": "Integral transforms, operational calculus",
+   "scope": "Integral transforms, operational calculus \\\\{For fractional derivatives and integrals, see 26A33; for Fourier transforms, see 42A38, 42B10; for integral transforms in distribution spaces, see 46F12; for numerical methods, see 65R10\\\\}",
+   "concepts": [
+    {
+     "msc": "44Axx",
+     "name": "Integral transforms, operational calculus",
+     "scope": "Integral transforms, operational calculus \\\\{For fractional derivatives and integrals, see 26A33; for Fourier transforms, see 42A38, 42B10; for integral transforms in distribution spaces, see 46F12; for numerical methods, see 65R10\\\\}"
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.33",
+   "msc": "45-XX",
+   "name": "Integral equations",
+   "scope": null,
+   "concepts": [
+    {
+     "msc": "45Axx",
+     "name": "Linear integral equations",
+     "scope": null
+    },
+    {
+     "msc": "45Bxx",
+     "name": "Fredholm integral equations",
+     "scope": null
+    },
+    {
+     "msc": "45Cxx",
+     "name": "Eigenvalue problems for integral equations",
+     "scope": "Eigenvalue problems for integral equations [See also 34Lxx, 35Pxx, 45P05, 47A75]"
+    },
+    {
+     "msc": "45Dxx",
+     "name": "Volterra integral equations",
+     "scope": "Volterra integral equations [See also 34A12]"
+    },
+    {
+     "msc": "45Exx",
+     "name": "Singular integral equations",
+     "scope": "Singular integral equations [See also 30E20, 30E25, 44A15, 44A35]"
+    },
+    {
+     "msc": "45Fxx",
+     "name": "Systems of linear integral equations",
+     "scope": null
+    },
+    {
+     "msc": "45Gxx",
+     "name": "Nonlinear integral equations",
+     "scope": "Nonlinear integral equations [See also 47H30, 47Jxx]"
+    },
+    {
+     "msc": "45Hxx",
+     "name": "Integral equations with miscellaneous special kernels",
+     "scope": "Integral equations with miscellaneous special kernels [See also 44A15]"
+    },
+    {
+     "msc": "45Jxx",
+     "name": "Integro-ordinary differential equations",
+     "scope": "Integro-ordinary differential equations [See also 34K05, 34K30, 47G20]"
+    },
+    {
+     "msc": "45Kxx",
+     "name": "Integro-partial differential equations",
+     "scope": "Integro-partial differential equations [See also 34K30, 35R09, 35R10, 47G20]"
+    },
+    {
+     "msc": "45Lxx",
+     "name": "Theoretical approximation of solutions to integral equations",
+     "scope": "Theoretical approximation of solutions to integral equations \\\\{For numerical analysis, see 65Rxx\\\\}"
+    },
+    {
+     "msc": "45Mxx",
+     "name": "Qualitative behavior of solutions to integral equations",
+     "scope": null
+    },
+    {
+     "msc": "45Nxx",
+     "name": "Abstract integral equations, integral equations in abstract spaces",
+     "scope": null
+    },
+    {
+     "msc": "45Pxx",
+     "name": "Integral operators",
+     "scope": "Integral operators [See also 47B38, 47G10]"
+    },
+    {
+     "msc": "45Qxx",
+     "name": "Inverse problems for integral equations",
+     "scope": null
+    },
+    {
+     "msc": "45Rxx",
+     "name": "Random integral equations",
+     "scope": "Random integral equations [See also 60H20]"
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.34",
+   "msc": "46-XX",
+   "name": "Functional analysis",
+   "scope": "Functional analysis \\\\{For manifolds modeled on topological linear spaces, see 57Nxx, 58Bxx\\\\}",
+   "concepts": [
+    {
+     "msc": "46Axx",
+     "name": "Topological linear spaces and related structures",
+     "scope": "Topological linear spaces and related structures \\\\{For function spaces, see 46Exx\\\\}"
+    },
+    {
+     "msc": "46Bxx",
+     "name": "Normed linear spaces and Banach spaces; Banach lattices",
+     "scope": "Normed linear spaces and Banach spaces; Banach lattices \\\\{For function spaces, see 46Exx\\\\}"
+    },
+    {
+     "msc": "46Cxx",
+     "name": "Inner product spaces and their generalizations, Hilbert spaces",
+     "scope": "Inner product spaces and their generalizations, Hilbert spaces \\\\{For function spaces, see 46Exx\\\\}"
+    },
+    {
+     "msc": "46Exx",
+     "name": "Linear function spaces and their duals",
+     "scope": "Linear function spaces and their duals [See also 30H05, 32A38, 46F05] \\\\{For function algebras, see 46J10\\\\}"
+    },
+    {
+     "msc": "46Fxx",
+     "name": "Distributions, generalized functions, distribution spaces",
+     "scope": "Distributions, generalized functions, distribution spaces [See also 46T30]"
+    },
+    {
+     "msc": "46Gxx",
+     "name": "Measures, integration, derivative, holomorphy (all involving infinite-dimensional spaces)",
+     "scope": "Measures, integration, derivative, holomorphy (all involving infinite-dimensional spaces) [See also 28-XX, 46Txx]"
+    },
+    {
+     "msc": "46Hxx",
+     "name": "Topological algebras, normed rings and algebras, Banach algebras",
+     "scope": "Topological algebras, normed rings and algebras, Banach algebras \\\\{For group algebras, convolution algebras and measure algebras, see 43A10, 43A20\\\\}"
+    },
+    {
+     "msc": "46Jxx",
+     "name": "Commutative Banach algebras and commutative topological algebras",
+     "scope": "Commutative Banach algebras and commutative topological algebras [See also 46E25]"
+    },
+    {
+     "msc": "46Kxx",
+     "name": "Topological (rings and) algebras with an involution",
+     "scope": "Topological (rings and) algebras with an involution [See also 16W10]"
+    },
+    {
+     "msc": "46Lxx",
+     "name": "Selfadjoint operator algebras (\\\\(C^*\\\\)-algebras, von Neumann (\\\\(W^*\\\\)-) algebras, etc.)",
+     "scope": "Selfadjoint operator algebras (\\\\(C^*\\\\)-algebras, von Neumann (\\\\(W^*\\\\)-) algebras, etc.) [See also 22D25, 47Lxx]"
+    },
+    {
+     "msc": "46Mxx",
+     "name": "Methods of category theory in functional analysis",
+     "scope": "Methods of category theory in functional analysis [See also 18-XX]"
+    },
+    {
+     "msc": "46Nxx",
+     "name": "Miscellaneous applications of functional analysis",
+     "scope": "Miscellaneous applications of functional analysis [See also 47Nxx]"
+    },
+    {
+     "msc": "46Sxx",
+     "name": "Other (nonclassical) types of functional analysis",
+     "scope": "Other (nonclassical) types of functional analysis [See also 47Sxx]"
+    },
+    {
+     "msc": "46Txx",
+     "name": "Nonlinear functional analysis",
+     "scope": "Nonlinear functional analysis [See also 47Hxx, 47Jxx, 58Cxx, 58Dxx]"
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.35",
+   "msc": "47-XX",
+   "name": "Operator theory",
+   "scope": null,
+   "concepts": [
+    {
+     "msc": "47Axx",
+     "name": "General theory of linear operators",
+     "scope": null
+    },
+    {
+     "msc": "47Bxx",
+     "name": "Special classes of linear operators",
+     "scope": null
+    },
+    {
+     "msc": "47Cxx",
+     "name": "Individual linear operators as elements of algebraic systems",
+     "scope": null
+    },
+    {
+     "msc": "47Dxx",
+     "name": "Groups and semigroups of linear operators, their generalizations and applications",
+     "scope": null
+    },
+    {
+     "msc": "47Exx",
+     "name": "Ordinary differential operators",
+     "scope": "Ordinary differential operators [See also 34Bxx, 34Lxx]"
+    },
+    {
+     "msc": "47Fxx",
+     "name": "Partial differential operators",
+     "scope": "Partial differential operators [See also 35Pxx, 58Jxx]"
+    },
+    {
+     "msc": "47Gxx",
+     "name": "Integral, integro-differential, and pseudodifferential operators",
+     "scope": "Integral, integro-differential, and pseudodifferential operators [See also 58Jxx]"
+    },
+    {
+     "msc": "47Hxx",
+     "name": "Nonlinear operators and their properties",
+     "scope": "Nonlinear operators and their properties \\\\{For global and geometric aspects, see 49J53, 58-XX, especially 58Cxx\\\\}"
+    },
+    {
+     "msc": "47Jxx",
+     "name": "Equations and inequalities involving nonlinear operators",
+     "scope": "Equations and inequalities involving nonlinear operators [See also 46Txx] \\\\{For global and geometric aspects, see 58-XX\\\\}"
+    },
+    {
+     "msc": "47Lxx",
+     "name": "Linear spaces and algebras of operators",
+     "scope": "Linear spaces and algebras of operators [See also 46Lxx]"
+    },
+    {
+     "msc": "47Nxx",
+     "name": "Miscellaneous applications of operator theory",
+     "scope": "Miscellaneous applications of operator theory [See also 46Nxx]"
+    },
+    {
+     "msc": "47Sxx",
+     "name": "Other (nonclassical) types of operator theory",
+     "scope": "Other (nonclassical) types of operator theory [See also 46Sxx]"
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.36",
+   "msc": "49-XX",
+   "name": "Calculus of variations and optimal control; optimization",
+   "scope": "Calculus of variations and optimal control; optimization [See also 34H05, 34K35, 65Kxx, 90Cxx, 93-XX]",
+   "concepts": [
+    {
+     "msc": "49Jxx",
+     "name": "Existence theories in calculus of variations and optimal control",
+     "scope": null
+    },
+    {
+     "msc": "49Kxx",
+     "name": "Optimality conditions",
+     "scope": null
+    },
+    {
+     "msc": "49Lxx",
+     "name": "Hamilton-Jacobi theories",
+     "scope": "Hamilton-Jacobi theories [See also 70H20, 35F21]"
+    },
+    {
+     "msc": "49Mxx",
+     "name": "Numerical methods in optimal control",
+     "scope": "Numerical methods in optimal control [See also 65Kxx, 90-08, 90Cxx]"
+    },
+    {
+     "msc": "49Nxx",
+     "name": "Miscellaneous topics in calculus of variations and optimal control",
+     "scope": null
+    },
+    {
+     "msc": "49Qxx",
+     "name": "Manifolds and measure-geometric topics",
+     "scope": "Manifolds and measure-geometric topics [See also 58Exx]"
+    },
+    {
+     "msc": "49Rxx",
+     "name": "Variational methods for eigenvalues of operators (should also be assigned at least one other classification number in Section 49-XX)",
+     "scope": "Variational methods for eigenvalues of operators (should also be assigned at least one other classification number in Section 49-XX) [See also 47A75]"
+    },
+    {
+     "msc": "49Sxx",
+     "name": "Variational principles of physics (should also be assigned at least one other classification number in Section 49-XX)",
+     "scope": null
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.37",
+   "msc": "51-XX",
+   "name": "Geometry",
+   "scope": "Geometry \\\\{For algebraic geometry, see 14-XX; for differential geometry, see 53-XX\\\\}",
+   "concepts": [
+    {
+     "msc": "51Axx",
+     "name": "Linear incidence geometry",
+     "scope": null
+    },
+    {
+     "msc": "51Bxx",
+     "name": "Nonlinear incidence geometry",
+     "scope": null
+    },
+    {
+     "msc": "51Cxx",
+     "name": "Ring geometry (Hjelmslev, Barbilian, etc.)",
+     "scope": null
+    },
+    {
+     "msc": "51Dxx",
+     "name": "Geometric closure systems",
+     "scope": null
+    },
+    {
+     "msc": "51Exx",
+     "name": "Finite geometry and special incidence structures",
+     "scope": null
+    },
+    {
+     "msc": "51Fxx",
+     "name": "Metric geometry",
+     "scope": null
+    },
+    {
+     "msc": "51Gxx",
+     "name": "Ordered geometries (ordered incidence structures, etc.)",
+     "scope": null
+    },
+    {
+     "msc": "51Hxx",
+     "name": "Topological geometry",
+     "scope": null
+    },
+    {
+     "msc": "51Jxx",
+     "name": "Incidence groups",
+     "scope": null
+    },
+    {
+     "msc": "51Kxx",
+     "name": "Distance geometry",
+     "scope": null
+    },
+    {
+     "msc": "51Lxx",
+     "name": "Geometric order structures",
+     "scope": "Geometric order structures [See also 53C75]"
+    },
+    {
+     "msc": "51Mxx",
+     "name": "Real and complex geometry",
+     "scope": null
+    },
+    {
+     "msc": "51Nxx",
+     "name": "Analytic and descriptive geometry",
+     "scope": null
+    },
+    {
+     "msc": "51Pxx",
+     "name": "Classical or axiomatic geometry and physics (should also be assigned at least one other classification number from Sections 70-XX-86-XX)",
+     "scope": null
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.38",
+   "msc": "52-XX",
+   "name": "Convex and discrete geometry",
+   "scope": null,
+   "concepts": [
+    {
+     "msc": "52Axx",
+     "name": "General convexity",
+     "scope": null
+    },
+    {
+     "msc": "52Bxx",
+     "name": "Polytopes and polyhedra",
+     "scope": null
+    },
+    {
+     "msc": "52Cxx",
+     "name": "Discrete geometry",
+     "scope": null
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.39",
+   "msc": "53-XX",
+   "name": "Differential geometry",
+   "scope": "Differential geometry \\\\{For differential topology, see 57Rxx; for foundational questions of differentiable manifolds, see 58Axx\\\\}",
+   "concepts": [
+    {
+     "msc": "53Axx",
+     "name": "Classical differential geometry",
+     "scope": null
+    },
+    {
+     "msc": "53Bxx",
+     "name": "Local differential geometry",
+     "scope": null
+    },
+    {
+     "msc": "53Cxx",
+     "name": "Global differential geometry",
+     "scope": "Global differential geometry [See also 51H25, 58-XX] \\\\{For related bundle theory, see 55Rxx, 57Rxx\\\\}"
+    },
+    {
+     "msc": "53Dxx",
+     "name": "Symplectic geometry, contact geometry",
+     "scope": "Symplectic geometry, contact geometry [See also 37Jxx, 70Gxx, 70Hxx]"
+    },
+    {
+     "msc": "53Exx",
+     "name": "Geometric evolution equations",
+     "scope": null
+    },
+    {
+     "msc": "53Zxx",
+     "name": "Applications of differential geometry to sciences and engineering",
+     "scope": null
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.40",
+   "msc": "54-XX",
+   "name": "General topology",
+   "scope": "General topology \\\\{For the topology of manifolds of all dimensions, see 57Nxx\\\\}",
+   "concepts": [
+    {
+     "msc": "54Axx",
+     "name": "Generalities in topology",
+     "scope": null
+    },
+    {
+     "msc": "54Bxx",
+     "name": "Basic constructions in general topology",
+     "scope": null
+    },
+    {
+     "msc": "54Cxx",
+     "name": "Maps and general types of topological spaces defined by maps",
+     "scope": null
+    },
+    {
+     "msc": "54Dxx",
+     "name": "Fairly general properties of topological spaces",
+     "scope": null
+    },
+    {
+     "msc": "54Exx",
+     "name": "Topological spaces with richer structures",
+     "scope": null
+    },
+    {
+     "msc": "54Fxx",
+     "name": "Special properties of topological spaces",
+     "scope": null
+    },
+    {
+     "msc": "54Gxx",
+     "name": "Peculiar topological spaces",
+     "scope": null
+    },
+    {
+     "msc": "54Hxx",
+     "name": "Connections of general topology with other structures, applications",
+     "scope": null
+    },
+    {
+     "msc": "54Jxx",
+     "name": "Nonstandard topology",
+     "scope": "Nonstandard topology [See also 03H05]"
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.41",
+   "msc": "55-XX",
+   "name": "Algebraic topology",
+   "scope": null,
+   "concepts": [
+    {
+     "msc": "55Mxx",
+     "name": "Classical topics in algebraic topology",
+     "scope": "Classical topics in algebraic topology \\\\{For the topology of Euclidean spaces and manifolds, see 57Nxx\\\\}"
+    },
+    {
+     "msc": "55Nxx",
+     "name": "Homology and cohomology theories in algebraic topology",
+     "scope": "Homology and cohomology theories in algebraic topology [See also 57Txx]"
+    },
+    {
+     "msc": "55Pxx",
+     "name": "Homotopy theory",
+     "scope": "Homotopy theory \\\\{For simple homotopy type, see 57Q10\\\\}"
+    },
+    {
+     "msc": "55Qxx",
+     "name": "Homotopy groups",
+     "scope": null
+    },
+    {
+     "msc": "55Rxx",
+     "name": "Fiber spaces and bundles in algebraic topology",
+     "scope": "Fiber spaces and bundles in algebraic topology [See also 18F15, 32Lxx, 46M20, 57R20, 57R22, 57R25]"
+    },
+    {
+     "msc": "55Sxx",
+     "name": "Operations and obstructions in algebraic topology",
+     "scope": null
+    },
+    {
+     "msc": "55Txx",
+     "name": "Spectral sequences in algebraic topology",
+     "scope": "Spectral sequences in algebraic topology [See also 18G40, 55R20]"
+    },
+    {
+     "msc": "55Uxx",
+     "name": "Applied homological algebra and category theory in algebraic topology",
+     "scope": "Applied homological algebra and category theory in algebraic topology [See also 18Gxx]"
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.42",
+   "msc": "57-XX",
+   "name": "Manifolds and cell complexes",
+   "scope": "Manifolds and cell complexes \\\\{For complex manifolds, see 32Qxx\\\\}",
+   "concepts": [
+    {
+     "msc": "57Kxx",
+     "name": "Low-dimensional topology in specific dimensions",
+     "scope": null
+    },
+    {
+     "msc": "57Mxx",
+     "name": "General low-dimensional topology",
+     "scope": null
+    },
+    {
+     "msc": "57Nxx",
+     "name": "Topological manifolds",
+     "scope": null
+    },
+    {
+     "msc": "57Pxx",
+     "name": "Generalized manifolds",
+     "scope": "Generalized manifolds [See also 18F15]"
+    },
+    {
+     "msc": "57Qxx",
+     "name": "PL-topology",
+     "scope": null
+    },
+    {
+     "msc": "57Rxx",
+     "name": "Differential topology",
+     "scope": "Differential topology \\\\{For foundational questions of differentiable manifolds, see 58Axx; for infinite-dimensional manifolds, see 58Bxx\\\\}"
+    },
+    {
+     "msc": "57Sxx",
+     "name": "Topological transformation groups",
+     "scope": "Topological transformation groups [See also 20F34, 22-XX, 37-XX, 54H15, 58D05]"
+    },
+    {
+     "msc": "57Txx",
+     "name": "Homology and homotopy of topological groups and related structures",
+     "scope": null
+    },
+    {
+     "msc": "57Zxx",
+     "name": "Relations of manifolds and cell complexes with science and engineering",
+     "scope": null
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.43",
+   "msc": "58-XX",
+   "name": "Global analysis, analysis on manifolds",
+   "scope": "Global analysis, analysis on manifolds [See also 32Cxx, 32Fxx, 32Wxx, 46-XX, 47Hxx, 53Cxx] \\\\{For geometric integration theory, see 49Q15\\\\}",
+   "concepts": [
+    {
+     "msc": "58Axx",
+     "name": "General theory of differentiable manifolds",
+     "scope": "General theory of differentiable manifolds [See also 32Cxx]"
+    },
+    {
+     "msc": "58Bxx",
+     "name": "Infinite-dimensional manifolds",
+     "scope": null
+    },
+    {
+     "msc": "58Cxx",
+     "name": "Calculus on manifolds; nonlinear operators",
+     "scope": "Calculus on manifolds; nonlinear operators [See also 46Txx, 47Hxx, 47Jxx]"
+    },
+    {
+     "msc": "58Dxx",
+     "name": "Spaces and manifolds of mappings (including nonlinear versions of 46Exx)",
+     "scope": "Spaces and manifolds of mappings (including nonlinear versions of 46Exx) [See also 46Txx, 53Cxx]"
+    },
+    {
+     "msc": "58Exx",
+     "name": "Variational problems in infinite-dimensional spaces",
+     "scope": null
+    },
+    {
+     "msc": "58Hxx",
+     "name": "Pseudogroups, differentiable groupoids and general structures on manifolds",
+     "scope": null
+    },
+    {
+     "msc": "58Jxx",
+     "name": "Partial differential equations on manifolds; differential operators",
+     "scope": "Partial differential equations on manifolds; differential operators [See also 32Wxx, 35-XX, 53Cxx]"
+    },
+    {
+     "msc": "58Kxx",
+     "name": "Theory of singularities and catastrophe theory",
+     "scope": "Theory of singularities and catastrophe theory [See also 32Sxx, 37-XX]"
+    },
+    {
+     "msc": "58Zxx",
+     "name": "Applications of global analysis to the sciences",
+     "scope": null
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.44",
+   "msc": "60-XX",
+   "name": "Probability theory and stochastic processes",
+   "scope": "Probability theory and stochastic processes \\\\{For additional applications, see 05Cxx, 11Kxx, 34-XX, 35-XX, 62-XX, 90-XX, 76-XX, 81-XX, 82-XX, 91-XX, 92-XX, 93-XX, 94-XX\\\\}",
+   "concepts": [
+    {
+     "msc": "60Axx",
+     "name": "Foundations of probability theory",
+     "scope": null
+    },
+    {
+     "msc": "60Bxx",
+     "name": "Probability theory on algebraic and topological structures",
+     "scope": null
+    },
+    {
+     "msc": "60Cxx",
+     "name": "Combinatorial probability",
+     "scope": null
+    },
+    {
+     "msc": "60Dxx",
+     "name": "Geometric probability and stochastic geometry",
+     "scope": "Geometric probability and stochastic geometry [See also 52A22, 53C65]"
+    },
+    {
+     "msc": "60Exx",
+     "name": "Distribution theory",
+     "scope": "Distribution theory [See also 62Exx, 62Hxx]"
+    },
+    {
+     "msc": "60Fxx",
+     "name": "Limit theorems in probability theory",
+     "scope": "Limit theorems in probability theory [See also 28Dxx, 60B12]"
+    },
+    {
+     "msc": "60Gxx",
+     "name": "Stochastic processes",
+     "scope": null
+    },
+    {
+     "msc": "60Hxx",
+     "name": "Stochastic analysis",
+     "scope": "Stochastic analysis [See also 58J65]"
+    },
+    {
+     "msc": "60Jxx",
+     "name": "Markov processes",
+     "scope": null
+    },
+    {
+     "msc": "60Kxx",
+     "name": "Special processes",
+     "scope": null
+    },
+    {
+     "msc": "60Lxx",
+     "name": "Rough analysis",
+     "scope": null
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.45",
+   "msc": "62-XX",
+   "name": "Statistics",
+   "scope": null,
+   "concepts": [
+    {
+     "msc": "62Axx",
+     "name": "Foundational topics in statistics",
+     "scope": null
+    },
+    {
+     "msc": "62Bxx",
+     "name": "Sufficiency and information",
+     "scope": null
+    },
+    {
+     "msc": "62Cxx",
+     "name": "Statistical decision theory",
+     "scope": "Statistical decision theory [See also 90B50, 91B06] \\\\{For game theory, see 91A35]"
+    },
+    {
+     "msc": "62Dxx",
+     "name": "Statistical sampling theory and related topics",
+     "scope": null
+    },
+    {
+     "msc": "62Exx",
+     "name": "Statistical distribution theory",
+     "scope": "Statistical distribution theory [See also 60Exx]"
+    },
+    {
+     "msc": "62Fxx",
+     "name": "Parametric inference",
+     "scope": null
+    },
+    {
+     "msc": "62Gxx",
+     "name": "Nonparametric inference",
+     "scope": null
+    },
+    {
+     "msc": "62Hxx",
+     "name": "Multivariate analysis",
+     "scope": "Multivariate analysis [See also 60Exx]"
+    },
+    {
+     "msc": "62Jxx",
+     "name": "Linear inference, regression",
+     "scope": null
+    },
+    {
+     "msc": "62Kxx",
+     "name": "Design of statistical experiments",
+     "scope": "Design of statistical experiments [See also 05Bxx]"
+    },
+    {
+     "msc": "62Lxx",
+     "name": "Sequential statistical methods",
+     "scope": null
+    },
+    {
+     "msc": "62Mxx",
+     "name": "Inference from stochastic processes",
+     "scope": null
+    },
+    {
+     "msc": "62Nxx",
+     "name": "Survival analysis and censored data",
+     "scope": null
+    },
+    {
+     "msc": "62Pxx",
+     "name": "Applications of statistics",
+     "scope": "Applications of statistics [See also 90-XX, 91-XX, 92-XX]"
+    },
+    {
+     "msc": "62Qxx",
+     "name": "Statistical tables",
+     "scope": null
+    },
+    {
+     "msc": "62Rxx",
+     "name": "Statistics on algebraic and topological structures",
+     "scope": null
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.46",
+   "msc": "65-XX",
+   "name": "Numerical analysis",
+   "scope": null,
+   "concepts": [
+    {
+     "msc": "65Axx",
+     "name": "Tables in numerical analysis",
+     "scope": null
+    },
+    {
+     "msc": "65Bxx",
+     "name": "Acceleration of convergence in numerical analysis",
+     "scope": null
+    },
+    {
+     "msc": "65Cxx",
+     "name": "Probabilistic methods, stochastic differential equations",
+     "scope": null
+    },
+    {
+     "msc": "65Dxx",
+     "name": "Numerical approximation and computational geometry (primarily algorithms)",
+     "scope": "Numerical approximation and computational geometry (primarily algorithms) \\\\{For theoretical aspects, see 41-XX, 68Uxx\\\\}"
+    },
+    {
+     "msc": "65Exx",
+     "name": "Numerical methods in complex analysis (potential theory, etc.)",
+     "scope": null
+    },
+    {
+     "msc": "65Fxx",
+     "name": "Numerical linear algebra",
+     "scope": null
+    },
+    {
+     "msc": "65Gxx",
+     "name": "Error analysis and interval analysis",
+     "scope": null
+    },
+    {
+     "msc": "65Hxx",
+     "name": "Nonlinear algebraic or transcendental equations",
+     "scope": null
+    },
+    {
+     "msc": "65Jxx",
+     "name": "Numerical analysis in abstract spaces",
+     "scope": null
+    },
+    {
+     "msc": "65Kxx",
+     "name": "Numerical methods for mathematical programming, optimization and variational techniques",
+     "scope": null
+    },
+    {
+     "msc": "65Lxx",
+     "name": "Numerical methods for ordinary differential equations",
+     "scope": null
+    },
+    {
+     "msc": "65Mxx",
+     "name": "Numerical methods for partial differential equations, initial value and time-dependent initial-boundary value problems",
+     "scope": null
+    },
+    {
+     "msc": "65Nxx",
+     "name": "Numerical methods for partial differential equations, boundary value problems",
+     "scope": null
+    },
+    {
+     "msc": "65Pxx",
+     "name": "Numerical problems in dynamical systems",
+     "scope": "Numerical problems in dynamical systems [See also 37Mxx]"
+    },
+    {
+     "msc": "65Qxx",
+     "name": "Numerical methods for difference and functional equations, recurrence relations",
+     "scope": null
+    },
+    {
+     "msc": "65Rxx",
+     "name": "Numerical methods for integral equations, integral transforms",
+     "scope": null
+    },
+    {
+     "msc": "65Sxx",
+     "name": "Graphical methods in numerical analysis",
+     "scope": null
+    },
+    {
+     "msc": "65Txx",
+     "name": "Numerical methods in Fourier analysis",
+     "scope": null
+    },
+    {
+     "msc": "65Yxx",
+     "name": "Computer aspects of numerical algorithms",
+     "scope": null
+    },
+    {
+     "msc": "65Zxx",
+     "name": "Applications to the sciences",
+     "scope": null
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.47",
+   "msc": "68-XX",
+   "name": "Computer science",
+   "scope": "Computer science \\\\{For papers containing software, source code, etc. in a specific mathematical area, see the classification number -04 in that area\\\\}",
+   "concepts": [
+    {
+     "msc": "68Mxx",
+     "name": "Computer system organization",
+     "scope": null
+    },
+    {
+     "msc": "68Nxx",
+     "name": "Theory of software",
+     "scope": null
+    },
+    {
+     "msc": "68Pxx",
+     "name": "Theory of data",
+     "scope": null
+    },
+    {
+     "msc": "68Qxx",
+     "name": "Theory of computing",
+     "scope": null
+    },
+    {
+     "msc": "68Rxx",
+     "name": "Discrete mathematics in relation to computer science",
+     "scope": null
+    },
+    {
+     "msc": "68Txx",
+     "name": "Artificial intelligence",
+     "scope": null
+    },
+    {
+     "msc": "68Uxx",
+     "name": "Computing methodologies and applications",
+     "scope": null
+    },
+    {
+     "msc": "68Vxx",
+     "name": "Computer science support for mathematical research and practice",
+     "scope": null
+    },
+    {
+     "msc": "68Wxx",
+     "name": "Algorithms in computer science",
+     "scope": "Algorithms in computer science \\\\{For numerical algorithms, see 65-XX; for combinatorics and graph theory, see 05C85, 68Rxx\\\\}"
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.48",
+   "msc": "90-XX",
+   "name": "Operations research, mathematical programming",
+   "scope": null,
+   "concepts": [
+    {
+     "msc": "90Bxx",
+     "name": "Operations research and management science",
+     "scope": null
+    },
+    {
+     "msc": "90Cxx",
+     "name": "Mathematical programming",
+     "scope": "Mathematical programming [See also 49Mxx, 65Kxx]"
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.49",
+   "msc": "91-XX",
+   "name": "Game theory, economics, finance, and other social and behavioral sciences",
+   "scope": null,
+   "concepts": [
+    {
+     "msc": "91Axx",
+     "name": "Game theory",
+     "scope": null
+    },
+    {
+     "msc": "91Bxx",
+     "name": "Mathematical economics",
+     "scope": "Mathematical economics \\\\{For econometrics, see 62P20\\\\}"
+    },
+    {
+     "msc": "91Cxx",
+     "name": "Social and behavioral sciences: general topics",
+     "scope": "Social and behavioral sciences: general topics \\\\{For statistics, see 62P25\\\\}"
+    },
+    {
+     "msc": "91Dxx",
+     "name": "Mathematical sociology (including anthropology)",
+     "scope": null
+    },
+    {
+     "msc": "91Exx",
+     "name": "Mathematical psychology",
+     "scope": "Mathematical psychology \\\\{For psychometrics, see 62P15\\\\}"
+    },
+    {
+     "msc": "91Fxx",
+     "name": "Other social and behavioral sciences (mathematical treatment)",
+     "scope": null
+    },
+    {
+     "msc": "91Gxx",
+     "name": "Actuarial science and mathematical finance",
+     "scope": "Actuarial science and mathematical finance \\\\{For statistics, see 62P05\\\\}"
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.50",
+   "msc": "93-XX",
+   "name": "Systems theory; control",
+   "scope": "Systems theory; control \\\\{For optimal control, see 49-XX\\\\}",
+   "concepts": [
+    {
+     "msc": "93Axx",
+     "name": "General systems theory",
+     "scope": null
+    },
+    {
+     "msc": "93Bxx",
+     "name": "Controllability, observability, and system structure",
+     "scope": null
+    },
+    {
+     "msc": "93Cxx",
+     "name": "Model systems in control theory",
+     "scope": null
+    },
+    {
+     "msc": "93Dxx",
+     "name": "Stability of control systems",
+     "scope": null
+    },
+    {
+     "msc": "93Exx",
+     "name": "Stochastic systems and control",
+     "scope": null
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.51",
+   "msc": "94-XX",
+   "name": "Information and communication theory, circuits",
+   "scope": null,
+   "concepts": [
+    {
+     "msc": "94Axx",
+     "name": "Communication, information",
+     "scope": null
+    },
+    {
+     "msc": "94Bxx",
+     "name": "Theory of error-correcting codes and error-detecting codes",
+     "scope": null
+    },
+    {
+     "msc": "94Cxx",
+     "name": "Circuits, networks",
+     "scope": "Circuits, networks [See also 68Q06]"
+    },
+    {
+     "msc": "94Dxx",
+     "name": "Miscellaneous topics in information and communication theory",
+     "scope": null
+    }
+   ]
+  },
+  {
+   "id": "02.01.04.52",
+   "msc": "97-XX",
+   "name": "Mathematics education",
+   "scope": null,
+   "concepts": [
+    {
+     "msc": "97Axx",
+     "name": "History and society (aspects of mathematics education)",
+     "scope": null
+    },
+    {
+     "msc": "97Bxx",
+     "name": "Educational policy and systems",
+     "scope": null
+    },
+    {
+     "msc": "97Cxx",
+     "name": "Psychology of mathematics education, research in mathematics education",
+     "scope": null
+    },
+    {
+     "msc": "97Dxx",
+     "name": "Education and instruction in mathematics",
+     "scope": null
+    },
+    {
+     "msc": "97Exx",
+     "name": "Education of foundations of mathematics",
+     "scope": null
+    },
+    {
+     "msc": "97Fxx",
+     "name": "Education of arithmetic and number theory",
+     "scope": null
+    },
+    {
+     "msc": "97Gxx",
+     "name": "Geometry education",
+     "scope": null
+    },
+    {
+     "msc": "97Hxx",
+     "name": "Algebra education",
+     "scope": null
+    },
+    {
+     "msc": "97Ixx",
+     "name": "Analysis education",
+     "scope": null
+    },
+    {
+     "msc": "97Kxx",
+     "name": "Education of combinatorics, graph theory, probability theory, and statistics",
+     "scope": null
+    },
+    {
+     "msc": "97Mxx",
+     "name": "Education of mathematical modeling and applications of mathematics",
+     "scope": null
+    },
+    {
+     "msc": "97Nxx",
+     "name": "Education of numerical mathematics",
+     "scope": null
+    },
+    {
+     "msc": "97Pxx",
+     "name": "Computer science (educational aspects)",
+     "scope": null
+    },
+    {
+     "msc": "97Uxx",
+     "name": "Educational material and media and educational technology in mathematics education",
+     "scope": null
+    }
+   ]
+  }
+ ]
+}
