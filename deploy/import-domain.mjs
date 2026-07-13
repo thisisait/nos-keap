@@ -107,9 +107,10 @@ pillars.forEach((pillar, pi) => {
     insNode.run(blockNodeId, pillarNodeId, block.name, desc, bi, actor, actor, tick());
     insDesc.run(blockNodeId, desc, null, actor, actor);
     // Brief = the constituent ontology concepts + agent-authored definitions.
-    const lines = (block.brief || []).map((c) =>
-      c.definition ? `- **${c.name}** (${c.code}) — ${clip(c.definition, 400)}` : `- **${c.name}** (${c.code})`,
-    );
+    const lines = (block.brief || []).map((c) => {
+      const code = c.code ? ` (${c.code})` : '';
+      return c.definition ? `- **${c.name}**${code} — ${clip(c.definition, 400)}` : `- **${c.name}**${code}`;
+    });
     const brief = `${desc}\n\n### Concepts\n${lines.join('\n')}`;
     insMeta.run(
       blockNodeId,

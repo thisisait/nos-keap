@@ -1,0 +1,102 @@
+{
+ "domain": "chemistry",
+ "ontology": "field-consensus branches (textbook)",
+ "root": {
+  "id": "01.02.11",
+  "parent": "01.02",
+  "name": "Chemical Disciplines",
+  "description": "The chemical sciences organized by discipline — from organic, inorganic and physical chemistry through analytical, materials, electro-, photo- and computational chemistry to the nuclear, environmental, medicinal and supramolecular frontiers. A deep authoritative map of chemistry's branches, their core theory, and their active research fronts."
+ },
+ "pillars": [
+  {
+   "id": "01.02.11.01",
+   "name": "Organic Chemistry",
+   "scope": "structure, reactivity, synthesis and mechanisms of carbon compounds; functional groups, stereochemistry, pericyclic and radical chemistry, total synthesis, organometallics in synthesis",
+   "concepts": []
+  },
+  {
+   "id": "01.02.11.02",
+   "name": "Inorganic Chemistry",
+   "scope": "chemistry of all the elements beyond simple carbon; coordination compounds, main-group and transition-metal chemistry, bioinorganic, solid-state and cluster chemistry, ligand field theory",
+   "concepts": []
+  },
+  {
+   "id": "01.02.11.03",
+   "name": "Physical Chemistry",
+   "scope": "the physical principles underlying chemical systems; thermodynamics, chemical kinetics, quantum chemistry, statistical mechanics, spectroscopy, surface and colloid science",
+   "concepts": []
+  },
+  {
+   "id": "01.02.11.04",
+   "name": "Analytical Chemistry",
+   "scope": "identification, separation and quantification of matter; chromatography, mass spectrometry, spectroscopic and electroanalytical methods, chemometrics, sensors",
+   "concepts": []
+  },
+  {
+   "id": "01.02.11.05",
+   "name": "Biochemistry",
+   "scope": "the chemistry of living systems; proteins and enzymes, nucleic acids, metabolism and bioenergetics, lipids and membranes, structural and chemical biology",
+   "concepts": []
+  },
+  {
+   "id": "01.02.11.06",
+   "name": "Theoretical & Computational Chemistry",
+   "scope": "prediction and modeling of chemical structure and behavior; electronic-structure methods (DFT, ab initio), molecular dynamics, force fields, cheminformatics, machine-learned potentials",
+   "concepts": []
+  },
+  {
+   "id": "01.02.11.07",
+   "name": "Materials Chemistry",
+   "scope": "design and synthesis of functional solids and soft matter; ceramics, semiconductors, catalysts, framework materials (MOFs/COFs), energy-storage and 2D materials",
+   "concepts": []
+  },
+  {
+   "id": "01.02.11.08",
+   "name": "Polymer Chemistry",
+   "scope": "synthesis, characterization and physics of macromolecules; chain-growth and step-growth polymerization, controlled/living methods, polymer physics, biopolymers",
+   "concepts": []
+  },
+  {
+   "id": "01.02.11.09",
+   "name": "Electrochemistry",
+   "scope": "chemistry of electron transfer at interfaces; voltammetry, batteries and fuel cells, electrocatalysis, corrosion, bioelectrochemistry",
+   "concepts": []
+  },
+  {
+   "id": "01.02.11.10",
+   "name": "Photochemistry & Radiation Chemistry",
+   "scope": "chemistry driven by light and ionizing radiation; excited states, photocatalysis, luminescence, solar energy conversion, radiolysis",
+   "concepts": []
+  },
+  {
+   "id": "01.02.11.11",
+   "name": "Nuclear & Radiochemistry",
+   "scope": "chemistry of radioactive nuclei and nuclear transformations; isotope production, actinide chemistry, nuclear fuel cycle, radiopharmaceuticals, radioanalytics",
+   "concepts": []
+  },
+  {
+   "id": "01.02.11.12",
+   "name": "Environmental & Green Chemistry",
+   "scope": "chemistry of the natural environment and sustainable design; atmospheric and aquatic chemistry, pollutant fate, catalysis for sustainability, benign solvents, atom economy",
+   "concepts": []
+  },
+  {
+   "id": "01.02.11.13",
+   "name": "Medicinal & Pharmaceutical Chemistry",
+   "scope": "chemistry of drug discovery and development; structure-activity relationships, lead optimization, pharmacophores, ADME, chemical biology of therapeutics",
+   "concepts": []
+  },
+  {
+   "id": "01.02.11.14",
+   "name": "Supramolecular Chemistry & Nanochemistry",
+   "scope": "chemistry beyond the molecule; molecular recognition, self-assembly, host-guest systems, molecular machines, nanoparticles and nanostructured matter",
+   "concepts": []
+  },
+  {
+   "id": "01.02.11.15",
+   "name": "Astrochemistry & Cosmochemistry",
+   "scope": "chemistry of the cosmos; interstellar and circumstellar molecules, planetary and meteoritic chemistry, prebiotic chemistry, isotopic cosmochemistry",
+   "concepts": []
+  }
+ ]
+}

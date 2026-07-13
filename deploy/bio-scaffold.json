@@ -1,0 +1,114 @@
+{
+ "domain": "bio",
+ "ontology": "field-consensus branches (textbook)",
+ "root": {
+  "id": "01.03.11",
+  "parent": "01.03",
+  "name": "Biological Disciplines",
+  "description": "The life sciences organized by discipline — from molecular, cell and developmental biology through genetics, genomics, evolution and ecology to physiology, neuroscience, immunology, microbiology and the systems, structural and astrobiological frontiers. A deep authoritative map of biology's branches, their core theory, and their active research fronts."
+ },
+ "pillars": [
+  {
+   "id": "01.03.11.01",
+   "name": "Molecular Biology",
+   "scope": "the molecular basis of biological activity; DNA replication, transcription, translation, gene regulation, RNA biology, molecular techniques",
+   "concepts": []
+  },
+  {
+   "id": "01.03.11.02",
+   "name": "Cell Biology",
+   "scope": "structure and function of cells; organelles, membranes and trafficking, cytoskeleton, cell cycle, signaling, cell death",
+   "concepts": []
+  },
+  {
+   "id": "01.03.11.03",
+   "name": "Genetics",
+   "scope": "heredity and variation; Mendelian and population genetics, linkage and mapping, mutation, epigenetics, quantitative genetics",
+   "concepts": []
+  },
+  {
+   "id": "01.03.11.04",
+   "name": "Genomics & Bioinformatics",
+   "scope": "genome-scale biology and computational analysis; sequencing, assembly and annotation, comparative and functional genomics, sequence algorithms, multi-omics integration",
+   "concepts": []
+  },
+  {
+   "id": "01.03.11.05",
+   "name": "Developmental Biology",
+   "scope": "how organisms build themselves; embryogenesis, morphogenesis, pattern formation, stem cells, regeneration, evo-devo",
+   "concepts": []
+  },
+  {
+   "id": "01.03.11.06",
+   "name": "Evolutionary Biology",
+   "scope": "the origin and change of biodiversity; natural selection, phylogenetics, speciation, molecular evolution, macroevolution, coevolution",
+   "concepts": []
+  },
+  {
+   "id": "01.03.11.07",
+   "name": "Ecology",
+   "scope": "interactions of organisms with each other and the environment; population, community and ecosystem ecology, biogeochemical cycles, conservation, global change",
+   "concepts": []
+  },
+  {
+   "id": "01.03.11.08",
+   "name": "Physiology",
+   "scope": "function of living systems; homeostasis, endocrine and nervous integration, cardiovascular, respiratory, renal and metabolic physiology across organisms",
+   "concepts": []
+  },
+  {
+   "id": "01.03.11.09",
+   "name": "Neuroscience",
+   "scope": "the nervous system and behavior; neurons and synapses, neural circuits, sensory and motor systems, plasticity, cognition, computational neuroscience",
+   "concepts": []
+  },
+  {
+   "id": "01.03.11.10",
+   "name": "Immunology",
+   "scope": "host defense and immune regulation; innate and adaptive immunity, antibodies and receptors, tolerance and autoimmunity, immunotherapy",
+   "concepts": []
+  },
+  {
+   "id": "01.03.11.11",
+   "name": "Microbiology & Virology",
+   "scope": "biology of microbes and viruses; bacterial physiology and genetics, microbial ecology and the microbiome, virology, host-pathogen interactions, antimicrobials",
+   "concepts": []
+  },
+  {
+   "id": "01.03.11.12",
+   "name": "Structural Biology",
+   "scope": "three-dimensional structure of biological macromolecules; protein folding, X-ray crystallography, cryo-EM, NMR, structure prediction, structure-function",
+   "concepts": []
+  },
+  {
+   "id": "01.03.11.13",
+   "name": "Systems & Synthetic Biology",
+   "scope": "quantitative and engineered biology; network and pathway modeling, gene circuits, metabolic engineering, genome editing, design-build-test",
+   "concepts": []
+  },
+  {
+   "id": "01.03.11.14",
+   "name": "Biophysics",
+   "scope": "physical principles of living matter; molecular motors, membrane and ion-channel biophysics, single-molecule methods, mechanobiology, statistical physics of biology",
+   "concepts": []
+  },
+  {
+   "id": "01.03.11.15",
+   "name": "Botany (Plant Biology)",
+   "scope": "biology of plants; photosynthesis, plant physiology and development, plant genetics, plant-environment interactions, crop and phytochemistry",
+   "concepts": []
+  },
+  {
+   "id": "01.03.11.16",
+   "name": "Zoology (Animal Biology)",
+   "scope": "biology of animals; comparative anatomy and physiology, behavior and ethology, animal diversity and systematics, physiological adaptation",
+   "concepts": []
+  },
+  {
+   "id": "01.03.11.17",
+   "name": "Astrobiology & Origins of Life",
+   "scope": "life beyond Earth and its beginnings; prebiotic chemistry, origin-of-life scenarios, extremophiles, biosignatures, habitability",
+   "concepts": []
+  }
+ ]
+}

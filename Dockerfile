@@ -60,6 +60,8 @@ COPY --from=build /app/deploy/toe-blocks.json ./deploy/toe-blocks.json
 # + container-restart materialization contract as import-toe.mjs.
 COPY --from=build /app/deploy/import-domain.mjs ./deploy/import-domain.mjs
 COPY --from=build /app/deploy/math-import.json ./deploy/math-import.json
+COPY --from=build /app/deploy/chem-import.json ./deploy/chem-import.json
+COPY --from=build /app/deploy/bio-import.json ./deploy/bio-import.json
 # /data must exist and belong to the runtime user BEFORE the VOLUME
 # declaration — an anonymous volume inherits these permissions; without the
 # chown the non-root process gets SQLITE_CANTOPEN on first boot.
