@@ -149,6 +149,15 @@ const _nebulaTex = radialSprite('rgba(255,255,255,0.9)', 'rgba(255,255,255,0.28)
 const _discTex = radialSprite('rgba(255,255,255,1)', 'rgba(255,255,255,0.35)');
 const _cometTex = tailSprite();
 
+// Decorative overlays (nebula halo, galaxy disc, labels, comet tail) must NOT
+// intercept clicks — a 560u nebula sprite would swallow every click meant for a
+// star inside that domain. Disable raycast so only the node's core sphere (or an
+// object's asset mesh) is the click target.
+const noRaycast = (o: THREE.Object3D) => {
+  o.raycast = () => {};
+  return o;
+};
+
 const _formGeo: Record<CelestialForm, THREE.BufferGeometry> = {
   planet: new THREE.SphereGeometry(1, 16, 12),
   moon: new THREE.SphereGeometry(1, 10, 8),
@@ -170,7 +179,7 @@ function nebulaSprite(hue: number): THREE.Sprite {
     }),
   );
   s.scale.setScalar(560); // ~2× LEVEL_RADIUS[1] so it visually contains its galaxies
-  return s;
+  return noRaycast(s) as THREE.Sprite;
 }
 
 function galaxyDisc(hue: number): THREE.Sprite {
@@ -185,7 +194,7 @@ function galaxyDisc(hue: number): THREE.Sprite {
     }),
   );
   s.scale.setScalar(70);
-  return s;
+  return noRaycast(s) as THREE.Sprite;
 }
 
 /** One typed orbital body: a per-form mesh (new Mesh off shared geometry). */
@@ -199,6 +208,7 @@ function buildAssetMesh(node: CanvasNode): THREE.Object3D {
     const ring = new THREE.Mesh(_ringGeo, mat);
     ring.rotation.x = Math.PI / 2.4;
     ring.scale.setScalar(size);
+    noRaycast(ring);
     const g = new THREE.Group();
     g.add(mesh, ring);
     return g;
@@ -216,6 +226,7 @@ function buildAssetMesh(node: CanvasNode): THREE.Object3D {
     );
     tail.scale.set(size * 6, size * 1.2, 1);
     tail.center.set(0.1, 0.5);
+    noRaycast(tail);
     const g = new THREE.Group();
     g.add(mesh, tail);
     return g;
@@ -517,6 +528,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       sprite.textHeight = node.level <= 1 ? 7 : 3.5;
       sprite.position.y = -(Math.sqrt(nodeSize(node)) * 2.4 + 6);
       sprite.material.depthWrite = false;
+      noRaycast(sprite);
       g.add(sprite);
     }
     return g.children.length ? g : (false as any);
