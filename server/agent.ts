@@ -454,6 +454,19 @@ export function registerAgentRoutes(app: Express) {
   const contentHashOf = (name: string, description: string | null | undefined) =>
     crypto.createHash('sha1').update(`${name} ${description ?? ''}`).digest('hex').slice(0, 16);
 
+  // The anchor core (level 0-2) is the curator's FIXED reference frame — the
+  // top ontology every votable-zone judgment must stay consistent with (plan
+  // §7). The profile is a static file so it can't bake the live tree; the agent
+  // fetches this once at run start. Read-only; the curator never edits the
+  // anchor core in P0 (anchor-edit proposals are P3, off by default).
+  app.get('/agent/v1/curator/anchor', agentAuth('ro'), (_req, res) => {
+    const anchor = allNodes()
+      .filter((n) => nodeLevel(n.id) <= 2)
+      .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
+      .map((n) => ({ id: n.id, name: n.name, level: nodeLevel(n.id), description: trim(n.description) }));
+    ok(res, { total: anchor.length, items: anchor });
+  });
+
   app.get('/agent/v1/curator/frontier', agentAuth('ro'), (req, res) => {
     const minLevel = req.query.minLevel !== undefined ? Number(req.query.minLevel) : 3;
     const maxLevel = req.query.maxLevel !== undefined ? Number(req.query.maxLevel) : 9;
