@@ -523,13 +523,19 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     if (node.level === 0) g.add(nebulaSprite(node.categoryHue));
     if (node.level === 1) g.add(galaxyDisc(node.categoryHue));
     if (node.level <= 1 || node.star) {
-      const sprite = new SpriteText(node.name) as THREE.Sprite;
-      sprite.color = node.star ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.92)';
+      const sprite = new SpriteText(node.name);
+      sprite.color = 'rgba(255,255,255,0.96)';
       sprite.textHeight = node.level <= 1 ? 7 : 3.5;
-      sprite.position.y = -(Math.sqrt(nodeSize(node)) * 2.4 + 6);
-      sprite.material.depthWrite = false;
-      noRaycast(sprite);
-      g.add(sprite);
+      // Dark pill behind the text so white labels stay legible over bright
+      // stars, nebulae and galaxy discs.
+      sprite.backgroundColor = 'rgba(0,0,0,0.6)';
+      sprite.padding = node.level <= 1 ? 2 : 1.2;
+      sprite.borderRadius = 2;
+      const label = sprite as unknown as THREE.Sprite;
+      label.position.y = -(Math.sqrt(nodeSize(node)) * 2.4 + 6);
+      label.material.depthWrite = false;
+      noRaycast(label);
+      g.add(label);
     }
     return g.children.length ? g : (false as any);
   }, []);
