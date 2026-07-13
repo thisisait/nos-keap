@@ -20,7 +20,7 @@
 import crypto from 'node:crypto';
 import type { Express, Request, Response, NextFunction } from 'express';
 import * as db from './db';
-import { getNode, getAncestors, taxonomyNodeCount, type FlatNode } from './taxonomy';
+import { getNode, getAncestors, taxonomyNodeCount, nodeLevel, type FlatNode } from './taxonomy';
 import { resolveContentRef, listContentServices } from './content-links';
 import { pendingEmbeddings, EMBED_MODEL, EMBED_DIM } from './embeddings';
 import { extractRefs } from './objects';
@@ -442,6 +442,119 @@ export function registerAgentRoutes(app: Express) {
       }
     }
     ok(res, { proposed: proposed.length, errors, submittedBy: `agent:${req.agentName}` });
+  });
+
+  // ── Curator surface (docs/plans/keap-curator-agent.md) ────────────────────
+  // The reconciler sweeps the votable zone (level >= minLevel) staleness-first,
+  // lints each node, and — in P0 — proposes desc rewrites through the describe
+  // seam above. These endpoints are the traversal cursor + work-log: frontier
+  // hands out the next batch (never-visited, then oldest, cooldown-skipped);
+  // run/start + run/finish bracket a sweep; visit checkpoints each node so a
+  // kill/OOM resumes from the max cursor. No taxonomy writes here — propose-only.
+  const contentHashOf = (name: string, description: string | null | undefined) =>
+    crypto.createHash('sha1').update(`${name} ${description ?? ''}`).digest('hex').slice(0, 16);
+
+  app.get('/agent/v1/curator/frontier', agentAuth('ro'), (req, res) => {
+    const minLevel = req.query.minLevel !== undefined ? Number(req.query.minLevel) : 3;
+    const maxLevel = req.query.maxLevel !== undefined ? Number(req.query.maxLevel) : 9;
+    const limit = Math.min(Number(req.query.limit) || 15, MAX_LIMIT);
+    const cooldownDays = req.query.cooldownDays !== undefined ? Number(req.query.cooldownDays) : 14;
+    const cooldownS = Math.max(0, cooldownDays) * 86400;
+    const now = Math.floor(Date.now() / 1000);
+
+    const nodes = allNodes();
+    const byId = new Map(nodes.map((n) => [n.id, n]));
+    const visits = db.curatorVisitMap();
+
+    // Relation degree per node (typed vs all) — the relation-desert signal.
+    const typedDeg = new Map<string, number>();
+    const allDeg = new Map<string, number>();
+    for (const r of db.listConceptRelations(false)) {
+      const typed = r.type !== 'related-concept';
+      for (const id of [r.from, r.to]) {
+        allDeg.set(id, (allDeg.get(id) ?? 0) + 1);
+        if (typed) typedDeg.set(id, (typedDeg.get(id) ?? 0) + 1);
+      }
+    }
+
+    const eligible = nodes.filter((n) => {
+      const lvl = nodeLevel(n.id);
+      if (lvl < minLevel || lvl > maxLevel) return false;
+      const v = visits.get(n.id);
+      if (!v) return true; // never visited — always eligible
+      // Skip only if seen recently AND unchanged since (convergence).
+      const fresh = now - v.visitedAt < cooldownS;
+      const unchanged = v.contentHash === contentHashOf(n.name, n.description);
+      return !(fresh && unchanged);
+    });
+
+    // Staleness order: never-visited first, then oldest visited_at ascending.
+    eligible.sort((a, b) => (visits.get(a.id)?.visitedAt ?? 0) - (visits.get(b.id)?.visitedAt ?? 0));
+
+    const items = eligible.slice(0, limit).map((n) => ({
+      id: n.id,
+      name: n.name,
+      path: n.path,
+      level: nodeLevel(n.id),
+      zone: n.zone,
+      description: n.description ?? null,
+      descriptionCs: n.descriptionCs ?? null,
+      descLen: (n.description ?? '').trim().length,
+      contentHash: contentHashOf(n.name, n.description),
+      lastVisitedAt: visits.get(n.id)?.visitedAt ?? null,
+      typedRelations: typedDeg.get(n.id) ?? 0,
+      allRelations: allDeg.get(n.id) ?? 0,
+      childNames: n.childIds.slice(0, 12).map((cid) => byId.get(cid)?.name).filter(Boolean),
+      siblingNames: n.parentId
+        ? (byId.get(n.parentId)?.childIds ?? [])
+            .filter((sid) => sid !== n.id)
+            .slice(0, 12)
+            .map((sid) => byId.get(sid)?.name)
+            .filter(Boolean)
+        : [],
+    }));
+    ok(res, { total: eligible.length, minLevel, maxLevel, cooldownDays, items });
+  });
+
+  app.post('/agent/v1/curator/run/start', agentAuth('rw'), (req, res) => {
+    const runId = String(req.body?.runId ?? '').trim();
+    if (!runId) return fail(res, 400, 'runId required');
+    db.startCuratorRun(
+      runId,
+      req.body?.params ? JSON.stringify(req.body.params) : null,
+      req.body?.budgetTokens != null ? Number(req.body.budgetTokens) : null,
+    );
+    ok(res, { runId, status: 'running' });
+  });
+
+  app.post('/agent/v1/curator/run/finish', agentAuth('rw'), (req, res) => {
+    const runId = String(req.body?.runId ?? '').trim();
+    if (!runId) return fail(res, 400, 'runId required');
+    db.finishCuratorRun(runId, {
+      tokensSpent: req.body?.tokensSpent != null ? Number(req.body.tokensSpent) : undefined,
+      nodesVisited: req.body?.nodesVisited != null ? Number(req.body.nodesVisited) : undefined,
+      proposalsMade: req.body?.proposalsMade != null ? Number(req.body.proposalsMade) : undefined,
+      proposalsApproved: req.body?.proposalsApproved != null ? Number(req.body.proposalsApproved) : undefined,
+      status: req.body?.status ? String(req.body.status) : undefined,
+    });
+    ok(res, { runId, status: req.body?.status ?? 'done' });
+  });
+
+  app.post('/agent/v1/curator/visit', agentAuth('rw'), (req, res) => {
+    const runId = String(req.body?.runId ?? '').trim();
+    const nodeId = String(req.body?.nodeId ?? '').trim();
+    if (!runId || !nodeId) return fail(res, 400, 'runId and nodeId required');
+    if (!getNode(nodeId)) return fail(res, 404, 'unknown taxonomy node');
+    db.recordCuratorVisit({
+      nodeId,
+      runId,
+      pass: req.body?.pass != null ? Number(req.body.pass) : 0,
+      contentHash: req.body?.contentHash ? String(req.body.contentHash) : null,
+      findingsCount: req.body?.findingsCount != null ? Number(req.body.findingsCount) : 0,
+      proposalsCount: req.body?.proposalsCount != null ? Number(req.body.proposalsCount) : 0,
+      action: req.body?.action ? String(req.body.action).slice(0, 64) : null,
+    });
+    ok(res, { nodeId, runId, recorded: true });
   });
 
   // ── taxonomy-brief surface (Track K) — the node's ARTICLE where the K1

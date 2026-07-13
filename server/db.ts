@@ -220,6 +220,37 @@ const SCHEMA = [
      source TEXT DEFAULT 'toe',
      PRIMARY KEY (from_id, to_id, type)
    )`,
+
+  // Curator work-log — the recursive-reconciler agent's cursor + progress
+  // (docs/plans/keap-curator-agent.md §9). curator_runs is one row per overnight
+  // sweep; curator_visits is one row per (node, run) so a kill/OOM resumes from
+  // the max cursor and the frontier orders staleness-first (never-visited, then
+  // oldest visited_at). content_hash lets a re-run skip an unchanged node inside
+  // the cooldown window. Propose-only: the curator never writes taxonomy rows
+  // directly — every edit rides the promotions bus.
+  `CREATE TABLE IF NOT EXISTS curator_runs (
+     run_id TEXT PRIMARY KEY,
+     started_at INTEGER DEFAULT (strftime('%s','now')),
+     ended_at INTEGER,
+     params_json TEXT,
+     budget_tokens INTEGER,
+     tokens_spent INTEGER,
+     nodes_visited INTEGER NOT NULL DEFAULT 0,
+     proposals_made INTEGER NOT NULL DEFAULT 0,
+     proposals_approved INTEGER NOT NULL DEFAULT 0,
+     status TEXT NOT NULL DEFAULT 'running'
+   )`,
+  `CREATE TABLE IF NOT EXISTS curator_visits (
+     node_id TEXT NOT NULL,
+     run_id TEXT NOT NULL,
+     pass INTEGER NOT NULL DEFAULT 0,
+     visited_at INTEGER DEFAULT (strftime('%s','now')),
+     content_hash TEXT,
+     findings_count INTEGER NOT NULL DEFAULT 0,
+     proposals_count INTEGER NOT NULL DEFAULT 0,
+     action TEXT,
+     PRIMARY KEY (node_id, run_id)
+   )`,
 ];
 
 // ── Vector layer (libSQL native) ──────────────────────────────────────────────
@@ -1408,6 +1439,108 @@ export function listConceptRelations(typedOnly = true): ConceptRelation[] {
     type: r.type,
     explored: r.explored ?? null,
   }));
+}
+
+// ── Curator work-log (docs/plans/keap-curator-agent.md §9) ──────────────────
+export interface CuratorVisit {
+  visitedAt: number;
+  contentHash: string | null;
+  runId: string;
+}
+
+/** Latest visit per node across ALL runs — the frontier's staleness signal. */
+export function curatorVisitMap(): Map<string, CuratorVisit> {
+  const rows = getDb()
+    .prepare(
+      `SELECT node_id, run_id, content_hash, MAX(visited_at) AS visited_at
+         FROM curator_visits GROUP BY node_id`,
+    )
+    .all() as any[];
+  const m = new Map<string, CuratorVisit>();
+  for (const r of rows) m.set(r.node_id, { visitedAt: r.visited_at, contentHash: r.content_hash ?? null, runId: r.run_id });
+  return m;
+}
+
+/** Open a run row (idempotent — re-opening the same run_id is a no-op reset). */
+export function startCuratorRun(runId: string, paramsJson: string | null, budgetTokens: number | null): void {
+  getDb()
+    .prepare(
+      `INSERT INTO curator_runs (run_id, params_json, budget_tokens, status)
+       VALUES (?, ?, ?, 'running')
+       ON CONFLICT(run_id) DO UPDATE SET
+         params_json = excluded.params_json,
+         budget_tokens = excluded.budget_tokens,
+         status = 'running',
+         ended_at = NULL`,
+    )
+    .run(runId, paramsJson, budgetTokens);
+}
+
+/** Close a run row with the final tallies. */
+export function finishCuratorRun(
+  runId: string,
+  t: { tokensSpent?: number; nodesVisited?: number; proposalsMade?: number; proposalsApproved?: number; status?: string },
+): void {
+  getDb()
+    .prepare(
+      `UPDATE curator_runs SET
+         ended_at = strftime('%s','now'),
+         tokens_spent = COALESCE(?, tokens_spent),
+         nodes_visited = COALESCE(?, nodes_visited),
+         proposals_made = COALESCE(?, proposals_made),
+         proposals_approved = COALESCE(?, proposals_approved),
+         status = COALESCE(?, 'done')
+       WHERE run_id = ?`,
+    )
+    .run(
+      t.tokensSpent ?? null,
+      t.nodesVisited ?? null,
+      t.proposalsMade ?? null,
+      t.proposalsApproved ?? null,
+      t.status ?? null,
+      runId,
+    );
+}
+
+/** Upsert one node visit and bump the run's rolling counters. */
+export function recordCuratorVisit(v: {
+  nodeId: string;
+  runId: string;
+  pass?: number;
+  contentHash?: string | null;
+  findingsCount?: number;
+  proposalsCount?: number;
+  action?: string | null;
+}): void {
+  const d = getDb();
+  const existed = d.prepare('SELECT 1 FROM curator_visits WHERE node_id = ? AND run_id = ?').get(v.nodeId, v.runId);
+  d.prepare(
+    `INSERT INTO curator_visits (node_id, run_id, pass, content_hash, findings_count, proposals_count, action)
+     VALUES (?, ?, ?, ?, ?, ?, ?)
+     ON CONFLICT(node_id, run_id) DO UPDATE SET
+       pass = excluded.pass,
+       visited_at = strftime('%s','now'),
+       content_hash = excluded.content_hash,
+       findings_count = excluded.findings_count,
+       proposals_count = excluded.proposals_count,
+       action = excluded.action`,
+  ).run(
+    v.nodeId,
+    v.runId,
+    v.pass ?? 0,
+    v.contentHash ?? null,
+    v.findingsCount ?? 0,
+    v.proposalsCount ?? 0,
+    v.action ?? null,
+  );
+  // Roll the run's node/proposal tallies forward (only on a fresh node visit so
+  // a checkpoint re-post of the same node doesn't double-count).
+  if (!existed) {
+    d.prepare(
+      `UPDATE curator_runs SET nodes_visited = nodes_visited + 1, proposals_made = proposals_made + ?
+         WHERE run_id = ?`,
+    ).run(v.proposalsCount ?? 0, v.runId);
+  }
 }
 
 /** Append one star to the baked layout under the CURRENT version (U1 append). */
