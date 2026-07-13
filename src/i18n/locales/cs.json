@@ -128,7 +128,10 @@
       "idNameRequired": "ID a název jsou povinné.",
       "selectFirst": "Nejdříve vyberte položku taxonomie.",
       "requiredData": "Odkaz na obsah (služba:cesta)",
-      "requiredDataHint": "Propojí uzel s živou nOS službou. K dispozici: {{list}}"
+      "requiredDataHint": "Propojí uzel s živou nOS službou. K dispozici: {{list}}",
+      "nodeCount": "{{count}} uzlů",
+      "searchPlaceholder": "Filtrovat podle id, názvu nebo popisu…",
+      "curatedBadge": "kurátorováno"
     },
     "tileTypes": {
       "recent-pages": "Naposledy zachycené",

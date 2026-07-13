@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useDatabase, type TaxonomyMetadata, type HomepageTile } from '@/hooks/useDatabase';
+import { useGraph, type GraphNode } from '@/hooks/useExplorerData';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -41,6 +42,62 @@ export default function Admin() {
   const [editingItem, setEditingItem] = useState<TaxonomyMetadata | null>(null);
   const [selectedTaxonomyId, setSelectedTaxonomyId] = useState<string | null>(null);
   const [newTile, setNewTile] = useState({ type: 'recent-pages', title: '' });
+  const [taxSearch, setTaxSearch] = useState('');
+
+  // The real taxonomy tree (server truth: node names + the K1 curated
+  // descriptions). The `taxonomy_metadata` overlay below only carries per-node
+  // content-link/icon overrides — rendering the list from THAT alone left roots
+  // "unnamed" and the list flat/half-empty. We render the tree, pre-order, and
+  // fold the curated overlay in as badges.
+  const graph = useGraph();
+  const curatedById = useMemo(
+    () => new Map(taxonomyItems.map((i) => [i.id, i])),
+    [taxonomyItems],
+  );
+  const orderedNodes = useMemo(() => {
+    const nodes = graph.data?.nodes ?? [];
+    const byParent = new Map<string | null, GraphNode[]>();
+    for (const n of nodes) {
+      const key = n.parentId ?? null;
+      const bucket = byParent.get(key);
+      if (bucket) bucket.push(n);
+      else byParent.set(key, [n]);
+    }
+    const out: GraphNode[] = [];
+    const walk = (parentId: string | null) => {
+      for (const n of byParent.get(parentId) ?? []) {
+        out.push(n);
+        walk(n.id);
+      }
+    };
+    walk(null);
+    return out;
+  }, [graph.data]);
+  const visibleNodes = useMemo(() => {
+    const q = taxSearch.trim().toLowerCase();
+    if (!q) return orderedNodes;
+    return orderedNodes.filter(
+      (n) =>
+        n.id.toLowerCase().includes(q) ||
+        n.name.toLowerCase().includes(q) ||
+        (n.description ?? '').toLowerCase().includes(q),
+    );
+  }, [orderedNodes, taxSearch]);
+
+  // Open the curated-metadata editor for a node: reuse an existing overlay row
+  // or seed a blank one keyed to the node id (the tree already owns the name).
+  const editNode = (node: GraphNode) => {
+    setEditingItem(
+      curatedById.get(node.id) ?? {
+        id: node.id,
+        name: node.name,
+        description: '',
+        icon: '',
+        links: '{}',
+        translations: '{}',
+      },
+    );
+  };
 
   const loadData = useCallback(async () => {
     try {
@@ -334,49 +391,91 @@ export default function Admin() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
-                  <Label>{t('admin.taxonomy.existing')}</Label>
-                  <div className="space-y-2 mt-2 max-h-40 overflow-y-auto border border-border rounded-md p-2">
-                    {taxonomyItems.length === 0 ? (
-                      <p className="text-muted-foreground text-sm">{t('admin.taxonomy.empty')}</p>
+                  <div className="flex items-center justify-between gap-2">
+                    <Label>{t('admin.taxonomy.existing')}</Label>
+                    <span className="text-xs text-muted-foreground">
+                      {t('admin.taxonomy.nodeCount', { count: orderedNodes.length })}
+                    </span>
+                  </div>
+                  <Input
+                    className="mt-2"
+                    placeholder={t('admin.taxonomy.searchPlaceholder')}
+                    value={taxSearch}
+                    onChange={(e) => setTaxSearch(e.target.value)}
+                  />
+                  <div className="space-y-0.5 mt-2 max-h-[32rem] overflow-y-auto border border-border rounded-md p-2">
+                    {graph.isLoading ? (
+                      <p className="text-muted-foreground text-sm p-2">{t('app.connecting')}</p>
+                    ) : visibleNodes.length === 0 ? (
+                      <p className="text-muted-foreground text-sm p-2">{t('admin.taxonomy.empty')}</p>
                     ) : (
-                      taxonomyItems.map((item) => (
-                        <div
-                          key={item.id}
-                          className="flex items-center justify-between p-2 bg-muted/30 rounded-md"
-                        >
-                          <div>
-                            <div className="font-medium text-sm flex items-center gap-2">
-                              {item.id}
-                              {item.requiredData && (
-                                <Badge variant="outline" className="text-xs font-normal">
-                                  {item.requiredData}
+                      visibleNodes.map((node) => {
+                        const curated = curatedById.get(node.id);
+                        const desc = node.description || curated?.description;
+                        return (
+                          <div
+                            key={node.id}
+                            className="flex items-start justify-between gap-2 py-1.5 pr-2 rounded-md hover:bg-muted/40"
+                            style={{ paddingLeft: `${node.level * 16 + 8}px` }}
+                          >
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                {node.level > 0 && (
+                                  <span className="text-muted-foreground select-none">└</span>
+                                )}
+                                <span
+                                  className={
+                                    node.level === 0 ? 'font-semibold' : 'font-medium text-sm'
+                                  }
+                                >
+                                  {node.name}
+                                </span>
+                                <Badge variant="outline" className="text-[10px] font-mono font-normal">
+                                  {node.id}
                                 </Badge>
+                                {node.dataType && (
+                                  <Badge variant="secondary" className="text-[10px] font-normal">
+                                    {node.dataType}
+                                  </Badge>
+                                )}
+                                {curated?.requiredData && (
+                                  <Badge variant="outline" className="text-[10px] font-normal">
+                                    {curated.requiredData}
+                                  </Badge>
+                                )}
+                                {curated && (
+                                  <Badge variant="secondary" className="text-[10px] font-normal">
+                                    {t('admin.taxonomy.curatedBadge')}
+                                  </Badge>
+                                )}
+                              </div>
+                              {desc && (
+                                <p className="text-xs text-muted-foreground line-clamp-2">{desc}</p>
                               )}
                             </div>
-                            <div className="text-xs text-muted-foreground">
-                              {item.name || t('admin.taxonomy.unnamed')}
+                            <div className="flex gap-1 shrink-0">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => editNode(node)}
+                                aria-label={t('common.edit')}
+                              >
+                                <Edit className="w-3 h-3" />
+                              </Button>
+                              {curated && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => deleteTaxonomyItem(node.id)}
+                                  aria-label={t('common.delete')}
+                                >
+                                  <Trash className="w-3 h-3" />
+                                </Button>
+                              )}
                             </div>
                           </div>
-                          <div className="flex gap-1">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => setEditingItem(item)}
-                              aria-label={t('common.edit')}
-                            >
-                              <Edit className="w-3 h-3" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => deleteTaxonomyItem(item.id)}
-                              aria-label={t('common.delete')}
-                            >
-                              <Trash className="w-3 h-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      ))
+                        );
+                      })
                     )}
                   </div>
                 </div>

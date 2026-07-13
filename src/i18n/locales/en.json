@@ -128,7 +128,10 @@
       "idNameRequired": "ID and name are required.",
       "selectFirst": "Select a taxonomy item first.",
       "requiredData": "Content link (service:path)",
-      "requiredDataHint": "Deep-links this node into a live nOS service. Available: {{list}}"
+      "requiredDataHint": "Deep-links this node into a live nOS service. Available: {{list}}",
+      "nodeCount": "{{count}} nodes",
+      "searchPlaceholder": "Filter by id, name or description…",
+      "curatedBadge": "curated"
     },
     "tileTypes": {
       "recent-pages": "Recently captured",
