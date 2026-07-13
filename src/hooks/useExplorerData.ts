@@ -42,6 +42,11 @@ export interface GraphObject {
   id: string;
   title: string;
   type: string;
+  /** Canonical asset type + the celestial body it orbits as (asset-types.ts). */
+  assetType: string;
+  form: 'planet' | 'moon' | 'asteroid' | 'comet' | 'station';
+  glyph: string;
+  hue: number;
   anchors: string[];
 }
 

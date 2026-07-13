@@ -17,6 +17,7 @@ import type { Express, Request, Response } from 'express';
 import * as db from './db';
 import { allNodes, getNode, getAncestors } from './taxonomy';
 import { resolveContentRef, inferCaptureType } from './content-links';
+import { assetDescriptor } from './asset-types';
 import { liveEmbedAvailable } from './embeddings';
 import { anchorNodeIds, type ObjectRef } from './objects';
 import { hybridSearch } from './search';
@@ -168,12 +169,22 @@ export function registerGraphRoutes(app: Express) {
     // stay panel/search-only — free-floating dust would break spatial memory.
     const objects = db
       .getObjects(req.user.id, req.user.isAdmin)
-      .map((o) => ({
-        id: o.id,
-        title: o.title,
-        type: o.type,
-        anchors: anchorNodeIds((o.links ?? []) as ObjectRef[]).filter((a) => getNode(a)),
-      }))
+      .map((o) => {
+        // A card typed 'file' whose resource is `kiwix:…` is really an
+        // encyclopedia — the resolved content type wins over the raw type.
+        const contentType = o.resource ? resolveContentRef(o.resource)?.type : undefined;
+        const d = assetDescriptor(contentType ?? o.type);
+        return {
+          id: o.id,
+          title: o.title,
+          type: o.type,
+          assetType: d.assetType,
+          form: d.form, // planet | moon | asteroid | comet | station
+          glyph: d.glyph,
+          hue: d.hue,
+          anchors: anchorNodeIds((o.links ?? []) as ObjectRef[]).filter((a) => getNode(a)),
+        };
+      })
       .filter((o) => o.anchors.length > 0);
     ok(res, {
       nodes,

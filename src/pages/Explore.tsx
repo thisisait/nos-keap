@@ -28,7 +28,9 @@ import {
   useNeighbors,
   type NeighborItem,
   type NeighborMode,
+  type GraphObject,
 } from '@/hooks/useExplorerData';
+import { orbitalPosition } from '@/components/explorer/orbital';
 
 export default function Explore() {
   const { t, i18n } = useTranslation();
@@ -105,23 +107,50 @@ export default function Explore() {
       categoryHue: hueByCategory.get(rootOf(n.id)) ?? 210,
     }));
     const links: CanvasLink[] = graph.links.map((l) => ({ ...l }));
-    // Nebula layer: anchored knowledge objects as dust around their stars.
-    // Only the first anchor becomes the tree edge — the 2D radial DAG cannot
-    // take multi-parent nodes; remaining anchors stay panel/drawer facts.
+    // Orbital layer: anchored knowledge objects orbit their taxonomy star as
+    // TYPED bodies (planet/moon/asteroid/comet/station by data type). Positions
+    // are PINNED around the star's baked coordinate — not force dust — so
+    // dragging the star never scatters them. Grouped by anchor so each body's
+    // (index, count) is stable across renders. Only the first anchor is used;
+    // remaining anchors stay panel/drawer facts.
+    const byAnchor = new Map<string, GraphObject[]>();
     for (const o of graph.objects ?? []) {
-      const id = `obj:${o.id}`;
-      nodes.push({
-        id,
-        name: o.title,
-        kind: 'object',
-        level: 98,
-        childCount: 0,
-        hasNote: false,
-        dataType: o.type,
-        nebula: true,
-        categoryHue: hueByCategory.get(rootOf(o.anchors[0])) ?? 180,
+      const anchor = o.anchors[0];
+      if (!anchor) continue;
+      const g = byAnchor.get(anchor);
+      if (g) g.push(o);
+      else byAnchor.set(anchor, [o]);
+    }
+    for (const [anchor, group] of byAnchor) {
+      const star = nodeById.get(anchor);
+      if (!star || star.x === undefined) continue;
+      group.forEach((o, i) => {
+        const [ox, oy, oz] = orbitalPosition(
+          { x: star.x!, y: star.y!, z: star.z! },
+          i,
+          group.length,
+          o.form,
+          o.id,
+          5,
+        );
+        nodes.push({
+          id: `obj:${o.id}`,
+          name: o.title,
+          kind: 'object',
+          level: (star.level ?? 0) + 1,
+          childCount: 0,
+          hasNote: false,
+          dataType: o.type,
+          object: true,
+          form: o.form,
+          glyph: o.glyph,
+          // Body colour encodes its DATA TYPE (asset hue), not the constellation.
+          categoryHue: o.hue,
+          fx: ox,
+          fy: oy,
+          fz: oz,
+        });
       });
-      links.push({ source: o.anchors[0], target: id, nebula: true });
     }
     if (focusId) {
       for (const item of starItems) {

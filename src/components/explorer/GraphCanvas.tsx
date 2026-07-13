@@ -24,6 +24,7 @@ import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPa
 import { forceCollide } from 'd3-force-3d';
 import { createShipModel, type ShipModelParts } from './ShipModel';
 import { useShipController } from './useShipController';
+import { FORM_SIZE, type CelestialForm } from './orbital';
 
 export type CameraMode = 'observer' | 'ship';
 
@@ -45,8 +46,11 @@ export interface CanvasNode {
   hasNote: boolean;
   dataType?: string;
   star?: boolean;
-  /** Anchored knowledge object — dust orbiting its taxonomy star. */
-  nebula?: boolean;
+  /** Anchored knowledge object rendering as a typed body orbiting its star. */
+  object?: boolean;
+  /** Celestial form (objects only) — planet | moon | asteroid | comet | station. */
+  form?: CelestialForm;
+  glyph?: string;
   distance?: number;
   categoryHue: number;
   /** Baked position pin (U1) — d3-force never moves fx/fy/fz nodes. */
@@ -82,20 +86,141 @@ const STAR_COLOR: Record<string, string> = {
   object: '#2dd4bf',
 };
 
+// ── Cosmology tiers ──────────────────────────────────────────────────────────
+// L0 taxonomy roots render as translucent NEBULAE (galaxy-clusters), L1 as
+// GALAXY discs, L2+ as STARS graded by depth (hotter/whiter shallow → cooler/
+// redder deep). Anchored objects are typed orbital bodies (see buildAssetMesh).
+
 function nodeColor(n: CanvasNode, focusId: string | null): string {
+  if (n.object) return `hsl(${n.categoryHue} 72% 60%)`; // hue = data-type identity
   if (n.star) return STAR_COLOR[n.kind] ?? STAR_COLOR[n.dataType ?? ''] ?? '#fbbf24';
-  if (n.nebula) return `hsl(${n.categoryHue} 45% 62% / 0.85)`;
-  const l = n.id === focusId ? 72 : n.kind === 'item' ? 46 : 58;
-  const s = n.id === focusId ? 95 : 70;
+  if (n.level === 0) return `hsl(${n.categoryHue} 55% 55% / 0.22)`; // faint nebula core
+  if (n.level === 1) return `hsl(${n.categoryHue} 62% 62%)`; // galaxy
+  const depth = Math.min(n.level - 2, 5);
+  const l = n.id === focusId ? 82 : 68 - depth * 4; // color temperature
+  const s = 58 + depth * 6;
   return `hsl(${n.categoryHue} ${s}% ${l}%)`;
 }
 
 function nodeSize(n: CanvasNode): number {
-  if (n.nebula) return 1.4;
+  if (n.object) return FORM_SIZE[n.form ?? 'asteroid'] ?? 1.4;
   if (n.star) return 3;
-  if (n.kind === 'category') return 9;
-  if (n.kind === 'subcategory') return 4 + Math.min(n.childCount / 6, 3);
-  return 2;
+  if (n.level === 0) return 22; // nebula core
+  if (n.level === 1) return 11; // galaxy
+  return Math.max(2, 7 - (n.level - 2) * 1.1); // graded stars
+}
+
+// ── Shared GPU resources (built ONCE, never per-node) ────────────────────────
+// Sharing a material/geometry across nodes is fine; sharing a Mesh instance is
+// NOT (three positions it), so buildAssetMesh news one Mesh per node off the
+// shared geometry.
+
+function radialSprite(inner: string, mid: string): THREE.Texture {
+  const c = document.createElement('canvas');
+  c.width = c.height = 128;
+  const g = c.getContext('2d')!;
+  const grad = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+  grad.addColorStop(0, inner);
+  grad.addColorStop(0.4, mid);
+  grad.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 128, 128);
+  const tex = new THREE.CanvasTexture(c);
+  tex.needsUpdate = true;
+  return tex;
+}
+
+function tailSprite(): THREE.Texture {
+  const c = document.createElement('canvas');
+  c.width = 128;
+  c.height = 32;
+  const g = c.getContext('2d')!;
+  const grad = g.createLinearGradient(0, 0, 128, 0);
+  grad.addColorStop(0, 'rgba(255,255,255,0.9)');
+  grad.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, 128, 32);
+  const tex = new THREE.CanvasTexture(c);
+  tex.needsUpdate = true;
+  return tex;
+}
+
+const _nebulaTex = radialSprite('rgba(255,255,255,0.9)', 'rgba(255,255,255,0.28)');
+const _discTex = radialSprite('rgba(255,255,255,1)', 'rgba(255,255,255,0.35)');
+const _cometTex = tailSprite();
+
+const _formGeo: Record<CelestialForm, THREE.BufferGeometry> = {
+  planet: new THREE.SphereGeometry(1, 16, 12),
+  moon: new THREE.SphereGeometry(1, 10, 8),
+  asteroid: new THREE.IcosahedronGeometry(1, 0),
+  station: new THREE.OctahedronGeometry(1, 0),
+  comet: new THREE.SphereGeometry(1, 10, 8),
+};
+const _ringGeo = new THREE.RingGeometry(1.5, 2.2, 24);
+
+function nebulaSprite(hue: number): THREE.Sprite {
+  const s = new THREE.Sprite(
+    new THREE.SpriteMaterial({
+      map: _nebulaTex,
+      color: new THREE.Color(`hsl(${hue}, 60%, 55%)`),
+      transparent: true,
+      opacity: 0.16,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    }),
+  );
+  s.scale.setScalar(560); // ~2× LEVEL_RADIUS[1] so it visually contains its galaxies
+  return s;
+}
+
+function galaxyDisc(hue: number): THREE.Sprite {
+  const s = new THREE.Sprite(
+    new THREE.SpriteMaterial({
+      map: _discTex,
+      color: new THREE.Color(`hsl(${hue}, 65%, 60%)`),
+      transparent: true,
+      opacity: 0.5,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    }),
+  );
+  s.scale.setScalar(70);
+  return s;
+}
+
+/** One typed orbital body: a per-form mesh (new Mesh off shared geometry). */
+function buildAssetMesh(node: CanvasNode): THREE.Object3D {
+  const form = node.form ?? 'asteroid';
+  const size = (FORM_SIZE[form] ?? 1.4) * 2.4;
+  const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(`hsl(${node.categoryHue}, 70%, 60%)`) });
+  const mesh = new THREE.Mesh(_formGeo[form] ?? _formGeo.asteroid, mat);
+  mesh.scale.setScalar(size);
+  if (form === 'planet') {
+    const ring = new THREE.Mesh(_ringGeo, mat);
+    ring.rotation.x = Math.PI / 2.4;
+    ring.scale.setScalar(size);
+    const g = new THREE.Group();
+    g.add(mesh, ring);
+    return g;
+  }
+  if (form === 'comet') {
+    const tail = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: _cometTex,
+        color: mat.color,
+        transparent: true,
+        opacity: 0.4,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      }),
+    );
+    tail.scale.set(size * 6, size * 1.2, 1);
+    tail.center.set(0.1, 0.5);
+    const g = new THREE.Group();
+    g.add(mesh, tail);
+    return g;
+  }
+  return mesh;
 }
 
 export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width, height, mode, onShipUpdate }: Props) {
@@ -253,7 +378,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
         const linkForce = ref.d3Force('link');
         if (linkForce) {
           linkForce.distance((l: any) =>
-            l.semantic ? 90 + (l.distance ?? 0.5) * 260 : l.nebula ? 20 : l.target?.star ? 55 : 38,
+            l.semantic ? 90 + (l.distance ?? 0.5) * 260 : l.target?.star ? 55 : 38,
           );
         }
         // Breathing room: stronger repulsion + a collide force so sibling
@@ -380,13 +505,21 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
   // with nodeThreeObjectExtend keeps the default sphere; the sprite is
   // ADDED next to it, not a replacement.
   const nodeThreeObject = useCallback((node: any) => {
-    if (node.kind !== 'category' && !node.star) return false as any;
-    const sprite = new SpriteText(node.name) as THREE.Sprite;
-    sprite.color = node.star ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.92)';
-    sprite.textHeight = node.kind === 'category' ? 7 : 3.5;
-    sprite.position.y = -(Math.sqrt(nodeSize(node)) * 2.4 + 6);
-    sprite.material.depthWrite = false;
-    return sprite;
+    // Objects: a typed body REPLACES the default sphere (extend=false below).
+    if (node.object) return buildAssetMesh(node);
+    // Taxonomy: nebula/galaxy halo + label ADDED next to the default sphere.
+    const g = new THREE.Group();
+    if (node.level === 0) g.add(nebulaSprite(node.categoryHue));
+    if (node.level === 1) g.add(galaxyDisc(node.categoryHue));
+    if (node.level <= 1 || node.star) {
+      const sprite = new SpriteText(node.name) as THREE.Sprite;
+      sprite.color = node.star ? 'rgba(255,255,255,0.75)' : 'rgba(255,255,255,0.92)';
+      sprite.textHeight = node.level <= 1 ? 7 : 3.5;
+      sprite.position.y = -(Math.sqrt(nodeSize(node)) * 2.4 + 6);
+      sprite.material.depthWrite = false;
+      g.add(sprite);
+    }
+    return g.children.length ? g : (false as any);
   }, []);
 
   return (
@@ -402,7 +535,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       nodeVal={(n: any) => nodeSize(n)}
       nodeColor={(n: any) => nodeColor(n, focusId)}
       nodeThreeObject={nodeThreeObject}
-      nodeThreeObjectExtend={true}
+      nodeThreeObjectExtend={(n: any) => !n.object}
       linkColor={(l: any) => (l.semantic ? 'rgba(251,191,36,0.55)' : 'rgba(120,130,150,0.25)')}
       linkWidth={(l: any) => (l.semantic ? 1.2 : 0.4)}
       onNodeClick={handleClick}
