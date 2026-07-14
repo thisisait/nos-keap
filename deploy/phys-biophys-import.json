@@ -1,0 +1,277 @@
+{
+ "importKey": "phys-biophys",
+ "actor": "agent:fable-import",
+ "root": {
+  "id": "01.01.10",
+  "parent": "01.01",
+  "name": "Biophysics",
+  "rootIsSeed": true
+ },
+ "pillars": [
+  {
+   "id": "01.01.10.01",
+   "name": "Molecular Biophysics",
+   "description": "The physics of biological macromolecules: protein structure and folding, molecular motors, and the forces and energetics that govern molecular machines.",
+   "descriptionCs": "Fyzika biologických makromolekul: struktura a sbalování bílkovin, molekulární motory a síly a energetika řídící molekulární stroje.",
+   "blocks": [
+    {
+     "slug": "protein-folding",
+     "name": "Protein Structure & Folding",
+     "description": "Proteins fold from linear chains into specific three-dimensional shapes that determine their function, driven toward a free-energy minimum by hydrophobic, electrostatic and hydrogen-bonding forces; misfolding underlies several diseases.",
+     "descriptionCs": "Bílkoviny se sbalují z lineárních řetězců do specifických trojrozměrných tvarů určujících jejich funkci, vedeny k minimu volné energie hydrofobními, elektrostatickými a vodíkovými vazbami; chybné sbalení je základem několika onemocnění.",
+     "explored": "partially",
+     "brief": [
+      {
+       "name": "Protein folding",
+       "definition": "The process by which a polypeptide chain adopts its functional three-dimensional structure."
+      },
+      {
+       "name": "Free-energy landscape",
+       "definition": "The funnel of conformational energies guiding a protein to its native state."
+      },
+      {
+       "name": "Hydrophobic effect",
+       "definition": "The tendency of nonpolar groups to cluster away from water, driving folding."
+      },
+      {
+       "name": "Conformational change",
+       "definition": "A functional shape change of a protein in response to binding or signals."
+      },
+      {
+       "name": "Misfolding",
+       "definition": "Incorrect folding producing aggregates linked to disease."
+      }
+     ]
+    },
+    {
+     "slug": "molecular-motors",
+     "name": "Molecular Motors & Machines",
+     "description": "Molecular motors convert chemical energy into directed motion and force, walking along filaments or rotating within membranes; they power muscle contraction, intracellular transport and the synthesis of the cell's energy currency.",
+     "descriptionCs": "Molekulární motory přeměňují chemickou energii na řízený pohyb a sílu, kráčejí podél filament nebo rotují v membránách; pohánějí svalový stah, nitrobuněčný transport a syntézu energetické měny buňky.",
+     "explored": "partially",
+     "brief": [
+      {
+       "name": "Molecular motor",
+       "definition": "A protein converting chemical energy into mechanical work."
+      },
+      {
+       "name": "ATP hydrolysis",
+       "definition": "The energy-releasing reaction powering most molecular motors."
+      },
+      {
+       "name": "Cytoskeletal transport",
+       "definition": "The motor-driven movement of cargo along filaments within cells."
+      },
+      {
+       "name": "Brownian ratchet",
+       "definition": "A mechanism rectifying random thermal motion into directed movement."
+      },
+      {
+       "name": "Rotary motor",
+       "definition": "A membrane machine such as the one synthesising the cell's energy currency by rotation."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "01.01.10.02",
+   "name": "Membrane & Neural Biophysics",
+   "description": "The physics of cell membranes and excitable cells: ion transport and membrane potentials, the action potential, and the electrical signalling of nerves.",
+   "descriptionCs": "Fyzika buněčných membrán a dráždivých buněk: transport iontů a membránové potenciály, akční potenciál a elektrická signalizace nervů.",
+   "blocks": [
+    {
+     "slug": "membrane-transport",
+     "name": "Membrane Potentials & Ion Transport",
+     "description": "Cell membranes maintain electrical potentials by selectively transporting ions through channels and pumps; the resulting gradients store energy and set the resting potential from which excitable cells generate signals.",
+     "descriptionCs": "Buněčné membrány udržují elektrické potenciály selektivním transportem iontů skrze kanály a pumpy; vzniklé gradienty ukládají energii a určují klidový potenciál, z něhož dráždivé buňky vytvářejí signály.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Membrane potential",
+       "definition": "The voltage difference across a cell membrane."
+      },
+      {
+       "name": "Ion channel",
+       "definition": "A membrane protein allowing specific ions to flow down their gradient."
+      },
+      {
+       "name": "Ion pump",
+       "definition": "A protein using energy to move ions against their gradient."
+      },
+      {
+       "name": "Nernst potential",
+       "definition": "The equilibrium voltage for an ion set by its concentration ratio."
+      },
+      {
+       "name": "Resting potential",
+       "definition": "The steady membrane voltage of an unstimulated cell."
+      }
+     ]
+    },
+    {
+     "slug": "action-potential",
+     "name": "The Action Potential & Nerve Signalling",
+     "description": "Excitable cells fire action potentials — rapid, self-propagating reversals of membrane potential driven by voltage-gated ion channels — which carry electrical signals along nerves, as captured by the Hodgkin-Huxley model.",
+     "descriptionCs": "Dráždivé buňky generují akční potenciály — rychlé, samovolně se šířící obrácení membránového potenciálu poháněná napěťově řízenými iontovými kanály — které přenášejí elektrické signály podél nervů, jak popisuje Hodgkinův–Huxleyův model.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Action potential",
+       "definition": "A rapid all-or-nothing reversal of membrane potential that propagates along a cell."
+      },
+      {
+       "name": "Voltage-gated channel",
+       "definition": "An ion channel that opens in response to membrane voltage."
+      },
+      {
+       "name": "Hodgkin-Huxley model",
+       "definition": "The quantitative model of the action potential from ionic currents."
+      },
+      {
+       "name": "Saltatory conduction",
+       "definition": "The jumping of nerve impulses between gaps in the myelin sheath, speeding signalling."
+      },
+      {
+       "name": "Synaptic transmission",
+       "definition": "The passing of a signal between cells at a synapse."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "01.01.10.03",
+   "name": "Biomechanics",
+   "description": "The mechanics of living matter: the material properties of tissues, the forces in movement and locomotion, and fluid flow in circulation and respiration.",
+   "descriptionCs": "Mechanika živé hmoty: materiálové vlastnosti tkání, síly při pohybu a lokomoci a proudění tekutin v oběhu a dýchání.",
+   "blocks": [
+    {
+     "slug": "tissue-mechanics-locomotion",
+     "name": "Tissue Mechanics & Locomotion",
+     "description": "Biomechanics applies the mechanics of materials and forces to living tissue: bones, muscles and tendons carry loads and store elastic energy, and the physics of levers and gaits governs how organisms move.",
+     "descriptionCs": "Biomechanika aplikuje mechaniku materiálů a sil na živou tkáň: kosti, svaly a šlachy nesou zatížení a ukládají pružnou energii a fyzika pák a chůze určuje, jak se organismy pohybují.",
+     "explored": "partially",
+     "brief": [
+      {
+       "name": "Tissue elasticity",
+       "definition": "The stress-strain response of biological materials such as bone and tendon."
+      },
+      {
+       "name": "Muscle mechanics",
+       "definition": "The force-length and force-velocity behaviour of contracting muscle."
+      },
+      {
+       "name": "Lever systems",
+       "definition": "The skeletal arrangements of bones and muscles acting as levers."
+      },
+      {
+       "name": "Gait",
+       "definition": "The mechanical pattern of legged locomotion optimising energy and stability."
+      },
+      {
+       "name": "Scaling laws",
+       "definition": "How mechanical demands change with organism size."
+      }
+     ]
+    },
+    {
+     "slug": "biofluid-dynamics",
+     "name": "Biological Fluid Dynamics",
+     "description": "The flow of biological fluids follows the physics of hydrodynamics adapted to living systems: blood circulates through branching vessels, air moves through the lungs, and microorganisms swim at low Reynolds number where viscosity dominates.",
+     "descriptionCs": "Proudění biologických tekutin se řídí fyzikou hydrodynamiky přizpůsobenou živým systémům: krev obíhá větvícími se cévami, vzduch proudí plícemi a mikroorganismy plavou při nízkém Reynoldsově čísle, kde převládá viskozita.",
+     "explored": "partially",
+     "brief": [
+      {
+       "name": "Haemodynamics",
+       "definition": "The physics of blood flow through the circulatory system."
+      },
+      {
+       "name": "Poiseuille flow",
+       "definition": "The pressure-driven laminar flow of fluid through a tube."
+      },
+      {
+       "name": "Low Reynolds number",
+       "definition": "The viscosity-dominated regime in which microorganisms swim."
+      },
+      {
+       "name": "Respiratory flow",
+       "definition": "The mechanics of air movement in breathing."
+      },
+      {
+       "name": "Wall shear stress",
+       "definition": "The frictional force of flowing fluid on vessel walls, sensed by cells."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "01.01.10.04",
+   "name": "Biophysical Techniques",
+   "description": "The physical methods that image and probe living systems: structural determination, single-molecule and optical techniques, and the physics of medical imaging.",
+   "descriptionCs": "Fyzikální metody zobrazující a zkoumající živé systémy: určování struktury, jednomolekulové a optické techniky a fyzika lékařského zobrazování.",
+   "blocks": [
+    {
+     "slug": "structural-single-molecule",
+     "name": "Structural & Single-Molecule Methods",
+     "description": "Physical techniques resolve biological structure and dynamics down to single molecules: X-ray crystallography, cryo-electron microscopy and nuclear magnetic resonance yield atomic structures, while optical tweezers and single-molecule fluorescence probe individual molecules at work.",
+     "descriptionCs": "Fyzikální techniky rozlišují biologickou strukturu a dynamiku až na úroveň jednotlivých molekul: rentgenová krystalografie, kryoelektronová mikroskopie a nukleární magnetická rezonance dávají atomární struktury, zatímco optická pinzeta a jednomolekulová fluorescence zkoumají jednotlivé molekuly při práci.",
+     "explored": "partially",
+     "brief": [
+      {
+       "name": "X-ray crystallography",
+       "definition": "Determining atomic structure from the diffraction of X-rays by a crystal."
+      },
+      {
+       "name": "Cryo-electron microscopy",
+       "definition": "Imaging frozen biomolecules at near-atomic resolution by electron microscopy."
+      },
+      {
+       "name": "Nuclear magnetic resonance",
+       "definition": "Probing molecular structure and dynamics through nuclear spin resonance."
+      },
+      {
+       "name": "Optical tweezers",
+       "definition": "Trapping and manipulating single molecules or particles with focused light."
+      },
+      {
+       "name": "Single-molecule fluorescence",
+       "definition": "Observing individual molecules by the light they emit."
+      }
+     ]
+    },
+    {
+     "slug": "medical-imaging-physics",
+     "name": "Physics of Medical Imaging",
+     "description": "Medical imaging applies physics to see inside the body without surgery: X-ray and computed tomography use ionising radiation, magnetic resonance imaging uses nuclear spins in magnetic fields, and ultrasound uses reflected sound waves.",
+     "descriptionCs": "Lékařské zobrazování aplikuje fyziku k pohledu dovnitř těla bez operace: rentgen a výpočetní tomografie využívají ionizující záření, magnetická rezonance využívá jaderné spiny v magnetickém poli a ultrazvuk využívá odražené zvukové vlny.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Computed tomography",
+       "definition": "Reconstruction of cross-sectional images from many X-ray projections."
+      },
+      {
+       "name": "Magnetic resonance imaging",
+       "definition": "Imaging based on the nuclear magnetic resonance of tissue protons."
+      },
+      {
+       "name": "Ultrasound imaging",
+       "definition": "Imaging from the echoes of high-frequency sound waves."
+      },
+      {
+       "name": "Contrast mechanism",
+       "definition": "The physical property that distinguishes tissues in an image."
+      },
+      {
+       "name": "Spatial resolution",
+       "definition": "The finest detail an imaging method can resolve."
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "relations": []
+}

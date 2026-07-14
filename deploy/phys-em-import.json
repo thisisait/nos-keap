@@ -1,0 +1,459 @@
+{
+ "importKey": "phys-em",
+ "actor": "agent:fable-import",
+ "root": {
+  "id": "01.01.04",
+  "parent": "01.01",
+  "name": "Electromagnetism",
+  "rootIsSeed": true
+ },
+ "pillars": [
+  {
+   "id": "01.01.04.01",
+   "name": "Electrostatics",
+   "description": "The physics of stationary electric charge: Coulomb's law, the electric field and potential, Gauss's law, and the behaviour of conductors and capacitors.",
+   "descriptionCs": "Fyzika nehybného elektrického náboje: Coulombův zákon, elektrické pole a potenciál, Gaussův zákon a chování vodičů a kondenzátorů.",
+   "blocks": [
+    {
+     "slug": "coulomb-law",
+     "name": "Coulomb's Law & Electric Force",
+     "description": "The force between point charges is proportional to their product and inversely proportional to the square of their separation, directed along the line joining them; this inverse-square law is the foundation of electrostatics.",
+     "descriptionCs": "Síla mezi bodovými náboji je úměrná jejich součinu a nepřímo úměrná druhé mocnině jejich vzdálenosti a míří podél jejich spojnice; tento zákon převrácené druhé mocniny je základem elektrostatiky.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Electric charge",
+       "definition": "The conserved property of matter that is the source of electromagnetic force, quantised in units of e."
+      },
+      {
+       "name": "Coulomb's law",
+       "definition": "The inverse-square force law between two point charges."
+      },
+      {
+       "name": "Superposition",
+       "definition": "The net force from many charges as the vector sum of individual Coulomb forces."
+      },
+      {
+       "name": "Permittivity",
+       "definition": "The constant characterising how a medium reduces the electrostatic force within it."
+      }
+     ]
+    },
+    {
+     "slug": "electric-field-potential",
+     "name": "Electric Field & Potential",
+     "description": "The electric field assigns a force-per-charge vector to every point in space, and the electric potential its energy-per-charge; the field is the gradient of the potential, and field lines and equipotentials visualise both.",
+     "descriptionCs": "Elektrické pole přiřazuje každému bodu prostoru vektor síly na jednotku náboje a elektrický potenciál energii na jednotku náboje; pole je gradientem potenciálu a siločáry a ekvipotenciály obojí znázorňují.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Electric field",
+       "definition": "The force per unit charge experienced by a test charge at a point."
+      },
+      {
+       "name": "Electric potential",
+       "definition": "The potential energy per unit charge, measured in volts."
+      },
+      {
+       "name": "Field-potential relation",
+       "definition": "The field equals minus the spatial gradient of the potential."
+      },
+      {
+       "name": "Dipole",
+       "definition": "A pair of equal and opposite charges whose field falls off faster than a single charge."
+      },
+      {
+       "name": "Equipotential surface",
+       "definition": "A surface of constant potential, everywhere perpendicular to the field."
+      }
+     ]
+    },
+    {
+     "slug": "gauss-law",
+     "name": "Gauss's Law",
+     "description": "The electric flux through any closed surface equals the enclosed charge divided by the permittivity; this restatement of the inverse-square law exploits symmetry to compute fields of charged spheres, lines and planes.",
+     "descriptionCs": "Elektrický tok libovolnou uzavřenou plochou se rovná uzavřenému náboji dělenému permitivitou; toto přeformulování zákona převrácené druhé mocniny využívá symetrie k výpočtu polí nabitých koulí, přímek a rovin.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Electric flux",
+       "definition": "The amount of electric field passing through a surface."
+      },
+      {
+       "name": "Gauss's law",
+       "definition": "The relation between the flux through a closed surface and the charge it encloses."
+      },
+      {
+       "name": "Gaussian surface",
+       "definition": "An imaginary closed surface chosen to exploit symmetry in field calculations."
+      },
+      {
+       "name": "Divergence form",
+       "definition": "The differential statement that the field's divergence equals charge density over permittivity."
+      }
+     ]
+    },
+    {
+     "slug": "conductors-capacitance",
+     "name": "Conductors & Capacitance",
+     "description": "In a conductor charge redistributes until the interior field vanishes and the surface is equipotential; capacitance measures the charge stored per unit voltage between conductors, storing energy in the electric field.",
+     "descriptionCs": "Ve vodiči se náboj přerozdělí, dokud vnitřní pole nezmizí a povrch není ekvipotenciální; kapacita udává náboj uložený na jednotku napětí mezi vodiči a ukládá energii v elektrickém poli.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Electrostatic shielding",
+       "definition": "The cancellation of interior fields by a conductor, the basis of the Faraday cage."
+      },
+      {
+       "name": "Capacitance",
+       "definition": "The ratio of stored charge to the voltage between two conductors."
+      },
+      {
+       "name": "Capacitor",
+       "definition": "A device of two conductors storing energy in the field between them."
+      },
+      {
+       "name": "Field energy density",
+       "definition": "The energy stored per unit volume in an electric field, proportional to its square."
+      },
+      {
+       "name": "Dielectric in a capacitor",
+       "definition": "An insulating filling that raises capacitance by reducing the internal field."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "01.01.04.02",
+   "name": "Magnetostatics",
+   "description": "The physics of steady currents and their magnetic fields: the Biot-Savart and Ampère laws, magnetic force, and the magnetic properties of matter.",
+   "descriptionCs": "Fyzika ustálených proudů a jejich magnetických polí: Biotův–Savartův a Ampérův zákon, magnetická síla a magnetické vlastnosti látek.",
+   "blocks": [
+    {
+     "slug": "magnetic-field-force",
+     "name": "Magnetic Field & Force",
+     "description": "Moving charges and currents create magnetic fields and feel forces in them: the Lorentz force acts perpendicular to both velocity and field, curving charged trajectories and driving the operation of motors.",
+     "descriptionCs": "Pohybující se náboje a proudy vytvářejí magnetické pole a působí na ně v něm síla: Lorentzova síla míří kolmo k rychlosti i poli, zakřivuje dráhy nabitých částic a pohání motory.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Lorentz force",
+       "definition": "The force qv×B on a charge moving through a magnetic field, plus the electric part."
+      },
+      {
+       "name": "Magnetic field",
+       "definition": "The vector field produced by currents and felt by moving charges, denoted B."
+      },
+      {
+       "name": "Cyclotron motion",
+       "definition": "The circular path of a charged particle in a uniform magnetic field."
+      },
+      {
+       "name": "Force on a current",
+       "definition": "The force on a current-carrying wire in a field, the basis of the electric motor."
+      },
+      {
+       "name": "Magnetic dipole moment",
+       "definition": "The measure of a current loop's strength as a source of magnetic field."
+      }
+     ]
+    },
+    {
+     "slug": "ampere-biot-savart",
+     "name": "Ampère's & Biot-Savart Laws",
+     "description": "The Biot-Savart law gives the field of an arbitrary current element, while Ampère's law relates the field circulating around a loop to the enclosed current, providing a symmetry shortcut for fields of wires, solenoids and toroids.",
+     "descriptionCs": "Biotův–Savartův zákon dává pole libovolného proudového elementu, zatímco Ampérův zákon spojuje pole cirkulující kolem smyčky s uzavřeným proudem a poskytuje symetrickou zkratku pro pole vodičů, solenoidů a toroidů.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Biot-Savart law",
+       "definition": "The field contribution of an infinitesimal current element."
+      },
+      {
+       "name": "Ampère's law",
+       "definition": "The relation between the field's circulation around a loop and the enclosed current."
+      },
+      {
+       "name": "Solenoid",
+       "definition": "A coil producing a nearly uniform field along its axis."
+      },
+      {
+       "name": "Magnetic flux",
+       "definition": "The amount of magnetic field passing through a surface."
+      },
+      {
+       "name": "No magnetic monopoles",
+       "definition": "The law that magnetic field lines have no sources or sinks, so flux through any closed surface is zero."
+      }
+     ]
+    },
+    {
+     "slug": "magnetic-materials",
+     "name": "Magnetism in Matter",
+     "description": "Materials respond to fields through the alignment of atomic magnetic moments, classified as diamagnetic, paramagnetic and ferromagnetic, the last retaining magnetisation below the Curie temperature and underlying permanent magnets.",
+     "descriptionCs": "Látky reagují na pole uspořádáním atomárních magnetických momentů a dělí se na diamagnetické, paramagnetické a feromagnetické, přičemž poslední si pod Curieovou teplotou udržují magnetizaci a tvoří základ permanentních magnetů.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Diamagnetism",
+       "definition": "Weak repulsion from a field, present in all matter, from induced opposing moments."
+      },
+      {
+       "name": "Paramagnetism",
+       "definition": "Weak attraction from the partial alignment of permanent atomic moments."
+      },
+      {
+       "name": "Ferromagnetism",
+       "definition": "Strong, retained magnetisation from spontaneous alignment in magnetic domains."
+      },
+      {
+       "name": "Curie temperature",
+       "definition": "The temperature above which ferromagnetic order is lost to thermal agitation."
+      },
+      {
+       "name": "Hysteresis",
+       "definition": "The lag of magnetisation behind the applied field, storing energy in magnetic memory."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "01.01.04.03",
+   "name": "Electrodynamics",
+   "description": "Time-varying fields and their unification: electromagnetic induction, the displacement current, and Maxwell's equations as the complete classical field theory.",
+   "descriptionCs": "Časově proměnná pole a jejich sjednocení: elektromagnetická indukce, posuvný proud a Maxwellovy rovnice jako úplná klasická teorie pole.",
+   "blocks": [
+    {
+     "slug": "faraday-induction",
+     "name": "Electromagnetic Induction",
+     "description": "A changing magnetic flux through a circuit induces an electromotive force, with the induced current opposing the change; Faraday's law of induction and Lenz's rule govern generators, transformers and inductors.",
+     "descriptionCs": "Měnící se magnetický tok obvodem indukuje elektromotorické napětí, přičemž indukovaný proud se změně brání; Faradayův zákon indukce a Lenzovo pravidlo řídí generátory, transformátory a cívky.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Faraday's law",
+       "definition": "The induced electromotive force equals minus the rate of change of magnetic flux."
+      },
+      {
+       "name": "Lenz's law",
+       "definition": "The induced current flows so as to oppose the flux change that causes it."
+      },
+      {
+       "name": "Inductance",
+       "definition": "The property relating induced voltage to the rate of change of current."
+      },
+      {
+       "name": "Transformer",
+       "definition": "A device coupling two coils by shared flux to change alternating voltage."
+      },
+      {
+       "name": "Eddy currents",
+       "definition": "Circulating currents induced in bulk conductors by changing fields."
+      }
+     ]
+    },
+    {
+     "slug": "maxwell-equations",
+     "name": "Maxwell's Equations",
+     "description": "Four equations — Gauss's laws for electricity and magnetism, Faraday's law, and the Ampère-Maxwell law with its displacement current — unify all classical electromagnetism and predict self-propagating electromagnetic waves.",
+     "descriptionCs": "Čtyři rovnice — Gaussovy zákony pro elektřinu a magnetismus, Faradayův zákon a Ampérův–Maxwellův zákon s posuvným proudem — sjednocují celý klasický elektromagnetismus a předpovídají samovolně se šířící elektromagnetické vlny.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Displacement current",
+       "definition": "Maxwell's term letting a changing electric field act as a source of magnetic field."
+      },
+      {
+       "name": "Field unification",
+       "definition": "The demonstration that electric and magnetic fields are aspects of one electromagnetic field."
+      },
+      {
+       "name": "Continuity equation",
+       "definition": "Charge conservation implied by the structure of Maxwell's equations."
+      },
+      {
+       "name": "Electromagnetic potentials",
+       "definition": "The scalar and vector potentials from which the fields are derived, with gauge freedom."
+      },
+      {
+       "name": "Wave prediction",
+       "definition": "The result that the equations admit waves travelling at the speed of light."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "01.01.04.04",
+   "name": "Electromagnetic Waves & Optics",
+   "description": "The propagation of electromagnetic fields as waves: the electromagnetic spectrum, energy and momentum transport, and the optics of reflection, refraction and interference.",
+   "descriptionCs": "Šíření elektromagnetického pole ve formě vln: elektromagnetické spektrum, přenos energie a hybnosti a optika odrazu, lomu a interference.",
+   "blocks": [
+    {
+     "slug": "em-waves",
+     "name": "Electromagnetic Waves & Spectrum",
+     "description": "Oscillating electric and magnetic fields propagate as transverse waves at the speed of light, spanning a continuous spectrum from radio to gamma rays and carrying energy and momentum through the Poynting vector and radiation pressure.",
+     "descriptionCs": "Kmitající elektrické a magnetické pole se šíří jako příčné vlny rychlostí světla, pokrývají spojité spektrum od rádiových vln po gama záření a přenášejí energii a hybnost prostřednictvím Poyntingova vektoru a tlaku záření.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Speed of light",
+       "definition": "The propagation speed of electromagnetic waves in vacuum, a universal constant."
+      },
+      {
+       "name": "Electromagnetic spectrum",
+       "definition": "The full range of wavelengths from radio through visible light to gamma rays."
+      },
+      {
+       "name": "Poynting vector",
+       "definition": "The directional energy flux carried by an electromagnetic wave."
+      },
+      {
+       "name": "Polarization",
+       "definition": "The orientation of the wave's electric-field oscillation, linear, circular or elliptical."
+      },
+      {
+       "name": "Radiation pressure",
+       "definition": "The momentum transferred by electromagnetic waves onto surfaces they strike."
+      }
+     ]
+    },
+    {
+     "slug": "geometric-wave-optics",
+     "name": "Reflection, Refraction & Interference",
+     "description": "At boundaries light reflects and refracts according to the laws of reflection and Snell's law, while its wave nature produces interference and diffraction; these govern lenses, mirrors, gratings and imaging.",
+     "descriptionCs": "Na rozhraních se světlo odráží a láme podle zákona odrazu a Snellova zákona, zatímco jeho vlnová povaha vytváří interferenci a difrakci; tyto jevy řídí čočky, zrcadla, mřížky a zobrazování.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Snell's law",
+       "definition": "The relation between angles of incidence and refraction at a boundary via refractive indices."
+      },
+      {
+       "name": "Total internal reflection",
+       "definition": "Complete reflection above a critical angle, the basis of optical fibres."
+      },
+      {
+       "name": "Interference",
+       "definition": "The superposition of waves producing bright and dark fringes."
+      },
+      {
+       "name": "Diffraction",
+       "definition": "The bending and spreading of waves around obstacles and through apertures."
+      },
+      {
+       "name": "Dispersion",
+       "definition": "The variation of refractive index with wavelength, splitting white light into colours."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "01.01.04.05",
+   "name": "Electromagnetism in Matter",
+   "description": "How materials respond to fields: polarization and dielectrics, magnetization and magnetic materials, conduction, and the resulting macroscopic field equations.",
+   "descriptionCs": "Jak látky reagují na pole: polarizace a dielektrika, magnetizace a magnetické materiály, vedení proudu a výsledné makroskopické rovnice pole.",
+   "blocks": [
+    {
+     "slug": "dielectrics-polarization",
+     "name": "Dielectrics & Polarization",
+     "description": "An electric field polarises a dielectric by displacing bound charge, weakening the internal field and defining the permittivity; the displacement field D separates free from bound charge in the macroscopic equations.",
+     "descriptionCs": "Elektrické pole polarizuje dielektrikum posunutím vázaného náboje, čímž oslabuje vnitřní pole a definuje permitivitu; pole elektrické indukce D odděluje volný náboj od vázaného v makroskopických rovnicích.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Polarization",
+       "definition": "The dipole moment per unit volume induced in a dielectric by a field."
+      },
+      {
+       "name": "Electric displacement",
+       "definition": "The field D combining the applied field and the medium's polarization."
+      },
+      {
+       "name": "Relative permittivity",
+       "definition": "The factor by which a dielectric reduces the field, also called the dielectric constant."
+      },
+      {
+       "name": "Bound charge",
+       "definition": "The effective surface and volume charge arising from aligned dipoles."
+      },
+      {
+       "name": "Dielectric breakdown",
+       "definition": "The field strength at which an insulator becomes conducting."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "01.01.04.06",
+   "name": "Circuits & Electromagnetic Technology",
+   "description": "The engineering physics of circuits and devices: Ohm's and Kirchhoff's laws, alternating current, and the electromagnetic principles behind motors, generators and antennas.",
+   "descriptionCs": "Technická fyzika obvodů a zařízení: Ohmův a Kirchhoffovy zákony, střídavý proud a elektromagnetické principy motorů, generátorů a antén.",
+   "blocks": [
+    {
+     "slug": "circuit-laws",
+     "name": "Circuit Laws & AC Analysis",
+     "description": "Ohm's law relates voltage, current and resistance, Kirchhoff's laws enforce charge and energy conservation at nodes and loops, and alternating-current analysis uses impedance and phasors to handle capacitors and inductors.",
+     "descriptionCs": "Ohmův zákon spojuje napětí, proud a odpor, Kirchhoffovy zákony zajišťují zachování náboje a energie v uzlech a smyčkách a analýza střídavého proudu používá impedanci a fázory k popisu kondenzátorů a cívek.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Ohm's law",
+       "definition": "The proportionality of current to voltage through a resistance."
+      },
+      {
+       "name": "Kirchhoff's laws",
+       "definition": "Conservation of current at nodes and of voltage around loops."
+      },
+      {
+       "name": "Impedance",
+       "definition": "The generalisation of resistance to alternating-current circuits with reactance."
+      },
+      {
+       "name": "Resonance",
+       "definition": "The frequency at which an inductor and capacitor exchange energy with minimal impedance."
+      },
+      {
+       "name": "Power in circuits",
+       "definition": "The rate of energy transfer, with real and reactive parts in AC systems."
+      }
+     ]
+    },
+    {
+     "slug": "motors-generators-antennas",
+     "name": "Motors, Generators & Antennas",
+     "description": "Electromagnetic induction and the force on currents underlie machines that convert between electrical and mechanical energy — motors and generators — while accelerating charges in antennas radiate the electromagnetic waves of communication.",
+     "descriptionCs": "Elektromagnetická indukce a síla na proudy tvoří základ strojů přeměňujících elektrickou a mechanickou energii — motorů a generátorů — zatímco zrychlované náboje v anténách vyzařují elektromagnetické vlny pro komunikaci.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Electric motor",
+       "definition": "A machine converting electrical energy to rotation via force on current loops."
+      },
+      {
+       "name": "Electric generator",
+       "definition": "A machine converting mechanical motion to electricity by induction."
+      },
+      {
+       "name": "Antenna",
+       "definition": "A conductor that radiates or receives electromagnetic waves from accelerating charge."
+      },
+      {
+       "name": "Waveguide",
+       "definition": "A structure that confines and directs electromagnetic waves along its length."
+      },
+      {
+       "name": "Electromagnetic radiation from acceleration",
+       "definition": "The principle that only accelerating charges radiate energy as waves."
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "relations": []
+}

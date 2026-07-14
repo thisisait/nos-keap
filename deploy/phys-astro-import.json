@@ -1,0 +1,343 @@
+{
+ "importKey": "phys-astro",
+ "actor": "agent:fable-import",
+ "root": {
+  "id": "01.01.08",
+  "parent": "01.01",
+  "name": "Astrophysics",
+  "rootIsSeed": true
+ },
+ "pillars": [
+  {
+   "id": "01.01.08.01",
+   "name": "Stellar Structure & Evolution",
+   "description": "The physics of stars: hydrostatic and thermal balance, energy generation by fusion, the main sequence, and the evolution of stars from birth to their final states.",
+   "descriptionCs": "Fyzika hvězd: hydrostatická a tepelná rovnováha, uvolňování energie fúzí, hlavní posloupnost a vývoj hvězd od zrození po jejich konečné stavy.",
+   "blocks": [
+    {
+     "slug": "stellar-structure",
+     "name": "Stellar Structure & Energy Generation",
+     "description": "A star is a self-gravitating ball of plasma in hydrostatic equilibrium, its inward gravity balanced by outward pressure sustained by nuclear fusion in the core; energy flows outward by radiation and convection to the surface.",
+     "descriptionCs": "Hvězda je samogravitující koule plazmatu v hydrostatické rovnováze, jejíž dovnitř mířící gravitaci vyvažuje ven mířící tlak udržovaný jadernou fúzí v jádru; energie proudí ven zářením a konvekcí k povrchu.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Hydrostatic equilibrium",
+       "definition": "The balance between gravity and pressure that keeps a star stable."
+      },
+      {
+       "name": "Proton-proton chain",
+       "definition": "The dominant hydrogen-fusion sequence powering low-mass stars."
+      },
+      {
+       "name": "CNO cycle",
+       "definition": "A catalytic hydrogen-fusion cycle dominant in more massive stars."
+      },
+      {
+       "name": "Radiative and convective transport",
+       "definition": "The two ways energy moves from a star's core to its surface."
+      },
+      {
+       "name": "Luminosity",
+       "definition": "The total power a star radiates, set by its mass and structure."
+      }
+     ]
+    },
+    {
+     "slug": "stellar-evolution",
+     "name": "Stellar Evolution",
+     "description": "Stars evolve as they exhaust their nuclear fuel, moving off the main sequence to become giants and shedding or exploding their outer layers; the mass of a star determines its lifetime and its final fate.",
+     "descriptionCs": "Hvězdy se vyvíjejí, jak spotřebovávají jaderné palivo, opouštějí hlavní posloupnost, stávají se obry a odvrhávají nebo vybuchují své vnější vrstvy; hmotnost hvězdy určuje její délku života i konečný osud.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Main sequence",
+       "definition": "The long stable phase of core hydrogen fusion where most stars spend their lives."
+      },
+      {
+       "name": "Hertzsprung-Russell diagram",
+       "definition": "The plot of luminosity against temperature mapping stellar populations."
+      },
+      {
+       "name": "Red giant phase",
+       "definition": "The swelling of a star after core hydrogen is exhausted."
+      },
+      {
+       "name": "Planetary nebula",
+       "definition": "The ejected envelope of a dying low-mass star, leaving a white dwarf."
+      },
+      {
+       "name": "Mass-lifetime relation",
+       "definition": "The rule that more massive stars burn brighter and die far sooner."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "01.01.08.02",
+   "name": "Compact Objects",
+   "description": "The dense remnants of stellar death: white dwarfs, neutron stars and stellar black holes, supported against gravity by degeneracy pressure or not at all.",
+   "descriptionCs": "Husté pozůstatky zániku hvězd: bílí trpaslíci, neutronové hvězdy a hvězdné černé díry, držené proti gravitaci degeneračním tlakem, nebo vůbec ne.",
+   "blocks": [
+    {
+     "slug": "white-dwarfs-neutron-stars",
+     "name": "White Dwarfs & Neutron Stars",
+     "description": "White dwarfs and neutron stars are the collapsed cores of dead stars, held up by electron and neutron degeneracy pressure respectively; each has a maximum mass beyond which collapse continues, the Chandrasekhar and Tolman-Oppenheimer-Volkoff limits.",
+     "descriptionCs": "Bílí trpaslíci a neutronové hvězdy jsou zhroucená jádra mrtvých hvězd, držená degeneračním tlakem elektronů, respektive neutronů; každý má maximální hmotnost, za níž kolaps pokračuje — Chandrasekharovu a Tolmanovu–Oppenheimerovu–Volkoffovu mez.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Degeneracy pressure",
+       "definition": "The quantum pressure from the exclusion principle supporting compact stars."
+      },
+      {
+       "name": "Chandrasekhar limit",
+       "definition": "The maximum mass of a white dwarf, about 1.4 solar masses."
+      },
+      {
+       "name": "Neutron star",
+       "definition": "An ultradense stellar remnant composed largely of neutrons."
+      },
+      {
+       "name": "Pulsar",
+       "definition": "A rapidly rotating magnetised neutron star seen as pulses of radiation."
+      },
+      {
+       "name": "Tolman-Oppenheimer-Volkoff limit",
+       "definition": "The maximum mass of a neutron star before black-hole collapse."
+      }
+     ]
+    },
+    {
+     "slug": "stellar-black-holes-accretion",
+     "name": "Stellar Black Holes & Accretion",
+     "description": "When collapse exceeds all support a stellar black hole forms; matter falling onto compact objects releases enormous energy as it forms a hot accretion disc, making X-ray binaries and quasars among the brightest sources in the sky.",
+     "descriptionCs": "Když kolaps překročí veškerou oporu, vzniká hvězdná černá díra; hmota padající na kompaktní objekty uvolňuje při tvorbě horkého akrečního disku obrovskou energii, což činí z rentgenových dvojhvězd a kvasarů jedny z nejjasnějších zdrojů na obloze.",
+     "explored": "partially",
+     "brief": [
+      {
+       "name": "Stellar black hole",
+       "definition": "A black hole formed by the collapse of a massive star's core."
+      },
+      {
+       "name": "Accretion disc",
+       "definition": "A disc of infalling matter heated to radiate as it spirals inward."
+      },
+      {
+       "name": "X-ray binary",
+       "definition": "A compact object accreting from a companion star, bright in X-rays."
+      },
+      {
+       "name": "Relativistic jet",
+       "definition": "A collimated outflow launched from near an accreting compact object."
+      },
+      {
+       "name": "Eddington limit",
+       "definition": "The luminosity at which radiation pressure halts further accretion."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "01.01.08.03",
+   "name": "Interstellar Medium & Star Formation",
+   "description": "The gas and dust between the stars and the collapse that turns it into new stars: molecular clouds, gravitational instability, and the physics of accretion and protostars.",
+   "descriptionCs": "Plyn a prach mezi hvězdami a kolaps, který jej mění v nové hvězdy: molekulární mračna, gravitační nestabilita a fyzika akrece a protohvězd.",
+   "blocks": [
+    {
+     "slug": "interstellar-medium",
+     "name": "The Interstellar Medium",
+     "description": "The space between stars holds gas and dust in phases from cold molecular clouds to hot ionised plasma, enriched by stellar death and cycled into new stars; its physics governs cooling, heating and the chemistry of space.",
+     "descriptionCs": "Prostor mezi hvězdami obsahuje plyn a prach ve fázích od chladných molekulárních mračen po horké ionizované plazma, obohacovaný zánikem hvězd a znovu zapojovaný do nových hvězd; jeho fyzika řídí ochlazování, ohřev a chemii vesmíru.",
+     "explored": "partially",
+     "brief": [
+      {
+       "name": "Molecular cloud",
+       "definition": "A cold dense region of gas where stars form."
+      },
+      {
+       "name": "Interstellar dust",
+       "definition": "Fine solid grains that redden starlight and seed molecule formation."
+      },
+      {
+       "name": "Ionised gas",
+       "definition": "Hot plasma around massive stars, glowing as emission nebulae."
+      },
+      {
+       "name": "Interstellar extinction",
+       "definition": "The dimming and reddening of starlight by intervening dust."
+      },
+      {
+       "name": "Cosmic cycle of matter",
+       "definition": "The recycling of gas from dying stars into new generations."
+      }
+     ]
+    },
+    {
+     "slug": "star-formation",
+     "name": "Star Formation",
+     "description": "Stars are born when a molecular cloud becomes gravitationally unstable and fragments and collapses, forming protostars that accrete through discs and ignite fusion once their cores reach the required temperature.",
+     "descriptionCs": "Hvězdy se rodí, když se molekulární mračno stane gravitačně nestabilním, rozpadne se a zhroutí, přičemž vznikají protohvězdy, které akreují skrze disky a zažehnou fúzi, jakmile jejich jádra dosáhnou potřebné teploty.",
+     "explored": "partially",
+     "brief": [
+      {
+       "name": "Jeans instability",
+       "definition": "The condition under which a gas cloud collapses under its own gravity."
+      },
+      {
+       "name": "Protostar",
+       "definition": "A forming star still accreting from its birth cloud."
+      },
+      {
+       "name": "Protoplanetary disc",
+       "definition": "The disc of gas and dust around a young star from which planets form."
+      },
+      {
+       "name": "Initial mass function",
+       "definition": "The distribution of masses with which stars are born."
+      },
+      {
+       "name": "Bipolar outflow",
+       "definition": "The jets of gas ejected along the poles of a forming star."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "01.01.08.04",
+   "name": "Galactic & Extragalactic Astrophysics",
+   "description": "The structure and dynamics of galaxies and the largest systems: galactic rotation and dark matter, active galactic nuclei, and clusters and the cosmic web.",
+   "descriptionCs": "Struktura a dynamika galaxií a největších soustav: rotace galaxií a temná hmota, aktivní galaktická jádra a kupy galaxií a kosmická síť.",
+   "blocks": [
+    {
+     "slug": "galaxy-dynamics-dark-matter",
+     "name": "Galaxy Dynamics & Dark Matter",
+     "description": "Galaxies are gravitationally bound systems of stars, gas and dark matter; their flat rotation curves reveal far more mass than the visible stars provide, the primary evidence for dark matter haloes surrounding them.",
+     "descriptionCs": "Galaxie jsou gravitačně vázané soustavy hvězd, plynu a temné hmoty; jejich ploché rotační křivky odhalují mnohem více hmoty, než poskytují viditelné hvězdy, což je hlavní důkaz pro halo temné hmoty, jež je obklopují.",
+     "explored": "partially",
+     "brief": [
+      {
+       "name": "Rotation curve",
+       "definition": "The orbital speed of stars versus distance from a galaxy's centre."
+      },
+      {
+       "name": "Dark matter halo",
+       "definition": "The extended invisible mass whose gravity binds a galaxy."
+      },
+      {
+       "name": "Galaxy morphology",
+       "definition": "The classification of galaxies as spiral, elliptical or irregular."
+      },
+      {
+       "name": "Galactic dynamics",
+       "definition": "The gravitational motion of stars and gas within a galaxy."
+      },
+      {
+       "name": "Galaxy mergers",
+       "definition": "The collisions that reshape galaxies and trigger star formation."
+      }
+     ]
+    },
+    {
+     "slug": "agn-large-scale",
+     "name": "Active Galactic Nuclei & Large-Scale Structure",
+     "description": "A supermassive black hole accreting at a galaxy's centre powers active galactic nuclei and quasars, while galaxies themselves cluster into filaments and voids forming the cosmic web, the largest structure in the universe.",
+     "descriptionCs": "Supermasivní černá díra akreující ve středu galaxie pohání aktivní galaktická jádra a kvasary, zatímco samotné galaxie se shlukují do vláken a prázdnot tvořících kosmickou síť, největší strukturu ve vesmíru.",
+     "explored": "partially",
+     "brief": [
+      {
+       "name": "Supermassive black hole",
+       "definition": "The million-to-billion-solar-mass black hole at a galaxy's core."
+      },
+      {
+       "name": "Quasar",
+       "definition": "An extremely luminous active galactic nucleus in the distant universe."
+      },
+      {
+       "name": "Galaxy cluster",
+       "definition": "A gravitationally bound assembly of hundreds to thousands of galaxies."
+      },
+      {
+       "name": "Cosmic web",
+       "definition": "The filamentary large-scale arrangement of galaxies and dark matter."
+      },
+      {
+       "name": "Gravitational lensing",
+       "definition": "The bending of light by mass, used to map dark matter and magnify distant sources."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "01.01.08.05",
+   "name": "High-Energy & Multi-Messenger Astrophysics",
+   "description": "The most violent phenomena and the many channels that reveal them: supernovae and their remnants, cosmic rays, gamma-ray bursts, and observation through light, particles and gravitational waves.",
+   "descriptionCs": "Nejprudší jevy a mnoho kanálů, jimiž se projevují: supernovy a jejich pozůstatky, kosmické záření, záblesky gama a pozorování světlem, částicemi a gravitačními vlnami.",
+   "blocks": [
+    {
+     "slug": "supernovae-cosmic-rays",
+     "name": "Supernovae & Cosmic Rays",
+     "description": "Massive stars end in supernova explosions that disperse newly forged elements and drive shock waves accelerating cosmic rays — high-energy particles that pervade the galaxy and strike the Earth's atmosphere.",
+     "descriptionCs": "Hmotné hvězdy končí výbuchy supernov, které rozptylují nově vytvořené prvky a vytvářejí rázové vlny urychlující kosmické záření — vysokoenergetické částice, jež prostupují galaxií a dopadají na zemskou atmosféru.",
+     "explored": "partially",
+     "brief": [
+      {
+       "name": "Core-collapse supernova",
+       "definition": "The explosion of a massive star when its iron core collapses."
+      },
+      {
+       "name": "Type Ia supernova",
+       "definition": "The thermonuclear detonation of a white dwarf, a cosmic standard candle."
+      },
+      {
+       "name": "Supernova remnant",
+       "definition": "The expanding shocked shell left by a supernova."
+      },
+      {
+       "name": "Cosmic rays",
+       "definition": "High-energy charged particles from space, accelerated by shocks and other sources."
+      },
+      {
+       "name": "Shock acceleration",
+       "definition": "The mechanism boosting particles to high energy at astrophysical shock fronts."
+      }
+     ]
+    },
+    {
+     "slug": "multi-messenger",
+     "name": "Multi-Messenger Astrophysics",
+     "description": "The universe is now observed through several messengers — electromagnetic radiation across the spectrum, neutrinos, cosmic rays and gravitational waves — whose combination pinpoints events such as neutron-star mergers and gamma-ray bursts.",
+     "descriptionCs": "Vesmír se nyní pozoruje prostřednictvím několika poslů — elektromagnetického záření napříč spektrem, neutrin, kosmického záření a gravitačních vln — jejichž kombinace přesně určuje děje, jako je splývání neutronových hvězd a záblesky gama.",
+     "explored": "partially",
+     "brief": [
+      {
+       "name": "Gamma-ray burst",
+       "definition": "The brightest electromagnetic explosion, from collapsing stars or merging compact objects."
+      },
+      {
+       "name": "Neutrino astronomy",
+       "definition": "Observation of astrophysical neutrinos that escape dense sources."
+      },
+      {
+       "name": "Gravitational-wave astronomy",
+       "definition": "The detection of spacetime ripples from merging compact objects."
+      },
+      {
+       "name": "Kilonova",
+       "definition": "The optical glow of a neutron-star merger forging heavy elements."
+      },
+      {
+       "name": "Messenger coincidence",
+       "definition": "The joint detection of one event across multiple channels, localising its source."
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "relations": []
+}

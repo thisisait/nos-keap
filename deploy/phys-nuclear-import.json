@@ -1,0 +1,314 @@
+{
+ "importKey": "phys-nuclear",
+ "actor": "agent:fable-import",
+ "root": {
+  "id": "01.01.06",
+  "parent": "01.01",
+  "name": "Nuclear Physics",
+  "rootIsSeed": true
+ },
+ "pillars": [
+  {
+   "id": "01.01.06.01",
+   "name": "Nuclear Structure",
+   "description": "The composition and organisation of the atomic nucleus: protons and neutrons, binding energy, nuclear size and shape, and the models that explain nuclear stability.",
+   "descriptionCs": "Složení a uspořádání atomového jádra: protony a neutrony, vazebná energie, velikost a tvar jádra a modely vysvětlující jadernou stabilitu.",
+   "blocks": [
+    {
+     "slug": "nucleons-binding",
+     "name": "Nucleons & Binding Energy",
+     "description": "The nucleus is bound protons and neutrons held by the strong nuclear force; the binding energy per nucleon peaks near iron, explaining why fusion of light nuclei and fission of heavy ones both release energy.",
+     "descriptionCs": "Jádro tvoří vázané protony a neutrony držené silnou jadernou silou; vazebná energie na nukleon dosahuje maxima poblíž železa, což vysvětluje, proč fúze lehkých jader i štěpení těžkých uvolňují energii.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Nucleon",
+       "definition": "A proton or neutron, the constituents of the nucleus."
+      },
+      {
+       "name": "Strong nuclear force",
+       "definition": "The short-range attraction binding nucleons against electrostatic repulsion."
+      },
+      {
+       "name": "Binding energy",
+       "definition": "The energy needed to disassemble a nucleus, reflected in a mass deficit."
+      },
+      {
+       "name": "Mass defect",
+       "definition": "The difference between a nucleus's mass and the sum of its free nucleons."
+      },
+      {
+       "name": "Binding-energy curve",
+       "definition": "The variation of binding energy per nucleon with mass number, peaking at iron."
+      }
+     ]
+    },
+    {
+     "slug": "nuclear-models",
+     "name": "Nuclear Models",
+     "description": "Complementary models capture nuclear behaviour: the liquid-drop model explains binding and fission energetics, while the shell model explains magic numbers and spins through nucleons filling quantised energy levels.",
+     "descriptionCs": "Doplňující se modely popisují chování jádra: kapkový model vysvětluje vazebnou energii a energetiku štěpení, zatímco slupkový model vysvětluje magická čísla a spiny pomocí nukleonů zaplňujících kvantované energetické hladiny.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Liquid-drop model",
+       "definition": "A model treating the nucleus as an incompressible charged drop."
+      },
+      {
+       "name": "Semi-empirical mass formula",
+       "definition": "The formula estimating binding energy from volume, surface, Coulomb and other terms."
+      },
+      {
+       "name": "Shell model",
+       "definition": "A model of nucleons in quantised orbitals explaining stability patterns."
+      },
+      {
+       "name": "Magic numbers",
+       "definition": "Nucleon counts giving closed shells and exceptional stability."
+      },
+      {
+       "name": "Nuclear spin",
+       "definition": "The total angular momentum of a nucleus, important in magnetic resonance."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "01.01.06.02",
+   "name": "Radioactivity & Decay",
+   "description": "The spontaneous transformation of unstable nuclei: alpha, beta and gamma decay, decay laws and half-lives, decay chains, and the applications of radioactive dating and tracing.",
+   "descriptionCs": "Samovolná přeměna nestabilních jader: alfa, beta a gama rozpad, zákony rozpadu a poločasy, rozpadové řady a využití radioaktivního datování a značkování.",
+   "blocks": [
+    {
+     "slug": "decay-modes",
+     "name": "Modes of Radioactive Decay",
+     "description": "Unstable nuclei shed energy by emitting an alpha particle, converting a neutron and proton through beta decay, or releasing a gamma photon; each mode changes the nucleus in a characteristic way governed by conservation laws.",
+     "descriptionCs": "Nestabilní jádra se zbavují energie vyzářením částice alfa, přeměnou neutronu a protonu při beta rozpadu nebo uvolněním fotonu gama; každý způsob mění jádro charakteristickým způsobem daným zákony zachování.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Alpha decay",
+       "definition": "Emission of a helium nucleus, reducing mass number by four."
+      },
+      {
+       "name": "Beta decay",
+       "definition": "Conversion of a neutron to a proton or vice versa, emitting an electron or positron and a neutrino."
+      },
+      {
+       "name": "Gamma decay",
+       "definition": "Emission of a high-energy photon as an excited nucleus relaxes."
+      },
+      {
+       "name": "Electron capture",
+       "definition": "Absorption of an inner electron converting a proton to a neutron."
+      },
+      {
+       "name": "Q-value",
+       "definition": "The energy released in a decay, shared as kinetic energy of the products."
+      }
+     ]
+    },
+    {
+     "slug": "decay-law-dating",
+     "name": "Decay Law, Half-Life & Dating",
+     "description": "Radioactive decay is a random process with a fixed probability per unit time, giving exponential decay and a characteristic half-life; the steady clock this provides underlies radiometric dating and radioactive tracing.",
+     "descriptionCs": "Radioaktivní rozpad je náhodný děj s pevnou pravděpodobností za jednotku času, což vede k exponenciálnímu poklesu a charakteristickému poločasu rozpadu; tyto stálé hodiny jsou základem radiometrického datování a radioaktivního značkování.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Half-life",
+       "definition": "The time for half the nuclei in a sample to decay."
+      },
+      {
+       "name": "Exponential decay law",
+       "definition": "The rule that activity falls off exponentially with time."
+      },
+      {
+       "name": "Activity",
+       "definition": "The number of decays per unit time in a radioactive sample."
+      },
+      {
+       "name": "Decay chain",
+       "definition": "A sequence of decays leading from an unstable parent to a stable end nucleus."
+      },
+      {
+       "name": "Radiometric dating",
+       "definition": "Determining age from the ratio of parent to daughter isotopes, as in carbon-14 dating."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "01.01.06.03",
+   "name": "Nuclear Reactions",
+   "description": "Induced transformations of nuclei: reaction kinematics and cross sections, conservation laws, and the mechanisms of scattering, capture and transmutation.",
+   "descriptionCs": "Vynucené přeměny jader: kinematika reakcí a účinné průřezy, zákony zachování a mechanismy rozptylu, záchytu a transmutace.",
+   "blocks": [
+    {
+     "slug": "reaction-cross-sections",
+     "name": "Reactions & Cross Sections",
+     "description": "In a nuclear reaction incident particles transform a target nucleus, conserving nucleon number, charge, energy and momentum; the cross section quantifies reaction probability, peaking sharply at resonances.",
+     "descriptionCs": "Při jaderné reakci dopadající částice přeměňují terčové jádro za zachování počtu nukleonů, náboje, energie a hybnosti; účinný průřez udává pravděpodobnost reakce a dosahuje ostrých maxim při rezonancích.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Cross section",
+       "definition": "The effective target area measuring the probability of a nuclear reaction."
+      },
+      {
+       "name": "Reaction kinematics",
+       "definition": "The application of energy and momentum conservation to reaction products."
+      },
+      {
+       "name": "Compound nucleus",
+       "definition": "A short-lived excited nucleus formed and then decaying during a reaction."
+      },
+      {
+       "name": "Resonance",
+       "definition": "A sharp peak in cross section when the energy matches a nuclear excited state."
+      },
+      {
+       "name": "Transmutation",
+       "definition": "The conversion of one element into another by a nuclear reaction."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "01.01.06.04",
+   "name": "Fission, Fusion & Energy",
+   "description": "The two routes to nuclear energy: the splitting of heavy nuclei and the merging of light ones, the physics of chain reactions and confinement, and their use in reactors and weapons.",
+   "descriptionCs": "Dvě cesty k jaderné energii: štěpení těžkých jader a slučování lehkých, fyzika řetězových reakcí a udržení a jejich využití v reaktorech a zbraních.",
+   "blocks": [
+    {
+     "slug": "nuclear-fission",
+     "name": "Nuclear Fission",
+     "description": "A heavy nucleus splits into lighter fragments, releasing energy and free neutrons that can sustain a chain reaction; controlled in reactors by moderators and control rods, uncontrolled it drives fission weapons.",
+     "descriptionCs": "Těžké jádro se rozštěpí na lehčí fragmenty, přičemž uvolní energii a volné neutrony schopné udržet řetězovou reakci; v reaktorech se řídí moderátory a regulačními tyčemi, neřízené pohání štěpné zbraně.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Induced fission",
+       "definition": "Splitting of a heavy nucleus triggered by neutron absorption."
+      },
+      {
+       "name": "Chain reaction",
+       "definition": "A self-sustaining sequence in which fission neutrons induce further fissions."
+      },
+      {
+       "name": "Critical mass",
+       "definition": "The minimum amount of fissile material needed to sustain a chain reaction."
+      },
+      {
+       "name": "Moderator",
+       "definition": "A material slowing neutrons to increase the fission probability in a reactor."
+      },
+      {
+       "name": "Fission products",
+       "definition": "The radioactive fragments and neutrons produced by fission."
+      }
+     ]
+    },
+    {
+     "slug": "nuclear-fusion",
+     "name": "Nuclear Fusion",
+     "description": "Light nuclei merge into a heavier one, releasing large energy per nucleon but requiring immense temperature and pressure to overcome their electrostatic repulsion; fusion powers the stars and is pursued for terrestrial energy.",
+     "descriptionCs": "Lehká jádra se slučují do těžšího a uvolňují velkou energii na nukleon, avšak vyžadují obrovskou teplotu a tlak k překonání elektrostatického odpuzování; fúze pohání hvězdy a usiluje se o ni jako o pozemský zdroj energie.",
+     "explored": "partially",
+     "brief": [
+      {
+       "name": "Fusion reaction",
+       "definition": "The merging of light nuclei into a heavier one with energy release."
+      },
+      {
+       "name": "Coulomb barrier",
+       "definition": "The electrostatic repulsion that fusing nuclei must overcome."
+      },
+      {
+       "name": "Thermonuclear ignition",
+       "definition": "The condition where fusion becomes self-sustaining through its own heat."
+      },
+      {
+       "name": "Magnetic confinement",
+       "definition": "Holding hot plasma with magnetic fields, as in a tokamak."
+      },
+      {
+       "name": "Inertial confinement",
+       "definition": "Compressing fuel by lasers or beams to reach fusion conditions."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "01.01.06.05",
+   "name": "Applied & Astrophysical Nuclear Physics",
+   "description": "Nuclear physics in practice and in the cosmos: nuclear medicine and radiation detection, radiation protection, and the nucleosynthesis that forges the elements in stars.",
+   "descriptionCs": "Jaderná fyzika v praxi a ve vesmíru: nukleární medicína a detekce záření, radiační ochrana a nukleosyntéza, která ve hvězdách vytváří prvky.",
+   "blocks": [
+    {
+     "slug": "nuclear-medicine-detection",
+     "name": "Nuclear Medicine & Radiation Detection",
+     "description": "Radioactive isotopes and radiation are harnessed for imaging and therapy and detected by instruments that convert ionisation into measurable signals; radiation protection limits exposure through shielding, distance and time.",
+     "descriptionCs": "Radioaktivní izotopy a záření se využívají k zobrazování a léčbě a detekují je přístroje, které převádějí ionizaci na měřitelný signál; radiační ochrana omezuje ozáření pomocí stínění, vzdálenosti a času.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Radiotracer",
+       "definition": "A radioactive label following a substance through a body or system."
+      },
+      {
+       "name": "Positron emission tomography",
+       "definition": "Imaging that reconstructs positron-emitter distribution in the body."
+      },
+      {
+       "name": "Radiotherapy",
+       "definition": "The use of ionising radiation to destroy diseased tissue."
+      },
+      {
+       "name": "Geiger counter",
+       "definition": "A detector registering individual ionising events as pulses."
+      },
+      {
+       "name": "Radiation protection",
+       "definition": "Limiting dose through shielding, distance and exposure time."
+      }
+     ]
+    },
+    {
+     "slug": "nucleosynthesis",
+     "name": "Nucleosynthesis",
+     "description": "The chemical elements are forged by nuclear reactions: the lightest in the first minutes of the Big Bang, heavier ones by fusion in stellar cores, and the heaviest by rapid neutron capture in supernovae and neutron-star mergers.",
+     "descriptionCs": "Chemické prvky vznikají jadernými reakcemi: nejlehčí v prvních minutách velkého třesku, těžší fúzí v jádrech hvězd a nejtěžší rychlým záchytem neutronů v supernovách a při splývání neutronových hvězd.",
+     "explored": "partially",
+     "brief": [
+      {
+       "name": "Big Bang nucleosynthesis",
+       "definition": "The formation of hydrogen, helium and lithium in the early universe."
+      },
+      {
+       "name": "Stellar nucleosynthesis",
+       "definition": "The building of elements up to iron by fusion in stars."
+      },
+      {
+       "name": "s-process",
+       "definition": "Slow neutron capture building heavy nuclei in evolved stars."
+      },
+      {
+       "name": "r-process",
+       "definition": "Rapid neutron capture forming the heaviest elements in explosive events."
+      },
+      {
+       "name": "Cosmic abundance",
+       "definition": "The observed proportions of the elements set by these processes."
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "relations": []
+}

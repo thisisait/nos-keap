@@ -53,12 +53,21 @@ db.exec(
   `CREATE TABLE IF NOT EXISTS concept_relations (from_id TEXT NOT NULL, to_id TEXT NOT NULL, type TEXT NOT NULL, explored TEXT, source TEXT DEFAULT 'toe', PRIMARY KEY (from_id, to_id, type))`,
 );
 
+// rootIsSeed: the L2 branch already exists in the static seed tree (e.g. the
+// named physics fields 01.01.03-.10). Pillars then attach as ext children
+// DIRECTLY under the seed L2 — the ToE precedent (ext L2 under seed L1 01.01)
+// proves ext-under-seed registers + gets an appended layout position without a
+// re-bake. In that mode we must NEVER touch the root's own row / description /
+// baked layout point — only its ext descendants.
+const rootIsSeed = bundle.rootIsSeed === true;
+
 // ── Idempotent reset of this domain's subtree + relations ───────────────────
 const like = `${root.id}.%`;
-db.exec(`DELETE FROM taxonomy_nodes_ext WHERE id = '${root.id}' OR id LIKE '${like}'`);
-db.exec(`DELETE FROM node_descriptions  WHERE node_id = '${root.id}' OR node_id LIKE '${like}'`);
-db.exec(`DELETE FROM taxonomy_metadata  WHERE id = '${root.id}' OR id LIKE '${like}'`);
-db.exec(`DELETE FROM taxonomy_layout    WHERE node_id = '${root.id}' OR node_id LIKE '${like}'`);
+const clause = (col) => (rootIsSeed ? `${col} LIKE '${like}'` : `${col} = '${root.id}' OR ${col} LIKE '${like}'`);
+db.exec(`DELETE FROM taxonomy_nodes_ext WHERE ${clause('id')}`);
+db.exec(`DELETE FROM node_descriptions  WHERE ${clause('node_id')}`);
+db.exec(`DELETE FROM taxonomy_metadata  WHERE ${clause('id')}`);
+db.exec(`DELETE FROM taxonomy_layout    WHERE ${clause('node_id')}`);
 db.exec(`DELETE FROM concept_relations  WHERE source = '${importKey}'`);
 
 const insNode = db.prepare(
@@ -87,8 +96,13 @@ const tick = () => clock++;
 const rootOrd = db.prepare(`SELECT COUNT(*) AS c FROM taxonomy_nodes_ext WHERE parent_id = ?`).get(root.parent).c;
 
 // ── 1. Root (L2) ────────────────────────────────────────────────────────────
-insNode.run(root.id, root.parent, root.name, clip(root.description, 480), rootOrd, actor, actor, tick());
-insDesc.run(root.id, clip(root.description, 480), null, actor, actor);
+// A seed root already exists in the static tree (row + baked star + seed desc);
+// skip re-inserting it, else the ext table duplicates the seed node. A grown
+// root (the ToE/chem/bio "Disciplines" catch-all pattern) is inserted as before.
+if (!rootIsSeed) {
+  insNode.run(root.id, root.parent, root.name, clip(root.description, 480), rootOrd, actor, actor, tick());
+  insDesc.run(root.id, clip(root.description, 480), root.descriptionCs ? clip(root.descriptionCs, 480) : null, actor, actor);
+}
 
 // ── 2. Pillars (L3) + 3. Blocks (L4) ────────────────────────────────────────
 const slugToNode = {};
@@ -98,14 +112,14 @@ pillars.forEach((pillar, pi) => {
   const pillarNodeId = `${root.id}.${pad(pi + 1)}`;
   const pDesc = clip(pillar.description, 480) || pillar.name;
   insNode.run(pillarNodeId, root.id, pillar.name, pDesc, pi, actor, actor, tick());
-  insDesc.run(pillarNodeId, pDesc, null, actor, actor);
+  insDesc.run(pillarNodeId, pDesc, pillar.descriptionCs ? clip(pillar.descriptionCs, 480) : null, actor, actor);
   nPillars++;
 
   pillar.blocks.forEach((block, bi) => {
     const blockNodeId = `${pillarNodeId}.${pad(bi + 1)}`;
     const desc = clip(block.description, 480);
     insNode.run(blockNodeId, pillarNodeId, block.name, desc, bi, actor, actor, tick());
-    insDesc.run(blockNodeId, desc, null, actor, actor);
+    insDesc.run(blockNodeId, desc, block.descriptionCs ? clip(block.descriptionCs, 480) : null, actor, actor);
     // Brief = the constituent ontology concepts + agent-authored definitions.
     const lines = (block.brief || []).map((c) => {
       const code = c.code ? ` (${c.code})` : '';

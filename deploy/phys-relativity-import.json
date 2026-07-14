@@ -1,0 +1,348 @@
+{
+ "importKey": "phys-relativity",
+ "actor": "agent:fable-import",
+ "root": {
+  "id": "01.01.05",
+  "parent": "01.01",
+  "name": "Relativity",
+  "rootIsSeed": true
+ },
+ "pillars": [
+  {
+   "id": "01.01.05.01",
+   "name": "Special Relativity",
+   "description": "Einstein's 1905 theory of space and time in inertial frames: the constancy of the speed of light, the relativity of simultaneity, time dilation and length contraction, and the Lorentz transformation.",
+   "descriptionCs": "Einsteinova teorie prostoru a času z roku 1905 v inerciálních soustavách: stálost rychlosti světla, relativita současnosti, dilatace času a kontrakce délek a Lorentzova transformace.",
+   "blocks": [
+    {
+     "slug": "postulates-simultaneity",
+     "name": "Postulates & Relativity of Simultaneity",
+     "description": "Special relativity rests on two postulates — the laws of physics are the same in all inertial frames and the speed of light is invariant — from which simultaneity becomes relative: events simultaneous in one frame need not be in another.",
+     "descriptionCs": "Speciální teorie relativity stojí na dvou postulátech — fyzikální zákony jsou stejné ve všech inerciálních soustavách a rychlost světla je invariantní — z nichž plyne relativita současnosti: události současné v jedné soustavě nemusí být současné v jiné.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Principle of relativity",
+       "definition": "The laws of physics take the same form in every inertial frame."
+      },
+      {
+       "name": "Invariance of light speed",
+       "definition": "The speed of light in vacuum is the same for all observers regardless of motion."
+      },
+      {
+       "name": "Inertial frame",
+       "definition": "A reference frame in which a free body moves in a straight line at constant speed."
+      },
+      {
+       "name": "Relativity of simultaneity",
+       "definition": "Whether two separated events are simultaneous depends on the observer's motion."
+      }
+     ]
+    },
+    {
+     "slug": "time-dilation-length-contraction",
+     "name": "Time Dilation & Length Contraction",
+     "description": "Moving clocks run slow and moving rods contract along their motion, by the Lorentz factor; these reciprocal effects preserve the invariant speed of light and are confirmed by decaying particles and precision clocks.",
+     "descriptionCs": "Pohybující se hodiny jdou pomaleji a pohybující se tyče se ve směru pohybu zkracují o Lorentzův faktor; tyto vzájemné jevy zachovávají invariantní rychlost světla a potvrzují je rozpadající se částice a přesné hodiny.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Time dilation",
+       "definition": "The slowing of a moving clock as seen from a frame in which it moves."
+      },
+      {
+       "name": "Length contraction",
+       "definition": "The shortening of a moving object along its direction of motion."
+      },
+      {
+       "name": "Lorentz factor",
+       "definition": "The factor gamma quantifying dilation and contraction, growing without bound near light speed."
+      },
+      {
+       "name": "Proper time",
+       "definition": "The time measured by a clock carried along a worldline, an invariant."
+      },
+      {
+       "name": "Twin paradox",
+       "definition": "The asymmetric ageing of a travelling twin, resolved by the acceleration of the return."
+      }
+     ]
+    },
+    {
+     "slug": "lorentz-transformation",
+     "name": "Lorentz Transformation & Velocity Addition",
+     "description": "The Lorentz transformation mixes space and time coordinates between inertial frames, replacing the Galilean transformation; it yields the relativistic velocity-addition rule that keeps the speed of light as an unreachable limit.",
+     "descriptionCs": "Lorentzova transformace mísí prostorové a časové souřadnice mezi inerciálními soustavami a nahrazuje Galileovu transformaci; dává relativistické pravidlo skládání rychlostí, které udržuje rychlost světla jako nedosažitelnou mez.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Lorentz transformation",
+       "definition": "The linear transformation of coordinates between inertial frames preserving the light speed."
+      },
+      {
+       "name": "Velocity addition",
+       "definition": "The rule combining velocities so their sum never exceeds the speed of light."
+      },
+      {
+       "name": "Relativistic Doppler effect",
+       "definition": "The frequency shift of light from relative motion, including a transverse component."
+      },
+      {
+       "name": "Invariant interval",
+       "definition": "The spacetime separation of events, agreed on by all inertial observers."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "01.01.05.02",
+   "name": "Relativistic Dynamics",
+   "description": "Mechanics at high speed: relativistic momentum and energy, the mass-energy equivalence, four-vectors, and the union of space and time into Minkowski spacetime.",
+   "descriptionCs": "Mechanika při vysokých rychlostech: relativistická hybnost a energie, ekvivalence hmoty a energie, čtyřvektory a sjednocení prostoru a času do Minkowského časoprostoru.",
+   "blocks": [
+    {
+     "slug": "mass-energy",
+     "name": "Mass-Energy Equivalence",
+     "description": "Energy and mass are equivalent, related by E = mc squared, so a body's rest energy is enormous and any energy has inertia; this underlies nuclear binding energy, particle creation and the energetics of stars.",
+     "descriptionCs": "Energie a hmota jsou ekvivalentní, spojené vztahem E = mc na druhou, takže klidová energie tělesa je obrovská a každá energie má setrvačnost; to je základem jaderné vazebné energie, vzniku částic a energetiky hvězd.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Rest energy",
+       "definition": "The energy mc squared a body possesses by virtue of its mass alone."
+      },
+      {
+       "name": "Relativistic momentum",
+       "definition": "Momentum that grows faster than velocity and diverges near light speed."
+      },
+      {
+       "name": "Energy-momentum relation",
+       "definition": "The invariant relation E squared = (pc) squared + (mc squared) squared."
+      },
+      {
+       "name": "Massless particles",
+       "definition": "Particles such as photons that carry energy and momentum but no rest mass and move at light speed."
+      },
+      {
+       "name": "Binding energy",
+       "definition": "The mass deficit released when bound systems form, powering nuclear reactions."
+      }
+     ]
+    },
+    {
+     "slug": "spacetime-fourvectors",
+     "name": "Minkowski Spacetime & Four-Vectors",
+     "description": "Space and time unite into four-dimensional Minkowski spacetime with an indefinite metric; physical quantities become four-vectors and tensors whose invariant magnitudes all observers agree on, making the laws manifestly frame-independent.",
+     "descriptionCs": "Prostor a čas se spojují do čtyřrozměrného Minkowského časoprostoru s indefinitní metrikou; fyzikální veličiny se stávají čtyřvektory a tenzory, na jejichž invariantních velikostech se shodnou všichni pozorovatelé, čímž jsou zákony zjevně nezávislé na soustavě.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Minkowski spacetime",
+       "definition": "The flat four-dimensional continuum of special relativity with a light-cone structure."
+      },
+      {
+       "name": "Worldline",
+       "definition": "The path of a particle through spacetime."
+      },
+      {
+       "name": "Light cone",
+       "definition": "The surface separating causally connected events from those that cannot interact."
+      },
+      {
+       "name": "Four-vector",
+       "definition": "A four-component quantity transforming under the Lorentz transformation, such as four-momentum."
+      },
+      {
+       "name": "Causality",
+       "definition": "The ordering of cause and effect preserved because no signal outpaces light."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "01.01.05.03",
+   "name": "General Relativity",
+   "description": "Einstein's geometric theory of gravity: the equivalence principle, curved spacetime, geodesic motion, and the field equations relating curvature to energy and momentum.",
+   "descriptionCs": "Einsteinova geometrická teorie gravitace: princip ekvivalence, zakřivený časoprostor, pohyb po geodetikách a rovnice pole spojující křivost s energií a hybností.",
+   "blocks": [
+    {
+     "slug": "equivalence-principle",
+     "name": "Equivalence Principle",
+     "description": "Gravitational and inertial mass are identical, so a freely falling observer feels no gravity and a uniform acceleration is locally indistinguishable from a gravitational field; this equivalence is the seed of general relativity.",
+     "descriptionCs": "Gravitační a setrvačná hmotnost jsou totožné, takže volně padající pozorovatel gravitaci necítí a rovnoměrné zrychlení je lokálně nerozlišitelné od gravitačního pole; tato ekvivalence je zárodkem obecné teorie relativity.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Equivalence principle",
+       "definition": "The local equivalence of a gravitational field and an accelerating frame."
+      },
+      {
+       "name": "Free fall",
+       "definition": "Motion under gravity alone, in which an observer feels weightless."
+      },
+      {
+       "name": "Gravitational time dilation",
+       "definition": "The slowing of clocks deeper in a gravitational potential."
+      },
+      {
+       "name": "Gravitational redshift",
+       "definition": "The lengthening of a photon's wavelength as it climbs out of a gravity well."
+      }
+     ]
+    },
+    {
+     "slug": "curved-spacetime-field-equations",
+     "name": "Curved Spacetime & Field Equations",
+     "description": "Gravity is the curvature of spacetime produced by energy and momentum; matter tells spacetime how to curve through Einstein's field equations, and spacetime tells matter how to move along geodesics.",
+     "descriptionCs": "Gravitace je zakřivení časoprostoru způsobené energií a hybností; hmota určuje, jak se má časoprostor zakřivit, prostřednictvím Einsteinových rovnic pole, a časoprostor určuje hmotě, jak se má pohybovat po geodetikách.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Spacetime curvature",
+       "definition": "The geometric deviation from flatness that manifests as gravity."
+      },
+      {
+       "name": "Geodesic",
+       "definition": "The straightest possible path in curved spacetime, followed by free-falling bodies."
+      },
+      {
+       "name": "Einstein field equations",
+       "definition": "The equations relating spacetime curvature to the energy-momentum of matter."
+      },
+      {
+       "name": "Metric tensor",
+       "definition": "The field encoding distances and times, the dynamical variable of general relativity."
+      },
+      {
+       "name": "Cosmological constant",
+       "definition": "A uniform energy of space driving accelerated expansion, added to the field equations."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "01.01.05.04",
+   "name": "Gravitation & Spacetime Solutions",
+   "description": "Solutions of the field equations and their physics: black holes, gravitational waves, and the exact geometries that describe stars, collapsed objects and the expanding universe.",
+   "descriptionCs": "Řešení rovnic pole a jejich fyzika: černé díry, gravitační vlny a přesné geometrie popisující hvězdy, zhroucené objekty a rozpínající se vesmír.",
+   "blocks": [
+    {
+     "slug": "black-holes",
+     "name": "Black Holes",
+     "description": "When gravity overwhelms all support, matter collapses to a region from which not even light escapes, bounded by an event horizon and characterised by mass, charge and spin; observations confirm them at stellar and galactic scales.",
+     "descriptionCs": "Když gravitace přemůže veškerou oporu, hmota se zhroutí do oblasti, z níž neunikne ani světlo, ohraničené horizontem událostí a charakterizované hmotností, nábojem a rotací; pozorování je potvrzují na hvězdných i galaktických škálách.",
+     "explored": "partially",
+     "brief": [
+      {
+       "name": "Event horizon",
+       "definition": "The boundary beyond which no signal can escape a black hole."
+      },
+      {
+       "name": "Schwarzschild solution",
+       "definition": "The exact spacetime of a non-rotating spherical mass."
+      },
+      {
+       "name": "Singularity",
+       "definition": "The region of formally infinite curvature at a black hole's centre, where the theory breaks down."
+      },
+      {
+       "name": "Kerr solution",
+       "definition": "The spacetime of a rotating black hole, dragging spacetime around it."
+      },
+      {
+       "name": "Hawking radiation",
+       "definition": "The predicted thermal emission that lets black holes slowly evaporate."
+      }
+     ]
+    },
+    {
+     "slug": "gravitational-waves",
+     "name": "Gravitational Waves",
+     "description": "Accelerating masses radiate ripples of spacetime curvature travelling at the speed of light; first detected in 2015 from merging black holes, they open a new observational window on the most violent events in the universe.",
+     "descriptionCs": "Zrychlující se hmoty vyzařují vlnění zakřivení časoprostoru šířící se rychlostí světla; poprvé detekované v roce 2015 ze splývajících černých děr otevírají nové pozorovací okno na nejprudší děje ve vesmíru.",
+     "explored": "partially",
+     "brief": [
+      {
+       "name": "Gravitational wave",
+       "definition": "A propagating oscillation of spacetime curvature emitted by accelerating masses."
+      },
+      {
+       "name": "Binary inspiral",
+       "definition": "The spiralling merger of two compact objects, a strong wave source."
+      },
+      {
+       "name": "Interferometric detection",
+       "definition": "The measurement of tiny length changes by laser interferometers such as LIGO."
+      },
+      {
+       "name": "Multi-messenger astronomy",
+       "definition": "The combined observation of gravitational waves and electromagnetic or particle signals."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "01.01.05.05",
+   "name": "Tests & Applications of Relativity",
+   "description": "The experimental confirmation and practical use of relativity, from Mercury's perihelion and light bending to gravitational-wave detection and the relativistic corrections in satellite navigation.",
+   "descriptionCs": "Experimentální potvrzení a praktické využití relativity, od stáčení perihelia Merkuru a ohybu světla po detekci gravitačních vln a relativistické korekce v družicové navigaci.",
+   "blocks": [
+    {
+     "slug": "classical-tests",
+     "name": "Classical Tests of Relativity",
+     "description": "General relativity was confirmed by the anomalous precession of Mercury's perihelion, the bending of starlight by the Sun, and the gravitational redshift of light, and continues to pass ever more precise experimental tests.",
+     "descriptionCs": "Obecná teorie relativity byla potvrzena anomálním stáčením perihelia Merkuru, ohybem hvězdného světla Sluncem a gravitačním rudým posuvem světla a nadále obstává ve stále přesnějších experimentálních testech.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Perihelion precession",
+       "definition": "The excess rotation of Mercury's orbit explained by general relativity."
+      },
+      {
+       "name": "Light deflection",
+       "definition": "The bending of light by mass, first measured during a solar eclipse."
+      },
+      {
+       "name": "Shapiro delay",
+       "definition": "The extra travel time of light passing near a massive body."
+      },
+      {
+       "name": "Frame dragging",
+       "definition": "The twisting of spacetime by a rotating mass, measured by orbiting gyroscopes."
+      }
+     ]
+    },
+    {
+     "slug": "gps-relativity",
+     "name": "Relativity in Navigation & Technology",
+     "description": "Satellite navigation must correct for both special-relativistic time dilation from orbital speed and general-relativistic speed-up from weaker gravity, without which position errors would accumulate at kilometres per day.",
+     "descriptionCs": "Družicová navigace musí korigovat jak speciálně-relativistickou dilataci času z orbitální rychlosti, tak obecně-relativistické zrychlení hodin ze slabší gravitace, bez čehož by chyby polohy narůstaly o kilometry za den.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "GPS time correction",
+       "definition": "The net relativistic clock adjustment applied to navigation satellites."
+      },
+      {
+       "name": "Orbital time dilation",
+       "definition": "The special-relativistic slowing of a fast-moving satellite clock."
+      },
+      {
+       "name": "Altitude clock speed-up",
+       "definition": "The general-relativistic quickening of a clock in weaker gravity."
+      },
+      {
+       "name": "Precision timekeeping",
+       "definition": "The use of relativity in atomic clocks and geodesy at sub-nanosecond accuracy."
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "relations": []
+}

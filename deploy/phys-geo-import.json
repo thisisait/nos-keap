@@ -1,0 +1,219 @@
+{
+ "importKey": "phys-geo",
+ "actor": "agent:fable-import",
+ "root": {
+  "id": "01.01.09",
+  "parent": "01.01",
+  "name": "Geophysics",
+  "rootIsSeed": true
+ },
+ "pillars": [
+  {
+   "id": "01.01.09.01",
+   "name": "Seismology & Earth's Interior",
+   "description": "The study of seismic waves and what they reveal about the planet's layered structure: earthquake sources, wave propagation, and the crust, mantle and core.",
+   "descriptionCs": "Studium seismických vln a toho, co odhalují o vrstevnaté stavbě planety: zdroje zemětřesení, šíření vln a kůra, plášť a jádro.",
+   "blocks": [
+    {
+     "slug": "seismic-waves",
+     "name": "Seismic Waves & Earthquakes",
+     "description": "Earthquakes radiate elastic seismic waves — fast compressional P-waves, slower shear S-waves, and surface waves — whose travel times and paths are recorded on seismographs and used to locate sources and measure magnitude.",
+     "descriptionCs": "Zemětřesení vyzařují elastické seismické vlny — rychlé podélné vlny P, pomalejší příčné vlny S a povrchové vlny — jejichž časy šíření a dráhy zaznamenávají seismografy a používají se k lokalizaci ohnisek a měření magnituda.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "P-wave",
+       "definition": "The fastest seismic wave, a compressional wave travelling through solids and liquids."
+      },
+      {
+       "name": "S-wave",
+       "definition": "A shear wave travelling only through solids, revealing the liquid outer core by its absence."
+      },
+      {
+       "name": "Surface waves",
+       "definition": "Slower waves confined to the surface that cause most earthquake damage."
+      },
+      {
+       "name": "Seismograph",
+       "definition": "The instrument recording ground motion from seismic waves."
+      },
+      {
+       "name": "Magnitude",
+       "definition": "A logarithmic measure of an earthquake's energy release, such as the moment magnitude."
+      }
+     ]
+    },
+    {
+     "slug": "earth-interior",
+     "name": "Earth's Internal Structure",
+     "description": "Seismic waves refract and reflect at internal boundaries, revealing the Earth's layers: a thin crust, a solid convecting mantle, a liquid outer core generating the magnetic field, and a solid inner core.",
+     "descriptionCs": "Seismické vlny se lámou a odrážejí na vnitřních rozhraních a odhalují vrstvy Země: tenkou kůru, pevný konvektující plášť, tekuté vnější jádro generující magnetické pole a pevné vnitřní jádro.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Crust",
+       "definition": "The thin outermost rocky layer, continental or oceanic."
+      },
+      {
+       "name": "Mantle",
+       "definition": "The thick solid layer that convects slowly over geological time."
+      },
+      {
+       "name": "Outer core",
+       "definition": "The liquid iron layer whose motion generates the magnetic field."
+      },
+      {
+       "name": "Inner core",
+       "definition": "The solid iron-nickel centre of the Earth."
+      },
+      {
+       "name": "Seismic discontinuity",
+       "definition": "A depth where wave speed changes abruptly, marking a layer boundary."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "01.01.09.02",
+   "name": "Geomagnetism & the Geodynamo",
+   "description": "The Earth's magnetic field, its generation by convection in the liquid outer core, its variations and reversals, and the record it leaves in rocks.",
+   "descriptionCs": "Magnetické pole Země, jeho vznik konvekcí v tekutém vnějším jádru, jeho proměny a přepólování a záznam, který zanechává v horninách.",
+   "blocks": [
+    {
+     "slug": "geodynamo",
+     "name": "The Geomagnetic Field & Geodynamo",
+     "description": "The Earth generates a magnetic field by dynamo action in its convecting liquid outer core; the field shields the surface from the solar wind, drifts and weakens over time, and reverses polarity at irregular intervals.",
+     "descriptionCs": "Země generuje magnetické pole dynamovým působením ve svém konvektujícím tekutém vnějším jádru; pole chrání povrch před slunečním větrem, s časem se posouvá a slábne a v nepravidelných intervalech přepóluje.",
+     "explored": "partially",
+     "brief": [
+      {
+       "name": "Geodynamo",
+       "definition": "The self-sustaining generation of the magnetic field by core convection."
+      },
+      {
+       "name": "Magnetosphere",
+       "definition": "The region of space dominated by the Earth's field, deflecting the solar wind."
+      },
+      {
+       "name": "Geomagnetic reversal",
+       "definition": "The occasional flip of the field's north and south polarity."
+      },
+      {
+       "name": "Palaeomagnetism",
+       "definition": "The record of past field directions frozen into rocks."
+      },
+      {
+       "name": "Secular variation",
+       "definition": "The slow change of the field's strength and direction over decades to centuries."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "01.01.09.03",
+   "name": "Gravity, Geodesy & Earth's Shape",
+   "description": "The Earth's gravity field and figure: geodesy and reference surfaces, gravity anomalies, isostasy, and the measurement of the planet's shape and rotation.",
+   "descriptionCs": "Tíhové pole a tvar Země: geodézie a referenční plochy, tíhové anomálie, izostáze a měření tvaru a rotace planety.",
+   "blocks": [
+    {
+     "slug": "gravity-geodesy",
+     "name": "Gravity Field & Geodesy",
+     "description": "Geodesy measures the Earth's shape, orientation and gravity field; departures of gravity from a uniform ellipsoid, the anomalies, map density variations and the isostatic balance of crustal loads on the mantle.",
+     "descriptionCs": "Geodézie měří tvar, orientaci a tíhové pole Země; odchylky tíže od rovnoměrného elipsoidu, tíhové anomálie, mapují změny hustoty a izostatickou rovnováhu zatížení kůry na plášti.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Geoid",
+       "definition": "The equipotential surface of the gravity field approximating mean sea level."
+      },
+      {
+       "name": "Reference ellipsoid",
+       "definition": "The smooth mathematical figure approximating the Earth's shape."
+      },
+      {
+       "name": "Gravity anomaly",
+       "definition": "The difference between measured and predicted gravity, revealing subsurface density."
+      },
+      {
+       "name": "Isostasy",
+       "definition": "The buoyant equilibrium of crustal blocks floating on the denser mantle."
+      },
+      {
+       "name": "Satellite geodesy",
+       "definition": "The use of satellites to measure the Earth's shape, gravity and rotation."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "01.01.09.04",
+   "name": "Geodynamics & Plate Tectonics",
+   "description": "The physics driving the solid Earth's motion: mantle convection, plate tectonics, and the heat flow and deformation that shape the surface.",
+   "descriptionCs": "Fyzika pohánějící pohyb pevné Země: konvekce v plášti, desková tektonika a tepelný tok a deformace, jež utvářejí povrch.",
+   "blocks": [
+    {
+     "slug": "plate-tectonics",
+     "name": "Plate Tectonics",
+     "description": "The Earth's rigid outer shell is broken into plates that move over the ductile mantle, interacting at boundaries where they spread apart, collide or slide past one another, driving earthquakes, volcanism and mountain building.",
+     "descriptionCs": "Tuhý vnější obal Země je rozlámán na desky, které se pohybují po tvárném plášti a vzájemně na sebe působí na rozhraních, kde se rozestupují, srážejí nebo se míjejí, čímž pohánějí zemětřesení, vulkanismus a horotvornou činnost.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Lithospheric plate",
+       "definition": "A rigid segment of the outer Earth that moves as a unit."
+      },
+      {
+       "name": "Divergent boundary",
+       "definition": "A boundary where plates spread apart and new crust forms."
+      },
+      {
+       "name": "Convergent boundary",
+       "definition": "A boundary where plates collide, forming subduction zones or mountains."
+      },
+      {
+       "name": "Transform boundary",
+       "definition": "A boundary where plates slide horizontally past each other."
+      },
+      {
+       "name": "Subduction",
+       "definition": "The sinking of one plate beneath another into the mantle."
+      }
+     ]
+    },
+    {
+     "slug": "mantle-convection-heat",
+     "name": "Mantle Convection & Earth's Heat",
+     "description": "Heat from the planet's formation and radioactive decay drives slow convection in the solid mantle, the engine of plate motion; measured surface heat flow constrains the planet's thermal history and internal dynamics.",
+     "descriptionCs": "Teplo z formování planety a z radioaktivního rozpadu pohání pomalou konvekci v pevném plášti, motor pohybu desek; měřený povrchový tepelný tok omezuje tepelnou historii planety a její vnitřní dynamiku.",
+     "explored": "partially",
+     "brief": [
+      {
+       "name": "Mantle convection",
+       "definition": "The slow creeping flow of the solid mantle transporting heat outward."
+      },
+      {
+       "name": "Radiogenic heat",
+       "definition": "Heat produced by the decay of radioactive isotopes in the Earth."
+      },
+      {
+       "name": "Heat flow",
+       "definition": "The rate at which heat escapes through the Earth's surface."
+      },
+      {
+       "name": "Mantle plume",
+       "definition": "An upwelling of hot mantle feeding volcanic hotspots."
+      },
+      {
+       "name": "Rheology",
+       "definition": "The deformation behaviour of rock that lets the solid mantle flow over long times."
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "relations": []
+}

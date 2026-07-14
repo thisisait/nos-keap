@@ -1,0 +1,343 @@
+{
+ "importKey": "phys-particle",
+ "actor": "agent:fable-import",
+ "root": {
+  "id": "01.01.07",
+  "parent": "01.01",
+  "name": "Particle Physics",
+  "rootIsSeed": true
+ },
+ "pillars": [
+  {
+   "id": "01.01.07.01",
+   "name": "The Standard Model",
+   "description": "The theory of elementary particles and their interactions: the quarks and leptons of matter, the gauge bosons carrying forces, and the Higgs boson that gives them mass.",
+   "descriptionCs": "Teorie elementárních částic a jejich interakcí: kvarky a leptony tvořící hmotu, kalibrační bosony přenášející síly a Higgsův boson, který jim dodává hmotnost.",
+   "blocks": [
+    {
+     "slug": "quarks-leptons",
+     "name": "Quarks & Leptons",
+     "description": "Matter is built from two families of spin-half fermions: six quarks, which combine into protons, neutrons and other hadrons, and six leptons, including the electron and its neutrino, arranged in three generations of increasing mass.",
+     "descriptionCs": "Hmota je tvořena dvěma rodinami fermionů se spinem jedna polovina: šesti kvarky, které se skládají do protonů, neutronů a dalších hadronů, a šesti leptony, mezi něž patří elektron a jeho neutrino, uspořádanými do tří generací s rostoucí hmotností.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Quark",
+       "definition": "A fermion carrying colour charge that combines to form hadrons, never seen in isolation."
+      },
+      {
+       "name": "Lepton",
+       "definition": "A fermion without colour charge, such as the electron, muon, tau and their neutrinos."
+      },
+      {
+       "name": "Generations",
+       "definition": "The three families of quarks and leptons, differing mainly in mass."
+      },
+      {
+       "name": "Hadron",
+       "definition": "A composite particle of quarks bound by the strong force, either a baryon or a meson."
+      },
+      {
+       "name": "Antiparticle",
+       "definition": "A partner with opposite charges to a given particle, produced together with it."
+      }
+     ]
+    },
+    {
+     "slug": "gauge-bosons-higgs",
+     "name": "Gauge Bosons & the Higgs",
+     "description": "Forces are carried by spin-one gauge bosons — the photon, the gluons and the W and Z — while the spin-zero Higgs boson, discovered in 2012, arises from the field whose interaction endows particles with mass.",
+     "descriptionCs": "Síly přenášejí kalibrační bosony se spinem jedna — foton, gluony a bosony W a Z — zatímco Higgsův boson se spinem nula, objevený v roce 2012, pochází z pole, jehož interakce dodává částicím hmotnost.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Photon",
+       "definition": "The massless carrier of the electromagnetic force."
+      },
+      {
+       "name": "Gluon",
+       "definition": "The carrier of the strong force, itself colour-charged."
+      },
+      {
+       "name": "W and Z bosons",
+       "definition": "The massive carriers of the weak force."
+      },
+      {
+       "name": "Higgs boson",
+       "definition": "The excitation of the Higgs field, confirmed in 2012."
+      },
+      {
+       "name": "Higgs mechanism",
+       "definition": "The process giving mass to the weak bosons and fermions through symmetry breaking."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "01.01.07.02",
+   "name": "Fundamental Interactions",
+   "description": "The forces between particles as gauge field theories: quantum electrodynamics, the strong interaction and quantum chromodynamics, and the weak interaction with electroweak unification.",
+   "descriptionCs": "Síly mezi částicemi jako kalibrační teorie pole: kvantová elektrodynamika, silná interakce a kvantová chromodynamika a slabá interakce s elektroslabým sjednocením.",
+   "blocks": [
+    {
+     "slug": "qed-qcd",
+     "name": "Quantum Electrodynamics & Chromodynamics",
+     "description": "Quantum electrodynamics describes the electromagnetic interaction of charged particles by photon exchange to extraordinary precision, while quantum chromodynamics describes the strong force among quarks and gluons, with confinement and asymptotic freedom.",
+     "descriptionCs": "Kvantová elektrodynamika popisuje elektromagnetickou interakci nabitých částic výměnou fotonů s mimořádnou přesností, zatímco kvantová chromodynamika popisuje silnou sílu mezi kvarky a gluony s uvězněním a asymptotickou volností.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Quantum electrodynamics",
+       "definition": "The quantum field theory of light and charged matter, tested to extreme precision."
+      },
+      {
+       "name": "Feynman diagram",
+       "definition": "A pictorial term in the perturbative expansion of a scattering amplitude."
+      },
+      {
+       "name": "Colour charge",
+       "definition": "The strong-force analogue of electric charge, carried by quarks and gluons."
+      },
+      {
+       "name": "Confinement",
+       "definition": "The property that colour-charged particles cannot exist in isolation."
+      },
+      {
+       "name": "Asymptotic freedom",
+       "definition": "The weakening of the strong force at short distances and high energies."
+      }
+     ]
+    },
+    {
+     "slug": "weak-electroweak",
+     "name": "Weak Interaction & Electroweak Unification",
+     "description": "The weak interaction changes particle flavour and causes beta decay through massive W and Z bosons; at high energy it merges with electromagnetism into a single electroweak force, unified in the Standard Model.",
+     "descriptionCs": "Slabá interakce mění vůni částic a způsobuje beta rozpad prostřednictvím hmotných bosonů W a Z; při vysokých energiích splývá s elektromagnetismem do jediné elektroslabé síly sjednocené ve standardním modelu.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Weak interaction",
+       "definition": "The short-range force responsible for flavour change and beta decay."
+      },
+      {
+       "name": "Flavour change",
+       "definition": "The conversion of one quark or lepton type into another via the weak force."
+      },
+      {
+       "name": "Electroweak unification",
+       "definition": "The theory merging electromagnetism and the weak force at high energy."
+      },
+      {
+       "name": "Neutrino interaction",
+       "definition": "The exclusively weak coupling that makes neutrinos so penetrating."
+      },
+      {
+       "name": "Parity violation",
+       "definition": "The weak force's distinction between left- and right-handed particles."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "01.01.07.03",
+   "name": "Symmetries & Conservation Laws",
+   "description": "The symmetry principles organising particle physics: conservation laws from continuous symmetries, the discrete symmetries C, P and T, and the spontaneous symmetry breaking behind mass generation.",
+   "descriptionCs": "Principy symetrie uspořádávající částicovou fyziku: zákony zachování ze spojitých symetrií, diskrétní symetrie C, P a T a spontánní narušení symetrie za vznikem hmotnosti.",
+   "blocks": [
+    {
+     "slug": "symmetries-noether",
+     "name": "Symmetries & Conservation",
+     "description": "Every continuous symmetry implies a conserved quantity by Noether's theorem, so energy, momentum and charge conservation reflect symmetries of space, time and gauge; particle physics is organised around such symmetry principles.",
+     "descriptionCs": "Každá spojitá symetrie implikuje zachovávanou veličinu podle Noetherové věty, takže zachování energie, hybnosti a náboje odráží symetrie prostoru, času a kalibrace; částicová fyzika je uspořádána kolem takových principů symetrie.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Noether's theorem",
+       "definition": "The correspondence between continuous symmetries and conservation laws."
+      },
+      {
+       "name": "Gauge symmetry",
+       "definition": "The local symmetry underlying each fundamental interaction."
+      },
+      {
+       "name": "Conserved quantum numbers",
+       "definition": "Quantities such as baryon and lepton number preserved in interactions."
+      },
+      {
+       "name": "Isospin",
+       "definition": "An approximate symmetry treating protons and neutrons as two states of one particle."
+      },
+      {
+       "name": "Spontaneous symmetry breaking",
+       "definition": "A symmetric theory with an asymmetric ground state, central to mass generation."
+      }
+     ]
+    },
+    {
+     "slug": "cpt-symmetry",
+     "name": "Discrete Symmetries & CP Violation",
+     "description": "The discrete operations of charge conjugation, parity and time reversal are individually violated by the weak force; their combination CPT is exact, and CP violation is essential to explaining why the universe contains more matter than antimatter.",
+     "descriptionCs": "Diskrétní operace nábojového sdružení, parity a obrácení času jsou jednotlivě narušovány slabou silou; jejich kombinace CPT je přesná a narušení CP je klíčové pro vysvětlení, proč vesmír obsahuje více hmoty než antihmoty.",
+     "explored": "partially",
+     "brief": [
+      {
+       "name": "Parity",
+       "definition": "The symmetry under spatial reflection, violated by the weak interaction."
+      },
+      {
+       "name": "Charge conjugation",
+       "definition": "The operation exchanging particles with their antiparticles."
+      },
+      {
+       "name": "CP violation",
+       "definition": "The small asymmetry between matter and antimatter behaviour."
+      },
+      {
+       "name": "CPT theorem",
+       "definition": "The exact combined symmetry required by relativistic quantum field theory."
+      },
+      {
+       "name": "Baryon asymmetry",
+       "definition": "The cosmic excess of matter over antimatter that CP violation helps explain."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "01.01.07.04",
+   "name": "Experimental Particle Physics",
+   "description": "How particles are produced and observed: accelerators and colliders, detector technologies, and the statistical analysis by which discoveries are established.",
+   "descriptionCs": "Jak se částice vytvářejí a pozorují: urychlovače a srážeče, detekční technologie a statistická analýza, kterou se prokazují objevy.",
+   "blocks": [
+    {
+     "slug": "accelerators-colliders",
+     "name": "Accelerators & Colliders",
+     "description": "Particle accelerators raise charged particles to high energy with electric and magnetic fields and collide them to create new particles from energy; colliders such as the Large Hadron Collider probe the smallest scales.",
+     "descriptionCs": "Urychlovače částic zvyšují energii nabitých částic pomocí elektrických a magnetických polí a srážejí je, aby z energie vznikaly nové částice; srážeče, jako je Velký hadronový srážeč, zkoumají nejmenší škály.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Particle accelerator",
+       "definition": "A machine boosting charged particles to high energy using electromagnetic fields."
+      },
+      {
+       "name": "Collider",
+       "definition": "An accelerator crossing two beams to maximise collision energy."
+      },
+      {
+       "name": "Centre-of-mass energy",
+       "definition": "The energy available in a collision to create new particles."
+      },
+      {
+       "name": "Synchrotron",
+       "definition": "A circular accelerator with fields ramped in step with rising particle energy."
+      },
+      {
+       "name": "Luminosity",
+       "definition": "The measure of collision rate determining how often rare processes occur."
+      }
+     ]
+    },
+    {
+     "slug": "detectors-discovery",
+     "name": "Detectors & Discovery",
+     "description": "Layered detectors track charged particles, measure their momentum and energy, and identify them by their signatures; a discovery is claimed only when a signal exceeds background at the stringent five-sigma statistical level.",
+     "descriptionCs": "Vrstvené detektory sledují nabité částice, měří jejich hybnost a energii a identifikují je podle jejich signatur; objev se prohlašuje teprve tehdy, když signál překročí pozadí na přísné statistické úrovni pěti sigma.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Tracking detector",
+       "definition": "A device recording the paths of charged particles in a magnetic field."
+      },
+      {
+       "name": "Calorimeter",
+       "definition": "A detector measuring particle energy by absorbing it in dense material."
+      },
+      {
+       "name": "Particle identification",
+       "definition": "Distinguishing particle types from their tracks and energy deposits."
+      },
+      {
+       "name": "Five-sigma criterion",
+       "definition": "The statistical threshold conventionally required to claim a discovery."
+      },
+      {
+       "name": "Background rejection",
+       "definition": "The removal of known processes to isolate a sought-after signal."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "01.01.07.05",
+   "name": "Beyond the Standard Model",
+   "description": "The open questions and proposed extensions: neutrino mass and oscillation, the identity of dark matter, supersymmetry and grand unification, and the matter-antimatter asymmetry of the universe.",
+   "descriptionCs": "Otevřené otázky a navrhovaná rozšíření: hmotnost a oscilace neutrin, povaha temné hmoty, supersymetrie a velké sjednocení a asymetrie hmoty a antihmoty ve vesmíru.",
+   "blocks": [
+    {
+     "slug": "neutrino-physics",
+     "name": "Neutrino Physics",
+     "description": "Neutrinos oscillate between flavours as they travel, proving they have tiny nonzero masses unexplained by the Standard Model; their nature, mass ordering and possible role in matter-antimatter asymmetry are active frontiers.",
+     "descriptionCs": "Neutrina během letu oscilují mezi vůněmi, což dokazuje, že mají nepatrné nenulové hmotnosti, jež standardní model nevysvětluje; jejich povaha, uspořádání hmotností a možná role v asymetrii hmoty a antihmoty jsou aktivní hranice výzkumu.",
+     "explored": "partially",
+     "brief": [
+      {
+       "name": "Neutrino oscillation",
+       "definition": "The periodic change of neutrino flavour in flight, implying nonzero mass."
+      },
+      {
+       "name": "Mass hierarchy",
+       "definition": "The unknown ordering of the three neutrino mass states."
+      },
+      {
+       "name": "Majorana neutrino",
+       "definition": "The open possibility that the neutrino is its own antiparticle."
+      },
+      {
+       "name": "Sterile neutrino",
+       "definition": "A hypothesised neutrino interacting only through gravity and mixing."
+      },
+      {
+       "name": "Neutrinoless double beta decay",
+       "definition": "A sought-after rare process that would reveal a Majorana nature."
+      }
+     ]
+    },
+    {
+     "slug": "bsm-unification",
+     "name": "Dark Matter, Supersymmetry & Unification",
+     "description": "The Standard Model omits gravity, dark matter and the origin of its parameters; proposed extensions include supersymmetry, grand unified theories merging the forces, and candidate dark-matter particles, none yet confirmed.",
+     "descriptionCs": "Standardní model opomíjí gravitaci, temnou hmotu a původ svých parametrů; navrhovaná rozšíření zahrnují supersymetrii, teorie velkého sjednocení slučující síly a kandidátní částice temné hmoty, žádné však dosud nebylo potvrzeno.",
+     "explored": "barely",
+     "brief": [
+      {
+       "name": "Dark matter",
+       "definition": "The unseen mass whose gravity shapes galaxies, of unknown particle identity."
+      },
+      {
+       "name": "Supersymmetry",
+       "definition": "A proposed symmetry pairing fermions with bosons, so far unobserved."
+      },
+      {
+       "name": "Grand unified theory",
+       "definition": "A theory merging the strong, weak and electromagnetic forces at high energy."
+      },
+      {
+       "name": "Hierarchy problem",
+       "definition": "The puzzle of why the Higgs mass is so far below the unification scale."
+      },
+      {
+       "name": "Proton decay",
+       "definition": "A predicted rare decay of the proton in many unified theories, not yet seen."
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "relations": []
+}

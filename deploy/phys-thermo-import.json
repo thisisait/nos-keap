@@ -1,0 +1,492 @@
+{
+ "importKey": "phys-thermo",
+ "actor": "agent:fable-import",
+ "root": {
+  "id": "01.01.03",
+  "parent": "01.01",
+  "name": "Thermodynamics",
+  "rootIsSeed": true
+ },
+ "pillars": [
+  {
+   "id": "01.01.03.01",
+   "name": "Laws of Thermodynamics",
+   "description": "The four foundational laws that govern energy, heat and entropy in every physical system, from the zeroth law defining temperature to the third law's absolute-zero limit.",
+   "descriptionCs": "Čtyři základní zákony, jimiž se řídí energie, teplo a entropie v každém fyzikálním systému — od nultého zákona definujícího teplotu po třetí zákon a mez absolutní nuly.",
+   "blocks": [
+    {
+     "slug": "zeroth-law",
+     "name": "Zeroth Law & Temperature",
+     "description": "Defines thermal equilibrium and temperature: if two systems are each in equilibrium with a third, they are in equilibrium with each other, making temperature a consistent, transitive property.",
+     "descriptionCs": "Definuje tepelnou rovnováhu a teplotu: jsou-li dva systémy v rovnováze se třetím, jsou v rovnováze i navzájem, což činí z teploty konzistentní, tranzitivní veličinu.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Thermal equilibrium",
+       "definition": "State in which no net heat flows between systems in contact, so their temperatures are equal."
+      },
+      {
+       "name": "Temperature scales",
+       "definition": "Empirical (Celsius, Fahrenheit) and absolute (Kelvin) scales measuring the degree of thermal agitation."
+      },
+      {
+       "name": "Thermometry",
+       "definition": "Measurement of temperature via a property that varies reproducibly with it, such as gas volume or resistance."
+      },
+      {
+       "name": "Transitivity of equilibrium",
+       "definition": "The logical basis of the zeroth law that lets temperature label equivalence classes of systems."
+      }
+     ]
+    },
+    {
+     "slug": "first-law",
+     "name": "First Law & Internal Energy",
+     "description": "Energy conservation for thermodynamic systems: the change in internal energy equals heat added minus work done, so heat and work are two forms of the same conserved quantity.",
+     "descriptionCs": "Zachování energie pro termodynamické systémy: změna vnitřní energie se rovná dodanému teplu zmenšenému o vykonanou práci, takže teplo a práce jsou dvě formy téže zachovávané veličiny.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Internal energy",
+       "definition": "The total microscopic kinetic and potential energy of a system, a state function."
+      },
+      {
+       "name": "Heat and work",
+       "definition": "The two path-dependent ways energy crosses a system boundary."
+      },
+      {
+       "name": "Work of expansion",
+       "definition": "Pressure-volume work done by or on a gas as its volume changes."
+      },
+      {
+       "name": "Enthalpy",
+       "definition": "The combination U + pV, convenient for processes at constant pressure."
+      },
+      {
+       "name": "Heat capacity",
+       "definition": "The heat required to raise a system's temperature by one degree, at constant volume or pressure."
+      }
+     ]
+    },
+    {
+     "slug": "second-law-entropy",
+     "name": "Second Law & Entropy",
+     "description": "Entropy of an isolated system never decreases, setting the direction of spontaneous change and the irreversibility of natural processes; it forbids perfect conversion of heat into work.",
+     "descriptionCs": "Entropie izolovaného systému nikdy neklesá, což určuje směr samovolných dějů a nevratnost přírodních procesů; zakazuje dokonalou přeměnu tepla na práci.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Entropy",
+       "definition": "A state function measuring the dispersal of energy and the number of accessible microstates."
+      },
+      {
+       "name": "Clausius statement",
+       "definition": "Heat does not spontaneously flow from a colder to a hotter body."
+      },
+      {
+       "name": "Kelvin-Planck statement",
+       "definition": "No cyclic process can convert heat entirely into work with no other effect."
+      },
+      {
+       "name": "Reversible vs irreversible",
+       "definition": "Idealised quasi-static processes conserve total entropy; real processes generate it."
+      },
+      {
+       "name": "Arrow of time",
+       "definition": "The thermodynamic asymmetry that distinguishes past from future via increasing entropy."
+      }
+     ]
+    },
+    {
+     "slug": "third-law",
+     "name": "Third Law & Absolute Zero",
+     "description": "As temperature approaches absolute zero the entropy of a perfect crystal approaches a constant minimum, implying absolute zero is unattainable in finitely many steps.",
+     "descriptionCs": "Když se teplota blíží absolutní nule, entropie dokonalého krystalu se blíží konstantnímu minimu, z čehož plyne, že absolutní nuly nelze dosáhnout konečným počtem kroků.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Nernst heat theorem",
+       "definition": "Entropy change of a reaction approaches zero as temperature approaches absolute zero."
+      },
+      {
+       "name": "Residual entropy",
+       "definition": "Nonzero ground-state entropy in disordered solids such as glasses or ice."
+      },
+      {
+       "name": "Unattainability",
+       "definition": "No finite sequence of processes can cool a system to exactly absolute zero."
+      },
+      {
+       "name": "Cryogenics",
+       "definition": "The production and study of very low temperatures approaching the absolute-zero limit."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "01.01.03.02",
+   "name": "Thermodynamic Potentials & Relations",
+   "description": "The state functions — internal energy, enthalpy, Helmholtz and Gibbs free energy — and the Maxwell relations and Legendre transforms that connect them.",
+   "descriptionCs": "Stavové funkce — vnitřní energie, entalpie, Helmholtzova a Gibbsova volná energie — a Maxwellovy relace a Legendreovy transformace, které je propojují.",
+   "blocks": [
+    {
+     "slug": "free-energy",
+     "name": "Free Energies",
+     "description": "Helmholtz and Gibbs free energies combine energy and entropy into potentials whose minima locate equilibrium at constant temperature-volume or temperature-pressure, and whose changes bound available work.",
+     "descriptionCs": "Helmholtzova a Gibbsova volná energie spojují energii a entropii do potenciálů, jejichž minima určují rovnováhu při konstantní teplotě a objemu či teplotě a tlaku a jejichž změny omezují využitelnou práci.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Helmholtz free energy",
+       "definition": "F = U - TS, minimised at equilibrium at constant temperature and volume."
+      },
+      {
+       "name": "Gibbs free energy",
+       "definition": "G = H - TS, minimised at equilibrium at constant temperature and pressure."
+      },
+      {
+       "name": "Spontaneity criterion",
+       "definition": "A process is spontaneous when the relevant free energy decreases."
+      },
+      {
+       "name": "Chemical potential",
+       "definition": "The change in free energy when one particle is added, driving mass transfer and reaction."
+      },
+      {
+       "name": "Maximum work",
+       "definition": "The free-energy change sets the greatest useful work extractable from a process."
+      }
+     ]
+    },
+    {
+     "slug": "maxwell-relations",
+     "name": "Maxwell Relations & State Functions",
+     "description": "Equality of mixed second derivatives of the thermodynamic potentials yields the Maxwell relations, linking hard-to-measure quantities such as entropy changes to measurable pressure, volume and temperature data.",
+     "descriptionCs": "Rovnost smíšených druhých derivací termodynamických potenciálů dává Maxwellovy relace, které spojují obtížně měřitelné veličiny, jako jsou změny entropie, s měřitelnými daty o tlaku, objemu a teplotě.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "State function",
+       "definition": "A quantity determined by the current state, independent of the path taken to reach it."
+      },
+      {
+       "name": "Exact differential",
+       "definition": "The mathematical property of state functions ensuring path-independent changes."
+      },
+      {
+       "name": "Legendre transform",
+       "definition": "The operation generating one potential from another by swapping conjugate variables."
+      },
+      {
+       "name": "Conjugate variables",
+       "definition": "Paired quantities such as pressure-volume and temperature-entropy whose product is energy."
+      },
+      {
+       "name": "Response functions",
+       "definition": "Measurable derivatives such as compressibility and thermal expansion linked by the relations."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "01.01.03.03",
+   "name": "Heat Engines & Cycles",
+   "description": "How cyclic processes convert heat into work, the efficiency limits imposed by the second law, and the idealised cycles that model real engines and refrigerators.",
+   "descriptionCs": "Jak cyklické děje přeměňují teplo na práci, meze účinnosti dané druhým zákonem a idealizované cykly modelující reálné motory a chladicí zařízení.",
+   "blocks": [
+    {
+     "slug": "carnot-cycle",
+     "name": "Carnot Cycle & Efficiency",
+     "description": "The Carnot cycle of two isothermal and two adiabatic steps is the most efficient possible heat engine between two reservoirs, its efficiency fixed by their temperatures alone and independent of the working substance.",
+     "descriptionCs": "Carnotův cyklus ze dvou izotermických a dvou adiabatických dějů je nejúčinnějším možným tepelným strojem mezi dvěma zásobníky; jeho účinnost je dána pouze jejich teplotami a nezávisí na pracovní látce.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Carnot efficiency",
+       "definition": "The maximum efficiency 1 - T_cold/T_hot achievable between two heat reservoirs."
+      },
+      {
+       "name": "Reversible cycle",
+       "definition": "An idealised cycle run infinitely slowly so total entropy is conserved."
+      },
+      {
+       "name": "Isothermal process",
+       "definition": "A step at constant temperature during which heat is exchanged with a reservoir."
+      },
+      {
+       "name": "Adiabatic process",
+       "definition": "A step with no heat exchange, so all energy change is mechanical work."
+      },
+      {
+       "name": "Carnot's theorem",
+       "definition": "No engine between two reservoirs can exceed the efficiency of a reversible one."
+      }
+     ]
+    },
+    {
+     "slug": "engine-cycles",
+     "name": "Practical Engine & Refrigeration Cycles",
+     "description": "Real engines and refrigerators approximate idealised cycles — Otto, Diesel, Brayton, Rankine and the reversed vapour-compression cycle — each trading efficiency, power and practicality for a given application.",
+     "descriptionCs": "Reálné motory a chladicí zařízení aproximují idealizované cykly — Ottův, Dieselův, Braytonův, Rankinův a obrácený kompresní chladicí cyklus — z nichž každý pro danou aplikaci volí kompromis mezi účinností, výkonem a praktičností.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Otto cycle",
+       "definition": "The idealised cycle of a spark-ignition petrol engine."
+      },
+      {
+       "name": "Diesel cycle",
+       "definition": "The compression-ignition cycle with heat added at constant pressure."
+      },
+      {
+       "name": "Rankine cycle",
+       "definition": "The steam power cycle used in most thermal and nuclear power stations."
+      },
+      {
+       "name": "Brayton cycle",
+       "definition": "The gas-turbine and jet-engine cycle of continuous compression, combustion and expansion."
+      },
+      {
+       "name": "Refrigeration cycle",
+       "definition": "A reversed cycle that moves heat from cold to hot using input work."
+      },
+      {
+       "name": "Coefficient of performance",
+       "definition": "The ratio of useful heating or cooling to the work input of a heat pump."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "01.01.03.04",
+   "name": "Phase Transitions & Equilibria",
+   "description": "Changes of state and coexistence of phases: phase diagrams, latent heat, the Clausius-Clapeyron relation, and the classification and criticality of transitions.",
+   "descriptionCs": "Změny skupenství a koexistence fází: fázové diagramy, latentní teplo, Clausiova–Clapeyronova rovnice a klasifikace a kritičnost přechodů.",
+   "blocks": [
+    {
+     "slug": "phase-diagrams",
+     "name": "Phase Diagrams & Coexistence",
+     "description": "Phase diagrams map which state of matter is stable at each pressure and temperature, with coexistence lines where phases meet, a triple point where three coexist, and a critical point where liquid and gas become indistinguishable.",
+     "descriptionCs": "Fázové diagramy znázorňují, které skupenství je stabilní při daném tlaku a teplotě, s koexistenčními křivkami, kde se fáze setkávají, trojným bodem, kde koexistují tři fáze, a kritickým bodem, kde se kapalina a plyn stávají nerozlišitelnými.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Triple point",
+       "definition": "The unique pressure and temperature at which solid, liquid and gas coexist."
+      },
+      {
+       "name": "Critical point",
+       "definition": "The endpoint of the liquid-gas line beyond which the two phases merge."
+      },
+      {
+       "name": "Clausius-Clapeyron relation",
+       "definition": "The equation giving the slope of a coexistence line from latent heat and volume change."
+      },
+      {
+       "name": "Latent heat",
+       "definition": "The heat absorbed or released during a phase change at constant temperature."
+      },
+      {
+       "name": "Gibbs phase rule",
+       "definition": "The relation fixing the number of independent variables among coexisting phases."
+      }
+     ]
+    },
+    {
+     "slug": "critical-phenomena",
+     "name": "Critical Phenomena & Order Parameters",
+     "description": "Near a continuous phase transition, fluctuations grow to all scales and thermodynamic quantities follow universal power laws set by critical exponents, independent of microscopic detail — the domain of universality classes.",
+     "descriptionCs": "V blízkosti spojitého fázového přechodu narůstají fluktuace na všech škálách a termodynamické veličiny se řídí univerzálními mocninnými zákony určenými kritickými exponenty, nezávislými na mikroskopických detailech — jde o oblast tříd univerzality.",
+     "explored": "partially",
+     "brief": [
+      {
+       "name": "Order parameter",
+       "definition": "A quantity that is zero in one phase and nonzero in the other, marking the transition."
+      },
+      {
+       "name": "Critical exponents",
+       "definition": "The universal powers describing how quantities diverge or vanish near the critical point."
+      },
+      {
+       "name": "Universality",
+       "definition": "The independence of critical behaviour from microscopic details, set by symmetry and dimension."
+      },
+      {
+       "name": "First- vs second-order",
+       "definition": "Transitions with a latent heat and jump versus continuous ones with diverging susceptibility."
+      },
+      {
+       "name": "Correlation length",
+       "definition": "The distance over which fluctuations are correlated, diverging at the critical point."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "01.01.03.05",
+   "name": "Statistical Mechanics",
+   "description": "The microscopic foundation of thermodynamics: how the statistics of many particles gives rise to macroscopic laws through ensembles, the partition function and entropy as counting.",
+   "descriptionCs": "Mikroskopický základ termodynamiky: jak statistika mnoha částic vede k makroskopickým zákonům pomocí souborů, partiční funkce a entropie jako počítání stavů.",
+   "blocks": [
+    {
+     "slug": "ensembles",
+     "name": "Statistical Ensembles",
+     "description": "Statistical mechanics computes macroscopic properties by averaging over ensembles of microstates — microcanonical at fixed energy, canonical at fixed temperature, grand canonical at fixed chemical potential — that reproduce thermodynamics.",
+     "descriptionCs": "Statistická mechanika počítá makroskopické vlastnosti průměrováním přes soubory mikrostavů — mikrokanonický při dané energii, kanonický při dané teplotě, velký kanonický při daném chemickém potenciálu — které reprodukují termodynamiku.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Microstate",
+       "definition": "A complete specification of the positions and momenta of all particles."
+      },
+      {
+       "name": "Microcanonical ensemble",
+       "definition": "The set of microstates at fixed energy, volume and particle number."
+      },
+      {
+       "name": "Canonical ensemble",
+       "definition": "The distribution of a system in thermal contact with a heat bath at fixed temperature."
+      },
+      {
+       "name": "Grand canonical ensemble",
+       "definition": "The distribution allowing exchange of both energy and particles with a reservoir."
+      },
+      {
+       "name": "Boltzmann distribution",
+       "definition": "The probability of a microstate falling off exponentially with its energy over kT."
+      }
+     ]
+    },
+    {
+     "slug": "partition-function",
+     "name": "Partition Function & Entropy",
+     "description": "The partition function sums Boltzmann factors over all microstates and is the generating function from which every thermodynamic quantity follows; Boltzmann's entropy S = k ln W ties entropy to the count of accessible microstates.",
+     "descriptionCs": "Partiční funkce sčítá Boltzmannovy faktory přes všechny mikrostavy a je vytvořující funkcí, z níž plyne každá termodynamická veličina; Boltzmannova entropie S = k ln W spojuje entropii s počtem dostupných mikrostavů.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Partition function",
+       "definition": "The sum over states weighting each by its Boltzmann factor, encoding all thermodynamics."
+      },
+      {
+       "name": "Boltzmann entropy",
+       "definition": "Entropy as the logarithm of the number of microstates times Boltzmann's constant."
+      },
+      {
+       "name": "Free energy from Z",
+       "definition": "The Helmholtz free energy given directly by minus kT times the log of the partition function."
+      },
+      {
+       "name": "Equipartition theorem",
+       "definition": "Each quadratic degree of freedom carries an average energy of one half kT."
+      },
+      {
+       "name": "Fluctuations",
+       "definition": "Statistical variations of energy and particle number, related to heat capacity and compressibility."
+      }
+     ]
+    },
+    {
+     "slug": "quantum-statistics",
+     "name": "Quantum Statistics",
+     "description": "Indistinguishable quantum particles obey Fermi-Dirac or Bose-Einstein statistics, explaining electron degeneracy in metals and stars, blackbody radiation, and Bose-Einstein condensation, with classical statistics as the dilute limit.",
+     "descriptionCs": "Nerozlišitelné kvantové částice se řídí Fermiho–Diracovou nebo Boseho–Einsteinovou statistikou, což vysvětluje degeneraci elektronů v kovech a hvězdách, záření černého tělesa a Boseho–Einsteinovu kondenzaci, přičemž klasická statistika je jejich zředěnou limitou.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Fermi-Dirac statistics",
+       "definition": "The distribution of fermions obeying the Pauli exclusion principle."
+      },
+      {
+       "name": "Bose-Einstein statistics",
+       "definition": "The distribution of bosons, which can occupy the same state without limit."
+      },
+      {
+       "name": "Degeneracy pressure",
+       "definition": "The pressure from the exclusion principle supporting white dwarfs and neutron stars."
+      },
+      {
+       "name": "Blackbody radiation",
+       "definition": "The thermal photon spectrum explained by quantising electromagnetic modes."
+      },
+      {
+       "name": "Bose-Einstein condensate",
+       "definition": "A macroscopic occupation of the ground state at very low temperature."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "01.01.03.06",
+   "name": "Kinetic Theory & Transport",
+   "description": "The dynamics of molecular motion and how it carries mass, momentum and energy: the kinetic theory of gases and the transport processes of diffusion, viscosity and conduction.",
+   "descriptionCs": "Dynamika molekulárního pohybu a jak přenáší hmotu, hybnost a energii: kinetická teorie plynů a transportní děje difuze, viskozity a vedení tepla.",
+   "blocks": [
+    {
+     "slug": "kinetic-theory-gases",
+     "name": "Kinetic Theory of Gases",
+     "description": "Treating a gas as many colliding point particles derives pressure, temperature and the ideal-gas law from mechanics, and gives the Maxwell-Boltzmann distribution of molecular speeds and the mean free path between collisions.",
+     "descriptionCs": "Pojetí plynu jako mnoha srážejících se hmotných bodů odvozuje tlak, teplotu a stavovou rovnici ideálního plynu z mechaniky a dává Maxwellovo–Boltzmannovo rozdělení rychlostí molekul a střední volnou dráhu mezi srážkami.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Ideal gas law",
+       "definition": "The relation pV = NkT linking pressure, volume and temperature of a dilute gas."
+      },
+      {
+       "name": "Maxwell-Boltzmann distribution",
+       "definition": "The statistical distribution of molecular speeds in a gas at equilibrium."
+      },
+      {
+       "name": "Mean free path",
+       "definition": "The average distance a molecule travels between successive collisions."
+      },
+      {
+       "name": "Pressure from momentum",
+       "definition": "Gas pressure as the momentum transfer of molecules striking the walls."
+      },
+      {
+       "name": "Real gas equations",
+       "definition": "Corrections such as the van der Waals equation accounting for molecular size and attraction."
+      }
+     ]
+    },
+    {
+     "slug": "transport-processes",
+     "name": "Transport Processes",
+     "description": "Gradients of concentration, velocity or temperature drive fluxes of matter, momentum and heat — diffusion, viscosity and thermal conduction — each described by a linear transport law and a molecular transport coefficient.",
+     "descriptionCs": "Gradienty koncentrace, rychlosti nebo teploty vyvolávají toky látky, hybnosti a tepla — difuzi, viskozitu a vedení tepla — z nichž každý popisuje lineární transportní zákon a molekulární transportní koeficient.",
+     "explored": "well",
+     "brief": [
+      {
+       "name": "Diffusion",
+       "definition": "Net transport of particles down a concentration gradient, described by Fick's laws."
+      },
+      {
+       "name": "Viscosity",
+       "definition": "The transport of momentum across a velocity gradient in a flowing fluid."
+      },
+      {
+       "name": "Thermal conduction",
+       "definition": "The transport of heat down a temperature gradient, described by Fourier's law."
+      },
+      {
+       "name": "Onsager reciprocity",
+       "definition": "Symmetry relations among coupled transport coefficients near equilibrium."
+      },
+      {
+       "name": "Non-equilibrium thermodynamics",
+       "definition": "The framework describing entropy production in systems with steady fluxes."
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "relations": []
+}
