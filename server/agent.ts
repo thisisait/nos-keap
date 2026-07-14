@@ -526,7 +526,20 @@ export function registerAgentRoutes(app: Express) {
             .filter(Boolean)
         : [],
     }));
-    ok(res, { total: eligible.length, minLevel, maxLevel, cooldownDays, items });
+    // Deterministic cursor advance: when the sweeping agent passes its runId
+    // (RW token), the hand-out itself checkpoints the served nodes as
+    // action='served' — so the cursor advances even if the LLM later forgets
+    // the per-node /visit call. /visit then UPSERTs findings/action onto these
+    // rows; run/finish owns the authoritative proposal tally. The RO pre-flight
+    // peek (no runId) stays a pure read.
+    const fRunId = String(req.query.runId ?? '').trim();
+    if (fRunId && req.agentScope === 'rw') {
+      db.startCuratorRun(fRunId, null, null);
+      for (const it of items) {
+        db.recordCuratorVisit({ nodeId: it.id, runId: fRunId, contentHash: it.contentHash, action: 'served' });
+      }
+    }
+    ok(res, { total: eligible.length, minLevel, maxLevel, cooldownDays, served: fRunId ? items.length : 0, items });
   });
 
   app.post('/agent/v1/curator/run/start', agentAuth('rw'), (req, res) => {

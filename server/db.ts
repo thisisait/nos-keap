@@ -1533,13 +1533,12 @@ export function recordCuratorVisit(v: {
     v.proposalsCount ?? 0,
     v.action ?? null,
   );
-  // Roll the run's node/proposal tallies forward (only on a fresh node visit so
-  // a checkpoint re-post of the same node doesn't double-count).
+  // Advance the run's node cursor on a FRESH node visit only (a re-post of the
+  // same node doesn't double-count). proposals_made is owned by run/finish (the
+  // agent's authoritative tally) so a frontier-served pre-checkpoint that later
+  // gets enriched by /visit never mis-counts proposals.
   if (!existed) {
-    d.prepare(
-      `UPDATE curator_runs SET nodes_visited = nodes_visited + 1, proposals_made = proposals_made + ?
-         WHERE run_id = ?`,
-    ).run(v.proposalsCount ?? 0, v.runId);
+    d.prepare(`UPDATE curator_runs SET nodes_visited = nodes_visited + 1 WHERE run_id = ?`).run(v.runId);
   }
 }
 
