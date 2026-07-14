@@ -73,12 +73,20 @@ let clock = Math.floor(Date.now() / 1000);
 const tick = () => clock++;
 
 function applyDomain(key, doc) {
-  // reset this L1's ext subtree + overrides + metadata + from-keyed relations
+  // Reset scope = exactly the nodes this file OWNS (dump groups by l1(id), so a
+  // file owns every id whose first two segments == key). An L1 key ("01.01")
+  // owns its whole subtree (id = key OR id LIKE 'key.%'). An L0 key ("01", no
+  // dot) owns ONLY itself — its subtree belongs to the L1 files ("01.01" …), so
+  // a prefix wipe there would delete sibling files' just-inserted content.
   const self = `'${key}'`, sub = `'${key}.%'`;
-  db.exec(`DELETE FROM taxonomy_nodes_ext WHERE id = ${self} OR id LIKE ${sub}`);
-  db.exec(`DELETE FROM node_descriptions  WHERE node_id = ${self} OR node_id LIKE ${sub}`);
-  db.exec(`DELETE FROM taxonomy_metadata  WHERE id = ${self} OR id LIKE ${sub}`);
-  db.exec(`DELETE FROM concept_relations  WHERE from_id = ${self} OR from_id LIKE ${sub}`);
+  const hasDot = key.includes('.');
+  const idC = hasDot ? `id = ${self} OR id LIKE ${sub}` : `id = ${self}`;
+  const ndC = hasDot ? `node_id = ${self} OR node_id LIKE ${sub}` : `node_id = ${self}`;
+  const frC = hasDot ? `from_id = ${self} OR from_id LIKE ${sub}` : `from_id = ${self}`;
+  db.exec(`DELETE FROM taxonomy_nodes_ext WHERE ${idC}`);
+  db.exec(`DELETE FROM node_descriptions  WHERE ${ndC}`);
+  db.exec(`DELETE FROM taxonomy_metadata  WHERE ${idC}`);
+  db.exec(`DELETE FROM concept_relations  WHERE ${frC}`);
   // insert nodes parent-first (id-sorted → a parent id is a prefix of its children)
   const nodes = [...doc.nodes].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
   for (const n of nodes) {
