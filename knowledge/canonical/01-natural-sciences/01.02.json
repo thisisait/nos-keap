@@ -109,7 +109,8 @@
    "ordinal": 0,
    "kind": "ext",
    "en": "Organic chemistry is the study of the structure, reactivity, and synthesis of carbon-based compounds, encompassing functional-group transformations, reaction mechanisms, stereochemistry, and multistep synthetic strategy. It spans from bonding fundamentals through pericyclic, radical, and organometallic chemistry to the total synthesis of complex natural products and pharmaceuticals, distinguishing it from Inorganic Chemistry's non-carbon systems and Biochemistry's focus on biological macromolecules.",
-   "cs": "Organická chemie je studium struktury, reaktivity a syntézy sloučenin na bázi uhlíku, zahrnující přeměny funkčních skupin, reakční mechanismy, stereochemii a strategie vícekrokové syntézy. Sahá od základů vazby přes pericyklickou, radikálovou a organokovovou chemii až po totální syntézu komplexních přírodních látek a léčiv, čímž se odlišuje od anorganické chemie zaměřené na sloučeniny bez uhlíku a biochemie zaměřené na biologické makromolekuly."
+   "cs": "Organická chemie je studium struktury, reaktivity a syntézy sloučenin na bázi uhlíku, zahrnující přeměny funkčních skupin, reakční mechanismy, stereochemii a strategie vícekrokové syntézy. Sahá od základů vazby přes pericyklickou, radikálovou a organokovovou chemii až po totální syntézu komplexních přírodních látek a léčiv, čímž se odlišuje od anorganické chemie zaměřené na sloučeniny bez uhlíku a biochemie zaměřené na biologické makromolekuly.",
+   "brief": "Organic chemistry is the systematic study of carbon-based compounds — their structure, bonding, reactivity, and synthesis. It builds from the electronic and stereochemical foundations of carbon frameworks through reaction mechanisms and functional-group transformations to the multistep total synthesis of complex natural products and pharmaceuticals. The discipline supplies the synthetic methods and mechanistic logic that [[01.02.11.13]] Medicinal & Pharmaceutical Chemistry turns toward drug targets, and that [[01.02.11.08]] Polymer Chemistry extends to macromolecular chains.\n\nIts boundaries run along the carbon skeleton and the living cell: metal-centered and non-carbon systems belong to [[01.02.11.02]] Inorganic Chemistry (the two meeting at organometallic catalysis), while the same carbon compounds studied as enzyme substrates or metabolites fall to [[01.02.11.05]] Biochemistry. Physical-organic reasoning draws its kinetic and thermodynamic tools from [[01.02.11.03]] Physical Chemistry, and structure elucidation depends on the spectroscopic methods shared with [[01.02.11.04]] Analytical Chemistry."
   },
   {
    "id": "01.02.11.01.01",
@@ -120,6 +121,7 @@
    "ordinal": 0,
    "kind": "ext",
    "en": "Covers the electronic and three-dimensional basis of carbon compounds: hybridization, resonance, conformational analysis, and the classification of chirality, configuration, and molecular symmetry. This foundation underlies every prediction of reactivity, selectivity, and physical property elsewhere in organic chemistry. Settled since the mid-20th century but continually refined by computational and X-ray methods.",
+   "cs": "Pokrývá elektronový a trojrozměrný základ sloučenin uhlíku: hybridizaci, rezonanci, konformační analýzu a klasifikaci chirality, konfigurace a molekulární symetrie. Tento základ stojí za každou predikcí reaktivity, selektivity a fyzikálních vlastností v ostatních oblastech organické chemie. Ustálen od poloviny 20. století, avšak neustále zpřesňovaný výpočetními a rentgenostrukturními metodami.",
    "brief": "Covers the electronic and three-dimensional basis of carbon compounds: hybridization, resonance, conformational analysis, and the classification of chirality, configuration, and molecular symmetry. This foundation underlies every prediction of reactivity, selectivity, and physical property elsewhere in organic chemistry. Settled since the mid-20th century but continually refined by computational and X-ray methods.\n\n### Concepts\n- **Hybridization & Resonance** — Molecular orbital mixing (sp3/sp2/sp) and delocalized electron distribution explain bond geometry and stability.\n- **Conformational Analysis** — Rotation about single bonds generates distinct energy minima (e.g. chair cyclohexane) that govern reactivity and stability.\n- **Chirality & Stereodescriptors** — R/S and E/Z nomenclature systematically encodes three-dimensional spatial arrangement at stereocenters and double bonds.\n- **Conformational & Configurational Isomerism** — Diastereomers, enantiomers, and atropisomers arise from distinct spatial relationships without breaking bonds.\n- **Aromaticity** — Cyclic, planar, conjugated systems obeying Huckel's rule gain exceptional thermodynamic stabilization."
   },
   {
@@ -131,6 +133,7 @@
    "ordinal": 1,
    "kind": "ext",
    "en": "Studies how and why organic reactions proceed, using kinetics, thermodynamics, linear free-energy relationships, and isotope effects to map transition states and intermediates such as carbocations, carbanions, and radicals. It provides the causal logic connecting substrate structure to reaction outcome. A mature discipline, though computational transition-state modeling keeps sharpening mechanistic detail.",
+   "cs": "Studuje, jak a proč organické reakce probíhají, a pomocí kinetiky, termodynamiky, lineárních vztahů volné energie a izotopových efektů mapuje přechodové stavy a meziprodukty jako karbokationty, karbanionty a radikály. Poskytuje kauzální logiku spojující strukturu substrátu s výsledkem reakce. Vyzrálý obor, byť výpočetní modelování přechodových stavů dále zpřesňuje mechanistické detaily.",
    "brief": "Studies how and why organic reactions proceed, using kinetics, thermodynamics, linear free-energy relationships, and isotope effects to map transition states and intermediates such as carbocations, carbanions, and radicals. It provides the causal logic connecting substrate structure to reaction outcome. A mature discipline, though computational transition-state modeling keeps sharpening mechanistic detail.\n\n### Concepts\n- **Nucleophilic Substitution & Elimination** — SN1/SN2 and E1/E2 pathways compete based on substrate, nucleophile, solvent, and base strength.\n- **Carbocation & Carbanion Chemistry** — Charged reactive intermediates rearrange and are stabilized by hyperconjugation, resonance, or neighboring-group participation.\n- **Linear Free-Energy Relationships** — Hammett and related plots quantitatively correlate substituent electronics with reaction rate or equilibrium.\n- **Kinetic Isotope Effects** — Rate changes upon isotopic substitution reveal which bonds break in the rate-determining step.\n- **Acid-Base & Catalytic Mechanisms** — Bronsted and Lewis acid-base catalysis lower activation barriers by stabilizing developing charge in the transition state."
   },
   {
@@ -142,6 +145,7 @@
    "ordinal": 2,
    "kind": "ext",
    "en": "Organizes organic reactivity around characteristic functional groups—alcohols, carbonyls, amines, alkenes, and their derivatives—and the canonical named transformations that interconvert them. This is the workhorse taxonomy taught in every introductory sequence and used daily in synthesis planning. Core reactions are textbook-settled; new variants and greener conditions remain an active refinement area.",
+   "cs": "Uspořádává organickou reaktivitu kolem charakteristických funkčních skupin — alkoholů, karbonylů, aminů, alkenů a jejich derivátů — a kanonických jmenných reakcí, které je vzájemně převádějí. Jde o pracovní taxonomii vyučovanou v každém úvodním kurzu a denně používanou při plánování syntézy. Základní reakce jsou učebnicově ustálené, zatímco nové varianty a šetrnější reakční podmínky zůstávají aktivní oblastí zpřesňování.",
    "brief": "Organizes organic reactivity around characteristic functional groups—alcohols, carbonyls, amines, alkenes, and their derivatives—and the canonical named transformations that interconvert them. This is the workhorse taxonomy taught in every introductory sequence and used daily in synthesis planning. Core reactions are textbook-settled; new variants and greener conditions remain an active refinement area.\n\n### Concepts\n- **Carbonyl Chemistry** — Aldehydes, ketones, and carboxylic acid derivatives undergo nucleophilic addition and acyl substitution at the electrophilic carbon.\n- **Enolate & Aldol Chemistry** — Deprotonated carbonyl compounds act as nucleophiles in aldol, Claisen, and Mannich carbon-carbon bond formations.\n- **Alkene & Alkyne Reactions** — Addition, oxidation, and metathesis reactions exploit pi-bond nucleophilicity to install new functionality.\n- **Named Reactions** — Well-characterized transformations such as Diels-Alder, Wittig, and Grignard addition provide reliable, predictable synthetic outcomes.\n- **Protecting Group Strategy** — Temporary functional-group masking enables chemoselective reaction sequences on polyfunctional molecules."
   },
   {
@@ -153,6 +157,7 @@
    "ordinal": 3,
    "kind": "ext",
    "en": "Examines concerted electrocyclic, cycloaddition, and sigmatropic reactions governed by orbital symmetry, alongside chain and non-chain radical processes and light-driven excited-state transformations. Woodward-Hoffmann rules and frontier molecular orbital theory give these seemingly disparate mechanisms a unified predictive framework. Classical pericyclic theory is settled; synthetic radical and photoredox methodology are fast-moving frontiers.",
+   "cs": "Zkoumá koncertované elektrocyklické, cykloadiční a sigmatropní reakce řízené orbitalovou symetrií, spolu s řetězovými i neřetězovými radikálovými procesy a světlem řízenými přeměnami excitovaných stavů. Woodwardova–Hoffmannova pravidla a teorie hraničních molekulových orbitalů poskytují těmto zdánlivě nesourodým mechanismům jednotný predikční rámec. Klasická teorie pericyklických reakcí je ustálená, zatímco syntetická radikálová a fotoredoxní metodika jsou rychle se rozvíjejícími frontami.",
    "brief": "Examines concerted electrocyclic, cycloaddition, and sigmatropic reactions governed by orbital symmetry, alongside chain and non-chain radical processes and light-driven excited-state transformations. Woodward-Hoffmann rules and frontier molecular orbital theory give these seemingly disparate mechanisms a unified predictive framework. Classical pericyclic theory is settled; synthetic radical and photoredox methodology are fast-moving frontiers.\n\n### Concepts\n- **Woodward-Hoffmann Rules** — Orbital symmetry conservation dictates whether pericyclic reactions proceed thermally or photochemically, and suprafacially or antarafacially.\n- **Cycloadditions & Electrocyclizations** — Diels-Alder-type and ring-closing pericyclic reactions form rings via concerted, single-transition-state pathways.\n- **Sigmatropic Rearrangements** — Cope and Claisen rearrangements migrate sigma bonds across a pi system with predictable stereochemical outcome.\n- **Radical Chain Reactions** — Initiation, propagation, and termination steps drive halogenation, polymerization, and radical cyclization chemistry.\n- **Photoredox Catalysis** — Visible-light-excited photocatalysts generate radical intermediates under mild conditions for selective bond formation."
   },
   {
@@ -164,6 +169,7 @@
    "ordinal": 4,
    "kind": "ext",
    "en": "Focuses on carbon-metal bonded reagents and transition-metal catalytic cycles—oxidative addition, transmetalation, reductive elimination—that enable cross-coupling, C-H functionalization, and asymmetric catalysis. This chemistry underpins most modern industrial and pharmaceutical carbon-carbon bond construction. Foundational cross-coupling is mature (Nobel-recognized), while C-H activation and earth-abundant-metal catalysis remain highly active research frontiers.",
+   "cs": "Zaměřuje se na činidla s vazbou uhlík–kov a katalytické cykly přechodných kovů — oxidační adici, transmetalaci, reduktivní eliminaci — které umožňují křížové kaplinky (cross-coupling), C–H funkcionalizaci a asymetrickou katalýzu. Tato chemie stojí za většinou moderní průmyslové i farmaceutické tvorby vazeb uhlík–uhlík. Zakládající křížové kaplinky jsou vyzrálé (oceněné Nobelovou cenou), zatímco C–H aktivace a katalýza hojně dostupnými kovy zůstávají vysoce aktivními výzkumnými frontami.",
    "brief": "Focuses on carbon-metal bonded reagents and transition-metal catalytic cycles—oxidative addition, transmetalation, reductive elimination—that enable cross-coupling, C-H functionalization, and asymmetric catalysis. This chemistry underpins most modern industrial and pharmaceutical carbon-carbon bond construction. Foundational cross-coupling is mature (Nobel-recognized), while C-H activation and earth-abundant-metal catalysis remain highly active research frontiers.\n\n### Concepts\n- **Cross-Coupling Reactions** — Pd- and Ni-catalyzed Suzuki, Negishi, and Heck couplings forge C-C bonds between organohalides and organometallic partners.\n- **C-H Activation & Functionalization** — Transition-metal catalysts selectively insert into inert C-H bonds, bypassing prefunctionalization steps.\n- **Asymmetric Catalysis** — Chiral metal or organocatalysts induce enantioselectivity in bond-forming reactions, critical for single-enantiomer drug synthesis.\n- **Organolithium & Grignard Reagents** — Highly nucleophilic carbanion equivalents add to electrophiles as fundamental carbon-nucleophile building blocks.\n- **Metathesis Chemistry** — Ru- and Mo-carbene catalysts redistribute alkene or alkyne substituents to form new unsaturated bonds."
   },
   {
@@ -175,6 +181,7 @@
    "ordinal": 5,
    "kind": "ext",
    "en": "Addresses the design and execution of multistep routes to complex natural products and target molecules, using retrosynthetic analysis to disconnect a target into simpler precursors. It integrates mechanism, stereochemistry, and catalysis into holistic synthetic planning and remains the discipline's showcase of strategic creativity. Classical retrosynthetic logic is settled; efficient, scalable, and computer-assisted route design is an active frontier.",
+   "cs": "Zabývá se návrhem a provedením vícekrokových cest ke složitým přírodním látkám a cílovým molekulám a využívá retrosyntetickou analýzu k rozkladu cíle na jednodušší prekurzory. Spojuje mechanismus, stereochemii a katalýzu do celostního plánování syntézy a zůstává ukázkou strategické tvořivosti oboru. Klasická retrosyntetická logika je ustálená, zatímco efektivní, škálovatelný a počítačem podporovaný návrh cest je aktivní frontou.",
    "brief": "Addresses the design and execution of multistep routes to complex natural products and target molecules, using retrosynthetic analysis to disconnect a target into simpler precursors. It integrates mechanism, stereochemistry, and catalysis into holistic synthetic planning and remains the discipline's showcase of strategic creativity. Classical retrosynthetic logic is settled; efficient, scalable, and computer-assisted route design is an active frontier.\n\n### Concepts\n- **Retrosynthetic Analysis** — Working backward from a target structure via bond disconnections identifies feasible synthetic precursors and routes.\n- **Protecting Group & Chemoselectivity Strategy** — Sequencing reactive-group manipulations avoids unwanted side reactions across a multistep synthesis.\n- **Natural Product Total Synthesis** — Complete laboratory construction of complex bioactive molecules validates strategy and often discovers new methodology.\n- **Convergent vs Linear Synthesis** — Combining independently built fragments late in a route improves overall yield versus a single sequential chain.\n- **Computer-Aided Synthesis Planning** — Machine-learning route-prediction tools propose and rank retrosynthetic disconnections at scale."
   },
   {
@@ -186,6 +193,7 @@
    "ordinal": 6,
    "kind": "ext",
    "en": "Encompasses the spectroscopic and analytical techniques—NMR, IR, mass spectrometry, X-ray crystallography—used to determine the connectivity, conformation, and purity of organic compounds. Structure elucidation is the indispensable verification step for every claimed synthesis or mechanism. Core techniques are mature; advances in cryo-EM-scale resolution and automated structure prediction continue to push sensitivity and throughput.",
+   "cs": "Zahrnuje spektroskopické a analytické techniky — NMR, IR, hmotnostní spektrometrii, rentgenovou krystalografii — používané ke stanovení konektivity, konformace a čistoty organických sloučenin. Určování struktury je nezbytným ověřovacím krokem každé deklarované syntézy či mechanismu. Základní techniky jsou vyzrálé, zatímco pokroky v rozlišení na úrovni kryo-EM a automatizovaná predikce struktury dále posouvají citlivost a průchodnost.",
    "brief": "Encompasses the spectroscopic and analytical techniques—NMR, IR, mass spectrometry, X-ray crystallography—used to determine the connectivity, conformation, and purity of organic compounds. Structure elucidation is the indispensable verification step for every claimed synthesis or mechanism. Core techniques are mature; advances in cryo-EM-scale resolution and automated structure prediction continue to push sensitivity and throughput.\n\n### Concepts\n- **NMR Spectroscopy** — Nuclear spin resonance patterns reveal atom connectivity, stereochemistry, and dynamic conformational behavior.\n- **Mass Spectrometry** — Ionization and fragmentation patterns determine molecular weight and substructure of an analyte.\n- **Infrared & UV-Vis Spectroscopy** — Vibrational and electronic absorption bands diagnose functional groups and conjugated chromophores.\n- **X-Ray Crystallography** — Diffraction of a crystalline sample provides unambiguous three-dimensional atomic-resolution structure."
   },
   {
@@ -197,6 +205,7 @@
    "ordinal": 7,
    "kind": "ext",
    "en": "Gathers emerging methodologies reshaping how organic molecules are made and studied: flow and automated synthesis, biocatalysis, click and bioorthogonal chemistry, and computational reaction discovery. These approaches prioritize sustainability, speed, and functional precision beyond classical batch methods. This is the branch's active research edge, with rapid ongoing methodological turnover.",
+   "cs": "Shromažďuje nastupující metodiky přetvářející způsob, jak se organické molekuly připravují a zkoumají: průtokovou a automatizovanou syntézu, biokatalýzu, click a bioortogonální chemii a výpočetní objevování reakcí. Tyto přístupy upřednostňují udržitelnost, rychlost a funkční přesnost nad rámec klasických vsádkových metod. Jde o aktivní výzkumné pomezí oboru s rychlou obměnou metodik.",
    "brief": "Gathers emerging methodologies reshaping how organic molecules are made and studied: flow and automated synthesis, biocatalysis, click and bioorthogonal chemistry, and computational reaction discovery. These approaches prioritize sustainability, speed, and functional precision beyond classical batch methods. This is the branch's active research edge, with rapid ongoing methodological turnover.\n\n### Concepts\n- **Flow Chemistry & Automation** — Continuous-flow reactors and robotic platforms enable rapid, reproducible, and scalable reaction optimization.\n- **Click & Bioorthogonal Chemistry** — Highly selective, high-yielding reactions like azide-alkyne cycloaddition function cleanly inside living systems.\n- **Biocatalysis & Directed Evolution** — Engineered enzymes catalyze organic transformations with exceptional selectivity under mild, sustainable conditions.\n- **Green & Sustainable Synthesis** — Solvent reduction, atom economy, and renewable feedstocks minimize the environmental footprint of synthetic routes.\n- **Machine-Learning-Guided Reaction Discovery** — Data-driven models predict reaction outcomes and propose novel transformations beyond human-curated rule sets."
   },
   {
@@ -208,7 +217,8 @@
    "ordinal": 1,
    "kind": "ext",
    "en": "Inorganic chemistry is the study of the structure, bonding, and reactivity of all elements and compounds outside the carbon-hydrogen skeletons that define organic chemistry, spanning main-group and transition-metal chemistry, coordination compounds, bioinorganic systems, solid-state and cluster chemistry, and the ligand-field theory explaining transition-metal electronic structure. Organic Chemistry's carbon-backbone compounds and Biochemistry's carbon chemistry inside living organisms lie outside its scope except at the bioinorganic interface.",
-   "cs": "Anorganická chemie je studium struktury, vazeb a reaktivity všech prvků a sloučenin mimo uhlíkovo-vodíkové kostry definující organickou chemii, zahrnující chemii hlavních skupin a přechodných kovů, koordinační sloučeniny, bioanorganické systémy, chemii pevných látek a klastrů a teorii ligandového pole vysvětlující elektronovou strukturu přechodných kovů. Sloučeniny s uhlíkovou kostrou náležející organické chemii a uhlíková chemie uvnitř živých organismů (biochemie) stojí mimo její záběr, kromě bioanorganického rozhraní."
+   "cs": "Anorganická chemie je studium struktury, vazeb a reaktivity všech prvků a sloučenin mimo uhlíkovo-vodíkové kostry definující organickou chemii, zahrnující chemii hlavních skupin a přechodných kovů, koordinační sloučeniny, bioanorganické systémy, chemii pevných látek a klastrů a teorii ligandového pole vysvětlující elektronovou strukturu přechodných kovů. Sloučeniny s uhlíkovou kostrou náležející organické chemii a uhlíková chemie uvnitř živých organismů (biochemie) stojí mimo její záběr, kromě bioanorganického rozhraní.",
+   "brief": "Inorganic chemistry studies the structure, bonding, and reactivity of all elements and compounds beyond the carbon-hydrogen skeletons that define [[01.02.11.01]] Organic Chemistry. It spans main-group and transition-metal chemistry, coordination compounds and ligand-field theory, solid-state and cluster chemistry, and the f-block chemistry of lanthanides and actinides, with organometallic chemistry forming a deliberate bridge to organic synthesis and homogeneous catalysis.\n\nThe branch connects widely: its coordination and spectroscopic principles underlie [[01.02.11.05]] Biochemistry at the bioinorganic interface of metalloenzymes, its solid-state chemistry feeds [[01.02.11.07]] Materials Chemistry, and its actinide chemistry grounds [[01.02.11.11]] Nuclear & Radiochemistry. Electronic-structure interpretation of complexes rests on the quantum framework of [[01.02.11.03]] Physical Chemistry, and the chemistry of extended solids meets the physics of the solid state in [[01.01]] Physics."
   },
   {
    "id": "01.02.11.02.01",
@@ -231,6 +241,7 @@
    "ordinal": 1,
    "kind": "ext",
    "en": "Studies the structure, bonding, and electronic spectra of transition-metal complexes, from Werner's coordination theory through crystal field, ligand field, and molecular orbital treatments of d-orbital splitting. Explains color, magnetism, and stability of complexes via spectrochemical and nephelauxetic series, Jahn-Teller distortion, and spin-crossover behavior. Forms the conceptual core connecting transition-metal structure to reactivity and spectroscopy.",
+   "cs": "Studuje strukturu, vazbu a elektronová spektra komplexů přechodných kovů, od Wernerovy koordinační teorie přes krystalové pole a ligandové pole až po popis štěpení d-orbitalů pomocí molekulových orbitalů. Vysvětluje barvu, magnetismus a stabilitu komplexů prostřednictvím spektrochemické a nefelauxetické řady, Jahnova–Tellerova zkreslení a chování se spinovým přechodem. Tvoří pojmové jádro propojující strukturu přechodných kovů s reaktivitou a spektroskopií.",
    "brief": "Studies the structure, bonding, and electronic spectra of transition-metal complexes, from Werner's coordination theory through crystal field, ligand field, and molecular orbital treatments of d-orbital splitting. Explains color, magnetism, and stability of complexes via spectrochemical and nephelauxetic series, Jahn-Teller distortion, and spin-crossover behavior. Forms the conceptual core connecting transition-metal structure to reactivity and spectroscopy.\n\n### Concepts\n- **Crystal and Ligand Field Theory** — d-orbital splitting in a ligand field explains color, magnetism, and geometric preferences of transition-metal complexes.\n- **Spectrochemical Series** — Empirical ordering of ligands by their field strength predicts d-d splitting magnitude and complex color.\n- **Jahn-Teller Distortion** — Degenerate electronic ground states in octahedral complexes drive geometric distortion to lower symmetry.\n- **Magnetochemistry** — Magnetic susceptibility measurements reveal spin state, oxidation state, and metal-metal interactions in coordination compounds.\n- **Coordination Isomerism and Stereochemistry** — Geometric and optical isomerism in complexes arises from ligand arrangement around the metal center."
   },
   {
@@ -242,6 +253,7 @@
    "ordinal": 2,
    "kind": "ext",
    "en": "Examines compounds with direct metal-carbon bonds across the d- and f-block, governed by the 18-electron rule, hapticity, and back-bonding in metal-carbonyl and metal-alkene systems. Central to homogeneous catalysis — hydrogenation, cross-coupling, olefin polymerization, and C-H activation — bridging inorganic and organic synthesis. A highly active field driving industrial catalyst design and green chemistry.",
+   "cs": "Zkoumá sloučeniny s přímými vazbami kov–uhlík napříč d- a f-blokem, řízené pravidlem 18 elektronů, hapticitou a zpětnou vazbou (back-bonding) v systémech kov–karbonyl a kov–alken. Je klíčová pro homogenní katalýzu — hydrogenaci, křížové kaplinky, polymeraci olefinů a C–H aktivaci — a propojuje anorganickou a organickou syntézu. Vysoce aktivní obor pohánějící návrh průmyslových katalyzátorů a zelenou chemii.",
    "brief": "Examines compounds with direct metal-carbon bonds across the d- and f-block, governed by the 18-electron rule, hapticity, and back-bonding in metal-carbonyl and metal-alkene systems. Central to homogeneous catalysis — hydrogenation, cross-coupling, olefin polymerization, and C-H activation — bridging inorganic and organic synthesis. A highly active field driving industrial catalyst design and green chemistry.\n\n### Concepts\n- **18-Electron Rule** — Electron-counting formalism predicts stability and reactivity of organometallic complexes.\n- **Metal Carbonyls and π-Backbonding** — Synergic σ-donation/π-backbonding between metal d-orbitals and CO π* orbitals stabilizes carbonyl complexes.\n- **Catalytic Cycles** — Oxidative addition, migratory insertion, and reductive elimination steps compose fundamental organometallic catalytic mechanisms.\n- **C-H Activation** — Direct functionalization of inert C-H bonds via transition-metal complexes enables atom-economical synthesis.\n- **Cross-Coupling Catalysis** — Pd- and Ni-catalyzed coupling reactions form carbon-carbon bonds from organohalides and organometallic partners."
   },
   {
@@ -253,6 +265,7 @@
    "ordinal": 3,
    "kind": "ext",
    "en": "Investigates the roles of metal ions in biological systems, including metalloenzyme active sites, electron-transfer proteins, oxygen transport, and metal-based therapeutics. Applies coordination and spectroscopic principles to understand catalytic mechanisms of enzymes such as cytochrome P450, nitrogenase, and photosystem II. A rapidly growing interface between inorganic chemistry, structural biology, and medicine.",
+   "cs": "Zkoumá úlohu kovových iontů v biologických systémech, včetně aktivních center metaloenzymů, proteinů přenášejících elektrony, transportu kyslíku a léčiv na bázi kovů. Aplikuje koordinační a spektroskopické principy k pochopení katalytických mechanismů enzymů, jako je cytochrom P450, nitrogenáza a fotosystém II. Rychle rostoucí rozhraní mezi anorganickou chemií, strukturní biologií a medicínou.",
    "brief": "Investigates the roles of metal ions in biological systems, including metalloenzyme active sites, electron-transfer proteins, oxygen transport, and metal-based therapeutics. Applies coordination and spectroscopic principles to understand catalytic mechanisms of enzymes such as cytochrome P450, nitrogenase, and photosystem II. A rapidly growing interface between inorganic chemistry, structural biology, and medicine.\n\n### Concepts\n- **Metalloenzyme Active Sites** — Metal cofactors in enzymes such as nitrogenase and hydrogenase enable challenging small-molecule transformations.\n- **Oxygen Transport Proteins** — Heme and non-heme iron/copper proteins like hemoglobin and hemocyanin reversibly bind and transport dioxygen.\n- **Electron-Transfer Metalloproteins** — Iron-sulfur clusters and blue-copper centers mediate long-range biological electron transfer.\n- **Medicinal Inorganic Chemistry** — Metal-based drugs such as cisplatin and metal radiopharmaceuticals exploit metal reactivity for therapeutic and diagnostic use.\n- **Metal Homeostasis and Transport** — Chaperone proteins and transporters regulate cellular uptake, trafficking, and storage of essential trace metals."
   },
   {
@@ -264,6 +277,7 @@
    "ordinal": 4,
    "kind": "ext",
    "en": "Addresses the structure, bonding, and defect chemistry of extended inorganic solids — oxides, chalcogenides, and framework materials — using band theory and crystallography. Encompasses superconductors, ionic conductors, magnetic materials, and metal-organic frameworks (MOFs), linking structure to electronic, magnetic, and porous functional properties. A major frontier for energy storage, catalysis, and quantum materials research.",
+   "cs": "Zabývá se strukturou, vazbou a chemií defektů rozsáhlých anorganických pevných látek — oxidů, chalkogenidů a rámcových materiálů — pomocí pásové teorie a krystalografie. Zahrnuje supravodiče, iontové vodiče, magnetické materiály a kovo-organické struktury (MOF) a propojuje strukturu s elektronickými, magnetickými a porézními funkčními vlastnostmi. Významná fronta výzkumu akumulace energie, katalýzy a kvantových materiálů.",
    "brief": "Addresses the structure, bonding, and defect chemistry of extended inorganic solids — oxides, chalcogenides, and framework materials — using band theory and crystallography. Encompasses superconductors, ionic conductors, magnetic materials, and metal-organic frameworks (MOFs), linking structure to electronic, magnetic, and porous functional properties. A major frontier for energy storage, catalysis, and quantum materials research.\n\n### Concepts\n- **Band Theory of Solids** — Delocalized molecular orbital treatment of periodic lattices explains metallic, semiconducting, and insulating behavior.\n- **Defect Chemistry** — Point, line, and planar defects in crystalline solids govern ionic conductivity, diffusion, and nonstoichiometry.\n- **Metal-Organic Frameworks** — Porous crystalline networks of metal nodes and organic linkers enable gas storage, separation, and catalysis.\n- **Superconducting and Quantum Materials** — Cuprate, iron-pnictide, and related inorganic solids exhibit high-temperature superconductivity and correlated-electron phenomena.\n- **Solid-State Ionic Conductors** — Fast-ion-conducting oxides and sulfides underpin solid-state batteries and fuel cell electrolytes."
   },
   {
@@ -275,6 +289,7 @@
    "ordinal": 5,
    "kind": "ext",
    "en": "Covers polynuclear inorganic species including boranes, carboranes, metal-metal bonded clusters, and polyoxometalates, rationalized through Wade-Mingos electron-counting rules and cluster bonding theory. Explores metal-metal multiple bonding and giant molecular architectures with applications in catalysis, magnetism, and nanoscale materials. Bridges molecular and solid-state inorganic chemistry through delocalized cluster bonding.",
+   "cs": "Pokrývá vícejaderné anorganické species včetně boranů, karboranů, klastrů s vazbami kov–kov a polyoxometalátů, vysvětlované pomocí Wadeových–Mingosových pravidel počítání elektronů a teorie klastrové vazby. Zkoumá vícenásobné vazby kov–kov a obří molekulární architektury s uplatněním v katalýze, magnetismu a nanomateriálech. Propojuje molekulární a pevnolátkovou anorganickou chemii prostřednictvím delokalizované klastrové vazby.",
    "brief": "Covers polynuclear inorganic species including boranes, carboranes, metal-metal bonded clusters, and polyoxometalates, rationalized through Wade-Mingos electron-counting rules and cluster bonding theory. Explores metal-metal multiple bonding and giant molecular architectures with applications in catalysis, magnetism, and nanoscale materials. Bridges molecular and solid-state inorganic chemistry through delocalized cluster bonding.\n\n### Concepts\n- **Wade-Mingos Rules** — Skeletal electron-pair counting predicts closo, nido, and arachno cluster geometries in boranes and metal clusters.\n- **Metal-Metal Multiple Bonds** — Quadruple and higher-order metal-metal bonds in dinuclear complexes exhibit distinctive electronic structure and reactivity.\n- **Polyoxometalates** — Anionic clusters of early transition-metal oxo units self-assemble into nanoscale molecular architectures.\n- **Boranes and Carboranes** — Electron-deficient boron hydride clusters and their carbon analogues exhibit three-center two-electron bonding.\n- **Cluster Catalysis** — Multi-metal cluster cores enable cooperative activation of small molecules unavailable to mononuclear centers."
   },
   {
@@ -286,6 +301,7 @@
    "ordinal": 6,
    "kind": "ext",
    "en": "Studies the pathways and rates of substitution, redox, and ligand-exchange reactions at metal centers, distinguishing associative, dissociative, and interchange mechanisms. Applies Marcus theory to electron-transfer kinetics and examines trans/cis effects governing substitution selectivity in square-planar and octahedral complexes. Provides the mechanistic foundation for designing catalytic and photochemical inorganic transformations.",
+   "cs": "Studuje cesty a rychlosti substitučních, redoxních a ligand-výměnných reakcí na kovových centrech a rozlišuje asociativní, disociativní a výměnné (interchange) mechanismy. Aplikuje Marcusovu teorii na kinetiku přenosu elektronu a zkoumá trans/cis efekty řídící selektivitu substituce ve čtvercově planárních a oktaedrických komplexech. Poskytuje mechanistický základ pro návrh katalytických a fotochemických anorganických přeměn.",
    "brief": "Studies the pathways and rates of substitution, redox, and ligand-exchange reactions at metal centers, distinguishing associative, dissociative, and interchange mechanisms. Applies Marcus theory to electron-transfer kinetics and examines trans/cis effects governing substitution selectivity in square-planar and octahedral complexes. Provides the mechanistic foundation for designing catalytic and photochemical inorganic transformations.\n\n### Concepts\n- **Substitution Mechanisms** — Associative, dissociative, and interchange pathways describe ligand-exchange kinetics at metal centers.\n- **Trans and Cis Effects** — Ligand identity kinetically and thermodynamically directs substitution position in square-planar complexes.\n- **Electron-Transfer Theory** — Marcus theory relates inner- and outer-sphere electron-transfer rates to reorganization energy and driving force.\n- **Redox Mechanisms** — Inner-sphere and outer-sphere pathways distinguish bridged versus non-bonded electron-transfer routes between metal centers.\n- **Photochemistry of Complexes** — Light-induced ligand-field and charge-transfer excited states drive photosubstitution and photoredox reactivity."
   },
   {
@@ -297,6 +313,7 @@
    "ordinal": 7,
    "kind": "ext",
    "en": "Examines f-block elements, whose contracted 4f/5f orbitals produce characteristic magnetic, optical, and coordination behavior distinct from d-block metals, alongside the specialized chemistry of radioactive actinides. Covers separation science for nuclear fuel cycles, single-molecule magnets, and luminescent lanthanide complexes. An area of intense current interest for nuclear waste management and quantum information applications.",
+   "cs": "Zkoumá prvky f-bloku, jejichž kontrahované orbitaly 4f/5f dávají charakteristické magnetické, optické a koordinační chování odlišné od kovů d-bloku, spolu se specializovanou chemií radioaktivních aktinoidů. Pokrývá separační vědu pro palivové cykly jaderných reaktorů, jednomolekulové magnety a luminiscenční komplexy lanthanoidů. Oblast intenzivního současného zájmu pro nakládání s jaderným odpadem a aplikace kvantové informatiky.",
    "brief": "Examines f-block elements, whose contracted 4f/5f orbitals produce characteristic magnetic, optical, and coordination behavior distinct from d-block metals, alongside the specialized chemistry of radioactive actinides. Covers separation science for nuclear fuel cycles, single-molecule magnets, and luminescent lanthanide complexes. An area of intense current interest for nuclear waste management and quantum information applications.\n\n### Concepts\n- **Lanthanide Contraction** — Poor 4f-orbital shielding causes a steady ionic-radius decrease across the lanthanide series, affecting coordination number.\n- **f-Element Luminescence** — Sharp, long-lived emission from lanthanide ions arises from Laporte-forbidden f-f transitions sensitized by antenna ligands.\n- **Single-Molecule Magnets** — Lanthanide complexes with strong magnetic anisotropy exhibit slow magnetic relaxation below a blocking temperature.\n- **Actinide Separation Chemistry** — Selective ligand extraction methods separate actinides from lanthanides for nuclear fuel reprocessing.\n- **Nuclear Fuel Cycle Chemistry** — Coordination and redox chemistry of uranium, plutonium, and minor actinides underpins reactor fuel and waste management."
   },
   {
@@ -308,7 +325,8 @@
    "ordinal": 2,
    "kind": "ext",
    "en": "Physical chemistry applies the quantitative laws of physics to chemical systems, explaining why reactions occur, how fast, and what governs molecular structure and phase behavior. Spans thermodynamics and equilibrium, reaction kinetics, quantum chemistry, statistical mechanics, spectroscopy, and surface and colloid phenomena, providing the theoretical and instrumental toolkit other chemistry disciplines draw on. Distinct from Theoretical & Computational Chemistry's algorithmic focus and from Analytical Chemistry's emphasis on measuring composition rather than explaining mechanism.",
-   "cs": "Fyzikální chemie aplikuje kvantitativní zákony fyziky na chemické systémy a vysvětluje, proč reakce probíhají, jak rychle a co určuje molekulární strukturu a fázové chování. Zahrnuje termodynamiku a rovnováhy, reakční kinetiku, kvantovou chemii, statistickou mechaniku, spektroskopii a povrchové a koloidní jevy a poskytuje teoretický a přístrojový aparát, z něhož čerpají ostatní chemické obory. Liší se od Teoretické a výpočetní chemie důrazem na algoritmický přístup a od Analytické chemie, která se soustředí na měření složení, nikoli na vysvětlení mechanismu."
+   "cs": "Fyzikální chemie aplikuje kvantitativní zákony fyziky na chemické systémy a vysvětluje, proč reakce probíhají, jak rychle a co určuje molekulární strukturu a fázové chování. Zahrnuje termodynamiku a rovnováhy, reakční kinetiku, kvantovou chemii, statistickou mechaniku, spektroskopii a povrchové a koloidní jevy a poskytuje teoretický a přístrojový aparát, z něhož čerpají ostatní chemické obory. Liší se od Teoretické a výpočetní chemie důrazem na algoritmický přístup a od Analytické chemie, která se soustředí na měření složení, nikoli na vysvětlení mechanismu.",
+   "brief": "Physical chemistry applies the quantitative laws of physics to chemical systems, explaining why reactions occur, how fast they proceed, and what governs molecular structure and phase behavior. It spans thermodynamics and equilibrium, kinetics and reaction dynamics, quantum chemistry, statistical mechanics, spectroscopy, and surface and colloid science — the theoretical and instrumental toolkit the rest of chemistry draws upon.\n\nIt is the connective tissue of the chemical sciences: it supplies the mechanistic and kinetic reasoning behind [[01.02.11.01]] Organic Chemistry, the electronic-structure theory realized algorithmically in [[01.02.11.06]] Theoretical & Computational Chemistry, and the interfacial and charge-transfer theory specialized by [[01.02.11.09]] Electrochemistry and [[01.02.11.10]] Photochemistry & Radiation Chemistry. Where physical chemistry explains mechanism, [[01.02.11.04]] Analytical Chemistry measures composition; its deepest roots reach into [[01.01]] Physics."
   },
   {
    "id": "01.02.11.03.01",
@@ -319,6 +337,7 @@
    "ordinal": 0,
    "kind": "ext",
    "en": "Studies energy, entropy, and free energy transformations that govern whether and how far chemical and physical processes proceed. Establishes the laws of thermodynamics as applied to reactions, phase changes, and mixtures, and predicts equilibrium composition, phase behavior, and work/heat exchange. Underpins virtually every quantitative prediction in chemistry, from reaction feasibility to material stability.",
+   "cs": "Studuje přeměny energie, entropie a volné energie, které určují, zda a jak daleko chemické a fyzikální procesy probíhají. Formuluje zákony termodynamiky aplikované na reakce, fázové přechody a směsi a předpovídá rovnovážné složení, fázové chování a výměnu práce a tepla. Je základem prakticky každé kvantitativní predikce v chemii, od proveditelnosti reakce po stabilitu materiálu.",
    "brief": "Studies energy, entropy, and free energy transformations that govern whether and how far chemical and physical processes proceed. Establishes the laws of thermodynamics as applied to reactions, phase changes, and mixtures, and predicts equilibrium composition, phase behavior, and work/heat exchange. Underpins virtually every quantitative prediction in chemistry, from reaction feasibility to material stability.\n\n### Concepts\n- **Laws of Thermodynamics** — The zeroth through third laws set the conservation, directionality, and absolute-zero constraints on energy and entropy.\n- **Chemical Potential & Free Energy** — Gibbs and Helmholtz energies quantify the driving force and spontaneity of processes at constant pressure or volume.\n- **Phase Equilibria** — Phase diagrams and the Clausius-Clapeyron relation describe conditions under which solid, liquid, and gas phases coexist.\n- **Solution Thermodynamics** — Activity coefficients and excess functions describe deviations of real mixtures from ideal-solution behavior.\n- **Chemical Equilibrium** — The equilibrium constant relates standard free-energy change to the composition-dependent reaction quotient at balance.\n- **Electrochemical Thermodynamics** — The Nernst equation links cell potential to free energy change and ion activities in redox equilibria."
   },
   {
@@ -330,6 +349,7 @@
    "ordinal": 1,
    "kind": "ext",
    "en": "Investigates the rates, mechanisms, and molecular-level pathways of chemical transformations, bridging macroscopic rate laws with microscopic collision and energy-transfer events. Covers catalysis, elementary-step mechanisms, and the theoretical frameworks that predict rate constants from molecular structure. Femtosecond spectroscopy and single-molecule methods keep pushing mechanistic resolution toward real-time observation of bond-breaking events.",
+   "cs": "Zkoumá rychlosti, mechanismy a molekulární dráhy chemických přeměn a propojuje makroskopické rychlostní zákony s mikroskopickými srážkovými a energopřenosovými ději. Zahrnuje katalýzu, mechanismy elementárních kroků a teoretické rámce předpovídající rychlostní konstanty z molekulární struktury. Femtosekundová spektroskopie a jednomolekulové metody dále posouvají mechanistické rozlišení k pozorování štěpení vazeb v reálném čase.",
    "brief": "Investigates the rates, mechanisms, and molecular-level pathways of chemical transformations, bridging macroscopic rate laws with microscopic collision and energy-transfer events. Covers catalysis, elementary-step mechanisms, and the theoretical frameworks that predict rate constants from molecular structure. Femtosecond spectroscopy and single-molecule methods keep pushing mechanistic resolution toward real-time observation of bond-breaking events.\n\n### Concepts\n- **Rate Laws & Reaction Order** — Empirical rate expressions relate reaction velocity to reactant concentrations and temperature via the Arrhenius equation.\n- **Transition State Theory** — Models the reaction rate as passage over an activated complex at a free-energy saddle point along the reaction coordinate.\n- **Collision & Molecular Beam Dynamics** — Crossed molecular beam experiments resolve state-to-state reactive scattering cross sections at the single-collision level.\n- **Catalysis Kinetics** — Homogeneous and enzyme catalysis mechanisms, including Michaelis-Menten kinetics, describe rate acceleration via alternative pathways.\n- **Femtochemistry** — Ultrafast pump-probe spectroscopy tracks transition-state dynamics on the femtosecond timescale of bond formation and cleavage.\n- **Non-Equilibrium & Complex Kinetics** — Oscillating reactions and chaotic kinetics reveal far-from-equilibrium dynamical behavior in coupled reaction networks."
   },
   {
@@ -341,6 +361,7 @@
    "ordinal": 2,
    "kind": "ext",
    "en": "Applies quantum mechanics to compute molecular electronic structure, bonding, and properties from first principles. Encompasses wavefunction-based ab initio methods, density functional theory, and semi-empirical approximations used to predict spectra, reactivity, and potential energy surfaces. A mature theoretical core paired with an intensely active computational frontier driven by algorithmic and hardware advances, including quantum computing applications.",
+   "cs": "Aplikuje kvantovou mechaniku na výpočet elektronové struktury, vazby a vlastností molekul z prvních principů. Zahrnuje ab initio metody založené na vlnové funkci, teorii funkcionálu hustoty a semiempirické aproximace používané k predikci spekter, reaktivity a hyperploch potenciální energie. Vyzrálé teoretické jádro spojené s intenzivně aktivní výpočetní frontou hnanou pokroky v algoritmech a hardwaru, včetně aplikací kvantových počítačů.",
    "brief": "Applies quantum mechanics to compute molecular electronic structure, bonding, and properties from first principles. Encompasses wavefunction-based ab initio methods, density functional theory, and semi-empirical approximations used to predict spectra, reactivity, and potential energy surfaces. A mature theoretical core paired with an intensely active computational frontier driven by algorithmic and hardware advances, including quantum computing applications.\n\n### Concepts\n- **Schrodinger Equation & Orbitals** — The molecular Schrodinger equation, solved approximately via atomic and molecular orbital theory, describes electron distribution.\n- **Ab Initio Methods** — Hartree-Fock and post-Hartree-Fock methods (MP2, coupled cluster) systematically approximate the many-electron wavefunction.\n- **Density Functional Theory** — DFT recasts electronic structure as a functional of electron density, enabling tractable calculations on larger molecular systems.\n- **Potential Energy Surfaces** — Multidimensional energy surfaces map how molecular energy varies with nuclear geometry, defining reaction paths and transition states.\n- **Computational Chemistry Software & Basis Sets** — Basis-set expansions and algorithmic implementations translate quantum theory into practical numerical predictions.\n- **Quantum Computing for Chemistry** — Emerging quantum algorithms target electronic-structure problems intractable for classical computers at scale."
   },
   {
@@ -352,6 +373,7 @@
    "ordinal": 3,
    "kind": "ext",
    "en": "Connects microscopic molecular properties to macroscopic thermodynamic observables through ensemble theory and partition functions. Provides the statistical foundation for computing entropy, heat capacity, and equilibrium constants from molecular energy levels, and underlies molecular dynamics and Monte Carlo simulation methods. Classical ensemble theory is settled; simulation methodology for complex and non-equilibrium systems remains a fertile research area.",
+   "cs": "Propojuje mikroskopické molekulární vlastnosti s makroskopickými termodynamickými veličinami prostřednictvím teorie souborů a partičních funkcí. Poskytuje statistický základ pro výpočet entropie, tepelné kapacity a rovnovážných konstant z molekulárních energetických hladin a stojí za metodami molekulové dynamiky a Monte Carlo. Klasická teorie souborů je ustálená, zatímco simulační metodika pro složité a nerovnovážné systémy zůstává úrodnou výzkumnou oblastí.",
    "brief": "Connects microscopic molecular properties to macroscopic thermodynamic observables through ensemble theory and partition functions. Provides the statistical foundation for computing entropy, heat capacity, and equilibrium constants from molecular energy levels, and underlies molecular dynamics and Monte Carlo simulation methods. Classical ensemble theory is settled; simulation methodology for complex and non-equilibrium systems remains a fertile research area.\n\n### Concepts\n- **Statistical Ensembles** — Microcanonical, canonical, and grand canonical ensembles formalize how microstate probability distributions yield bulk thermodynamic properties.\n- **Partition Functions** — The partition function encodes all accessible energy states of a system and generates thermodynamic quantities via differentiation.\n- **Molecular Dynamics Simulation** — Numerical integration of classical equations of motion propagates atomic trajectories to sample structural and dynamic properties.\n- **Monte Carlo Methods** — Stochastic sampling algorithms estimate equilibrium averages over configuration space without solving explicit dynamics.\n- **Statistical Thermodynamics of Gases** — Translational, rotational, vibrational, and electronic partition functions predict ideal-gas thermodynamic functions from spectroscopic data.\n- **Non-Equilibrium Statistical Mechanics** — Fluctuation theorems and linear response theory extend statistical mechanics to driven, non-equilibrium systems."
   },
   {
@@ -363,6 +385,7 @@
    "ordinal": 4,
    "kind": "ext",
    "en": "Studies the interaction of electromagnetic radiation with matter to determine molecular structure, dynamics, and composition. Spans rotational, vibrational, and electronic spectroscopy as well as magnetic resonance and diffraction techniques used across chemistry, biology, and materials science. Foundational selection-rule theory is well established, while multidimensional and single-molecule spectroscopic techniques continue to expand resolution and applicability.",
+   "cs": "Studuje interakci elektromagnetického záření s látkou za účelem stanovení struktury, dynamiky a složení molekul. Zahrnuje rotační, vibrační a elektronovou spektroskopii i techniky magnetické rezonance a difrakce používané napříč chemií, biologií a materiálovými vědami. Základní teorie výběrových pravidel je dobře ustálená, zatímco vícerozměrné a jednomolekulové spektroskopické techniky nadále rozšiřují rozlišení a použitelnost.",
    "brief": "Studies the interaction of electromagnetic radiation with matter to determine molecular structure, dynamics, and composition. Spans rotational, vibrational, and electronic spectroscopy as well as magnetic resonance and diffraction techniques used across chemistry, biology, and materials science. Foundational selection-rule theory is well established, while multidimensional and single-molecule spectroscopic techniques continue to expand resolution and applicability.\n\n### Concepts\n- **Rotational & Vibrational Spectroscopy** — Microwave and infrared spectroscopy probe molecular bond lengths, angles, and vibrational force constants via quantized transitions.\n- **Electronic Spectroscopy** — UV-visible absorption and emission spectroscopy reveal electronic transitions and excited-state molecular properties.\n- **Nuclear Magnetic Resonance** — NMR exploits nuclear spin transitions in a magnetic field to determine molecular connectivity and three-dimensional structure.\n- **Raman Spectroscopy** — Inelastic light scattering probes vibrational modes complementary to infrared, sensitive to polarizability changes.\n- **Mass Spectrometry** — Ionization and mass-to-charge analysis determine molecular mass, fragmentation patterns, and structural composition.\n- **X-ray & Electron Diffraction** — Diffraction of X-rays or electrons by crystalline or gas-phase samples resolves precise three-dimensional atomic structure."
   },
   {
@@ -374,6 +397,7 @@
    "ordinal": 5,
    "kind": "ext",
    "en": "Examines phenomena at interfaces between phases, including adsorption, catalysis on surfaces, and the stability of dispersed colloidal systems. Governs behavior critical to heterogeneous catalysis, nanomaterials, emulsions, and biological membranes. Classical adsorption isotherms and colloid stability theory are well established, with nanoscale interfacial engineering as an active growth area.",
+   "cs": "Zkoumá jevy na rozhraních mezi fázemi, včetně adsorpce, katalýzy na površích a stability dispergovaných koloidních systémů. Řídí chování klíčové pro heterogenní katalýzu, nanomateriály, emulze a biologické membrány. Klasické adsorpční izotermy a teorie stability koloidů jsou dobře ustálené, přičemž nanoškálové inženýrství rozhraní je aktivní růstovou oblastí.",
    "brief": "Examines phenomena at interfaces between phases, including adsorption, catalysis on surfaces, and the stability of dispersed colloidal systems. Governs behavior critical to heterogeneous catalysis, nanomaterials, emulsions, and biological membranes. Classical adsorption isotherms and colloid stability theory are well established, with nanoscale interfacial engineering as an active growth area.\n\n### Concepts\n- **Adsorption & Surface Isotherms** — Langmuir and BET isotherms quantify how gas or solute molecules bind to solid surfaces as a function of pressure or concentration.\n- **Heterogeneous Catalysis** — Reactions occurring at solid catalyst surfaces proceed through adsorption, surface reaction, and desorption steps.\n- **Colloidal Stability** — DLVO theory balances van der Waals attraction and electrostatic repulsion to predict aggregation or stability of colloidal particles.\n- **Surface Tension & Interfacial Phenomena** — Surface free energy governs wetting, capillarity, and the shape of liquid interfaces described by the Young-Laplace equation.\n- **Micelles & Self-Assembly** — Amphiphilic molecules spontaneously organize into micelles, bilayers, and vesicles above a critical concentration threshold.\n- **Nanomaterial Interfaces** — Nanoscale surface-to-volume ratios produce size-dependent electronic, optical, and catalytic properties distinct from bulk materials."
   },
   {
@@ -385,6 +409,7 @@
    "ordinal": 6,
    "kind": "ext",
    "en": "Covers the physical chemistry of charge transfer at electrodes, ion transport in solution, and diffusion-driven processes that govern batteries, fuel cells, corrosion, and sensors. Integrates thermodynamic and kinetic treatments of redox reactions with mass-transport theory. Core electrode-kinetics theory is mature, while energy-storage electrochemistry remains a rapidly evolving applied frontier.",
+   "cs": "Pokrývá fyzikální chemii přenosu náboje na elektrodách, transportu iontů v roztoku a difuzí řízených procesů, jež určují chování baterií, palivových článků, koroze a senzorů. Spojuje termodynamický a kinetický popis redoxních reakcí s teorií transportu hmoty. Základní teorie elektrodové kinetiky je vyzrálá, zatímco elektrochemie akumulace energie zůstává rychle se vyvíjející aplikační frontou.",
    "brief": "Covers the physical chemistry of charge transfer at electrodes, ion transport in solution, and diffusion-driven processes that govern batteries, fuel cells, corrosion, and sensors. Integrates thermodynamic and kinetic treatments of redox reactions with mass-transport theory. Core electrode-kinetics theory is mature, while energy-storage electrochemistry remains a rapidly evolving applied frontier.\n\n### Concepts\n- **Electrode Kinetics** — The Butler-Volmer equation relates current density to overpotential at an electrode-electrolyte interface.\n- **Electrochemical Cells & Batteries** — Galvanic and electrolytic cell design principles underlie energy conversion and storage in batteries and fuel cells.\n- **Ion Transport & Conductivity** — Ionic mobility and molar conductivity describe how dissolved ions migrate under concentration and electric-field gradients.\n- **Diffusion & Mass Transport** — Fick's laws govern the diffusive flux of species across concentration gradients in solution and at interfaces.\n- **Corrosion Electrochemistry** — Electrochemical potential differences drive metal oxidation processes that underlie corrosion mechanisms and prevention."
   },
   {
@@ -396,6 +421,7 @@
    "ordinal": 7,
    "kind": "ext",
    "en": "Studies light-induced electronic excitation and the subsequent chemical or physical relaxation pathways of excited molecular states. Covers photoinduced reactions, luminescence, and energy transfer processes central to solar energy conversion, photocatalysis, and photobiology. Foundational excited-state theory is well developed, while applications in photocatalysis and light-harvesting materials remain an active research frontier.",
+   "cs": "Studuje světlem indukovanou elektronovou excitaci a následné chemické či fyzikální relaxační dráhy excitovaných stavů molekul. Zahrnuje fotoindukované reakce, luminiscenci a procesy přenosu energie klíčové pro přeměnu sluneční energie, fotokatalýzu a fotobiologii. Základní teorie excitovaných stavů je dobře rozvinutá, zatímco aplikace ve fotokatalýze a materiálech pro sběr světla zůstávají aktivní výzkumnou frontou.",
    "brief": "Studies light-induced electronic excitation and the subsequent chemical or physical relaxation pathways of excited molecular states. Covers photoinduced reactions, luminescence, and energy transfer processes central to solar energy conversion, photocatalysis, and photobiology. Foundational excited-state theory is well developed, while applications in photocatalysis and light-harvesting materials remain an active research frontier.\n\n### Concepts\n- **Excited-State Relaxation** — Jablonski-diagram pathways of fluorescence, phosphorescence, and internal conversion describe how excited molecules dissipate energy.\n- **Photochemical Reactions** — Light absorption promotes molecules into reactive excited states that follow distinct pathways from thermal ground-state chemistry.\n- **Photocatalysis** — Light-activated catalysts drive redox chemistry such as water splitting and organic transformations using photon energy.\n- **Energy & Electron Transfer** — Forster and Dexter mechanisms describe how excitation energy or electrons migrate between chromophores over defined distances.\n- **Solar Energy Conversion** — Photovoltaic and photosynthetic-mimetic systems convert absorbed photon energy into electrical or chemical potential."
   },
   {
@@ -407,7 +433,8 @@
    "ordinal": 3,
    "kind": "ext",
    "en": "Analytical chemistry identifies, separates, and quantifies the components of matter, combining chromatographic and electroanalytical separations with spectroscopic and mass-spectrometric detection, chemometric data analysis, and sensor-based measurement. It supplies the measurement methodology that the other chemical disciplines rely on to characterize composition, rather than studying reactivity or synthesis itself.",
-   "cs": "Analytická chemie identifikuje, odděluje a kvantifikuje složky látek, a to kombinací chromatografických a elektroanalytických separací se spektroskopickou a hmotnostně-spektrometrickou detekcí, chemometrickou analýzou dat a senzorovým měřením. Poskytuje měřicí metodiku, na niž se spoléhají ostatní chemické obory při charakterizaci složení, sama se však nezabývá reaktivitou ani syntézou."
+   "cs": "Analytická chemie identifikuje, odděluje a kvantifikuje složky látek, a to kombinací chromatografických a elektroanalytických separací se spektroskopickou a hmotnostně-spektrometrickou detekcí, chemometrickou analýzou dat a senzorovým měřením. Poskytuje měřicí metodiku, na niž se spoléhají ostatní chemické obory při charakterizaci složení, sama se však nezabývá reaktivitou ani syntézou.",
+   "brief": "Analytical chemistry identifies, separates, and quantifies the components of matter. It combines chromatographic and electrophoretic separation science with mass-spectrometric, spectroscopic, and electroanalytical detection, chemometric data analysis, sensor development, and the metrology of validation and measurement uncertainty. Rather than studying reactivity or synthesis itself, it supplies the measurement methodology on which every other chemical discipline relies to characterize composition.\n\nIts techniques are shared throughout chemistry: structure elucidation in [[01.02.11.01]] Organic Chemistry and biomolecular analysis in [[01.02.11.05]] Biochemistry depend on the same spectroscopic and mass-spectrometric tools, while quality assurance underpins [[01.02.11.13]] Medicinal & Pharmaceutical Chemistry and trace detection anchors [[01.02.11.12]] Environmental & Green Chemistry. The physical theory of the measurements themselves belongs to [[01.02.11.03]] Physical Chemistry."
   },
   {
    "id": "01.02.11.04.01",
@@ -418,6 +445,7 @@
    "ordinal": 0,
    "kind": "ext",
    "en": "Covers the physicochemical principles and instrumentation used to resolve complex mixtures into individual components prior to detection or quantification. Encompasses gas, liquid, and supercritical-fluid chromatography as well as electrophoretic and electrokinetic separations. Underpins virtually every modern analytical workflow, from pharmaceutical QC to omics profiling.",
+   "cs": "Pokrývá fyzikálně-chemické principy a přístrojové vybavení používané k rozdělení složitých směsí na jednotlivé složky před detekcí či kvantifikací. Zahrnuje plynovou, kapalinovou a superkritickou fluidní chromatografii i elektroforetické a elektrokinetické separace. Tvoří základ prakticky každého moderního analytického postupu, od farmaceutické kontroly kvality po omické profilování.",
    "brief": "Covers the physicochemical principles and instrumentation used to resolve complex mixtures into individual components prior to detection or quantification. Encompasses gas, liquid, and supercritical-fluid chromatography as well as electrophoretic and electrokinetic separations. Underpins virtually every modern analytical workflow, from pharmaceutical QC to omics profiling.\n\n### Concepts\n- **Gas Chromatography** — Separates volatile analytes by differential partitioning between a mobile gas phase and a stationary liquid or solid phase in a column.\n- **High-Performance Liquid Chromatography** — Separates non-volatile and thermally labile compounds using a pressurized liquid mobile phase over a packed or monolithic stationary phase.\n- **Capillary Electrophoresis** — Separates charged species in narrow capillaries by their differential migration velocities under an applied electric field.\n- **Ion Chromatography** — Separates and quantifies inorganic and organic ions using ion-exchange stationary phases coupled with conductivity or suppressed detection.\n- **Supercritical Fluid Chromatography** — Uses a supercritical fluid, typically CO2, as mobile phase to combine GC-like efficiency with LC-like selectivity for thermolabile analytes."
   },
   {
@@ -429,6 +457,7 @@
    "ordinal": 1,
    "kind": "ext",
    "en": "Studies the ionization, mass analysis, and fragmentation of molecules to determine molecular mass, elemental composition, and structural connectivity. Couples routinely with chromatographic front ends to deliver hyphenated identification and trace-level quantification across proteomics, metabolomics, forensics, and environmental analysis. Instrument and ionization-source innovation remains an active engineering frontier.",
+   "cs": "Studuje ionizaci, hmotnostní analýzu a fragmentaci molekul za účelem stanovení molekulové hmotnosti, prvkového složení a strukturní konektivity. Rutinně se spojuje s chromatografickými vstupy a poskytuje spřaženou (hyphenated) identifikaci a stopovou kvantifikaci napříč proteomikou, metabolomikou, forenzní a environmentální analýzou. Inovace přístrojů a ionizačních zdrojů zůstávají aktivní inženýrskou frontou.",
    "brief": "Studies the ionization, mass analysis, and fragmentation of molecules to determine molecular mass, elemental composition, and structural connectivity. Couples routinely with chromatographic front ends to deliver hyphenated identification and trace-level quantification across proteomics, metabolomics, forensics, and environmental analysis. Instrument and ionization-source innovation remains an active engineering frontier.\n\n### Concepts\n- **Ionization Techniques** — Convert neutral analytes into gas-phase ions via methods such as electrospray ionization, MALDI, or electron impact prior to mass analysis.\n- **Mass Analyzers** — Separate ions by mass-to-charge ratio using quadrupole, time-of-flight, ion-trap, or Orbitrap technologies with differing resolution and speed.\n- **Tandem Mass Spectrometry** — Performs sequential stages of mass selection and fragmentation to elucidate structure and achieve high-selectivity quantification (MS/MS).\n- **Hyphenated LC-MS and GC-MS** — Couples chromatographic separation directly to mass spectrometric detection for combined resolving power and identification confidence.\n- **High-Resolution and Accurate-Mass MS** — Determines elemental formulae from sub-ppm mass accuracy measurements, enabling non-targeted identification of unknowns."
   },
   {
@@ -512,7 +541,8 @@
    "ordinal": 4,
    "kind": "ext",
    "en": "Biochemistry investigates the molecular composition and chemical reactions that constitute living systems, spanning protein and enzyme structure-function, nucleic acid chemistry, metabolic and bioenergetic pathways, and membrane lipid organization. It provides the molecular mechanistic layer beneath cell biology and genetics, explaining biological processes as specific, catalyzed chemical transformations.",
-   "cs": "Biochemie zkoumá molekulární složení a chemické reakce, které tvoří živé systémy, a zahrnuje strukturu a funkci proteinů a enzymů, chemii nukleových kyselin, metabolické a bioenergetické dráhy a organizaci membránových lipidů. Poskytuje molekulárně-mechanistickou vrstvu pod buněčnou biologií a genetikou a vysvětluje biologické procesy jako konkrétní, katalyzované chemické přeměny."
+   "cs": "Biochemie zkoumá molekulární složení a chemické reakce, které tvoří živé systémy, a zahrnuje strukturu a funkci proteinů a enzymů, chemii nukleových kyselin, metabolické a bioenergetické dráhy a organizaci membránových lipidů. Poskytuje molekulárně-mechanistickou vrstvu pod buněčnou biologií a genetikou a vysvětluje biologické procesy jako konkrétní, katalyzované chemické přeměny.",
+   "brief": "Biochemistry investigates the molecular composition and chemical reactions that constitute living systems: protein structure and enzyme catalysis, nucleic acid chemistry and molecular genetics, metabolism and bioenergetics, and the lipid organization of membranes and cell signaling. It provides the molecular-mechanistic layer beneath cell biology and genetics, explaining biological processes as specific, catalyzed chemical transformations.\n\nIt sits at the chemistry–biology boundary: it specializes the carbon chemistry of [[01.02.11.01]] Organic Chemistry to the context of the living cell, draws its metal-cofactor chemistry from the bioinorganic interface with [[01.02.11.02]] Inorganic Chemistry, and depends on the structural and chemical-biology methods it shares with [[01.02.11.04]] Analytical Chemistry. Its frontier merges with synthetic biology and the wider life sciences of [[01.03]] Biology, while its therapeutic applications feed [[01.02.11.13]] Medicinal & Pharmaceutical Chemistry."
   },
   {
    "id": "01.02.11.05.01",
@@ -523,6 +553,7 @@
    "ordinal": 0,
    "kind": "ext",
    "en": "Studies the folding, dynamics, and quaternary organization of polypeptides and how three-dimensional architecture encodes biological function. Covers primary-to-quaternary structural hierarchy, folding thermodynamics and chaperone-assisted assembly, and structure-function relationships in globular, fibrous, membrane, and intrinsically disordered proteins. Foundational to understanding disease-linked misfolding and to rational protein engineering.",
+   "cs": "Studuje sbalení, dynamiku a kvartérní uspořádání polypeptidů a to, jak trojrozměrná architektura kóduje biologickou funkci. Pokrývá strukturní hierarchii od primární po kvartérní úroveň, termodynamiku sbalování a skládání za asistence chaperonů a vztahy mezi strukturou a funkcí u globulárních, fibrilárních, membránových a vnitřně neuspořádaných proteinů. Je základem pro pochopení chorobně podmíněného chybného sbalení a pro racionální proteinové inženýrství.",
    "brief": "Studies the folding, dynamics, and quaternary organization of polypeptides and how three-dimensional architecture encodes biological function. Covers primary-to-quaternary structural hierarchy, folding thermodynamics and chaperone-assisted assembly, and structure-function relationships in globular, fibrous, membrane, and intrinsically disordered proteins. Foundational to understanding disease-linked misfolding and to rational protein engineering.\n\n### Concepts\n- **Protein Folding** — The physical process by which a polypeptide chain acquires its native, functionally competent three-dimensional conformation.\n- **Secondary/Tertiary Structure** — Local hydrogen-bonded motifs (alpha-helix, beta-sheet) and their global packing into a compact tertiary fold.\n- **Molecular Chaperones** — ATP-dependent machines such as Hsp70 and GroEL/GroES that assist correct folding and prevent aggregation.\n- **Intrinsically Disordered Proteins** — Polypeptides lacking a fixed tertiary structure that function through dynamic conformational ensembles.\n- **Protein-Protein Interactions** — Specific, often allosteric, binding events between polypeptides that assemble complexes and signaling networks.\n- **Proteostasis & Misfolding Disease** — Cellular quality-control networks that balance synthesis, folding, and degradation, whose failure underlies amyloid disorders."
   },
   {
@@ -534,6 +565,7 @@
    "ordinal": 1,
    "kind": "ext",
    "en": "Examines how enzymes accelerate biochemical reactions through precise transition-state stabilization, cofactor chemistry, and regulatory control. Encompasses kinetic frameworks, catalytic mechanisms, allosteric and covalent regulation, and the design principles exploited in biocatalysis and drug inhibition. Central to understanding metabolic control and to engineering enzymes for industrial and therapeutic use.",
+   "cs": "Zkoumá, jak enzymy urychlují biochemické reakce přesnou stabilizací přechodového stavu, chemií kofaktorů a regulační kontrolou. Zahrnuje kinetické rámce, katalytické mechanismy, alosterickou a kovalentní regulaci a konstrukční principy využívané v biokatalýze a inhibici léčiv. Klíčová pro pochopení metabolické regulace a pro inženýrství enzymů pro průmyslové a terapeutické využití.",
    "brief": "Examines how enzymes accelerate biochemical reactions through precise transition-state stabilization, cofactor chemistry, and regulatory control. Encompasses kinetic frameworks, catalytic mechanisms, allosteric and covalent regulation, and the design principles exploited in biocatalysis and drug inhibition. Central to understanding metabolic control and to engineering enzymes for industrial and therapeutic use.\n\n### Concepts\n- **Enzyme Kinetics** — Michaelis-Menten and related rate laws that quantify substrate affinity and catalytic turnover.\n- **Catalytic Mechanisms** — Chemical strategies—acid-base, covalent, and metal-ion catalysis—by which active sites lower activation energy.\n- **Cofactors & Coenzymes** — Non-protein molecules such as NAD+, FAD, and pyridoxal phosphate that extend the chemical repertoire of enzymes.\n- **Allosteric Regulation** — Conformational control of catalytic activity by effector binding at sites distinct from the active site.\n- **Enzyme Inhibition** — Competitive, noncompetitive, and irreversible mechanisms by which small molecules modulate catalytic rate, exploited in drug design.\n- **Directed Evolution & Biocatalysis** — Laboratory selection and engineering of enzymes for novel or enhanced catalytic activities."
   },
   {
@@ -545,6 +577,7 @@
    "ordinal": 2,
    "kind": "ext",
    "en": "Addresses the chemical structure, replication, and information-processing chemistry of DNA and RNA, from the double helix to catalytic and regulatory RNAs. Covers polymerase mechanisms, repair chemistry, and the expanding roles of non-coding RNA in gene regulation. Underpins genomics, gene-editing technology, and RNA-based therapeutics.",
+   "cs": "Zabývá se chemickou strukturou, replikací a chemií zpracování informace u DNA a RNA, od dvojšroubovice po katalytické a regulační RNA. Pokrývá mechanismy polymeráz, chemii oprav a rozšiřující se úlohu nekódujících RNA v regulaci genové exprese. Je základem genomiky, technologií editace genů a terapeutik na bázi RNA.",
    "brief": "Addresses the chemical structure, replication, and information-processing chemistry of DNA and RNA, from the double helix to catalytic and regulatory RNAs. Covers polymerase mechanisms, repair chemistry, and the expanding roles of non-coding RNA in gene regulation. Underpins genomics, gene-editing technology, and RNA-based therapeutics.\n\n### Concepts\n- **DNA Structure & Replication** — The double-helical architecture of DNA and the polymerase-driven chemistry that copies it with high fidelity.\n- **Transcription & RNA Processing** — RNA polymerase-catalyzed synthesis of RNA and its subsequent splicing, capping, and polyadenylation.\n- **Ribozymes & Catalytic RNA** — RNA molecules that catalyze chemical reactions, including peptide bond formation by the ribosome.\n- **DNA Repair & Genome Stability** — Enzymatic pathways that correct replication errors and chemical damage to preserve genomic integrity.\n- **Epigenetic Chemistry** — Covalent modifications of DNA and histones—methylation, acetylation—that regulate gene expression without altering sequence.\n- **CRISPR & Gene-Editing Chemistry** — Nuclease-guided RNA systems that enable programmable, sequence-specific genome editing."
   },
   {
@@ -556,6 +589,7 @@
    "ordinal": 3,
    "kind": "ext",
    "en": "Traces the integrated network of catabolic and anabolic pathways that extract, store, and deploy chemical energy in living cells. Covers glycolysis, the citric acid cycle, oxidative phosphorylation, photosynthesis, and the hormonal and allosteric logic that coordinates fuel selection across tissues. Central to physiology, nutrition science, and metabolic disease research.",
+   "cs": "Sleduje integrovanou síť katabolických a anabolických drah, které v živých buňkách získávají, ukládají a využívají chemickou energii. Pokrývá glykolýzu, citrátový cyklus, oxidativní fosforylaci, fotosyntézu a hormonální a alosterickou logiku, jež koordinuje výběr paliva napříč tkáněmi. Klíčová pro fyziologii, výživovou vědu a výzkum metabolických onemocnění.",
    "brief": "Traces the integrated network of catabolic and anabolic pathways that extract, store, and deploy chemical energy in living cells. Covers glycolysis, the citric acid cycle, oxidative phosphorylation, photosynthesis, and the hormonal and allosteric logic that coordinates fuel selection across tissues. Central to physiology, nutrition science, and metabolic disease research.\n\n### Concepts\n- **Glycolysis & Gluconeogenesis** — The reciprocal pathways that break down and synthesize glucose to balance cellular energy supply.\n- **Citric Acid Cycle** — The mitochondrial cycle that oxidizes acetyl-CoA to CO2 while generating reduced electron carriers.\n- **Oxidative Phosphorylation** — The electron-transport chain and ATP synthase machinery that convert redox energy into a proton-motive force and ATP.\n- **Photosynthesis** — The light-driven conversion of CO2 and water into carbohydrates and oxygen in plants, algae, and cyanobacteria.\n- **Metabolic Regulation & Signaling** — Hormonal and allosteric control circuits, such as insulin and AMPK signaling, that integrate whole-body fuel metabolism.\n- **Metabolic Disease Biochemistry** — Dysregulated pathways underlying diabetes, obesity, and inherited metabolic disorders."
   },
   {
@@ -567,6 +601,7 @@
    "ordinal": 4,
    "kind": "ext",
    "en": "Covers the structure and biosynthesis of fatty acids, phospholipids, and sterols, and how they assemble into selectively permeable membranes. Examines membrane protein function, lipid-mediated signal transduction, and second-messenger cascades that transmit extracellular cues into cellular responses. Essential to understanding cell communication, membrane trafficking, and lipid-related pathology.",
+   "cs": "Pokrývá strukturu a biosyntézu mastných kyselin, fosfolipidů a sterolů a to, jak se skládají do selektivně propustných membrán. Zkoumá funkci membránových proteinů, signální transdukci zprostředkovanou lipidy a kaskády druhých poslů, které přenášejí extracelulární podněty do buněčných odpovědí. Nezbytná pro pochopení buněčné komunikace, membránového transportu a patologie spojené s lipidy.",
    "brief": "Covers the structure and biosynthesis of fatty acids, phospholipids, and sterols, and how they assemble into selectively permeable membranes. Examines membrane protein function, lipid-mediated signal transduction, and second-messenger cascades that transmit extracellular cues into cellular responses. Essential to understanding cell communication, membrane trafficking, and lipid-related pathology.\n\n### Concepts\n- **Fatty Acid Metabolism** — Biosynthetic and oxidative pathways that build and break down fatty acid chains for energy and membrane precursors.\n- **Membrane Structure & Fluidity** — The lipid bilayer's composition and dynamics, which govern permeability and protein mobility.\n- **Membrane Transport Proteins** — Channels, carriers, and pumps that mediate selective movement of ions and solutes across membranes.\n- **Signal Transduction Cascades** — Receptor-initiated pathways, including G-protein and kinase cascades, that relay extracellular signals intracellularly.\n- **Lipid Second Messengers** — Signaling lipids such as inositol phosphates and diacylglycerol generated by membrane phospholipid hydrolysis.\n- **Lipidomics** — Systematic profiling of cellular lipid species to map their diversity and functional roles."
   },
   {
@@ -578,6 +613,7 @@
    "ordinal": 5,
    "kind": "ext",
    "en": "Encompasses the experimental and computational techniques used to determine biomolecular structures and probe function with chemical precision. Covers X-ray crystallography, cryo-EM, NMR, and mass spectrometry alongside bioorthogonal chemistry and chemical-probe design for interrogating living systems. Drives modern drug discovery and the mechanistic dissection of macromolecular machines.",
+   "cs": "Zahrnuje experimentální a výpočetní techniky používané ke stanovení struktur biomolekul a ke zkoumání jejich funkce s chemickou přesností. Pokrývá rentgenovou krystalografii, kryo-EM, NMR a hmotnostní spektrometrii spolu s bioortogonální chemií a návrhem chemických sond pro sledování živých systémů. Pohání moderní vývoj léčiv a mechanistické rozpletení makromolekulárních strojů.",
    "brief": "Encompasses the experimental and computational techniques used to determine biomolecular structures and probe function with chemical precision. Covers X-ray crystallography, cryo-EM, NMR, and mass spectrometry alongside bioorthogonal chemistry and chemical-probe design for interrogating living systems. Drives modern drug discovery and the mechanistic dissection of macromolecular machines.\n\n### Concepts\n- **X-ray Crystallography** — Diffraction-based determination of atomic-resolution biomolecular structure from crystallized samples.\n- **Cryo-Electron Microscopy** — Imaging of flash-frozen macromolecules to resolve near-atomic structures without crystallization.\n- **NMR Spectroscopy** — Solution-state technique that reports atomic-level structure and dynamics of biomolecules in near-native conditions.\n- **Mass Spectrometry & Proteomics** — Ionization-based analysis that identifies, quantifies, and maps post-translational modifications of proteins at scale.\n- **Bioorthogonal Chemistry** — Reactions that proceed selectively inside living systems without perturbing native biochemistry, enabling molecular tagging.\n- **Chemical Probes & Activity-Based Protein Profiling** — Small-molecule tools that covalently report on enzyme activity within complex proteomes."
   },
   {
@@ -589,6 +625,7 @@
    "ordinal": 6,
    "kind": "ext",
    "en": "Studies the structure, biosynthesis, and biological roles of monosaccharides, polysaccharides, and glycoconjugates. Covers glycosylation pathways, glycan-mediated recognition in immunity and cell adhesion, and the analytical challenges of sequencing branched, heterogeneous glycan structures. A less classically emphasized but increasingly critical frontier linking chemistry to immunology and cancer biology.",
+   "cs": "Studuje strukturu, biosyntézu a biologickou úlohu monosacharidů, polysacharidů a glykokonjugátů. Pokrývá glykosylační dráhy, rozpoznávání zprostředkované glykany v imunitě a buněčné adhezi a analytické výzvy sekvenování rozvětvených, heterogenních glykanových struktur. Méně klasicky zdůrazňovaná, avšak stále významnější fronta propojující chemii s imunologií a nádorovou biologií.",
    "brief": "Studies the structure, biosynthesis, and biological roles of monosaccharides, polysaccharides, and glycoconjugates. Covers glycosylation pathways, glycan-mediated recognition in immunity and cell adhesion, and the analytical challenges of sequencing branched, heterogeneous glycan structures. A less classically emphasized but increasingly critical frontier linking chemistry to immunology and cancer biology.\n\n### Concepts\n- **Glycosylation Pathways** — Enzymatic assembly of N-linked and O-linked glycans onto proteins and lipids in the secretory pathway.\n- **Glycan Recognition & Lectins** — Carbohydrate-binding proteins that mediate cell-cell recognition, immune signaling, and pathogen adhesion.\n- **Glycosaminoglycans & Proteoglycans** — Sulfated polysaccharide chains and their protein cores that structure the extracellular matrix and modulate signaling.\n- **Glycan Analysis** — Mass-spectrometric and chromatographic methods for sequencing structurally heterogeneous glycan chains."
   },
   {
@@ -600,6 +637,7 @@
    "ordinal": 7,
    "kind": "ext",
    "en": "Explores engineered biomolecular systems—expanded genetic codes, synthetic pathways, and designed proteins—that push biochemistry beyond natural evolution. Covers genetic code expansion, de novo protein design, and synthetic metabolic circuits built for biotechnology and therapeutics. Represents the actively expanding research edge where biochemistry meets synthetic biology and machine learning.",
+   "cs": "Zkoumá inženýrsky upravené biomolekulární systémy — rozšířené genetické kódy, syntetické dráhy a navržené proteiny — které posouvají biochemii za hranice přirozené evoluce. Pokrývá rozšíření genetického kódu, návrh proteinů de novo a syntetické metabolické obvody vytvořené pro biotechnologie a terapeutika. Představuje aktivně se rozšiřující výzkumné pomezí, kde se biochemie setkává se syntetickou biologií a strojovým učením.",
    "brief": "Explores engineered biomolecular systems—expanded genetic codes, synthetic pathways, and designed proteins—that push biochemistry beyond natural evolution. Covers genetic code expansion, de novo protein design, and synthetic metabolic circuits built for biotechnology and therapeutics. Represents the actively expanding research edge where biochemistry meets synthetic biology and machine learning.\n\n### Concepts\n- **Genetic Code Expansion** — Engineering orthogonal translation systems to incorporate non-canonical amino acids into proteins.\n- **De Novo Protein Design** — Computational and AI-guided creation of novel protein folds and functions not found in nature.\n- **Synthetic Metabolic Pathways** — Rationally engineered enzyme cascades that produce non-native metabolites in host organisms.\n- **Minimal & Synthetic Cells** — Bottom-up reconstruction of cellular biochemistry from defined molecular components to probe the chemical basis of life.\n- **AI-Driven Structure Prediction** — Deep-learning models such as AlphaFold that predict protein structure and interactions from sequence alone."
   },
   {
@@ -611,7 +649,8 @@
    "ordinal": 5,
    "kind": "ext",
    "en": "Theoretical and computational chemistry predicts and models chemical structure, energetics, and reactivity through quantum-mechanical and computational methods rather than direct measurement — electronic-structure theory, molecular dynamics, machine-learned potentials, cheminformatics, and reaction-kinetics modeling. It supplies the quantitative machinery that the other chemistry disciplines draw on for mechanism, spectroscopy, and materials prediction.",
-   "cs": "Teoretická a výpočetní chemie predikuje a modeluje chemickou strukturu, energetiku a reaktivitu pomocí kvantově-mechanických a výpočetních metod namísto přímého měření — teorie elektronové struktury, molekulární dynamika, strojově naučené potenciály, chemoinformatika a modelování reakční kinetiky. Poskytuje kvantitativní aparát, který ostatní chemické obory využívají k predikci mechanismů, spekter a materiálových vlastností."
+   "cs": "Teoretická a výpočetní chemie predikuje a modeluje chemickou strukturu, energetiku a reaktivitu pomocí kvantově-mechanických a výpočetních metod namísto přímého měření — teorie elektronové struktury, molekulární dynamika, strojově naučené potenciály, chemoinformatika a modelování reakční kinetiky. Poskytuje kvantitativní aparát, který ostatní chemické obory využívají k predikci mechanismů, spekter a materiálových vlastností.",
+   "brief": "Theoretical and computational chemistry predicts and models chemical structure, energetics, and reactivity through quantum-mechanical and statistical methods rather than direct measurement. It spans electronic-structure theory, molecular dynamics and statistical mechanics, machine-learned interatomic potentials, cheminformatics, and reaction-kinetics modeling — here the computer is the instrument.\n\nIt supplies the quantitative machinery the other disciplines draw on: mechanism and spectra for [[01.02.11.01]] Organic Chemistry, electronic structure of complexes for [[01.02.11.02]] Inorganic Chemistry, and materials prediction for [[01.02.11.07]] Materials Chemistry and [[01.02.11.14]] Supramolecular Chemistry & Nanochemistry. It shares its theoretical foundations with [[01.02.11.03]] Physical Chemistry — which supplies the underlying laws — while its algorithms and quantum-computing frontier reach into [[01.01]] Physics, and virtual screening links it directly to drug design in [[01.02.11.13]] Medicinal & Pharmaceutical Chemistry."
   },
   {
    "id": "01.02.11.06.01",
@@ -622,6 +661,7 @@
    "ordinal": 0,
    "kind": "ext",
    "en": "The quantum-mechanical core of theoretical chemistry: solving or approximating the many-electron Schrödinger equation to obtain molecular energies, wavefunctions, and properties. Spans wavefunction-based ab initio hierarchies and density-functional approaches, and underlies nearly every other computational sub-area as its energy-evaluation engine.",
+   "cs": "Kvantově-mechanické jádro teoretické chemie: řešení nebo aproximace mnohaelektronové Schrödingerovy rovnice k získání energií, vlnových funkcí a vlastností molekul. Zahrnuje hierarchie ab initio metod založených na vlnové funkci i přístupy teorie funkcionálu hustoty a stojí jako výpočetní jádro téměř za každou další výpočetní podoblastí coby její nástroj vyhodnocení energie.",
    "brief": "The quantum-mechanical core of theoretical chemistry: solving or approximating the many-electron Schrödinger equation to obtain molecular energies, wavefunctions, and properties. Spans wavefunction-based ab initio hierarchies and density-functional approaches, and underlies nearly every other computational sub-area as its energy-evaluation engine.\n\n### Concepts\n- **Hartree-Fock Theory** — Approximates the many-electron wavefunction as a single Slater determinant under a mean-field treatment of electron repulsion.\n- **Density Functional Theory** — Recasts the electronic problem in terms of the electron density via Kohn-Sham orbitals and an approximate exchange-correlation functional.\n- **Post-Hartree-Fock Correlation Methods** — Systematically recover electron correlation beyond mean-field via perturbation theory (MP2) or coupled-cluster expansions (CCSD(T)).\n- **Multireference Methods** — Treat systems with near-degenerate electronic configurations, such as bond breaking or diradicals, via CASSCF and CASPT2-type approaches.\n- **Basis Sets** — Finite sets of atom-centered or plane-wave functions used to expand molecular orbitals, trading accuracy against computational cost.\n- **Semi-Empirical Methods** — Simplify ab initio Hamiltonians with parameterized approximations to extend electronic-structure calculations to larger systems."
   },
   {
@@ -633,6 +673,7 @@
    "ordinal": 1,
    "kind": "ext",
    "en": "Simulates the time evolution and ensemble behavior of molecular systems by propagating classical (or mixed quantum-classical) equations of motion under empirical or first-principles force fields. Connects microscopic interactions to macroscopic thermodynamic and kinetic observables via statistical-mechanical ensembles.",
+   "cs": "Simuluje časový vývoj a chování souborů molekulárních systémů propagací klasických (nebo smíšených kvantově-klasických) pohybových rovnic pod empirickými nebo z prvních principů odvozenými silovými poli. Propojuje mikroskopické interakce s makroskopickými termodynamickými a kinetickými veličinami prostřednictvím statisticko-mechanických souborů.",
    "brief": "Simulates the time evolution and ensemble behavior of molecular systems by propagating classical (or mixed quantum-classical) equations of motion under empirical or first-principles force fields. Connects microscopic interactions to macroscopic thermodynamic and kinetic observables via statistical-mechanical ensembles.\n\n### Concepts\n- **Classical Force Fields** — Parameterized potential-energy functions (bonded and non-bonded terms) that approximate interatomic interactions for large-scale simulation.\n- **Integration Algorithms** — Numerical schemes such as velocity-Verlet that propagate Newtonian trajectories while conserving energy and phase-space volume.\n- **Enhanced Sampling Methods** — Techniques like metadynamics and replica exchange that accelerate exploration of rare events and rugged free-energy landscapes.\n- **Free-Energy Calculations** — Methods including thermodynamic integration and free-energy perturbation that estimate binding and solvation free energies from simulation ensembles.\n- **Coarse-Grained Modeling** — Reduces molecular resolution by grouping atoms into effective interaction sites to reach larger length and time scales."
   },
   {
@@ -644,6 +685,7 @@
    "ordinal": 2,
    "kind": "ext",
    "en": "Uses statistical learning, especially neural networks, to fit interatomic potential-energy surfaces and molecular properties directly from quantum-mechanical reference data, approaching ab initio accuracy at force-field cost. A rapidly expanding frontier that also encompasses generative models for molecular and materials design.",
+   "cs": "Využívá statistické učení, zejména neuronové sítě, k proložení hyperploch potenciální energie mezi atomy a molekulárních vlastností přímo z kvantově-mechanických referenčních dat, čímž dosahuje ab initio přesnosti za cenu silového pole. Rychle se rozšiřující fronta, která zahrnuje i generativní modely pro návrh molekul a materiálů.",
    "brief": "Uses statistical learning, especially neural networks, to fit interatomic potential-energy surfaces and molecular properties directly from quantum-mechanical reference data, approaching ab initio accuracy at force-field cost. A rapidly expanding frontier that also encompasses generative models for molecular and materials design.\n\n### Concepts\n- **Neural Network Potentials** — Feed-forward or graph neural networks trained to reproduce energies and forces from reference electronic-structure calculations.\n- **Gaussian Approximation Potentials** — Kernel-based regression methods that interpolate potential-energy surfaces using local atomic-environment descriptors.\n- **Graph Neural Networks for Molecules** — Represent molecules as graphs of atoms and bonds to learn structure-property relationships end-to-end from data.\n- **Generative Molecular Design** — Deep generative models (VAEs, diffusion, autoregressive) that propose novel molecules or materials with targeted properties.\n- **Active Learning for Potential Fitting** — Iteratively selects the most informative configurations for quantum-chemical labeling to efficiently train machine-learned potentials."
   },
   {
@@ -655,6 +697,7 @@
    "ordinal": 3,
    "kind": "ext",
    "en": "Models the time-dependent quantum behavior of electrons and nuclei, including light-matter interaction, non-adiabatic transitions between electronic states, and vibrational and electronic spectroscopy. Essential for photochemistry, photophysics, and interpreting spectroscopic experiments from first principles.",
+   "cs": "Modeluje časově závislé kvantové chování elektronů a jader, včetně interakce světla s látkou, neadiabatických přechodů mezi elektronovými stavy a vibrační a elektronové spektroskopie. Nezbytná pro fotochemii, fotofyziku a interpretaci spektroskopických experimentů z prvních principů.",
    "brief": "Models the time-dependent quantum behavior of electrons and nuclei, including light-matter interaction, non-adiabatic transitions between electronic states, and vibrational and electronic spectroscopy. Essential for photochemistry, photophysics, and interpreting spectroscopic experiments from first principles.\n\n### Concepts\n- **Time-Dependent DFT** — Extends density functional theory to excited states and optical spectra via linear-response or real-time propagation.\n- **Non-Adiabatic Dynamics** — Simulates transitions between electronic states beyond the Born-Oppenheimer approximation, e.g. via surface hopping.\n- **Conical Intersections** — Points of exact electronic-state degeneracy that govern ultrafast radiationless decay in photochemical processes.\n- **Nuclear Wavepacket Dynamics** — Propagates quantum nuclear wavefunctions on coupled potential-energy surfaces to capture vibrational and tunneling effects.\n- **Spectroscopy Simulation** — Computes vibrational, electronic, and NMR spectra from electronic-structure and dynamics calculations for direct experimental comparison."
   },
   {
@@ -666,6 +709,7 @@
    "ordinal": 4,
    "kind": "ext",
    "en": "Develops computational representations, descriptors, and databases of chemical structures to enable large-scale search, property prediction, and design. Bridges theoretical chemistry with data science and underpins virtual screening pipelines in drug discovery and materials informatics.",
+   "cs": "Rozvíjí výpočetní reprezentace, deskriptory a databáze chemických struktur umožňující rozsáhlé vyhledávání, predikci vlastností a návrh. Propojuje teoretickou chemii s datovou vědou a stojí za postupy virtuálního screeningu při vývoji léčiv a materiálové informatice.",
    "brief": "Develops computational representations, descriptors, and databases of chemical structures to enable large-scale search, property prediction, and design. Bridges theoretical chemistry with data science and underpins virtual screening pipelines in drug discovery and materials informatics.\n\n### Concepts\n- **Molecular Descriptors and Fingerprints** — Numerical or bit-vector encodings of molecular structure used as inputs to similarity search and predictive models.\n- **QSAR/QSPR Modeling** — Statistical models relating quantitative structure to activity or physicochemical properties for prediction and design.\n- **Virtual Screening and Docking** — Computationally ranks candidate molecules by predicted binding affinity or fit against a target structure.\n- **Retrosynthesis Prediction** — Algorithmic and ML-driven planning of synthetic routes by recursively decomposing a target molecule into feasible precursors.\n- **Chemical Databases and Ontologies** — Curated repositories (e.g. PubChem, Cambridge Structural Database) that organize structures, reactions, and properties for computational reuse."
   },
   {
@@ -677,6 +721,7 @@
    "ordinal": 5,
    "kind": "ext",
    "en": "Characterizes potential-energy surfaces to locate stationary points, reaction pathways, and transition states, then translates these into rate constants and mechanistic kinetics. Provides the theoretical basis for predicting reactivity, selectivity, and catalytic cycles across organic, inorganic, and enzymatic chemistry.",
+   "cs": "Charakterizuje hyperplochy potenciální energie za účelem lokalizace stacionárních bodů, reakčních drah a přechodových stavů a následně je převádí na rychlostní konstanty a mechanistickou kinetiku. Poskytuje teoretický základ pro predikci reaktivity, selektivity a katalytických cyklů napříč organickou, anorganickou a enzymovou chemií.",
    "brief": "Characterizes potential-energy surfaces to locate stationary points, reaction pathways, and transition states, then translates these into rate constants and mechanistic kinetics. Provides the theoretical basis for predicting reactivity, selectivity, and catalytic cycles across organic, inorganic, and enzymatic chemistry.\n\n### Concepts\n- **Transition State Theory** — Relates reaction rate constants to the free-energy barrier and properties of the transition-state structure.\n- **Potential-Energy Surface Mapping** — Characterizes minima and saddle points on the multidimensional energy landscape governing a chemical reaction.\n- **Reaction Path Search Algorithms** — Automated methods, such as nudged elastic band, that locate minimum-energy pathways connecting reactants and products.\n- **Microkinetic Modeling** — Constructs coupled rate-equation networks from elementary steps to predict overall reaction kinetics and selectivity.\n- **Implicit Solvation Models** — Approximate solvent effects on reaction energetics as a continuum dielectric rather than explicit solvent molecules."
   },
   {
@@ -712,7 +757,8 @@
    "ordinal": 6,
    "kind": "ext",
    "en": "Materials chemistry designs and synthesizes functional solids and soft matter with targeted structural, electronic, or mechanical properties, spanning ceramics, semiconductors, catalysts, framework materials (MOFs/COFs), energy-storage compounds, and two-dimensional materials. Bridges synthetic chemistry with solid-state physics and engineering to translate molecular-level control into bulk material performance.",
-   "cs": "Materiálová chemie navrhuje a syntetizuje funkční pevné látky a měkkou hmotu s cílenými strukturními, elektronickými nebo mechanickými vlastnostmi — od keramiky, polovodičů a katalyzátorů přes rámcové materiály (MOF/COF) po materiály pro uchovávání energie a dvojrozměrné materiály. Propojuje syntetickou chemii s fyzikou pevných látek a inženýrstvím, aby molekulární kontrolu převedla do vlastností objemového materiálu."
+   "cs": "Materiálová chemie navrhuje a syntetizuje funkční pevné látky a měkkou hmotu s cílenými strukturními, elektronickými nebo mechanickými vlastnostmi — od keramiky, polovodičů a katalyzátorů přes rámcové materiály (MOF/COF) po materiály pro uchovávání energie a dvojrozměrné materiály. Propojuje syntetickou chemii s fyzikou pevných látek a inženýrstvím, aby molekulární kontrolu převedla do vlastností objemového materiálu.",
+   "brief": "Materials chemistry designs and synthesizes functional solids and soft matter with targeted structural, electronic, or mechanical properties — ceramics and semiconductors, catalysts, framework materials (MOFs and COFs), energy-storage compounds, and two-dimensional materials. It bridges synthetic chemistry with solid-state physics and engineering, translating molecular-level control into bulk material performance.\n\nThe discipline is deeply cross-linked: it inherits solid-state and cluster chemistry from [[01.02.11.02]] Inorganic Chemistry, soft-matter design from [[01.02.11.08]] Polymer Chemistry, and interfacial catalysis from the surface science of [[01.02.11.03]] Physical Chemistry. Its energy-storage and electrocatalytic materials are shared with [[01.02.11.09]] Electrochemistry, its nanoscale assemblies overlap [[01.02.11.14]] Supramolecular Chemistry & Nanochemistry, and computational discovery ties it to [[01.02.11.06]] Theoretical & Computational Chemistry. The physics of the resulting solids belongs to [[01.01]] Physics."
   },
   {
    "id": "01.02.11.07.01",
@@ -819,7 +865,8 @@
    "ordinal": 7,
    "kind": "ext",
    "en": "Polymer chemistry studies the synthesis, structure, and physical behavior of macromolecules built from repeating monomer units. It covers chain-growth and step-growth polymerization mechanisms, controlled/living polymerization techniques, and the characterization, solution physics, and self-assembly of the resulting materials, including biopolymers and stimuli-responsive polymers.",
-   "cs": "Chemie polymerů studuje syntézu, strukturu a fyzikální chování makromolekul tvořených opakujícími se monomerními jednotkami. Zahrnuje mechanismy řetězové a stupňovité polymerace, techniky řízené/živé polymerace a charakterizaci, roztokovou fyziku a samoskladbu výsledných materiálů včetně biopolymerů a stimul-responzivních polymerů."
+   "cs": "Chemie polymerů studuje syntézu, strukturu a fyzikální chování makromolekul tvořených opakujícími se monomerními jednotkami. Zahrnuje mechanismy řetězové a stupňovité polymerace, techniky řízené/živé polymerace a charakterizaci, roztokovou fyziku a samoskladbu výsledných materiálů včetně biopolymerů a stimul-responzivních polymerů.",
+   "brief": "Polymer chemistry studies the synthesis, structure, and physical behavior of macromolecules built from repeating monomer units. It covers chain-growth and step-growth polymerization, controlled/living techniques for precise architecture, and the characterization, solution thermodynamics, and self-assembly of the resulting materials — from commodity plastics and engineering thermosets to biopolymers and stimuli-responsive smart polymers.\n\nIt extends the reaction chemistry of [[01.02.11.01]] Organic Chemistry to the macromolecular scale, borrows chain-conformation and phase-behavior theory from [[01.02.11.03]] Physical Chemistry, and merges with [[01.02.11.07]] Materials Chemistry where polymers become functional solids and soft matter. Its biopolymer subfield connects to the proteins and nucleic acids of [[01.02.11.05]] Biochemistry, while supramolecular polymers held together by non-covalent bonds link it to [[01.02.11.14]] Supramolecular Chemistry & Nanochemistry."
   },
   {
    "id": "01.02.11.08.01",
@@ -866,6 +913,7 @@
    "ordinal": 3,
    "kind": "ext",
    "en": "Encompasses experimental techniques that measure molar mass distribution, chain architecture, composition, and microstructure of macromolecules. Size-exclusion chromatography, NMR, mass spectrometry, and scattering methods quantify dispersity, tacticity, and copolymer sequence, providing the analytical backbone that links synthesis to structure-property relationships. Rheometry and thermal analysis complement molecular-level data with bulk processing-relevant metrics.",
+   "cs": "Zahrnuje experimentální techniky, které měří distribuci molární hmotnosti, architekturu řetězců, složení a mikrostrukturu makromolekul. Gelová permeační chromatografie (SEC), NMR, hmotnostní spektrometrie a rozptylové metody kvantifikují disperzitu, takticitu a sekvenci kopolymerů a poskytují analytickou páteř spojující syntézu se vztahy struktura–vlastnost. Reometrie a termická analýza doplňují data na molekulární úrovni o metriky relevantní pro objemové zpracování.",
    "brief": "Encompasses experimental techniques that measure molar mass distribution, chain architecture, composition, and microstructure of macromolecules. Size-exclusion chromatography, NMR, mass spectrometry, and scattering methods quantify dispersity, tacticity, and copolymer sequence, providing the analytical backbone that links synthesis to structure-property relationships. Rheometry and thermal analysis complement molecular-level data with bulk processing-relevant metrics.\n\n### Concepts\n- **Size-Exclusion Chromatography (GPC/SEC)** — Separates macromolecules by hydrodynamic volume to determine molar mass averages and dispersity.\n- **NMR Spectroscopy of Polymers** — Resolves monomer sequence, tacticity, and end-group structure through chemical-shift analysis of polymer backbones.\n- **Differential Scanning Calorimetry (DSC)** — Measures glass transition, melting, and crystallization thermal events that define polymer thermal behavior.\n- **Small-Angle X-ray/Neutron Scattering** — Probes nanoscale chain conformation and microphase morphology in solution and bulk polymer states.\n- **MALDI-TOF Mass Spectrometry** — Determines absolute molar mass and end-group fidelity of synthetic polymers with soft ionization."
   },
   {
@@ -877,6 +925,7 @@
    "ordinal": 4,
    "kind": "ext",
    "en": "Develops statistical-mechanical models of chain conformation, solution behavior, and phase equilibria that explain why macromolecules behave differently from small molecules. Flory-Huggins theory, scaling concepts, and reptation dynamics describe solubility, chain entanglement, and viscoelastic response. This theoretical core connects molecular architecture to macroscopic mechanical and flow properties.",
+   "cs": "Rozvíjí statisticko-mechanické modely konformace řetězců, chování v roztoku a fázových rovnováh, které vysvětlují, proč se makromolekuly chovají odlišně od malých molekul. Floryho–Hugginsova teorie, škálovací koncepty a reptační dynamika popisují rozpustnost, zapletení řetězců a viskoelastickou odezvu. Toto teoretické jádro propojuje molekulární architekturu s makroskopickými mechanickými a tokovými vlastnostmi.",
    "brief": "Develops statistical-mechanical models of chain conformation, solution behavior, and phase equilibria that explain why macromolecules behave differently from small molecules. Flory-Huggins theory, scaling concepts, and reptation dynamics describe solubility, chain entanglement, and viscoelastic response. This theoretical core connects molecular architecture to macroscopic mechanical and flow properties.\n\n### Concepts\n- **Flory-Huggins Theory** — Lattice-based mean-field model of polymer-solvent mixing free energy explaining solubility and phase separation.\n- **Random Coil Statistics** — Statistical description of chain conformation via radius of gyration and end-to-end distance distributions.\n- **Reptation and Entanglement Dynamics** — de Gennes tube model describing chain diffusion and viscoelasticity in entangled melts.\n- **Glass Transition Phenomenology** — Kinetic-thermodynamic transition governing the onset of segmental mobility in amorphous polymers.\n- **Polymer Crystallization** — Chain-folding process forming lamellar and spherulitic semicrystalline morphology that sets mechanical performance."
   },
   {
@@ -888,6 +937,7 @@
    "ordinal": 5,
    "kind": "ext",
    "en": "Examines how monomer sequence and topology, including block, graft, random, star, brush, and dendritic architectures, direct microphase separation and nanostructure formation. Block copolymer self-assembly into lamellae, cylinders, and gyroids underpins nanolithography, drug-delivery vehicles, and structured soft materials. Theory here bridges synthetic control from the controlled-polymerization block with emergent condensed-matter morphology.",
+   "cs": "Zkoumá, jak sekvence a topologie monomerů — včetně blokových, roubovaných, náhodných, hvězdicovitých, kartáčových a dendritických architektur — řídí mikrofázovou separaci a tvorbu nanostruktur. Samouspořádání blokových kopolymerů do lamel, cylindrů a gyroidů je základem nanolitografie, nosičů pro dopravu léčiv a strukturovaných měkkých materiálů. Teorie zde propojuje syntetickou kontrolu z bloku řízené polymerace s emergentní morfologií kondenzované hmoty.",
    "brief": "Examines how monomer sequence and topology, including block, graft, random, star, brush, and dendritic architectures, direct microphase separation and nanostructure formation. Block copolymer self-assembly into lamellae, cylinders, and gyroids underpins nanolithography, drug-delivery vehicles, and structured soft materials. Theory here bridges synthetic control from the controlled-polymerization block with emergent condensed-matter morphology.\n\n### Concepts\n- **Block Copolymer Microphase Separation** — Thermodynamically driven self-assembly of chemically distinct blocks into periodic nanoscale morphologies.\n- **Graft and Comb Copolymers** — Branched architectures with side chains attached to a backbone, tuning bulk viscosity and surface properties.\n- **Dendrimers and Hyperbranched Polymers** — Highly branched, monodisperse or statistically branched macromolecules with tailored peripheral functionality.\n- **Star Polymers** — Multi-arm architectures radiating from a central core, affecting solution viscosity and packing density.\n- **Polymer Brushes and Surface Grafting** — Densely tethered chain layers on surfaces that control wetting, lubrication, and biofouling resistance."
   },
   {
@@ -911,6 +961,7 @@
    "ordinal": 7,
    "kind": "ext",
    "en": "Addresses stimuli-responsive, conductive, and self-healing macromolecular systems whose properties change reversibly with temperature, pH, light, or applied field. Conjugated polymers for organic electronics, shape-memory networks, and hydrogel actuators represent an active frontier connecting polymer chemistry to materials engineering and device applications. This area is where synthetic control and physical understanding translate into emerging technologies.",
+   "cs": "Zabývá se stimul-responzivními, vodivými a samoléčivými makromolekulárními systémy, jejichž vlastnosti se vratně mění s teplotou, pH, světlem nebo vloženým polem. Konjugované polymery pro organickou elektroniku, sítě s tvarovou pamětí a hydrogelové aktuátory představují aktivní frontu propojující chemii polymerů s materiálovým inženýrstvím a aplikacemi v zařízeních. Zde se syntetická kontrola a fyzikální pochopení převádějí do nastupujících technologií.",
    "brief": "Addresses stimuli-responsive, conductive, and self-healing macromolecular systems whose properties change reversibly with temperature, pH, light, or applied field. Conjugated polymers for organic electronics, shape-memory networks, and hydrogel actuators represent an active frontier connecting polymer chemistry to materials engineering and device applications. This area is where synthetic control and physical understanding translate into emerging technologies.\n\n### Concepts\n- **Stimuli-Responsive Polymers** — Macromolecules that undergo reversible conformational or phase changes triggered by temperature, pH, or light.\n- **Conjugated and Conducting Polymers** — Pi-electron-delocalized backbones enabling charge transport for organic electronic and photovoltaic devices.\n- **Self-Healing Polymer Networks** — Materials incorporating dynamic covalent or supramolecular bonds that autonomously repair damage.\n- **Shape-Memory Polymers** — Networks capable of fixing a temporary shape and recovering an original form upon a specific stimulus.\n- **Hydrogels and Soft Actuators** — Water-swollen crosslinked networks that convert environmental stimuli into mechanical actuation."
   },
   {
@@ -922,7 +973,8 @@
    "ordinal": 8,
    "kind": "ext",
    "en": "Electrochemistry studies the coupling of chemical reactions to electron transfer at electrode–electrolyte interfaces, covering the thermodynamics of cell potentials, the kinetics of charge transfer and mass transport, and electroanalytical methods such as voltammetry. It underlies energy-storage and conversion technologies (batteries, fuel cells, electrolyzers), electrocatalysis, corrosion, and electrochemical sensing, distinguishing it from Physical Chemistry's broader thermodynamic and kinetic scope by its focus specifically on the electrode interface.",
-   "cs": "Elektrochemie studuje spojení chemických reakcí s přenosem elektronů na rozhraní elektroda–elektrolyt, včetně termodynamiky elektrodových potenciálů, kinetiky přenosu náboje a transportu hmoty a elektroanalytických metod, jako je voltametrie. Je základem technologií akumulace a přeměny energie (baterie, palivové články, elektrolyzéry), elektrokatalýzy, koroze a elektrochemických senzorů, čímž se od fyzikální chemie s jejím širším termodynamickým a kinetickým záběrem odlišuje zaměřením konkrétně na rozhraní elektrody."
+   "cs": "Elektrochemie studuje spojení chemických reakcí s přenosem elektronů na rozhraní elektroda–elektrolyt, včetně termodynamiky elektrodových potenciálů, kinetiky přenosu náboje a transportu hmoty a elektroanalytických metod, jako je voltametrie. Je základem technologií akumulace a přeměny energie (baterie, palivové články, elektrolyzéry), elektrokatalýzy, koroze a elektrochemických senzorů, čímž se od fyzikální chemie s jejím širším termodynamickým a kinetickým záběrem odlišuje zaměřením konkrétně na rozhraní elektrody.",
+   "brief": "Electrochemistry studies the coupling of chemical reactions to electron transfer at electrode–electrolyte interfaces: the thermodynamics of cell potentials, the kinetics of charge transfer and mass transport, and electroanalytical methods such as voltammetry. It underlies energy storage and conversion (batteries, fuel cells, electrolyzers), electrocatalysis, corrosion, and electrochemical sensing.\n\nIt specializes the broader thermodynamic and kinetic scope of [[01.02.11.03]] Physical Chemistry to the electrode interface, and its voltammetric methods are a core toolkit within [[01.02.11.04]] Analytical Chemistry. Electrode and electrolyte materials are shared with [[01.02.11.07]] Materials Chemistry, its electrocatalysis and green-hydrogen chemistry connect to [[01.02.11.12]] Environmental & Green Chemistry, and its bioelectrochemistry reaches the enzyme and membrane systems of [[01.02.11.05]] Biochemistry."
   },
   {
    "id": "01.02.11.09.01",
@@ -933,6 +985,7 @@
    "ordinal": 0,
    "kind": "ext",
    "en": "Covers the equilibrium description of electrochemical systems: standard electrode potentials, the Nernst equation, and the relationship between Gibbs free energy, cell EMF, and reaction spontaneity. This is the axiomatic foundation on which every kinetic and applied electrochemical topic is built, and it remains settled, textbook-level theory.",
+   "cs": "Pokrývá rovnovážný popis elektrochemických systémů: standardní elektrodové potenciály, Nernstovu rovnici a vztah mezi Gibbsovou volnou energií, elektromotorickým napětím článku a samovolností reakce. Jde o axiomatický základ, na němž je vybudováno každé kinetické a aplikované elektrochemické téma, a zůstává ustálenou, učebnicovou teorií.",
    "brief": "Covers the equilibrium description of electrochemical systems: standard electrode potentials, the Nernst equation, and the relationship between Gibbs free energy, cell EMF, and reaction spontaneity. This is the axiomatic foundation on which every kinetic and applied electrochemical topic is built, and it remains settled, textbook-level theory.\n\n### Concepts\n- **Standard Electrode Potential** — The equilibrium potential of a half-cell measured against the standard hydrogen electrode under defined conditions.\n- **Nernst Equation** — Relates the equilibrium electrode potential to standard potential and the activities of reactants and products.\n- **Electrochemical Series** — A ranked table of standard reduction potentials used to predict the direction of spontaneous redox reactions.\n- **Galvanic and Electrolytic Cells** — Devices that respectively convert chemical energy to electrical work spontaneously or drive non-spontaneous reactions with applied current.\n- **Pourbaix Diagrams** — Potential–pH maps showing the thermodynamically stable phases of a metal–water system."
   },
   {
@@ -944,6 +997,7 @@
    "ordinal": 1,
    "kind": "ext",
    "en": "Studies the rate laws governing charge transfer across the electrode–electrolyte interface and the coupled diffusion, migration, and convection processes that supply reactants to it. The Butler-Volmer and Marcus frameworks quantify how overpotential drives current, forming the mechanistic core used to interpret every applied electrochemical device.",
+   "cs": "Studuje rychlostní zákony řídící přenos náboje přes rozhraní elektroda–elektrolyt a spřažené procesy difuze, migrace a konvekce, které k němu dopravují reaktanty. Butlerův–Volmerův a Marcusův rámec kvantifikují, jak přepětí pohání proud, a tvoří mechanistické jádro používané k interpretaci každého aplikovaného elektrochemického zařízení.",
    "brief": "Studies the rate laws governing charge transfer across the electrode–electrolyte interface and the coupled diffusion, migration, and convection processes that supply reactants to it. The Butler-Volmer and Marcus frameworks quantify how overpotential drives current, forming the mechanistic core used to interpret every applied electrochemical device.\n\n### Concepts\n- **Butler-Volmer Equation** — Describes the exponential dependence of net electrode current on activation overpotential for a simple electron-transfer step.\n- **Tafel Analysis** — Extracts exchange current density and transfer coefficient from the linear log(current)-versus-overpotential regime.\n- **Marcus Theory of Electron Transfer** — Models outer-sphere electron-transfer rates as a function of reorganization energy and driving force.\n- **Diffusion-Limited Current** — The current ceiling set by the rate at which electroactive species reach the electrode surface via concentration gradients.\n- **Electrical Double Layer** — The charge-separated interfacial region whose capacitance and structure govern non-Faradaic current and ion screening."
   },
   {
@@ -1027,7 +1081,8 @@
    "ordinal": 9,
    "kind": "ext",
    "en": "Photochemistry and radiation chemistry study how matter transforms when it absorbs light or ionizing radiation, from the formation and decay of electronically excited states to the reactive species — radicals and ions — produced by radiolysis. Covers photocatalysis and solar energy conversion, luminescent and photonic materials, and the ultrafast spectroscopy used to track these transformations on femtosecond timescales. Distinct from Electrochemistry, which drives reactions with an applied potential rather than photons or radiation.",
-   "cs": "Fotochemie a radiační chemie zkoumají přeměny látek vyvolané pohlcením světla nebo ionizujícího záření — od vzniku a zániku elektronově excitovaných stavů až po reaktivní částice, radikály a ionty, vznikající radiolýzou. Zahrnuje fotokatalýzu a přeměnu sluneční energie, luminiscenční a fotonické materiály i ultrarychlou spektroskopii používanou ke sledování těchto dějů na femtosekundové časové škále. Odlišuje se od elektrochemie, která reakce pohání vloženým elektrickým potenciálem, nikoli fotony nebo zářením."
+   "cs": "Fotochemie a radiační chemie zkoumají přeměny látek vyvolané pohlcením světla nebo ionizujícího záření — od vzniku a zániku elektronově excitovaných stavů až po reaktivní částice, radikály a ionty, vznikající radiolýzou. Zahrnuje fotokatalýzu a přeměnu sluneční energie, luminiscenční a fotonické materiály i ultrarychlou spektroskopii používanou ke sledování těchto dějů na femtosekundové časové škále. Odlišuje se od elektrochemie, která reakce pohání vloženým elektrickým potenciálem, nikoli fotony nebo zářením.",
+   "brief": "Photochemistry and radiation chemistry study how matter transforms when it absorbs light or ionizing radiation — from the formation and decay of electronically excited states to the radicals and ions produced by radiolysis. The field spans excited-state photophysics, photochemical reaction mechanisms, photocatalysis and solar energy conversion, luminescent and photonic materials, radiolysis, and the ultrafast spectroscopy used to track these events on femtosecond timescales.\n\nIts excited-state theory is grounded in the quantum chemistry of [[01.02.11.03]] Physical Chemistry and modeled by the excited-state methods of [[01.02.11.06]] Theoretical & Computational Chemistry. It shares photoredox and pericyclic photochemistry with [[01.02.11.01]] Organic Chemistry, light-harvesting and emitter design with [[01.02.11.07]] Materials Chemistry, and radiation effects with [[01.02.11.11]] Nuclear & Radiochemistry. It differs from [[01.02.11.09]] Electrochemistry, which drives reactions with an applied potential rather than photons or radiation."
   },
   {
    "id": "01.02.11.10.01",
@@ -1122,7 +1177,8 @@
    "ordinal": 10,
    "kind": "ext",
    "en": "Nuclear and radiochemistry studies the chemical behavior of radioactive nuclides and the transformations atomic nuclei undergo through decay, fission, and fusion, encompassing actinide and transactinide chemistry, the nuclear fuel cycle, radiopharmaceutical synthesis, and radioanalytical measurement. It differs from Photochemistry & Radiation Chemistry, which addresses the chemical effects of radiation on matter rather than the properties of the radioactive nuclei themselves.",
-   "cs": "Jaderná a radiochemie zkoumá chemické chování radioaktivních nuklidů a přeměny, kterými atomová jádra procházejí při rozpadu, štěpení a fúzi, a zahrnuje chemii aktinoidů a transaktinoidů, palivový cyklus jaderných reaktorů, syntézu radiofarmak a radioanalytické metody měření. Liší se od radiační chemie, která se zabývá chemickými účinky záření na látku, nikoli vlastnostmi samotných radioaktivních jader."
+   "cs": "Jaderná a radiochemie zkoumá chemické chování radioaktivních nuklidů a přeměny, kterými atomová jádra procházejí při rozpadu, štěpení a fúzi, a zahrnuje chemii aktinoidů a transaktinoidů, palivový cyklus jaderných reaktorů, syntézu radiofarmak a radioanalytické metody měření. Liší se od radiační chemie, která se zabývá chemickými účinky záření na látku, nikoli vlastnostmi samotných radioaktivních jader.",
+   "brief": "Nuclear and radiochemistry study the chemical behavior of radioactive nuclides and the transformations atomic nuclei undergo through decay, fission, and fusion. The field encompasses nuclear structure and decay kinetics, reaction and fission/fusion chemistry, actinide and transactinide chemistry, the nuclear fuel cycle and reprocessing, radiopharmaceuticals, radioanalytical measurement, environmental radiochemistry, and hot-atom isotope production.\n\nIts actinide and f-block chemistry is shared with [[01.02.11.02]] Inorganic Chemistry, and its radiopharmaceutical synthesis connects to [[01.02.11.13]] Medicinal & Pharmaceutical Chemistry. It differs from [[01.02.11.10]] Photochemistry & Radiation Chemistry, which addresses the chemical effects of radiation on matter rather than the properties of the radioactive nuclei themselves, while its underlying nuclear physics belongs to [[01.01]] Physics. Environmental radiochemistry overlaps the contaminant-transport concerns of [[01.02.11.12]] Environmental & Green Chemistry."
   },
   {
    "id": "01.02.11.11.01",
@@ -1229,7 +1285,8 @@
    "ordinal": 11,
    "kind": "ext",
    "en": "Studies the chemistry of the natural environment and the design of chemical processes that minimize environmental and health impact. Spans atmospheric, aquatic, and soil chemistry; the fate, transport, and ecotoxicology of pollutants; and green-chemistry principles such as sustainable catalysis, benign solvents, and atom economy that guide inherently safer synthesis.",
-   "cs": "Zkoumá chemii přírodního prostředí a navrhování chemických procesů minimalizujících dopad na životní prostředí a lidské zdraví. Zahrnuje atmosférickou, vodní a půdní chemii, osud, transport a ekotoxicitu polutantů a principy zelené chemie, jako je udržitelná katalýza, neškodná rozpouštědla a atomová ekonomie, které vedou k vnitřně bezpečnější syntéze."
+   "cs": "Zkoumá chemii přírodního prostředí a navrhování chemických procesů minimalizujících dopad na životní prostředí a lidské zdraví. Zahrnuje atmosférickou, vodní a půdní chemii, osud, transport a ekotoxicitu polutantů a principy zelené chemie, jako je udržitelná katalýza, neškodná rozpouštědla a atomová ekonomie, které vedou k vnitřně bezpečnější syntéze.",
+   "brief": "Environmental and green chemistry study the chemistry of the natural environment and the design of chemical processes that minimize environmental and health impact. The field spans atmospheric, aquatic, and soil chemistry; the fate, transport, and ecotoxicology of pollutants; green-chemistry principles such as sustainable catalysis, benign solvents, renewable feedstocks, and atom economy; and the analytical chemistry of monitoring and remediation.\n\nIts trace-detection and monitoring methods draw on [[01.02.11.04]] Analytical Chemistry, while sustainable catalysis and benign reaction media reform the practice of [[01.02.11.01]] Organic Chemistry and the catalytic scope of [[01.02.11.03]] Physical Chemistry. Green-hydrogen and CO2-utilization chemistry connect it to [[01.02.11.09]] Electrochemistry, and its ecotoxicology reaches into the living systems of [[01.03]] Biology."
   },
   {
    "id": "01.02.11.12.01",
@@ -1300,6 +1357,7 @@
    "ordinal": 5,
    "kind": "ext",
    "en": "Investigates alternatives to hazardous volatile organic solvents, including water, supercritical fluids, ionic liquids, and deep eutectic solvents, as reaction and separation media. Solvent choice dominates the mass and toxicity footprint of most syntheses, making this sub-area a primary lever for greener process design. Also covers solvent-free and mechanochemical reaction techniques.",
+   "cs": "Zkoumá alternativy k nebezpečným těkavým organickým rozpouštědlům, včetně vody, superkritických tekutin, iontových kapalin a hlubokých eutektických rozpouštědel jako reakčních a separačních médií. Volba rozpouštědla dominuje hmotnostní a toxikologické stopě většiny syntéz, což z této oblasti činí hlavní páku pro šetrnější návrh procesů. Pokrývá také bezrozpouštědlové a mechanochemické reakční techniky.",
    "brief": "Investigates alternatives to hazardous volatile organic solvents, including water, supercritical fluids, ionic liquids, and deep eutectic solvents, as reaction and separation media. Solvent choice dominates the mass and toxicity footprint of most syntheses, making this sub-area a primary lever for greener process design. Also covers solvent-free and mechanochemical reaction techniques.\n\n### Concepts\n- **Water as Reaction Medium** — Exploitation of aqueous conditions, including on-water and micellar catalysis, to replace organic solvents.\n- **Supercritical Fluids** — Use of supercritical CO2 and other fluids as tunable, low-toxicity extraction and reaction media.\n- **Ionic Liquids** — Low-volatility molten salts engineered as designer solvents with tunable polarity and negligible vapor pressure.\n- **Deep Eutectic Solvents** — Biodegradable eutectic mixtures of hydrogen-bond donors and acceptors used as low-cost green solvent alternatives.\n- **Mechanochemistry & Solvent-Free Synthesis** — Reaction techniques using mechanical grinding or milling to eliminate solvent use entirely."
   },
   {
@@ -1311,6 +1369,7 @@
    "ordinal": 6,
    "kind": "ext",
    "en": "Focuses on converting lignocellulosic biomass, CO2, and other renewable carbon sources into fuels, platform chemicals, and materials to displace petrochemical feedstocks. Encompasses biorefinery design, catalytic depolymerization, and CO2 utilization chemistry as strategies for a circular carbon economy. A rapidly growing frontier tied directly to decarbonization goals.",
+   "cs": "Zaměřuje se na přeměnu lignocelulózové biomasy, CO2 a dalších obnovitelných zdrojů uhlíku na paliva, platformové chemikálie a materiály nahrazující petrochemické suroviny. Zahrnuje návrh biorafinérií, katalytickou depolymeraci a chemii využití CO2 jako strategie pro cirkulární uhlíkovou ekonomiku. Rychle rostoucí fronta přímo spjatá s cíli dekarbonizace.",
    "brief": "Focuses on converting lignocellulosic biomass, CO2, and other renewable carbon sources into fuels, platform chemicals, and materials to displace petrochemical feedstocks. Encompasses biorefinery design, catalytic depolymerization, and CO2 utilization chemistry as strategies for a circular carbon economy. A rapidly growing frontier tied directly to decarbonization goals.\n\n### Concepts\n- **Lignocellulosic Biorefining** — Fractionation and catalytic conversion of cellulose, hemicellulose, and lignin into fuels and chemical building blocks.\n- **Platform Chemicals from Biomass** — Production of bio-based building-block molecules such as furfural, HMF, and lactic acid from renewable sugars.\n- **CO2 Utilization Chemistry** — Catalytic conversion of captured carbon dioxide into fuels, polymers, and carbonate-based chemicals.\n- **Biodegradable Polymers** — Renewable-feedstock plastics such as polylactic acid designed to degrade without persistent environmental accumulation.\n- **Biofuels Chemistry** — Chemical pathways converting biomass and waste oils into transportation fuels via transesterification and pyrolysis."
   },
   {
@@ -1322,6 +1381,7 @@
    "ordinal": 7,
    "kind": "ext",
    "en": "Provides the analytical methods for detecting and quantifying trace contaminants in environmental matrices and the chemical strategies for restoring polluted systems. Combines mass spectrometry, chromatography, and sensor development with remediation approaches such as advanced oxidation, adsorption, and bioremediation. Essential for regulatory monitoring and the practical cleanup of contaminated sites.",
+   "cs": "Poskytuje analytické metody pro detekci a kvantifikaci stopových kontaminantů v environmentálních matricích a chemické strategie pro obnovu znečištěných systémů. Kombinuje hmotnostní spektrometrii, chromatografii a vývoj senzorů s nápravnými postupy, jako je pokročilá oxidace, adsorpce a bioremediace. Nezbytná pro regulační monitoring a praktické čištění kontaminovaných lokalit.",
    "brief": "Provides the analytical methods for detecting and quantifying trace contaminants in environmental matrices and the chemical strategies for restoring polluted systems. Combines mass spectrometry, chromatography, and sensor development with remediation approaches such as advanced oxidation, adsorption, and bioremediation. Essential for regulatory monitoring and the practical cleanup of contaminated sites.\n\n### Concepts\n- **Trace Environmental Analysis** — Chromatographic and mass-spectrometric methods for detecting contaminants at parts-per-trillion concentrations.\n- **Advanced Oxidation Processes** — Hydroxyl-radical-based treatment methods that mineralize recalcitrant organic pollutants in water.\n- **Adsorption & Sequestration Remediation** — Use of activated carbon, zeolites, and engineered sorbents to remove contaminants from air, water, and soil.\n- **Bioremediation** — Microbial or plant-based degradation and stabilization of pollutants in contaminated environmental matrices.\n- **Environmental Sensors** — Chemical and electrochemical sensing devices developed for real-time field monitoring of pollutants."
   },
   {
@@ -1333,7 +1393,8 @@
    "ordinal": 12,
    "kind": "ext",
    "en": "Medicinal and pharmaceutical chemistry designs, synthesizes, and optimizes bioactive molecules into safe, effective drugs, linking molecular structure to biological activity, pharmacokinetics, and delivery. It spans structure-activity relationships and computational drug design through synthesis, ADME/toxicology, and formulation, distinguishing itself from biochemistry by its focus on engineering new therapeutic entities rather than characterizing native biomolecules.",
-   "cs": "Medicinální a farmaceutická chemie navrhuje, syntetizuje a optimalizuje biologicky aktivní molekuly na bezpečná a účinná léčiva a propojuje strukturu molekuly s biologickou aktivitou, farmakokinetikou a způsobem podání. Zahrnuje vztahy mezi strukturou a aktivitou i výpočetní návrh léčiv, syntézu, ADME/toxikologii a farmaceutickou formulaci, čímž se odlišuje od biochemie důrazem na konstrukci nových terapeutik spíše než na charakterizaci přirozených biomolekul."
+   "cs": "Medicinální a farmaceutická chemie navrhuje, syntetizuje a optimalizuje biologicky aktivní molekuly na bezpečná a účinná léčiva a propojuje strukturu molekuly s biologickou aktivitou, farmakokinetikou a způsobem podání. Zahrnuje vztahy mezi strukturou a aktivitou i výpočetní návrh léčiv, syntézu, ADME/toxikologii a farmaceutickou formulaci, čímž se odlišuje od biochemie důrazem na konstrukci nových terapeutik spíše než na charakterizaci přirozených biomolekul.",
+   "brief": "Medicinal and pharmaceutical chemistry design, synthesize, and optimize bioactive molecules into safe, effective drugs, linking molecular structure to biological activity, pharmacokinetics, and delivery. The field spans structure–activity relationships and computational drug design, medicinal synthesis and lead generation, ADME and drug metabolism, target-class chemical biology, formulation, and emerging modalities such as peptides, oligonucleotides, and targeted protein degraders.\n\nIt turns the synthetic methods and mechanistic logic of [[01.02.11.01]] Organic Chemistry toward specific drug targets, and rests on the molecular understanding of disease supplied by [[01.02.11.05]] Biochemistry. Structure-based design borrows docking and free-energy methods from [[01.02.11.06]] Theoretical & Computational Chemistry, quality assurance and ADME assays depend on [[01.02.11.04]] Analytical Chemistry, its radiopharmaceutical branch overlaps [[01.02.11.11]] Nuclear & Radiochemistry, and formulation science connects it to [[01.02.11.07]] Materials Chemistry."
   },
   {
    "id": "01.02.11.13.01",
@@ -1344,6 +1405,7 @@
    "ordinal": 0,
    "kind": "ext",
    "en": "Covers the rational design of bioactive small molecules through systematic structural variation and correlation with biological potency. Central to this block are pharmacophore modeling, bioisosterism, and quantitative structure-activity relationship (QSAR) methods that translate chemical structure into predicted activity. Lead optimization campaigns rely on these principles to balance potency, selectivity, and physicochemical properties.",
+   "cs": "Pokrývá racionální návrh biologicky aktivních malých molekul systematickou obměnou struktury a korelací s biologickou účinností. Ústředními prvky tohoto bloku jsou modelování farmakoforů, bioizosterie a metody kvantitativních vztahů mezi strukturou a aktivitou (QSAR), které převádějí chemickou strukturu na předpovězenou aktivitu. Kampaně optimalizace vodítek se opírají o tyto principy k vyvážení účinnosti, selektivity a fyzikálně-chemických vlastností.",
    "brief": "Covers the rational design of bioactive small molecules through systematic structural variation and correlation with biological potency. Central to this block are pharmacophore modeling, bioisosterism, and quantitative structure-activity relationship (QSAR) methods that translate chemical structure into predicted activity. Lead optimization campaigns rely on these principles to balance potency, selectivity, and physicochemical properties.\n\n### Concepts\n- **Structure-Activity Relationship (SAR)** — SAR correlates systematic changes in a molecule's structure with changes in its measured biological activity.\n- **Pharmacophore Modeling** — A pharmacophore model abstracts the spatial arrangement of steric and electronic features a molecule needs to bind a target and trigger a response.\n- **Bioisosterism** — Bioisosteric replacement swaps a functional group for another with similar physicochemical properties to modulate potency, stability, or selectivity while retaining biological activity.\n- **QSAR/QSPR Modeling** — Quantitative structure-activity/property relationship models use statistical or machine-learning methods to predict biological activity or physicochemical properties from molecular descriptors.\n- **Lead Optimization** — Lead optimization iteratively modifies a hit compound's structure to improve potency, selectivity, and drug-like properties before candidate nomination.\n- **Fragment-Based Drug Design** — Fragment-based drug design screens low-molecular-weight compound fragments and grows or links them into higher-affinity leads guided by structural data."
   },
   {
@@ -1355,6 +1417,7 @@
    "ordinal": 1,
    "kind": "ext",
    "en": "Encompasses the synthetic and screening strategies used to discover and produce candidate therapeutic molecules. High-throughput and virtual screening identify initial hits, while combinatorial and diversity-oriented synthesis generate the chemical libraries screened against biological targets. This block underlies the earliest, discovery-phase stages of the drug pipeline.",
+   "cs": "Zahrnuje syntetické a screeningové strategie používané k objevování a přípravě kandidátních terapeutických molekul. Vysoce průchodný a virtuální screening identifikují počáteční zásahy (hits), zatímco kombinatoriální a diverzitně orientovaná syntéza vytvářejí chemické knihovny testované proti biologickým cílům. Tento blok stojí za nejranějšími, objevnými fázemi vývojového řetězce léčiv.",
    "brief": "Encompasses the synthetic and screening strategies used to discover and produce candidate therapeutic molecules. High-throughput and virtual screening identify initial hits, while combinatorial and diversity-oriented synthesis generate the chemical libraries screened against biological targets. This block underlies the earliest, discovery-phase stages of the drug pipeline.\n\n### Concepts\n- **High-Throughput Screening (HTS)** — HTS assays large compound libraries in parallel against a biological target to identify initial active hits.\n- **Combinatorial Chemistry** — Combinatorial chemistry synthesizes large, systematically varied compound libraries by combining sets of building blocks in parallel or split-pool formats.\n- **Virtual Screening** — Virtual screening computationally ranks large compound collections by predicted binding affinity or drug-likeness to prioritize candidates for synthesis and testing.\n- **Diversity-Oriented Synthesis** — Diversity-oriented synthesis builds structurally and stereochemically varied scaffolds from common intermediates to maximize chemical space coverage.\n- **Natural Product-Derived Drug Discovery** — This approach isolates, characterizes, and semi-synthetically modifies bioactive natural products as starting points for therapeutic agents."
   },
   {
@@ -1366,6 +1429,7 @@
    "ordinal": 2,
    "kind": "ext",
    "en": "Applies molecular modeling, docking, and structural biology to predict and rationalize ligand-target interactions at atomic resolution. Structure-based drug design uses experimentally determined or predicted protein structures to guide molecule design, while molecular dynamics and free-energy methods refine binding predictions. This block is the fastest-moving methodological frontier in modern medicinal chemistry.",
+   "cs": "Aplikuje molekulární modelování, dokování a strukturní biologii k predikci a vysvětlení interakcí ligand–cíl v atomárním rozlišení. Strukturně orientovaný návrh léčiv využívá experimentálně stanovené nebo předpovězené struktury proteinů k vedení návrhu molekul, zatímco molekulová dynamika a metody volné energie zpřesňují predikce vazby. Tento blok je nejrychleji se rozvíjející metodickou frontou moderní medicinální chemie.",
    "brief": "Applies molecular modeling, docking, and structural biology to predict and rationalize ligand-target interactions at atomic resolution. Structure-based drug design uses experimentally determined or predicted protein structures to guide molecule design, while molecular dynamics and free-energy methods refine binding predictions. This block is the fastest-moving methodological frontier in modern medicinal chemistry.\n\n### Concepts\n- **Structure-Based Drug Design** — Structure-based drug design uses the three-dimensional structure of a target biomolecule, typically from crystallography or cryo-EM, to guide ligand design.\n- **Molecular Docking** — Molecular docking computationally predicts the preferred binding pose and estimates affinity of a small molecule within a target's binding site.\n- **Molecular Dynamics Simulation** — Molecular dynamics simulates the time-dependent motion of a ligand-protein complex to capture flexibility and binding thermodynamics beyond static structures.\n- **Free Energy Perturbation** — Free energy perturbation computes relative binding free energies between congeneric ligands to guide quantitative lead optimization decisions.\n- **AI/Deep Learning-Guided Drug Design** — Deep generative and predictive models propose novel scaffolds and predict activity or properties directly from molecular structure, accelerating hit-to-lead cycles.\n- **Protein Structure Prediction** — Machine-learning methods such as AlphaFold predict protein three-dimensional structure from sequence, enabling structure-based design against previously undetermined targets."
   },
   {
@@ -1377,6 +1441,7 @@
    "ordinal": 3,
    "kind": "ext",
    "en": "Studies how a drug's chemical structure governs its absorption, distribution, metabolism, and excretion (ADME) within the body, and how these processes determine dosing and toxicity. Metabolic soft-spot analysis and prodrug design use chemical intuition to engineer favorable pharmacokinetic profiles. This discipline bridges medicinal chemistry with pharmacology and toxicology.",
+   "cs": "Studuje, jak chemická struktura léčiva určuje jeho absorpci, distribuci, metabolismus a exkreci (ADME) v organismu a jak tyto procesy určují dávkování a toxicitu. Analýza metabolicky citlivých míst a návrh proléčiv využívají chemickou intuici k inženýrství příznivých farmakokinetických profilů. Tento obor propojuje medicinální chemii s farmakologií a toxikologií.",
    "brief": "Studies how a drug's chemical structure governs its absorption, distribution, metabolism, and excretion (ADME) within the body, and how these processes determine dosing and toxicity. Metabolic soft-spot analysis and prodrug design use chemical intuition to engineer favorable pharmacokinetic profiles. This discipline bridges medicinal chemistry with pharmacology and toxicology.\n\n### Concepts\n- **Absorption, Distribution, Metabolism, Excretion (ADME)** — ADME describes the four pharmacokinetic processes governing a drug's concentration and duration of action in the body.\n- **Cytochrome P450 Metabolism** — Cytochrome P450 enzymes oxidize xenobiotics, and predicting their metabolic sites is central to designing metabolically stable drugs.\n- **Prodrug Design** — A prodrug is an inactive derivative engineered to convert to the active drug in vivo, improving solubility, permeability, or targeted delivery.\n- **Bioavailability Optimization** — Bioavailability optimization adjusts molecular properties such as lipophilicity and polar surface area to maximize the fraction of drug reaching systemic circulation.\n- **Drug-Drug Interaction Prediction** — This field assesses how co-administered drugs alter each other's metabolism or transport, often via shared cytochrome P450 or transporter pathways.\n- **Lipinski's Rule of Five** — Lipinski's Rule of Five is a set of heuristic molecular-property thresholds correlating with oral drug-likeness and absorption."
   },
   {
@@ -1388,6 +1453,7 @@
    "ordinal": 4,
    "kind": "ext",
    "en": "Examines the major druggable biomolecular target families and the chemical tools used to probe and validate them. Enzyme inhibition kinetics, receptor pharmacology, and chemical probe design connect small-molecule structure to mechanism of action at specific target classes such as GPCRs, kinases, and ion channels. Chemical biology methods such as activity-based protein profiling extend this understanding to native cellular contexts.",
+   "cs": "Zkoumá hlavní ovlivnitelné (druggable) rodiny biomolekulárních cílů a chemické nástroje používané k jejich zkoumání a validaci. Kinetika inhibice enzymů, receptorová farmakologie a návrh chemických sond propojují strukturu malých molekul s mechanismem účinku u konkrétních tříd cílů, jako jsou receptory spřažené s G-proteiny (GPCR), kinázy a iontové kanály. Metody chemické biologie, jako je profilování proteinů na základě aktivity, rozšiřují toto pochopení do nativního buněčného prostředí.",
    "brief": "Examines the major druggable biomolecular target families and the chemical tools used to probe and validate them. Enzyme inhibition kinetics, receptor pharmacology, and chemical probe design connect small-molecule structure to mechanism of action at specific target classes such as GPCRs, kinases, and ion channels. Chemical biology methods such as activity-based protein profiling extend this understanding to native cellular contexts.\n\n### Concepts\n- **Enzyme Inhibitor Design** — Enzyme inhibitor design engineers molecules that block catalytic activity through competitive, allosteric, or covalent mechanisms at defined active sites.\n- **GPCR & Ion Channel Pharmacology** — This area studies how ligand structure modulates activation, inhibition, or allosteric tuning of G-protein-coupled receptors and ion channels.\n- **Kinase Inhibitor Chemistry** — Kinase inhibitor chemistry designs ATP-competitive or allosteric small molecules that selectively block protein kinase signaling implicated in disease.\n- **Chemical Probes & Activity-Based Protein Profiling** — Chemical probes are selective small molecules, often with reactive or affinity tags, used to interrogate protein function and target engagement in living systems.\n- **Covalent Drug Design** — Covalent drug design engineers electrophilic warheads that form irreversible or reversible covalent bonds with a nucleophilic target residue for prolonged pharmacological effect."
   },
   {
@@ -1399,6 +1465,7 @@
    "ordinal": 5,
    "kind": "ext",
    "en": "Addresses the physicochemical chemistry that converts an active pharmaceutical ingredient into a stable, deliverable dosage form. Solid-state chemistry, including polymorphism and salt selection, determines solubility and stability, while drug delivery systems engineer release kinetics and tissue targeting. This block connects medicinal chemistry to pharmaceutics and materials science.",
+   "cs": "Zabývá se fyzikálně-chemickými principy, které převádějí účinnou farmaceutickou látku na stabilní, podatelnou lékovou formu. Chemie pevného stavu, včetně polymorfismu a výběru soli, určuje rozpustnost a stabilitu, zatímco systémy dopravy léčiv řídí kinetiku uvolňování a cílení do tkání. Tento blok propojuje medicinální chemii s farmacií a materiálovou vědou.",
    "brief": "Addresses the physicochemical chemistry that converts an active pharmaceutical ingredient into a stable, deliverable dosage form. Solid-state chemistry, including polymorphism and salt selection, determines solubility and stability, while drug delivery systems engineer release kinetics and tissue targeting. This block connects medicinal chemistry to pharmaceutics and materials science.\n\n### Concepts\n- **Salt & Polymorph Selection** — Salt and polymorph selection screens crystalline forms of an active ingredient to optimize solubility, stability, and manufacturability.\n- **Solubility & Solid-State Chemistry** — Solid-state chemistry studies how crystal packing and hydrogen bonding govern a drug's dissolution rate and physical stability.\n- **Controlled & Targeted Drug Delivery** — Controlled and targeted drug delivery engineers carriers or chemical modifications that govern the rate, site, and timing of drug release in the body.\n- **Nanoparticle & Lipid-Based Delivery Systems** — Nanoparticle and lipid-based carriers such as liposomes and lipid nanoparticles encapsulate drugs or nucleic acids to improve stability and tissue-specific delivery.\n- **Prodrug & Bioconjugate Delivery Strategies** — These strategies covalently link a drug to a carrier, polymer, or targeting moiety to alter its pharmacokinetic and delivery profile."
   },
   {
@@ -1410,6 +1477,7 @@
    "ordinal": 6,
    "kind": "ext",
    "en": "Covers therapeutic modalities beyond classical small molecules, including peptides, oligonucleotides, and antibody-drug conjugates, along with the chemistry of proximity-induced pharmacology such as PROTACs. This is the most active research frontier in pharmaceutical chemistry, driven by advances in synthetic biology and targeted protein degradation. Chemical synthesis and conjugation methods here differ substantially from traditional small-molecule medicinal chemistry.",
+   "cs": "Pokrývá terapeutické modality nad rámec klasických malých molekul, včetně peptidů, oligonukleotidů a konjugátů protilátka–léčivo, spolu s chemií farmakologie vyvolané prostorovou blízkostí, jako jsou PROTAC. Jde o nejaktivnější výzkumnou frontu farmaceutické chemie hnanou pokroky v syntetické biologii a cílené degradaci proteinů. Metody chemické syntézy a konjugace se zde podstatně liší od tradiční medicinální chemie malých molekul.",
    "brief": "Covers therapeutic modalities beyond classical small molecules, including peptides, oligonucleotides, and antibody-drug conjugates, along with the chemistry of proximity-induced pharmacology such as PROTACs. This is the most active research frontier in pharmaceutical chemistry, driven by advances in synthetic biology and targeted protein degradation. Chemical synthesis and conjugation methods here differ substantially from traditional small-molecule medicinal chemistry.\n\n### Concepts\n- **Peptide & Peptidomimetic Therapeutics** — Peptide and peptidomimetic therapeutics use natural or chemically stabilized peptide scaffolds to achieve high target selectivity with engineered proteolytic stability.\n- **Antibody-Drug Conjugates** — Antibody-drug conjugates chemically link a cytotoxic payload to a monoclonal antibody via a cleavable or stable linker for targeted tumor delivery.\n- **Targeted Protein Degradation (PROTACs)** — PROTACs are bifunctional molecules that recruit an E3 ubiquitin ligase to a target protein, inducing its ubiquitination and proteasomal degradation.\n- **Oligonucleotide Therapeutics** — Oligonucleotide therapeutics use chemically modified DNA or RNA strands, such as antisense or siRNA constructs, to modulate gene expression at the nucleic acid level.\n- **Molecular Glues** — Molecular glues are small molecules that induce or stabilize novel protein-protein interactions, most notably between a target and an E3 ligase, without a bifunctional linker."
   },
   {
@@ -1421,7 +1489,8 @@
    "ordinal": 13,
    "kind": "ext",
    "en": "Chemistry beyond the single covalent molecule: molecular recognition, self-assembly, and host–guest complexation build discrete non-covalent architectures, while mechanically interlocked molecular machines and nanostructured matter — nanoparticles, 2D materials, and DNA nanostructures — extend the same design logic to functional nanoscale systems. Distinct from Materials Chemistry's focus on bulk material properties, it centers on individually addressable non-covalent assemblies and the theory that governs them.",
-   "cs": "Chemie nad rámec jediné kovalentní molekuly: molekulární rozpoznávání, samouspořádání a hostitel-host komplexace vytvářejí diskrétní nekovalentní architektury, zatímco mechanicky provázané molekulární stroje a nanostrukturovaná hmota — nanočástice, 2D materiály a DNA nanostruktury — rozšiřují stejnou konstrukční logiku na funkční nanoškálové systémy. Na rozdíl od Materiálové chemie, zaměřené na vlastnosti objemového materiálu, se soustředí na jednotlivě adresovatelná nekovalentní uspořádání a teorii, která je řídí."
+   "cs": "Chemie nad rámec jediné kovalentní molekuly: molekulární rozpoznávání, samouspořádání a hostitel-host komplexace vytvářejí diskrétní nekovalentní architektury, zatímco mechanicky provázané molekulární stroje a nanostrukturovaná hmota — nanočástice, 2D materiály a DNA nanostruktury — rozšiřují stejnou konstrukční logiku na funkční nanoškálové systémy. Na rozdíl od Materiálové chemie, zaměřené na vlastnosti objemového materiálu, se soustředí na jednotlivě adresovatelná nekovalentní uspořádání a teorii, která je řídí.",
+   "brief": "Supramolecular chemistry and nanochemistry study matter beyond the single covalent molecule: molecular recognition, self-assembly, and host–guest complexation build discrete non-covalent architectures, while mechanically interlocked molecular machines and nanostructured matter — nanoparticles, carbon nanomaterials, and DNA nanostructures — extend the same design logic to functional nanoscale systems. The field pairs synthetic control with the characterization and theory of weak interactions.\n\nDistinct from the bulk-property focus of [[01.02.11.07]] Materials Chemistry, it centers on individually addressable assemblies. Its recognition and binding thermodynamics draw on [[01.02.11.03]] Physical Chemistry, its non-covalent polymers connect to [[01.02.11.08]] Polymer Chemistry, and its coordination cages inherit from [[01.02.11.02]] Inorganic Chemistry. DNA nanotechnology and bio-nanomedicine link it to [[01.02.11.05]] Biochemistry, while modeling of weak interactions ties it to [[01.02.11.06]] Theoretical & Computational Chemistry."
   },
   {
    "id": "01.02.11.14.01",
@@ -1444,6 +1513,7 @@
    "ordinal": 1,
    "kind": "ext",
    "en": "Examines how molecular building blocks spontaneously organize into well-defined, higher-order structures through programmed non-covalent or dynamic covalent interactions. Covers metal-directed self-assembly (coordination cages, grids, helicates) and extended hydrogen-bonded or metal-organic frameworks. Design rules (symmetry, directionality, self-sorting) are mature, while framework functionalization and hierarchical assembly remain active research areas.",
+   "cs": "Zkoumá, jak se molekulární stavební bloky samovolně organizují do dobře definovaných struktur vyššího řádu prostřednictvím programovaných nekovalentních nebo dynamických kovalentních interakcí. Pokrývá kovem řízené samouspořádání (koordinační klece, mřížky, helikáty) a rozsáhlé vodíkově vázané nebo kovo-organické struktury. Návrhová pravidla (symetrie, směrovost, samotřídění) jsou vyzrálá, zatímco funkcionalizace struktur a hierarchické skládání zůstávají aktivními výzkumnými oblastmi.",
    "brief": "Examines how molecular building blocks spontaneously organize into well-defined, higher-order structures through programmed non-covalent or dynamic covalent interactions. Covers metal-directed self-assembly (coordination cages, grids, helicates) and extended hydrogen-bonded or metal-organic frameworks. Design rules (symmetry, directionality, self-sorting) are mature, while framework functionalization and hierarchical assembly remain active research areas.\n\n### Concepts\n- **Coordination Cages & Helicates** — Discrete polyhedral or helical assemblies formed by metal-ligand self-assembly around templating metal centers.\n- **Metal-Organic Frameworks (MOFs)** — Crystalline, porous networks of metal nodes and organic linkers engineered for gas storage, separation, and catalysis.\n- **Hydrogen-Bonded Frameworks** — Extended networks assembled through directional hydrogen-bond synthons, as formalized in crystal engineering.\n- **Self-Sorting** — The capacity of mixed molecular components to spontaneously segregate into distinct, thermodynamically favored assemblies.\n- **Dynamic Combinatorial Chemistry** — Reversible covalent or non-covalent bond exchange used to select the most stable assembly from a library under thermodynamic control."
   },
   {
@@ -1527,7 +1597,8 @@
    "ordinal": 14,
    "kind": "ext",
    "en": "Studies the chemical composition and reaction processes of matter beyond Earth, spanning gas-phase and grain-surface chemistry in interstellar and circumstellar environments, protoplanetary disks, comets, and meteorites. Isotopic and molecular abundances recovered from spectroscopy and meteoritic samples trace the chemical evolution from molecular clouds to planet formation, including prebiotic organic synthesis relevant to the origin of life. Distinct from terrestrial physical and analytical chemistry in its reliance on remote spectroscopic observation and extraterrestrial sample analysis rather than laboratory synthesis alone.",
-   "cs": "Zkoumá chemické složení a reakční procesy hmoty mimo Zemi, od plynofázové a povrchové chemie na prachových zrnech v mezihvězdném a cirkumstelárním prostředí přes protoplanetární disky až po komety a meteority. Izotopové a molekulární zastoupení zjištěné spektroskopií a analýzou meteoritických vzorků sleduje chemický vývoj od molekulových mračen po vznik planet, včetně prebiotické organické syntézy relevantní pro vznik života. Od pozemské fyzikální a analytické chemie se odlišuje závislostí na dálkovém spektroskopickém pozorování a analýze mimozemských vzorků namísto laboratorní syntézy."
+   "cs": "Zkoumá chemické složení a reakční procesy hmoty mimo Zemi, od plynofázové a povrchové chemie na prachových zrnech v mezihvězdném a cirkumstelárním prostředí přes protoplanetární disky až po komety a meteority. Izotopové a molekulární zastoupení zjištěné spektroskopií a analýzou meteoritických vzorků sleduje chemický vývoj od molekulových mračen po vznik planet, včetně prebiotické organické syntézy relevantní pro vznik života. Od pozemské fyzikální a analytické chemie se odlišuje závislostí na dálkovém spektroskopickém pozorování a analýze mimozemských vzorků namísto laboratorní syntézy.",
+   "brief": "Astrochemistry and cosmochemistry study the chemical composition and reaction processes of matter beyond Earth — gas-phase and grain-surface chemistry in interstellar and circumstellar environments, protoplanetary disks, comets, and meteorites. Isotopic and molecular abundances recovered from spectroscopy and meteoritic samples trace chemical evolution from molecular clouds to planet formation, including the prebiotic synthesis relevant to the origin of life.\n\nIt relies on remote spectroscopic observation and extraterrestrial sample analysis rather than laboratory synthesis alone, distinguishing it from terrestrial [[01.02.11.03]] Physical Chemistry and [[01.02.11.04]] Analytical Chemistry, whose gas-phase kinetics and mass spectrometry it nonetheless borrows. Its interstellar and cometary organic inventories connect to [[01.02.11.01]] Organic Chemistry, its prebiotic-chemistry frontier reaches the origin-of-life questions of [[01.03]] Biology, and its astrophysical setting is shared with [[01.01]] Physics."
   },
   {
    "id": "01.02.11.15.01",
@@ -1562,6 +1633,7 @@
    "ordinal": 2,
    "kind": "ext",
    "en": "Addresses heterogeneous chemistry occurring on interstellar and protoplanetary dust-grain surfaces and within their accreted ice mantles, where atom and radical mobility enables reactions inaccessible in the gas phase. Explains the formation of molecular hydrogen, water ice, and saturated organic molecules, and the desorption processes that return them to the gas. Central to reconciling observed gas-phase abundances with solid-state astrochemical models.",
+   "cs": "Zabývá se heterogenní chemií probíhající na površích mezihvězdných a protoplanetárních prachových zrn a v jejich narostlých ledových pláštích, kde pohyblivost atomů a radikálů umožňuje reakce nedostupné v plynné fázi. Vysvětluje vznik molekulárního vodíku, vodního ledu a nasycených organických molekul a desorpční procesy, které je vracejí do plynu. Klíčová pro sladění pozorovaného zastoupení v plynné fázi s pevnolátkovými astrochemickými modely.",
    "brief": "Addresses heterogeneous chemistry occurring on interstellar and protoplanetary dust-grain surfaces and within their accreted ice mantles, where atom and radical mobility enables reactions inaccessible in the gas phase. Explains the formation of molecular hydrogen, water ice, and saturated organic molecules, and the desorption processes that return them to the gas. Central to reconciling observed gas-phase abundances with solid-state astrochemical models.\n\n### Concepts\n- **H2 Formation Catalysis** — Grain-surface recombination of hydrogen atoms is the dominant formation route for molecular hydrogen in the interstellar medium.\n- **Ice Mantle Accretion and Layering** — Sequential freeze-out of gas-phase species builds layered polar and apolar ice mantles on cold grain surfaces.\n- **Non-Thermal Desorption Mechanisms** — UV photodesorption, cosmic-ray spot heating, and chemical desorption release ice-formed molecules back into the gas without thermal sublimation.\n- **Laboratory Astrochemistry Simulations** — Ultra-high-vacuum ice-analog experiments that measure reaction and desorption rates used to calibrate grain-chemistry models."
   },
   {
@@ -1573,6 +1645,7 @@
    "ordinal": 3,
    "kind": "ext",
    "en": "Traces how interstellar chemical inheritance is processed, reset, and re-synthesized across the radial and vertical structure of protoplanetary disks as planetesimals and planets assemble. Governs the distribution of volatiles, organics, and isotopic signatures delivered to forming planets and their atmospheres. Bridges molecular-cloud chemistry to solar-system chemical records.",
+   "cs": "Sleduje, jak je mezihvězdné chemické dědictví zpracováváno, resetováno a znovu syntetizováno napříč radiální a vertikální strukturou protoplanetárních disků při skládání planetesimál a planet. Řídí distribuci těkavých látek, organických molekul a izotopových signatur dodávaných vznikajícím planetám a jejich atmosférám. Přemosťuje chemii molekulových mračen a chemické záznamy sluneční soustavy.",
    "brief": "Traces how interstellar chemical inheritance is processed, reset, and re-synthesized across the radial and vertical structure of protoplanetary disks as planetesimals and planets assemble. Governs the distribution of volatiles, organics, and isotopic signatures delivered to forming planets and their atmospheres. Bridges molecular-cloud chemistry to solar-system chemical records.\n\n### Concepts\n- **Snowlines and Volatile Sequestration** — Radial condensation fronts where major volatiles freeze out, setting the solid/gas partitioning of water, CO, and other ices in the disk.\n- **Disk Chemical Inheritance vs Reset** — Debate over how much protostellar disk material retains parent-cloud molecular composition versus is chemically reprocessed near the young star.\n- **Planetesimal and Comet Volatile Budgets** — Ice and organic inventories incorporated into comets and planetesimals that constrain the chemical architecture of forming planetary systems.\n- **Exoplanet Atmospheric Chemistry** — Photochemical and thermochemical equilibrium models of exoplanet atmospheres inferred from transmission and emission spectroscopy."
   },
   {
@@ -1584,6 +1657,7 @@
    "ordinal": 4,
    "kind": "ext",
    "en": "Analyzes the mineralogy, bulk chemistry, and isotopic composition of chondrites, achondrites, and their presolar grain components to reconstruct early solar system conditions and stellar nucleosynthetic sources. Chondrules, calcium-aluminum-rich inclusions, and matrix organics record the earliest solid-forming events before planetary accretion. Foundational to dating and sequencing solar system formation.",
+   "cs": "Analyzuje mineralogii, hrubé chemické složení a izotopové složení chondritů, achondritů a jejich presolárních zrnitých složek k rekonstrukci podmínek rané sluneční soustavy a nukleosyntetických zdrojů ve hvězdách. Chondruly, vápníkem a hliníkem bohaté inkluze a organické látky matrice zaznamenávají nejranější děje tvorby pevné fáze před planetární akrecí. Základní pro datování a sekvenování vzniku sluneční soustavy.",
    "brief": "Analyzes the mineralogy, bulk chemistry, and isotopic composition of chondrites, achondrites, and their presolar grain components to reconstruct early solar system conditions and stellar nucleosynthetic sources. Chondrules, calcium-aluminum-rich inclusions, and matrix organics record the earliest solid-forming events before planetary accretion. Foundational to dating and sequencing solar system formation.\n\n### Concepts\n- **Chondrites and Chondrules** — Primitive stony meteorites containing millimeter-sized silicate spherules formed by rapid melting events in the early solar nebula.\n- **Calcium-Aluminum-Rich Inclusions** — The oldest dated solar system solids, formed by high-temperature condensation and providing the primary chronological anchor at 4567 Ma.\n- **Presolar Grains** — Sub-micron mineral grains that condensed in stellar outflows before the Sun formed and survived meteorite parent-body processing intact.\n- **Achondrites and Differentiated Bodies** — Meteorites from melted, differentiated parent bodies that record igneous processing and core-mantle-crust separation off-Earth.\n- **Meteoritic Organic Matter** — Insoluble and soluble carbonaceous compounds in carbonaceous chondrites, including amino acids and nucleobases of extraterrestrial origin."
   },
   {
@@ -1595,6 +1669,7 @@
    "ordinal": 5,
    "kind": "ext",
    "en": "Uses stable and radiogenic isotope anomalies and decay systematics to fingerprint nucleosynthetic stellar sources, trace chemical fractionation processes, and establish absolute and relative chronologies for solar system solids. Short-lived radionuclide systems date the earliest few million years of solar system history at sub-million-year resolution. Isotopic mass-independent anomalies distinguish nebular from parent-body chemical processes.",
+   "cs": "Využívá anomálie stabilních a radiogenních izotopů a rozpadovou systematiku k identifikaci nukleosyntetických hvězdných zdrojů, sledování procesů chemické frakcionace a stanovení absolutních a relativních chronologií pevných látek sluneční soustavy. Systémy krátkověkých radionuklidů datují prvních několik milionů let historie sluneční soustavy s rozlišením pod jeden milion let. Hmotnostně nezávislé izotopové anomálie odlišují nebulární procesy od chemických procesů v mateřských tělesech.",
    "brief": "Uses stable and radiogenic isotope anomalies and decay systematics to fingerprint nucleosynthetic stellar sources, trace chemical fractionation processes, and establish absolute and relative chronologies for solar system solids. Short-lived radionuclide systems date the earliest few million years of solar system history at sub-million-year resolution. Isotopic mass-independent anomalies distinguish nebular from parent-body chemical processes.\n\n### Concepts\n- **Radiometric Chronometry** — Long-lived decay systems such as Pb-Pb and Ar-Ar isotope dating that anchor absolute ages of meteorites and lunar samples.\n- **Short-Lived Radionuclides** — Extinct isotopes like 26Al and 60Fe whose decay products give high-resolution relative chronology for early solar system events.\n- **Nucleosynthetic Isotope Anomalies** — Mass-independent isotope variations among meteorite groups that trace heterogeneous mixing of distinct stellar nucleosynthetic components.\n- **Stable Isotope Fractionation** — Mass-dependent isotope shifts in O, H, N, and C that record evaporation, condensation, and photochemical self-shielding processes."
   },
   {
@@ -1606,6 +1681,7 @@
    "ordinal": 6,
    "kind": "ext",
    "en": "Investigates abiotic synthesis pathways for amino acids, sugars, nucleobases, and other biologically relevant molecules under cosmic and planetary conditions, and the delivery of these compounds to early Earth via comets and meteorites. Connects astrochemical inventories to origin-of-life chemistry and the search for biosignatures elsewhere in the solar system and beyond. A highly active interdisciplinary frontier linking chemistry, planetary science, and biology.",
+   "cs": "Zkoumá abiotické syntetické dráhy aminokyselin, cukrů, nukleobází a dalších biologicky významných molekul za kosmických a planetárních podmínek a dopravu těchto sloučenin na ranou Zemi kometami a meteority. Propojuje astrochemické zásoby s chemií vzniku života a hledáním biosignatur jinde ve sluneční soustavě i mimo ni. Vysoce aktivní mezioborová fronta propojující chemii, planetární vědu a biologii.",
    "brief": "Investigates abiotic synthesis pathways for amino acids, sugars, nucleobases, and other biologically relevant molecules under cosmic and planetary conditions, and the delivery of these compounds to early Earth via comets and meteorites. Connects astrochemical inventories to origin-of-life chemistry and the search for biosignatures elsewhere in the solar system and beyond. A highly active interdisciplinary frontier linking chemistry, planetary science, and biology.\n\n### Concepts\n- **Extraterrestrial Delivery Hypothesis** — The proposal that comets and carbonaceous meteorites supplied prebiotic organics and volatiles to the early Earth surface.\n- **Abiotic Amino Acid and Nucleobase Synthesis** — Non-biological reaction pathways, including Strecker synthesis and photochemistry, that produce biomolecule precursors in ices and aqueous fluids.\n- **Homochirality Origins** — Hypotheses for how a single molecular handedness became dominant in biological building blocks, including circularly polarized light and asymmetric autocatalysis.\n- **Biosignature Chemistry** — Chemical and isotopic markers proposed to distinguish biological activity from abiotic processes in planetary and exoplanetary environments."
   },
   {
@@ -1617,6 +1693,7 @@
    "ordinal": 7,
    "kind": "ext",
    "en": "Characterizes the coma and nucleus composition of comets and other icy bodies as the least-altered chemical relics of the outer protosolar nebula. Compares volatile and isotopic ratios such as D/H across comets, Earth's oceans, and interstellar ices to test models of water and volatile delivery to the terrestrial planets. Draws on in-situ spacecraft mass spectrometry and remote sensing to complement meteoritic and disk-chemistry constraints.",
+   "cs": "Charakterizuje složení komatu a jádra komet a dalších ledových těles jako nejméně pozměněné chemické relikty vnější protosolární mlhoviny. Porovnává poměry těkavých látek a izotopů, jako je D/H, napříč kometami, pozemskými oceány a mezihvězdnými ledy k testování modelů dopravy vody a těkavých látek na terestrické planety. Opírá se o in-situ hmotnostní spektrometrii z kosmických sond a dálkový průzkum, aby doplnila poznatky z meteoritů a chemie disků.",
    "brief": "Characterizes the coma and nucleus composition of comets and other icy bodies as the least-altered chemical relics of the outer protosolar nebula. Compares volatile and isotopic ratios such as D/H across comets, Earth's oceans, and interstellar ices to test models of water and volatile delivery to the terrestrial planets. Draws on in-situ spacecraft mass spectrometry and remote sensing to complement meteoritic and disk-chemistry constraints.\n\n### Concepts\n- **Cometary Coma Composition** — Gas and dust released from a sublimating nucleus, measured spectroscopically and in situ to reveal parent volatile abundances.\n- **D/H and Isotopic Tracers of Water Origin** — Deuterium-to-hydrogen ratios compared across comets, asteroids, and Earth's oceans to constrain the source reservoirs of terrestrial water.\n- **In Situ Cometary Mass Spectrometry** — Spacecraft rendezvous measurements, such as Rosetta's ROSINA instrument, providing direct molecular and isotopic composition of a comet's coma.\n- **Icy Body and Ocean World Chemistry** — Chemical characterization of outer solar system ices and subsurface oceans on moons as potential habitable or prebiotic environments."
   }
  ],
@@ -2245,6 +2322,48 @@
    "source": "chem"
   },
   {
+   "from": "01.02.11.01",
+   "to": "01.02.11.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.01",
+   "to": "01.02.11.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.01",
+   "to": "01.02.11.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.01",
+   "to": "01.02.11.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.01",
+   "to": "01.02.11.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.01",
+   "to": "01.02.11.13",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
    "from": "01.02.11.02.01",
    "to": "01.02.11.07.03",
    "type": "shared-structure",
@@ -2607,6 +2726,48 @@
    "type": "shared-structure",
    "explored": "partially",
    "source": "chem"
+  },
+  {
+   "from": "01.02.11.02",
+   "to": "01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.02",
+   "to": "01.02.11.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.02",
+   "to": "01.02.11.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.02",
+   "to": "01.02.11.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.02",
+   "to": "01.02.11.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.02",
+   "to": "01.02.11.11",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
   },
   {
    "from": "01.02.11.03.01",
@@ -3015,6 +3176,48 @@
    "source": "chem"
   },
   {
+   "from": "01.02.11.03",
+   "to": "01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.03",
+   "to": "01.02.11.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.03",
+   "to": "01.02.11.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.03",
+   "to": "01.02.11.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.03",
+   "to": "01.02.11.09",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.03",
+   "to": "01.02.11.10",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
    "from": "01.02.11.04.01",
    "to": "01.02.11.05.06",
    "type": "shared-structure",
@@ -3344,6 +3547,41 @@
    "source": "chem"
   },
   {
+   "from": "01.02.11.04",
+   "to": "01.02.11.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.04",
+   "to": "01.02.11.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.04",
+   "to": "01.02.11.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.04",
+   "to": "01.02.11.12",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.04",
+   "to": "01.02.11.13",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
    "from": "01.02.11.05.01",
    "to": "01.02.11.06.02",
    "type": "shared-math",
@@ -3645,6 +3883,41 @@
    "source": "chem"
   },
   {
+   "from": "01.02.11.05",
+   "to": "01.02.11.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.05",
+   "to": "01.02.11.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.05",
+   "to": "01.02.11.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.05",
+   "to": "01.02.11.13",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.05",
+   "to": "01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
    "from": "01.02.11.06.01",
    "to": "01.02.11.07.08",
    "type": "shared-math",
@@ -3825,6 +4098,55 @@
    "type": "conjecture",
    "explored": "barely",
    "source": "chem"
+  },
+  {
+   "from": "01.02.11.06",
+   "to": "01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.06",
+   "to": "01.02.11.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.06",
+   "to": "01.02.11.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.06",
+   "to": "01.02.11.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.06",
+   "to": "01.02.11.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.06",
+   "to": "01.02.11.13",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.06",
+   "to": "01.02.11.14",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
   },
   {
    "from": "01.02.11.07.01",
@@ -4086,6 +4408,55 @@
    "source": "chem"
   },
   {
+   "from": "01.02.11.07",
+   "to": "01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.07",
+   "to": "01.02.11.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.07",
+   "to": "01.02.11.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.07",
+   "to": "01.02.11.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.07",
+   "to": "01.02.11.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.07",
+   "to": "01.02.11.09",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.07",
+   "to": "01.02.11.14",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
    "from": "01.02.11.08.01",
    "to": "01.02.11.10.02",
    "type": "related-concept",
@@ -4191,6 +4562,41 @@
    "source": "chem"
   },
   {
+   "from": "01.02.11.08",
+   "to": "01.02.11.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.08",
+   "to": "01.02.11.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.08",
+   "to": "01.02.11.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.08",
+   "to": "01.02.11.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.08",
+   "to": "01.02.11.14",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
    "from": "01.02.11.09.04",
    "to": "01.02.11.14.05",
    "type": "related-concept",
@@ -4238,6 +4644,41 @@
    "type": "related-concept",
    "explored": "barely",
    "source": "chem"
+  },
+  {
+   "from": "01.02.11.09",
+   "to": "01.02.11.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.09",
+   "to": "01.02.11.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.09",
+   "to": "01.02.11.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.09",
+   "to": "01.02.11.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.09",
+   "to": "01.02.11.12",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
   },
   {
    "from": "01.02.11.10.02",
@@ -4336,6 +4777,48 @@
    "type": "related-concept",
    "explored": "partially",
    "source": "chem"
+  },
+  {
+   "from": "01.02.11.10",
+   "to": "01.02.11.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.10",
+   "to": "01.02.11.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.10",
+   "to": "01.02.11.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.10",
+   "to": "01.02.11.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.10",
+   "to": "01.02.11.09",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.10",
+   "to": "01.02.11.11",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
   },
   {
    "from": "01.02.11.11.01",
@@ -4457,6 +4940,41 @@
    "source": "chem"
   },
   {
+   "from": "01.02.11.11",
+   "to": "01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.11",
+   "to": "01.02.11.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.11",
+   "to": "01.02.11.10",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.11",
+   "to": "01.02.11.12",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.11",
+   "to": "01.02.11.13",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
    "from": "01.02.11.12.01",
    "to": "01.02.11.15.03",
    "type": "related-concept",
@@ -4506,6 +5024,41 @@
    "source": "chem"
   },
   {
+   "from": "01.02.11.12",
+   "to": "01.02.11.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.12",
+   "to": "01.02.11.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.12",
+   "to": "01.02.11.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.12",
+   "to": "01.02.11.09",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.12",
+   "to": "01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
    "from": "01.02.11.13.03",
    "to": "01.02.11.14.08",
    "type": "shared-math",
@@ -4548,6 +5101,48 @@
    "source": "chem"
   },
   {
+   "from": "01.02.11.13",
+   "to": "01.02.11.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.13",
+   "to": "01.02.11.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.13",
+   "to": "01.02.11.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.13",
+   "to": "01.02.11.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.13",
+   "to": "01.02.11.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.13",
+   "to": "01.02.11.11",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
    "from": "01.02.11.14.02",
    "to": "01.02.11.15.07",
    "type": "conjecture",
@@ -4581,6 +5176,83 @@
    "type": "shared-structure",
    "explored": "partially",
    "source": "chem"
+  },
+  {
+   "from": "01.02.11.14",
+   "to": "01.02.11.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.14",
+   "to": "01.02.11.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.14",
+   "to": "01.02.11.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.14",
+   "to": "01.02.11.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.14",
+   "to": "01.02.11.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.14",
+   "to": "01.02.11.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.15",
+   "to": "01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.15",
+   "to": "01.02.11.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.15",
+   "to": "01.02.11.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.15",
+   "to": "01.02.11.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.11.15",
+   "to": "01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
   },
   {
    "from": "01.02",
