@@ -97,7 +97,8 @@
    "zone": "votable",
    "ordinal": 0,
    "kind": "ext",
-   "en": "The chemical sciences organized by discipline — from organic, inorganic and physical chemistry through analytical, materials, electro-, photo- and computational chemistry to the nuclear, environmental, medicinal and supramolecular frontiers. A deep authoritative map of chemistry's branches, their core theory, and their active research fronts."
+   "en": "The chemical sciences organized by discipline — from organic, inorganic and physical chemistry through analytical, materials, electro-, photo- and computational chemistry to the nuclear, environmental, medicinal and supramolecular frontiers. A deep authoritative map of chemistry's branches, their core theory, and their active research fronts.",
+   "cs": "Chemické vědy uspořádané podle disciplín — od organické, anorganické a fyzikální chemie přes analytickou, materiálovou, elektro-, foto- a výpočetní chemii až po jaderné, environmentální, medicinální a supramolekulární pomezí. Hloubková autoritativní mapa odvětví chemie, jejich základní teorie a aktivních výzkumných front."
   },
   {
    "id": "01.02.11.01",

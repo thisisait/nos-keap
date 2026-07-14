@@ -322,7 +322,8 @@
    "zone": "votable",
    "ordinal": 0,
    "kind": "ext",
-   "en": "The mathematical sciences organized by the Mathematics Subject Classification 2020 — 52 core-mathematics disciplines from number theory and algebraic geometry through functional analysis, topology, probability and numerical analysis. Physics-applied MSC classes live in the Physics cluster; this branch is pure and applied mathematics proper."
+   "en": "The mathematical sciences organized by the Mathematics Subject Classification 2020 — 52 core-mathematics disciplines from number theory and algebraic geometry through functional analysis, topology, probability and numerical analysis. Physics-applied MSC classes live in the Physics cluster; this branch is pure and applied mathematics proper.",
+   "cs": "Matematické vědy uspořádané podle Mathematics Subject Classification 2020 — 52 disciplín jádra matematiky od teorie čísel a algebraické geometrie přes funkcionální analýzu, topologii, pravděpodobnost a numerickou analýzu. Třídy MSC aplikované ve fyzice patří do fyzikálního shluku; toto odvětví je vlastní čistá a aplikovaná matematika."
   },
   {
    "id": "02.01.04.01",

@@ -97,7 +97,8 @@
    "zone": "votable",
    "ordinal": 0,
    "kind": "ext",
-   "en": "The life sciences organized by discipline — from molecular, cell and developmental biology through genetics, genomics, evolution and ecology to physiology, neuroscience, immunology, microbiology and the systems, structural and astrobiological frontiers. A deep authoritative map of biology's branches, their core theory, and their active research fronts."
+   "en": "The life sciences organized by discipline — from molecular, cell and developmental biology through genetics, genomics, evolution and ecology to physiology, neuroscience, immunology, microbiology and the systems, structural and astrobiological frontiers. A deep authoritative map of biology's branches, their core theory, and their active research fronts.",
+   "cs": "Vědy o životě uspořádané podle disciplín — od molekulární, buněčné a vývojové biologie přes genetiku, genomiku, evoluci a ekologii až po fyziologii, neurovědu, imunologii, mikrobiologii a systémová, strukturní a astrobiologická pomezí. Hloubková autoritativní mapa odvětví biologie, jejich základní teorie a aktivních výzkumných front."
   },
   {
    "id": "01.03.11.01",

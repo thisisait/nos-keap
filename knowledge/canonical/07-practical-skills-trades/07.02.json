@@ -6,7 +6,7 @@
    "level": 1,
    "kind": "seed-override",
    "en": "Mechanics is the science and practice of maintaining, repairing, and rebuilding mechanical systems—primarily engines, transmissions, and power-transmission assemblies—to restore function and performance.",
-   "cs": "Mechanika je věda a praxe údržby a opravy mechanických systémů—především motorů a převodovek—k obnovení funkce.",
+   "cs": "Mechanika je věda a praxe údržby, opravy a repase mechanických systémů—především motorů, převodovek a sestav pro přenos výkonu—za účelem obnovení funkce a výkonu.",
    "brief": "Mechanics is the science and practice of maintaining, repairing, and rebuilding mechanical systems that generate, transmit, and control motion — principally engines and the drivetrain and control systems built around them. Diagnosis is central to the discipline: a mechanic works backward from a symptom (noise, vibration, loss of power) to the specific component or system that produces it.\n\nThe field anchors [[07.02.01]] as the power-generating core of the system, [[07.02.02]] as the assembly that delivers that power to the wheels, and [[07.02.04]] as the safety-critical system that stops the vehicle. Mechanics shares its parent, Practical Skills & Trades, with [[07.03]], which applies a comparable diagnostic method to electrical and signal faults rather than mechanical ones, and with [[07.01]], whose systems are static rather than moving parts under load.\n\nThe [ASE (National Institute for Automotive Service Excellence)](https://www.ase.com/) certifies and documents professional standards across automotive mechanical repair."
   },
   {

@@ -1611,7 +1611,8 @@
    "zone": "votable",
    "ordinal": 0,
    "kind": "ext",
-   "en": "Approaches to a quantum theory of gravity and the unification of general relativity with quantum field theory — 19 research pillars from string theory and loop quantum gravity to holography, causal sets and the swampland."
+   "en": "Approaches to a quantum theory of gravity and the unification of general relativity with quantum field theory — 19 research pillars from string theory and loop quantum gravity to holography, causal sets and the swampland.",
+   "cs": "Přístupy ke kvantové teorii gravitace a ke sjednocení obecné relativity s kvantovou teorií pole — 19 výzkumných pilířů od teorie strun a smyčkové kvantové gravitace přes holografii a kauzální množiny až po swampland."
   },
   {
    "id": "01.01.11.01",
@@ -2172,7 +2173,8 @@
    "zone": "votable",
    "ordinal": 5,
    "kind": "ext",
-   "en": "The thesis that the spacetime metric and its Einstein dynamics are not fundamental variables but a collective/effective, low-energy description of a deeper microscopic theory, analogous to how hydrodynamics or elasticity emerges from molecular physics."
+   "en": "The thesis that the spacetime metric and its Einstein dynamics are not fundamental variables but a collective/effective, low-energy description of a deeper microscopic theory, analogous to how hydrodynamics or elasticity emerges from molecular physics.",
+   "cs": "Teze, že metrika časoprostoru a její Einsteinova dynamika nejsou fundamentální proměnné, nýbrž kolektivní/efektivní nízkoenergetický popis hlubší mikroskopické teorie, obdobně jako hydrodynamika či pružnost vyvstávají z molekulární fyziky."
   },
   {
    "id": "01.01.11.06.01",
@@ -3274,7 +3276,8 @@
    "zone": "votable",
    "ordinal": 16,
    "kind": "ext",
-   "en": "Program (Vafa 2005) characterizing which low-energy effective field theories admit a UV completion in quantum gravity (the landscape) versus those that do not (the swampland). Central conjectures: Swampland Distance Conjecture, Weak Gravity Conjecture, de Sitter Conjecture, Emergent String Conjecture, plus the species scale as a gravitational cutoff."
+   "en": "Program (Vafa 2005) characterizing which low-energy effective field theories admit a UV completion in quantum gravity (the landscape) versus those that do not (the swampland). Central conjectures: Swampland Distance Conjecture, Weak Gravity Conjecture, de Sitter Conjecture, Emergent String Conjecture, plus the species scale as a gravitational cutoff.",
+   "cs": "Program (Vafa 2005) charakterizující, které nízkoenergetické efektivní teorie pole připouštějí UV doplnění v kvantové gravitaci (landscape) a které nikoli (swampland). Ústřední hypotézy: Swampland Distance Conjecture, Weak Gravity Conjecture, de Sitter Conjecture, Emergent String Conjecture a rovněž species scale coby gravitační cutoff."
   },
   {
    "id": "01.01.11.17.01",
