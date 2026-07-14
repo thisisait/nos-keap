@@ -144,11 +144,16 @@ function nodeColor(n: CanvasNode, focusId: string | null, lens?: LensState): str
 
 function nodeSize(n: CanvasNode, lens?: LensState): number {
   let base: number;
+  // Celestial hierarchy by depth: galaxy › constellation › star › planet ›
+  // satellite. Clear size steps so a level reads at a glance AND the body is big
+  // enough to show its (lens) colour.
   if (n.object) base = FORM_SIZE[n.form ?? 'asteroid'] ?? 1.4;
   else if (n.star) base = 3;
-  else if (n.level === 0) base = 22; // nebula core
-  else if (n.level === 1) base = 11; // galaxy
-  else base = Math.max(2, 7 - (n.level - 2) * 1.1); // graded stars
+  else if (n.level === 0) base = 24; // galaxy
+  else if (n.level === 1) base = 13; // constellation
+  else if (n.level === 2) base = 7.5; // star
+  else if (n.level === 3) base = 4.5; // planet
+  else base = Math.max(2.2, 3.4 - (n.level - 4) * 0.6); // satellite / small body
   // Semantic lens: scale taxonomy stars by centrality (hubs bigger). Keeps the
   // level-graded base so structure stays legible; centrality (~0.1–0.5) modulates.
   if (lens?.sizeByCentrality && !n.object && !n.star && (n.level ?? 2) >= 2) {
@@ -242,6 +247,24 @@ function galaxyDisc(hue: number): THREE.Sprite {
     }),
   );
   s.scale.setScalar(70);
+  return noRaycast(s) as THREE.Sprite;
+}
+
+// A star's soft halo (L2) — makes the field-level "stars" twinkle above the
+// planets/satellites below them. Structural hue; the sphere core carries the
+// lens colour so the two read together.
+function starGlow(hue: number): THREE.Sprite {
+  const s = new THREE.Sprite(
+    new THREE.SpriteMaterial({
+      map: _discTex,
+      color: new THREE.Color(`hsl(${hue}, 78%, 66%)`),
+      transparent: true,
+      opacity: 0.5,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    }),
+  );
+  s.scale.setScalar(17);
   return noRaycast(s) as THREE.Sprite;
 }
 
@@ -577,10 +600,13 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
   const nodeThreeObject = useCallback((node: any) => {
     // Objects: a typed body REPLACES the default sphere (extend=false below).
     if (node.object) return buildAssetMesh(node);
-    // Taxonomy: nebula/galaxy halo + label ADDED next to the default sphere.
+    // Taxonomy celestial hierarchy — a level-appropriate halo ADDED next to the
+    // default sphere (the sphere is the lens-coloured body): galaxy › constellation
+    // › star, then planets (L3) and satellites (L4+) are the bare sphere by size.
     const g = new THREE.Group();
-    if (node.level === 0) g.add(nebulaSprite(node.categoryHue));
-    if (node.level === 1) g.add(galaxyDisc(node.categoryHue));
+    if (node.level === 0) g.add(nebulaSprite(node.categoryHue)); // galaxy
+    else if (node.level === 1) g.add(galaxyDisc(node.categoryHue)); // constellation
+    else if (node.level === 2) g.add(starGlow(node.categoryHue)); // star
     if (node.level <= 1 || node.star) {
       const sprite = new SpriteText(node.name);
       sprite.color = '#e9eefc';
