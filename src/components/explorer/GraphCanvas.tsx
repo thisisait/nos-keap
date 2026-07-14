@@ -287,6 +287,13 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
   const didFitRef = useRef(false);
   const modelRef = useRef<ShipModelParts | null>(null);
   const lastTimeRef = useRef<number | null>(null);
+
+  // react-force-graph caches node styling; when the semantic lens changes, force
+  // it to re-read nodeColor/nodeVal so the recolour/resize applies live (without
+  // this the accessors only re-run on a graphData change). Camera is untouched.
+  useEffect(() => {
+    fgRef.current?.refresh?.();
+  }, [lens?.axis, lens?.sizeByCentrality]);
   const { shipRef, tick, reset } = useShipController(mode === 'ship');
 
   const _camOffset = useMemo(() => new THREE.Vector3(0, 3.5, -14), []);
