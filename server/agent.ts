@@ -161,6 +161,26 @@ export function registerAgentRoutes(app: Express) {
     });
   });
 
+  // ── Semantic lens: derived-features pipeline ───────────────────────────────
+  // Bulk export of taxonomy embeddings for the host-side keap-features-sync job
+  // (it has Ollama + numpy; it projects these onto the exemplar-difference axes,
+  // computes centrality + clusters, and POSTs the scalars back). This is the
+  // features pipeline's own channel, NOT the 16 KiB-capped agent surface.
+  app.get('/agent/v1/features/vectors', agentAuth('ro'), (_req, res) => {
+    const vectors = db.readTaxonomyVectors();
+    ok(res, { model: db.embeddingStats().model, count: vectors.length, vectors });
+  });
+
+  // Upsert the per-node derived features (abstractness/scale/formalness/dynamism/
+  // centrality/cluster) computed by keap-features-sync. GraphCanvas renders them.
+  app.post('/agent/v1/features', agentAuth('rw'), (req, res) => {
+    const body = (req.body ?? {}) as { features?: unknown; model?: unknown };
+    const feats = Array.isArray(body.features) ? (body.features as db.NodeFeatureRow[]) : null;
+    if (!feats) return fail(res, 400, 'features[] required');
+    const model = String(body.model ?? db.embeddingStats().model ?? 'unknown');
+    ok(res, { upserted: db.upsertNodeFeatures(feats, model) });
+  });
+
   // Resolve a content ref ("kiwix:wikipedia_en") to a live nOS service URL.
   app.get('/agent/v1/content/resolve', agentAuth('ro'), (req, res) => {
     const ref = String(req.query.ref ?? '');

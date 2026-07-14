@@ -135,6 +135,9 @@ export function registerGraphRoutes(app: Express) {
     // Baked star positions (U1) — the explorer pins taxonomy nodes to these;
     // only semantic stars and nebula dust stay force-simulated.
     const layout = db.getLayout();
+    // Semantic-lens derived features (colour/size/texture channels). Empty until
+    // keap-features-sync populates node_features — the client just skips the lens.
+    const feats = db.getNodeFeatures();
     const nodes = allNodes().map((n) => {
       const cur = curatedById.get(n.id);
       const ref = cur?.requiredData ?? n.requiredData;
@@ -159,6 +162,7 @@ export function registerGraphRoutes(app: Express) {
         x: p?.x,
         y: p?.y,
         z: p?.z,
+        features: feats.get(n.id),
       };
     });
     const links = nodes

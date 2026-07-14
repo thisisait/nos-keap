@@ -107,7 +107,29 @@ const STAR_COLOR: Record<string, string> = {
 // GALAXY discs, L2+ as STARS graded by depth (hotter/whiter shallow → cooler/
 // redder deep). Anchored objects are typed orbital bodies (see buildAssetMesh).
 
-function nodeColor(n: CanvasNode, focusId: string | null): string {
+// Semantic-lens state: colour by a chosen embedding-derived axis + size by
+// centrality. Positions never change — the lens only re-skins the stars.
+export interface LensState { axis?: string; sizeByCentrality?: boolean }
+
+// Diverging blue→red gradient over an axis score (~[-0.35, 0.35] in practice).
+function lensColor(score: number, focus: boolean): string {
+  const t = Math.max(0, Math.min(1, (score + 0.35) / 0.7)); // → [0,1]
+  const hue = 235 - t * 235; // low = blue (calm), high = red (toward the +pole)
+  return `hsl(${hue} 78% ${focus ? 80 : 56}%)`;
+}
+function nodeFeature(n: CanvasNode, key: string): number | undefined {
+  const f = (n as { features?: Record<string, number> }).features;
+  const v = f?.[key];
+  return typeof v === 'number' ? v : undefined;
+}
+
+function nodeColor(n: CanvasNode, focusId: string | null, lens?: LensState): string {
+  // Semantic lens: taxonomy stars are recoloured by their axis projection; the
+  // structural hue (below) is the default when the lens is off / feature absent.
+  if (lens?.axis && !n.object && !n.star) {
+    const s = nodeFeature(n, lens.axis);
+    if (s !== undefined) return lensColor(s, n.id === focusId);
+  }
   if (n.object) return `hsl(${n.categoryHue} 72% 60%)`; // hue = data-type identity
   if (n.star) return STAR_COLOR[n.kind] ?? STAR_COLOR[n.dataType ?? ''] ?? '#fbbf24';
   if (n.level === 0) return `hsl(${n.categoryHue} 55% 55% / 0.22)`; // faint nebula core
@@ -118,12 +140,20 @@ function nodeColor(n: CanvasNode, focusId: string | null): string {
   return `hsl(${n.categoryHue} ${s}% ${l}%)`;
 }
 
-function nodeSize(n: CanvasNode): number {
-  if (n.object) return FORM_SIZE[n.form ?? 'asteroid'] ?? 1.4;
-  if (n.star) return 3;
-  if (n.level === 0) return 22; // nebula core
-  if (n.level === 1) return 11; // galaxy
-  return Math.max(2, 7 - (n.level - 2) * 1.1); // graded stars
+function nodeSize(n: CanvasNode, lens?: LensState): number {
+  let base: number;
+  if (n.object) base = FORM_SIZE[n.form ?? 'asteroid'] ?? 1.4;
+  else if (n.star) base = 3;
+  else if (n.level === 0) base = 22; // nebula core
+  else if (n.level === 1) base = 11; // galaxy
+  else base = Math.max(2, 7 - (n.level - 2) * 1.1); // graded stars
+  // Semantic lens: scale taxonomy stars by centrality (hubs bigger). Keeps the
+  // level-graded base so structure stays legible; centrality (~0.1–0.5) modulates.
+  if (lens?.sizeByCentrality && !n.object && !n.star && (n.level ?? 2) >= 2) {
+    const c = nodeFeature(n, 'centrality');
+    if (c !== undefined) base *= 0.7 + Math.max(0, Math.min(1, c)) * 2.0;
+  }
+  return base;
 }
 
 // ── Shared GPU resources (built ONCE, never per-node) ────────────────────────

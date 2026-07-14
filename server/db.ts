@@ -265,6 +265,27 @@ const SCHEMA = [
      n_relations INTEGER NOT NULL DEFAULT 0,
      applied_at TEXT NOT NULL
    )`,
+
+  // Semantic-lens derived features — a handful of scalars per node, projected
+  // from its 768-dim embedding onto interpretable difference-vector axes, plus
+  // centrality (hub-ness) and a k-means cluster (texture facet). Computed by the
+  // host-side keap-features-sync Pulse job (which has Ollama + numpy) and POSTed
+  // to /agent/v1/features; GraphCanvas maps these to colour/size/texture behind
+  // the "semantic lens" toggle. Positions stay tree-baked — features never move a
+  // star. axis_json holds all axis projections {name: score}; the fixed columns
+  // are convenience mirrors of the canonical four. See docs/plans/keap-semantic-lens.md.
+  `CREATE TABLE IF NOT EXISTS node_features (
+     node_id TEXT PRIMARY KEY,
+     abstractness REAL,
+     scale REAL,
+     formalness REAL,
+     dynamism REAL,
+     centrality REAL,
+     cluster INTEGER,
+     axis_json TEXT,
+     model TEXT,
+     updated_at INTEGER DEFAULT (strftime('%s','now'))
+   )`,
 ];
 
 // ── Vector layer (libSQL native) ──────────────────────────────────────────────
@@ -938,6 +959,51 @@ export function getEmbeddingHashes(kind: EmbeddingKind): Map<string, string> {
   if (!vectorsOk) return new Map();
   const rows = getDb().prepare('SELECT ref_id, content_hash FROM embeddings WHERE kind = ?').all(kind) as any[];
   return new Map(rows.map((r) => [r.ref_id, r.content_hash]));
+}
+
+// ── Semantic-lens derived features ────────────────────────────────────────────
+/** All taxonomy embeddings as {id, vector} — the host-side keap-features-sync job
+ *  reads these (GET /agent/v1/features/vectors), projects them onto its axis
+ *  vectors, and POSTs the scalars back. vector_extract unpacks the F32_BLOB. */
+export function readTaxonomyVectors(): { id: string; vector: number[] }[] {
+  if (!vectorsOk) return [];
+  const rows = getDb()
+    .prepare("SELECT ref_id, vector_extract(vector) AS v FROM embeddings WHERE kind = 'taxonomy'")
+    .all() as any[];
+  return rows.map((r) => ({ id: r.ref_id, vector: JSON.parse(r.v) }));
+}
+
+export interface NodeFeatureRow {
+  node_id: string;
+  abstractness?: number; scale?: number; formalness?: number; dynamism?: number;
+  centrality?: number; cluster?: number; axis_json?: string;
+}
+
+/** Upsert the derived features computed host-side (keap-features-sync). */
+export function upsertNodeFeatures(rows: NodeFeatureRow[], model: string): number {
+  const d = getDb();
+  const stmt = d.prepare(
+    `INSERT INTO node_features (node_id, abstractness, scale, formalness, dynamism, centrality, cluster, axis_json, model, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%s','now'))
+     ON CONFLICT(node_id) DO UPDATE SET abstractness=excluded.abstractness, scale=excluded.scale,
+       formalness=excluded.formalness, dynamism=excluded.dynamism, centrality=excluded.centrality,
+       cluster=excluded.cluster, axis_json=excluded.axis_json, model=excluded.model, updated_at=excluded.updated_at`);
+  const txn = d.transaction((rs: NodeFeatureRow[]) => {
+    for (const r of rs) stmt.run(r.node_id, r.abstractness ?? null, r.scale ?? null, r.formalness ?? null,
+      r.dynamism ?? null, r.centrality ?? null, r.cluster ?? null, r.axis_json ?? null, model);
+  });
+  txn(rows);
+  return rows.length;
+}
+
+/** node_id → derived-feature scalars, for the graph payload's semantic lens. */
+export function getNodeFeatures(): Map<string, Record<string, number>> {
+  try {
+    const rows = getDb().prepare('SELECT * FROM node_features').all() as any[];
+    return new Map(rows.map((r) => [r.node_id, {
+      abstractness: r.abstractness, scale: r.scale, formalness: r.formalness,
+      dynamism: r.dynamism, centrality: r.centrality, cluster: r.cluster }]));
+  } catch { return new Map(); }
 }
 
 export function upsertEmbeddings(
