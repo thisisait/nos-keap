@@ -251,6 +251,20 @@ const SCHEMA = [
      action TEXT,
      PRIMARY KEY (node_id, run_id)
    )`,
+
+  // Knowledge-ingest marker — one row per canonical domain file (knowledge/ =
+  // git SoT; knowledge/ingest.mjs). source_sha (sha256 of the file bytes) gates
+  // re-apply: an unchanged file is skipped, so the pazny.keap role's ingest is
+  // idempotent every run and only restarts the container when something changed.
+  // A blank DB has no markers → everything applies. See
+  // docs/plans/keap-knowledge-ingest-pipeline.md (in the nOS repo).
+  `CREATE TABLE IF NOT EXISTS knowledge_imports (
+     import_key TEXT PRIMARY KEY,
+     source_sha TEXT NOT NULL,
+     n_nodes INTEGER NOT NULL DEFAULT 0,
+     n_relations INTEGER NOT NULL DEFAULT 0,
+     applied_at TEXT NOT NULL
+   )`,
 ];
 
 // ── Vector layer (libSQL native) ──────────────────────────────────────────────

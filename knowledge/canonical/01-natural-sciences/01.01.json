@@ -168,16 +168,6 @@
    "brief": "Quantum Optics studies the quantum behaviour of light and its interaction with matter: individual photons, coherent and squeezed states, cavity quantum electrodynamics, the quantum-level operation of lasers, and photonic implementations of entanglement and quantum communication. It treats the electromagnetic field itself as a quantum system rather than as a classical wave.\n\nIts photon-based experiments are frequently the most direct tests of the entanglement and Bell-inequality questions raised in [[01.01.02.01]] Quantum Foundations, and its squeezed and entangled photon states supply one of the hardware platforms used by [[01.01.02.03]] Quantum Computing and quantum communication. The quantized electromagnetic field it works with is a direct application of [[01.01.02.02]] Quantum Field Theory's field-quantization formalism to a single, experimentally accessible field.\n\nQuantum optics experiments — from single-photon interference to satellite-based quantum key distribution — have repeatedly closed loopholes in tests of quantum theory. See the [Optica (formerly OSA) quantum optics resources](https://www.optica.org/) and [HyperPhysics on the quantum nature of light](http://hyperphysics.phy-astr.gsu.edu/hbase/quantum/qm.html) for further reading."
   },
   {
-   "id": "01.01.03",
-   "level": 2,
-   "parentId": "01.01",
-   "name": "Thermodynamics",
-   "zone": "votable",
-   "ordinal": 1,
-   "kind": "ext",
-   "en": ""
-  },
-  {
    "id": "01.01.03.01",
    "level": 3,
    "parentId": "01.01.03",
@@ -424,16 +414,6 @@
    "brief": "Gradients of concentration, velocity or temperature drive fluxes of matter, momentum and heat — diffusion, viscosity and thermal conduction — each described by a linear transport law and a molecular transport coefficient.\n\n### Concepts\n- **Diffusion** — Net transport of particles down a concentration gradient, described by Fick's laws.\n- **Viscosity** — The transport of momentum across a velocity gradient in a flowing fluid.\n- **Thermal conduction** — The transport of heat down a temperature gradient, described by Fourier's law.\n- **Onsager reciprocity** — Symmetry relations among coupled transport coefficients near equilibrium.\n- **Non-equilibrium thermodynamics** — The framework describing entropy production in systems with steady fluxes."
   },
   {
-   "id": "01.01.04",
-   "level": 2,
-   "parentId": "01.01",
-   "name": "Electromagnetism",
-   "zone": "votable",
-   "ordinal": 2,
-   "kind": "ext",
-   "en": ""
-  },
-  {
    "id": "01.01.04.01",
    "level": 3,
    "parentId": "01.01.04",
@@ -668,16 +648,6 @@
    "brief": "Electromagnetic induction and the force on currents underlie machines that convert between electrical and mechanical energy — motors and generators — while accelerating charges in antennas radiate the electromagnetic waves of communication.\n\n### Concepts\n- **Electric motor** — A machine converting electrical energy to rotation via force on current loops.\n- **Electric generator** — A machine converting mechanical motion to electricity by induction.\n- **Antenna** — A conductor that radiates or receives electromagnetic waves from accelerating charge.\n- **Waveguide** — A structure that confines and directs electromagnetic waves along its length.\n- **Electromagnetic radiation from acceleration** — The principle that only accelerating charges radiate energy as waves."
   },
   {
-   "id": "01.01.05",
-   "level": 2,
-   "parentId": "01.01",
-   "name": "Relativity",
-   "zone": "votable",
-   "ordinal": 3,
-   "kind": "ext",
-   "en": ""
-  },
-  {
    "id": "01.01.05.01",
    "level": 3,
    "parentId": "01.01.05",
@@ -865,16 +835,6 @@
    "brief": "Satellite navigation must correct for both special-relativistic time dilation from orbital speed and general-relativistic speed-up from weaker gravity, without which position errors would accumulate at kilometres per day.\n\n### Concepts\n- **GPS time correction** — The net relativistic clock adjustment applied to navigation satellites.\n- **Orbital time dilation** — The special-relativistic slowing of a fast-moving satellite clock.\n- **Altitude clock speed-up** — The general-relativistic quickening of a clock in weaker gravity.\n- **Precision timekeeping** — The use of relativity in atomic clocks and geodesy at sub-nanosecond accuracy."
   },
   {
-   "id": "01.01.06",
-   "level": 2,
-   "parentId": "01.01",
-   "name": "Nuclear Physics",
-   "zone": "votable",
-   "ordinal": 4,
-   "kind": "ext",
-   "en": ""
-  },
-  {
    "id": "01.01.06.01",
    "level": 3,
    "parentId": "01.01.06",
@@ -1036,16 +996,6 @@
    "en": "The chemical elements are forged by nuclear reactions: the lightest in the first minutes of the Big Bang, heavier ones by fusion in stellar cores, and the heaviest by rapid neutron capture in supernovae and neutron-star mergers.",
    "cs": "Chemické prvky vznikají jadernými reakcemi: nejlehčí v prvních minutách velkého třesku, těžší fúzí v jádrech hvězd a nejtěžší rychlým záchytem neutronů v supernovách a při splývání neutronových hvězd.",
    "brief": "The chemical elements are forged by nuclear reactions: the lightest in the first minutes of the Big Bang, heavier ones by fusion in stellar cores, and the heaviest by rapid neutron capture in supernovae and neutron-star mergers.\n\n### Concepts\n- **Big Bang nucleosynthesis** — The formation of hydrogen, helium and lithium in the early universe.\n- **Stellar nucleosynthesis** — The building of elements up to iron by fusion in stars.\n- **s-process** — Slow neutron capture building heavy nuclei in evolved stars.\n- **r-process** — Rapid neutron capture forming the heaviest elements in explosive events.\n- **Cosmic abundance** — The observed proportions of the elements set by these processes."
-  },
-  {
-   "id": "01.01.07",
-   "level": 2,
-   "parentId": "01.01",
-   "name": "Particle Physics",
-   "zone": "votable",
-   "ordinal": 5,
-   "kind": "ext",
-   "en": ""
   },
   {
    "id": "01.01.07.01",
@@ -1223,16 +1173,6 @@
    "brief": "The Standard Model omits gravity, dark matter and the origin of its parameters; proposed extensions include supersymmetry, grand unified theories merging the forces, and candidate dark-matter particles, none yet confirmed.\n\n### Concepts\n- **Dark matter** — The unseen mass whose gravity shapes galaxies, of unknown particle identity.\n- **Supersymmetry** — A proposed symmetry pairing fermions with bosons, so far unobserved.\n- **Grand unified theory** — A theory merging the strong, weak and electromagnetic forces at high energy.\n- **Hierarchy problem** — The puzzle of why the Higgs mass is so far below the unification scale.\n- **Proton decay** — A predicted rare decay of the proton in many unified theories, not yet seen."
   },
   {
-   "id": "01.01.08",
-   "level": 2,
-   "parentId": "01.01",
-   "name": "Astrophysics",
-   "zone": "votable",
-   "ordinal": 6,
-   "kind": "ext",
-   "en": ""
-  },
-  {
    "id": "01.01.08.01",
    "level": 3,
    "parentId": "01.01.08",
@@ -1408,16 +1348,6 @@
    "brief": "The universe is now observed through several messengers — electromagnetic radiation across the spectrum, neutrinos, cosmic rays and gravitational waves — whose combination pinpoints events such as neutron-star mergers and gamma-ray bursts.\n\n### Concepts\n- **Gamma-ray burst** — The brightest electromagnetic explosion, from collapsing stars or merging compact objects.\n- **Neutrino astronomy** — Observation of astrophysical neutrinos that escape dense sources.\n- **Gravitational-wave astronomy** — The detection of spacetime ripples from merging compact objects.\n- **Kilonova** — The optical glow of a neutron-star merger forging heavy elements.\n- **Messenger coincidence** — The joint detection of one event across multiple channels, localising its source."
   },
   {
-   "id": "01.01.09",
-   "level": 2,
-   "parentId": "01.01",
-   "name": "Geophysics",
-   "zone": "votable",
-   "ordinal": 7,
-   "kind": "ext",
-   "en": ""
-  },
-  {
    "id": "01.01.09.01",
    "level": 3,
    "parentId": "01.01.09",
@@ -1532,16 +1462,6 @@
    "en": "Heat from the planet's formation and radioactive decay drives slow convection in the solid mantle, the engine of plate motion; measured surface heat flow constrains the planet's thermal history and internal dynamics.",
    "cs": "Teplo z formování planety a z radioaktivního rozpadu pohání pomalou konvekci v pevném plášti, motor pohybu desek; měřený povrchový tepelný tok omezuje tepelnou historii planety a její vnitřní dynamiku.",
    "brief": "Heat from the planet's formation and radioactive decay drives slow convection in the solid mantle, the engine of plate motion; measured surface heat flow constrains the planet's thermal history and internal dynamics.\n\n### Concepts\n- **Mantle convection** — The slow creeping flow of the solid mantle transporting heat outward.\n- **Radiogenic heat** — Heat produced by the decay of radioactive isotopes in the Earth.\n- **Heat flow** — The rate at which heat escapes through the Earth's surface.\n- **Mantle plume** — An upwelling of hot mantle feeding volcanic hotspots.\n- **Rheology** — The deformation behaviour of rock that lets the solid mantle flow over long times."
-  },
-  {
-   "id": "01.01.10",
-   "level": 2,
-   "parentId": "01.01",
-   "name": "Biophysics",
-   "zone": "votable",
-   "ordinal": 8,
-   "kind": "ext",
-   "en": ""
   },
   {
    "id": "01.01.10.01",

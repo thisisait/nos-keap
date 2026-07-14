@@ -59,7 +59,8 @@ db.exec(
 // proves ext-under-seed registers + gets an appended layout position without a
 // re-bake. In that mode we must NEVER touch the root's own row / description /
 // baked layout point — only its ext descendants.
-const rootIsSeed = bundle.rootIsSeed === true;
+// accept the flag at the top level or nested in root{} (the fable bundles nest it)
+const rootIsSeed = bundle.rootIsSeed === true || (bundle.root && bundle.root.rootIsSeed === true);
 
 // ── Idempotent reset of this domain's subtree + relations ───────────────────
 const like = `${root.id}.%`;
