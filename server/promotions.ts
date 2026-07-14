@@ -259,8 +259,16 @@ export function proposeDescription(
     descriptionEn: draft.descriptionEn.trim().slice(0, 2000),
     descriptionCs: draft.descriptionCs?.trim().slice(0, 2000),
   };
-  if (normalized.descriptionEn === node.description) {
-    throw new Error('identical to the current description — nothing to propose');
+  // Allow a proposal when EITHER field actually changes — a CS-only fix (the
+  // English is fine, the Czech translation is wrong) must not be rejected just
+  // because EN is unchanged, else the caller is forced to churn EN to slip the
+  // real CS fix past this guard.
+  const curCs = ((node as any).descriptionCs ?? null) as string | null;
+  const enSame = normalized.descriptionEn === node.description;
+  const csSame =
+    normalized.descriptionCs === undefined || (normalized.descriptionCs ?? null) === curCs;
+  if (enSame && csSame) {
+    throw new Error('identical to the current description (en+cs) — nothing to propose');
   }
   // One open desc proposal per node — a re-proposal updates it.
   const existing = db.openPromotions()
