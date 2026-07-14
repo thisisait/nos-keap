@@ -109,7 +109,8 @@
    "ordinal": 0,
    "kind": "ext",
    "en": "Molecular biology studies the molecular mechanisms of gene expression and inheritance — DNA replication and repair, transcription, translation, and the regulatory and epigenetic controls that govern when and how genes are expressed — along with the techniques used to manipulate nucleic acids and genomes. It provides the mechanistic core that Genetics and Genomics build on for inheritance patterns and genome-scale analysis, and that Cell Biology extends to whole-cell organization.",
-   "cs": "Molekulární biologie studuje molekulární mechanismy genové exprese a dědičnosti - replikaci a opravu DNA, transkripci, translaci a regulační i epigenetické mechanismy řídící, kdy a jak jsou geny exprimovány - spolu s technikami manipulace s nukleovými kyselinami a genomy. Poskytuje mechanistické jádro, na němž genetika a genomika stavějí své studium dědičnosti a analýzy na úrovni celého genomu a které buněčná biologie rozšiřuje na organizaci celé buňky."
+   "cs": "Molekulární biologie studuje molekulární mechanismy genové exprese a dědičnosti - replikaci a opravu DNA, transkripci, translaci a regulační i epigenetické mechanismy řídící, kdy a jak jsou geny exprimovány - spolu s technikami manipulace s nukleovými kyselinami a genomy. Poskytuje mechanistické jádro, na němž genetika a genomika stavějí své studium dědičnosti a analýzy na úrovni celého genomu a které buněčná biologie rozšiřuje na organizaci celé buňky.",
+   "brief": "Molecular biology is the mechanistic engine room of the life sciences: it explains heredity and gene expression in the currency of nucleic acids and proteins — how DNA is replicated and repaired, transcribed into RNA, and translated into the protein machinery that runs the cell. It supplies the causal layer beneath [[01.03.11.03]] Genetics, which tracks inheritance patterns without needing their chemistry, and beneath [[01.03.11.04]] Genomics & Bioinformatics, which scales those same mechanisms to whole-genome data.\n\nThe discipline's lower boundary is with [[01.02]] Chemistry — the reactions it describes are ultimately organic and physical chemistry — while its upper boundary is with [[01.03.11.02]] Cell Biology, which reassembles these molecules into the organized whole of a working cell. Its regulatory and epigenetic reach into how genes switch on and off makes it foundational for [[01.03.11.05]] Developmental Biology and [[01.03.11.10]] Immunology, and its toolkit — cloning, PCR, sequencing, CRISPR — is the practical substrate of nearly all modern experimental biology."
   },
   {
    "id": "01.03.11.01.01",
@@ -120,6 +121,7 @@
    "ordinal": 0,
    "kind": "ext",
    "en": "Covers the enzymatic machinery that duplicates the genome with high fidelity each cell cycle and the pathways that detect and correct DNA damage. Includes origin licensing, the replisome, mismatch repair, excision repair, and homologous and non-homologous recombination. Fidelity and repair fidelity underlie genome stability, aging, and cancer etiology.",
+   "cs": "Zahrnuje enzymatickou mašinerii, která v každém buněčném cyklu zdvojuje genom s vysokou věrností, a dráhy, jež rozpoznávají a opravují poškození DNA. Patří sem licencování replikačních počátků, replizom, oprava chybného párování (mismatch repair), excizní oprava a homologní i nehomologní rekombinace. Věrnost replikace a oprav je základem stability genomu, stárnutí a vzniku nádorů.",
    "brief": "Covers the enzymatic machinery that duplicates the genome with high fidelity each cell cycle and the pathways that detect and correct DNA damage. Includes origin licensing, the replisome, mismatch repair, excision repair, and homologous and non-homologous recombination. Fidelity and repair fidelity underlie genome stability, aging, and cancer etiology.\n\n### Concepts\n- **Replisome Architecture** — The multiprotein complex of helicase, primase, and DNA polymerases that unwinds and copies both strands at the replication fork.\n- **Origin Licensing** — Assembly of pre-replication complexes at defined origins ensures each genomic locus replicates exactly once per cell cycle.\n- **Mismatch Repair** — A post-replicative surveillance system excises misincorporated bases missed by polymerase proofreading, cutting error rates roughly a thousandfold.\n- **Nucleotide and Base Excision Repair** — Distinct pathways remove bulky adducts or single damaged bases, respectively, restoring the correct sequence using the intact complementary strand as template.\n- **Homologous Recombination** — Uses a sister chromatid or homologous sequence as template to accurately repair double-strand breaks and to generate genetic diversity via crossing over.\n- **Telomere Maintenance** — Telomerase extends chromosome ends to offset the end-replication problem, linking telomere length to cellular senescence and immortalization."
   },
   {
@@ -131,6 +133,7 @@
    "ordinal": 1,
    "kind": "ext",
    "en": "Studies how RNA polymerases convert DNA templates into RNA transcripts, including promoter recognition, elongation, termination, and co-transcriptional RNA processing. Covers the distinct machineries of bacterial and eukaryotic systems and the general and sequence-specific factors that position polymerase at the correct start site. This is the first and most heavily regulated step of gene expression.",
+   "cs": "Studuje, jak RNA polymerázy přepisují templátovou DNA do RNA transkriptů, včetně rozpoznání promotoru, elongace, terminace a kotranskripčního zpracování RNA. Zahrnuje odlišné aparáty bakteriálních a eukaryotických systémů a obecné i sekvenčně specifické faktory, které polymerázu ustavují na správném počátečním místě. Jde o první a nejsilněji regulovaný krok genové exprese.",
    "brief": "Studies how RNA polymerases convert DNA templates into RNA transcripts, including promoter recognition, elongation, termination, and co-transcriptional RNA processing. Covers the distinct machineries of bacterial and eukaryotic systems and the general and sequence-specific factors that position polymerase at the correct start site. This is the first and most heavily regulated step of gene expression.\n\n### Concepts\n- **RNA Polymerase Structure and Catalysis** — Multi-subunit enzymes catalyze template-directed RNA synthesis using a two-metal-ion mechanism conserved across all domains of life.\n- **Promoter Recognition and Initiation** — General transcription factors assemble a pre-initiation complex at core promoter elements to position polymerase and open the DNA duplex.\n- **Transcriptional Elongation and Termination** — Elongation factors modulate polymerase pausing and processivity, while intrinsic or factor-dependent mechanisms release the completed transcript.\n- **Pre-mRNA Splicing** — The spliceosome removes introns and ligates exons co-transcriptionally, and alternative splicing generates multiple protein isoforms from one gene.\n- **5' Capping and 3' Polyadenylation** — Co-transcriptional addition of a 5' cap and 3' poly(A) tail protects the transcript and licenses it for nuclear export and translation."
   },
   {
@@ -142,6 +145,7 @@
    "ordinal": 2,
    "kind": "ext",
    "en": "Examines how the ribosome decodes messenger RNA into polypeptide chains using the genetic code, transfer RNAs, and a suite of initiation, elongation, and release factors. Addresses translational fidelity, ribosome structure, and co-translational quality-control mechanisms that couple protein synthesis to folding and localization. Central to understanding how genetic information becomes functional protein.",
+   "cs": "Zkoumá, jak ribozom dekóduje mediátorovou RNA do polypeptidových řetězců pomocí genetického kódu, transferových RNA a sady iniciačních, elongačních a terminačních faktorů. Věnuje se věrnosti translace, struktuře ribozomu a kotranslačním mechanismům kontroly kvality, které spojují syntézu proteinů s jejich sbalováním a lokalizací. Je klíčová pro pochopení, jak se genetická informace stává funkčním proteinem.",
    "brief": "Examines how the ribosome decodes messenger RNA into polypeptide chains using the genetic code, transfer RNAs, and a suite of initiation, elongation, and release factors. Addresses translational fidelity, ribosome structure, and co-translational quality-control mechanisms that couple protein synthesis to folding and localization. Central to understanding how genetic information becomes functional protein.\n\n### Concepts\n- **Genetic Code and Codon Recognition** — The near-universal triplet code maps 61 sense codons to 20 amino acids via wobble-permissive codon-anticodon pairing.\n- **Ribosome Structure and Function** — The two-subunit ribozyme-containing ribosome catalyzes peptide bond formation and translocates along the mRNA one codon at a time.\n- **Translation Initiation** — Initiation factors assemble the small subunit, initiator tRNA, and mRNA at the start codon, the rate-limiting and most regulated step of translation.\n- **Aminoacyl-tRNA Synthetases** — Enzymes that charge each tRNA with its cognate amino acid with high specificity, setting the fidelity ceiling of the genetic code.\n- **Co-translational Quality Control** — Ribosome-associated chaperones and surveillance pathways such as no-go and non-stop decay clear stalled or aberrant translation complexes."
   },
   {
@@ -153,6 +157,7 @@
    "ordinal": 3,
    "kind": "ext",
    "en": "Investigates how cells switch genes on and off in response to developmental cues and environmental signals, spanning transcription factor logic, operons, enhancers, and combinatorial control. Explains how a single genome generates distinct cell types and adaptive responses. A cornerstone for developmental biology, immunology, and disease mechanisms.",
+   "cs": "Zkoumá, jak buňky zapínají a vypínají geny v reakci na vývojové podněty a signály prostředí, od logiky transkripčních faktorů přes operony a zesilovače (enhancery) až po kombinatorickou regulaci. Vysvětluje, jak jediný genom dává vzniknout odlišným buněčným typům a adaptivním odpovědím. Je základním kamenem vývojové biologie, imunologie a mechanismů nemocí.",
    "brief": "Investigates how cells switch genes on and off in response to developmental cues and environmental signals, spanning transcription factor logic, operons, enhancers, and combinatorial control. Explains how a single genome generates distinct cell types and adaptive responses. A cornerstone for developmental biology, immunology, and disease mechanisms.\n\n### Concepts\n- **Transcription Factors and DNA Binding Motifs** — Sequence-specific proteins bind cis-regulatory elements to activate or repress nearby genes, often through structural motifs like helix-turn-helix or zinc fingers.\n- **Operons and Bacterial Regulatory Logic** — Coordinately controlled gene clusters, exemplified by the lac operon, illustrate inducible and repressible regulatory circuits in prokaryotes.\n- **Enhancers and Combinatorial Control** — Distal regulatory elements integrate multiple transcription factor inputs and loop to promoters to achieve precise, tissue-specific expression.\n- **Signal Transduction to the Nucleus** — Extracellular signals relay through kinase cascades to activate latent transcription factors, coupling gene expression to cellular environment.\n- **Gene Regulatory Networks** — Interlocking feedback and feedforward circuits among transcription factors produce robust, switch-like, or oscillatory expression dynamics."
   },
   {
@@ -164,6 +169,7 @@
    "ordinal": 4,
    "kind": "ext",
    "en": "Covers the diverse catalytic and regulatory roles of RNA beyond its role as a coding intermediate, including microRNAs, long non-coding RNAs, riboswitches, and catalytic ribozymes. Explores RNA structure-function relationships and post-transcriptional control of gene expression. A rapidly expanding field since the discovery that most of the genome is transcribed into non-coding transcripts.",
+   "cs": "Zahrnuje rozmanité katalytické a regulační role RNA nad rámec jejího působení coby kódujícího meziproduktu, včetně mikroRNA, dlouhých nekódujících RNA, ribopřepínačů a katalytických ribozymů. Zkoumá vztahy mezi strukturou a funkcí RNA a posttranskripční regulaci genové exprese. Jde o rychle se rozvíjející obor od objevu, že se přepisuje většina genomu do nekódujících transkriptů.",
    "brief": "Covers the diverse catalytic and regulatory roles of RNA beyond its role as a coding intermediate, including microRNAs, long non-coding RNAs, riboswitches, and catalytic ribozymes. Explores RNA structure-function relationships and post-transcriptional control of gene expression. A rapidly expanding field since the discovery that most of the genome is transcribed into non-coding transcripts.\n\n### Concepts\n- **MicroRNA-Mediated Silencing** — Small ~22-nucleotide RNAs guide the RISC complex to complementary mRNAs, triggering translational repression or degradation.\n- **Long Non-Coding RNAs** — Transcripts over 200 nucleotides that regulate chromatin state, transcription, or scaffolding without being translated, such as Xist in X-inactivation.\n- **Riboswitches and Ribozymes** — RNA elements that directly sense metabolite concentration or catalyze chemical reactions, revealing pre-protein regulatory and catalytic capacities of RNA.\n- **RNA Interference and Small Interfering RNAs** — A conserved sequence-specific gene-silencing pathway triggered by double-stranded RNA, widely repurposed as an experimental knockdown tool.\n- **CRISPR RNA-Guided Immunity** — Bacterial adaptive immune systems use guide RNAs to direct Cas nucleases to cleave invading nucleic acids, the biological basis of CRISPR gene editing."
   },
   {
@@ -175,6 +181,7 @@
    "ordinal": 5,
    "kind": "ext",
    "en": "Studies how DNA is packaged with histones into chromatin and how covalent modifications to DNA and histones establish heritable gene expression states without altering sequence. Encompasses nucleosome positioning, histone codes, DNA methylation, and higher-order genome architecture. Explains cell-type memory, X-inactivation, and imprinting.",
+   "cs": "Studuje, jak je DNA sbalena s histony do chromatinu a jak kovalentní modifikace DNA a histonů ustavují dědičné stavy genové exprese bez změny sekvence. Zahrnuje pozicování nukleozomů, histonový kód, metylaci DNA a vyšší uspořádání architektury genomu. Vysvětluje buněčnou paměť typu, inaktivaci chromozomu X a genomový imprinting.",
    "brief": "Studies how DNA is packaged with histones into chromatin and how covalent modifications to DNA and histones establish heritable gene expression states without altering sequence. Encompasses nucleosome positioning, histone codes, DNA methylation, and higher-order genome architecture. Explains cell-type memory, X-inactivation, and imprinting.\n\n### Concepts\n- **Nucleosome Structure and Positioning** — DNA wound around histone octamers forms the fundamental chromatin unit, whose positioning gates transcription factor access.\n- **Histone Post-Translational Modifications** — Acetylation, methylation, and other marks on histone tails recruit reader proteins that activate or compact chromatin, forming a combinatorial 'histone code'.\n- **DNA Methylation** — Covalent addition of methyl groups to cytosine, typically at CpG dinucleotides, silences gene expression and is heritable through cell division.\n- **Chromatin Remodeling Complexes** — ATP-dependent machines slide, evict, or restructure nucleosomes to dynamically expose or occlude regulatory DNA.\n- **Genomic Imprinting and X-Inactivation** — Parent-of-origin-specific silencing and dosage compensation mechanisms demonstrate epigenetic control operating at the whole-chromosome scale."
   },
   {
@@ -186,6 +193,7 @@
    "ordinal": 6,
    "kind": "ext",
    "en": "Covers the experimental methods that made molecular biology a manipulable science: cloning, amplification, sequencing, and targeted genome editing. Includes the enzymatic and biophysical principles underlying PCR, recombinant DNA technology, next-generation sequencing, and CRISPR-based editing. These tools are the practical foundation for both basic research and biotechnology.",
+   "cs": "Zahrnuje experimentální metody, které z molekulární biologie učinily manipulovatelnou vědu: klonování, amplifikaci, sekvenování a cílenou editaci genomu. Patří sem enzymatické a biofyzikální principy, na nichž stojí PCR, technologie rekombinantní DNA, sekvenování nové generace a editace založená na CRISPR. Tyto nástroje jsou praktickým základem jak základního výzkumu, tak biotechnologií.",
    "brief": "Covers the experimental methods that made molecular biology a manipulable science: cloning, amplification, sequencing, and targeted genome editing. Includes the enzymatic and biophysical principles underlying PCR, recombinant DNA technology, next-generation sequencing, and CRISPR-based editing. These tools are the practical foundation for both basic research and biotechnology.\n\n### Concepts\n- **Recombinant DNA and Molecular Cloning** — Restriction enzymes and ligases enable insertion of foreign DNA into plasmid vectors for propagation and expression in host cells.\n- **Polymerase Chain Reaction** — A thermocycling enzymatic method exponentially amplifies a targeted DNA sequence from minute starting material.\n- **DNA Sequencing Technologies** — Methods from Sanger dideoxy sequencing to massively parallel next-generation and long-read platforms determine nucleotide order at increasing scale and speed.\n- **CRISPR-Cas Genome Editing** — Programmable Cas nucleases guided by engineered RNAs introduce targeted double-strand breaks for precise gene disruption, correction, or insertion.\n- **Gene Expression Profiling** — Microarrays and RNA-sequencing quantify transcript abundance genome-wide, revealing expression differences across conditions or cell states."
   },
   {
@@ -197,7 +205,8 @@
    "ordinal": 1,
    "kind": "ext",
    "en": "Cell biology is the study of the cell as the basic structural and functional unit of life, covering organelle architecture and compartmentalization, the cytoskeleton, membrane trafficking, the cell cycle, intracellular and intercellular signaling, and programmed cell death. It examines structure and behavior at the level of the whole cell, distinct from Molecular Biology's focus on nucleic-acid and protein mechanisms and Physiology's focus on tissue- and organ-level function.",
-   "cs": "Buněčná biologie je studium buňky jako základní strukturní a funkční jednotky života, zahrnující architekturu organel a jejich kompartmentalizaci, cytoskelet, membránový transport, buněčný cyklus, nitrobuněčnou i mezibuněčnou signalizaci a programovanou buněčnou smrt. Zkoumá strukturu a chování na úrovni celé buňky, na rozdíl od molekulární biologie, zaměřené na mechanismy nukleových kyselin a proteinů, a fyziologie, jež se soustředí na funkci tkání a orgánů."
+   "cs": "Buněčná biologie je studium buňky jako základní strukturní a funkční jednotky života, zahrnující architekturu organel a jejich kompartmentalizaci, cytoskelet, membránový transport, buněčný cyklus, nitrobuněčnou i mezibuněčnou signalizaci a programovanou buněčnou smrt. Zkoumá strukturu a chování na úrovni celé buňky, na rozdíl od molekulární biologie, zaměřené na mechanismy nukleových kyselin a proteinů, a fyziologie, jež se soustředí na funkci tkání a orgánů.",
+   "brief": "Cell biology takes the cell — the smallest self-sustaining unit of life — as its object, studying how membranes, organelles, the cytoskeleton, and trafficking systems organize matter and energy in space, and how the cell cycle, signaling, and programmed death govern the cell's behavior over time. It occupies the level above [[01.03.11.01]] Molecular Biology, which supplies the macromolecular parts, and below [[01.03.11.08]] Physiology, which treats the tissues and organs built from many cells.\n\nIts accounts of the cytoskeleton, membrane biophysics, and force generation shade into [[01.03.11.14]] Biophysics, while its treatment of organelle architecture connects to [[01.03.11.12]] Structural Biology. Cell-division and checkpoint control anchor cancer biology and feed directly into [[01.03.11.05]] Developmental Biology, and the same organelle-level rules govern the specialized cells studied by [[01.03.11.09]] Neuroscience and [[01.03.11.10]] Immunology."
   },
   {
    "id": "01.03.11.02.01",
@@ -208,6 +217,7 @@
    "ordinal": 0,
    "kind": "ext",
    "en": "Studies the composition, organization, and biophysics of biological membranes — lipid bilayers, membrane proteins, and the compartmentalization they enforce. Covers lateral heterogeneity (lipid rafts), membrane curvature, fusion/fission mechanics, and transport across membranes. Foundational to understanding how cells maintain distinct internal environments and exchange material with their surroundings.",
+   "cs": "Studuje složení, uspořádání a biofyziku biologických membrán — lipidových dvojvrstev, membránových proteinů a kompartmentalizace, kterou vynucují. Zahrnuje laterální heterogenitu (lipidové rafty), zakřivení membrány, mechaniku fúze a štěpení a transport přes membrány. Je základem pochopení, jak si buňky udržují odlišná vnitřní prostředí a vyměňují látky se svým okolím.",
    "brief": "Studies the composition, organization, and biophysics of biological membranes — lipid bilayers, membrane proteins, and the compartmentalization they enforce. Covers lateral heterogeneity (lipid rafts), membrane curvature, fusion/fission mechanics, and transport across membranes. Foundational to understanding how cells maintain distinct internal environments and exchange material with their surroundings.\n\n### Concepts\n- **Lipid Bilayer** — The self-assembled phospholipid sheet that forms the basic permeability barrier of all cellular membranes.\n- **Membrane Proteins** — Integral and peripheral proteins that mediate transport, signaling, and adhesion across the bilayer.\n- **Membrane Fluidity** — The lateral and rotational mobility of lipids and proteins that governs membrane function and lipid raft formation.\n- **Transport Across Membranes** — Passive diffusion, facilitated transport, and active pumping that move ions and solutes across the bilayer."
   },
   {
@@ -219,6 +229,7 @@
    "ordinal": 1,
    "kind": "ext",
    "en": "Examines the structure, biogenesis, and specialized functions of membrane-bound and membraneless organelles that subdivide the eukaryotic cell. Includes the endomembrane system, mitochondria and plastids, peroxisomes, and the nucleus, each maintaining distinct biochemical environments for specialized tasks. Organelle interaction via contact sites and inheritance during division are active research areas.",
+   "cs": "Zkoumá stavbu, biogenezi a specializované funkce membránových i bezmembránových organel, které rozčleňují eukaryotickou buňku. Zahrnuje endomembránový systém, mitochondrie a plastidy, peroxizomy a jádro, z nichž každá udržuje odlišné biochemické prostředí pro specializované úkoly. Vzájemné působení organel prostřednictvím kontaktních míst a jejich dědění při dělení jsou aktivními oblastmi výzkumu.",
    "brief": "Examines the structure, biogenesis, and specialized functions of membrane-bound and membraneless organelles that subdivide the eukaryotic cell. Includes the endomembrane system, mitochondria and plastids, peroxisomes, and the nucleus, each maintaining distinct biochemical environments for specialized tasks. Organelle interaction via contact sites and inheritance during division are active research areas.\n\n### Concepts\n- **Nucleus** — The membrane-bound organelle housing chromatin and the machinery for transcription and RNA processing.\n- **Mitochondria** — Semi-autonomous double-membrane organelles that generate ATP via oxidative phosphorylation and retain their own genome.\n- **Endoplasmic Reticulum** — A continuous membrane network responsible for protein folding, lipid synthesis, and calcium storage.\n- **Golgi Apparatus** — The stacked organelle that modifies, sorts, and packages proteins and lipids for their final destinations.\n- **Peroxisomes** — Single-membrane organelles that carry out fatty acid oxidation and reactive oxygen species detoxification."
   },
   {
@@ -230,6 +241,7 @@
    "ordinal": 2,
    "kind": "ext",
    "en": "Covers the dynamic filament networks — actin, microtubules, and intermediate filaments — that give cells shape, mechanical resilience, and the capacity for movement. Includes motor proteins, cell polarity, and mechanotransduction, linking cytoskeletal architecture to migration, division, and tissue mechanics. Remains a frontier for understanding force generation and self-organization at the molecular scale.",
+   "cs": "Zahrnuje dynamické filamentové sítě — aktin, mikrotubuly a intermediární filamenta — které dávají buňkám tvar, mechanickou odolnost a schopnost pohybu. Patří sem motorové proteiny, buněčná polarita a mechanotransdukce, jež spojují uspořádání cytoskeletu s migrací, dělením a mechanikou tkání. Zůstává hraniční oblastí pro pochopení generování síly a samoorganizace na molekulární úrovni.",
    "brief": "Covers the dynamic filament networks — actin, microtubules, and intermediate filaments — that give cells shape, mechanical resilience, and the capacity for movement. Includes motor proteins, cell polarity, and mechanotransduction, linking cytoskeletal architecture to migration, division, and tissue mechanics. Remains a frontier for understanding force generation and self-organization at the molecular scale.\n\n### Concepts\n- **Actin Filaments** — Dynamic polymers that drive cell shape change, cortical tension, and lamellipodial protrusion.\n- **Microtubules** — Polarized tubulin polymers that organize intracellular transport tracks and form the mitotic spindle.\n- **Intermediate Filaments** — Rope-like polymers such as keratins and lamins that confer mechanical strength to cells and nuclei.\n- **Motor Proteins** — ATP-driven proteins including myosins, kinesins, and dyneins that generate force along cytoskeletal tracks.\n- **Cell Migration** — The coordinated cytoskeletal remodeling process that enables directed cell movement in development and disease."
   },
   {
@@ -241,6 +253,7 @@
    "ordinal": 3,
    "kind": "ext",
    "en": "Studies how proteins and lipids move between organelles and to the cell surface via coated vesicles, and how cargo is selectively packaged, targeted, and delivered. Encompasses the secretory pathway, endocytosis, autophagy, and the molecular machinery of vesicle budding and fusion (SNAREs, Rabs, coat proteins). Errors in trafficking underlie numerous inherited and neurodegenerative diseases.",
+   "cs": "Studuje, jak se proteiny a lipidy pohybují mezi organelami a k buněčnému povrchu prostřednictvím obalených váčků a jak je náklad selektivně balen, směrován a doručován. Zahrnuje sekreční dráhu, endocytózu, autofagii a molekulární aparát pučení a fúze váčků (SNARE, Rab, obalové proteiny). Chyby v tomto transportu jsou podkladem řady dědičných a neurodegenerativních onemocnění.",
    "brief": "Studies how proteins and lipids move between organelles and to the cell surface via coated vesicles, and how cargo is selectively packaged, targeted, and delivered. Encompasses the secretory pathway, endocytosis, autophagy, and the molecular machinery of vesicle budding and fusion (SNAREs, Rabs, coat proteins). Errors in trafficking underlie numerous inherited and neurodegenerative diseases.\n\n### Concepts\n- **Secretory Pathway** — The ER-to-Golgi-to-plasma-membrane route by which newly synthesized proteins are exported from the cell.\n- **Endocytosis** — The process by which cells internalize surface material and extracellular cargo into vesicles.\n- **SNARE Proteins** — Membrane proteins that catalyze the specific fusion of transport vesicles with target membranes.\n- **Autophagy** — The self-degradative pathway that delivers cytoplasmic components to lysosomes for recycling.\n- **Rab GTPases** — Molecular switches that confer identity and directionality to trafficking vesicles along their route."
   },
   {
@@ -252,6 +265,7 @@
    "ordinal": 4,
    "kind": "ext",
    "en": "Addresses the ordered sequence of events by which a cell duplicates its contents and divides, including DNA replication licensing, checkpoint surveillance, and the mechanics of mitosis and cytokinesis. Cyclin-CDK oscillations and checkpoint proteins enforce fidelity, and their dysregulation is a hallmark of cancer. Meiosis and its distinct recombination and segregation machinery are treated as a specialized variant.",
+   "cs": "Věnuje se uspořádanému sledu dějů, jimiž buňka zdvojuje svůj obsah a dělí se, včetně licencování replikace DNA, kontrolního dohledu a mechaniky mitózy a cytokineze. Oscilace cyklin-CDK a kontrolní proteiny vynucují věrnost dělení a jejich rozladění je charakteristickým znakem nádorů. Meióza a její odlišný aparát rekombinace a segregace jsou pojaty jako specializovaná varianta.",
    "brief": "Addresses the ordered sequence of events by which a cell duplicates its contents and divides, including DNA replication licensing, checkpoint surveillance, and the mechanics of mitosis and cytokinesis. Cyclin-CDK oscillations and checkpoint proteins enforce fidelity, and their dysregulation is a hallmark of cancer. Meiosis and its distinct recombination and segregation machinery are treated as a specialized variant.\n\n### Concepts\n- **Cyclins & CDKs** — The oscillating kinase complexes that drive progression through the cell cycle's phases.\n- **Checkpoints** — Surveillance mechanisms that halt cycle progression until DNA replication or chromosome attachment is complete.\n- **Mitosis** — The process of nuclear division that segregates duplicated chromosomes equally into two daughter cells.\n- **Cytokinesis** — The physical division of the cytoplasm that completes cell separation after nuclear division.\n- **Meiosis** — The specialized two-division cycle that halves chromosome number and generates genetic recombination in gametes."
   },
   {
@@ -263,6 +277,7 @@
    "ordinal": 5,
    "kind": "ext",
    "en": "Examines how cells detect and respond to extracellular and intracellular cues via receptors, second messengers, and signal transduction cascades. Covers receptor classes, downstream kinase networks, and how signals are integrated to control gene expression, metabolism, and behavior. Central to understanding development, homeostasis, and disease-associated pathway rewiring.",
+   "cs": "Zkoumá, jak buňky rozpoznávají a reagují na mimobuněčné i nitrobuněčné podněty prostřednictvím receptorů, druhých poslů a signálních transdukčních kaskád. Zahrnuje třídy receptorů, navazující kinázové sítě a způsob, jímž jsou signály integrovány k řízení genové exprese, metabolismu a chování. Je klíčová pro pochopení vývoje, homeostázy a přestavby drah spojené s nemocemi.",
    "brief": "Examines how cells detect and respond to extracellular and intracellular cues via receptors, second messengers, and signal transduction cascades. Covers receptor classes, downstream kinase networks, and how signals are integrated to control gene expression, metabolism, and behavior. Central to understanding development, homeostasis, and disease-associated pathway rewiring.\n\n### Concepts\n- **Receptor Tyrosine Kinases** — Cell-surface receptors that autophosphorylate upon ligand binding to launch downstream signaling cascades.\n- **G Protein-Coupled Receptors** — The largest receptor family, transducing extracellular signals via heterotrimeric G proteins.\n- **Second Messengers** — Small diffusible molecules such as cAMP and calcium that relay and amplify receptor signals intracellularly.\n- **Signal Transduction Cascades** — Sequential kinase or phosphatase relays that convert a receptor event into a specific cellular response."
   },
   {
@@ -274,6 +289,7 @@
    "ordinal": 6,
    "kind": "ext",
    "en": "Covers the regulated pathways by which cells self-destruct or adapt under stress, including apoptosis, necroptosis, pyroptosis, and the unfolded protein response. These programs balance tissue homeostasis against pathology, and their dysregulation contributes to cancer, neurodegeneration, and autoimmune disease. Distinguishing regulated cell death modalities from passive necrosis remains an active area of mechanistic refinement.",
+   "cs": "Zahrnuje regulované dráhy, jimiž buňky sebe samy ničí nebo se přizpůsobují stresu, včetně apoptózy, nekroptózy, pyroptózy a odpovědi na nesbalené proteiny. Tyto programy vyvažují homeostázu tkání proti patologii a jejich rozladění přispívá k nádorům, neurodegeneraci a autoimunitním chorobám. Odlišení regulovaných forem buněčné smrti od pasivní nekrózy zůstává aktivní oblastí mechanistického upřesňování.",
    "brief": "Covers the regulated pathways by which cells self-destruct or adapt under stress, including apoptosis, necroptosis, pyroptosis, and the unfolded protein response. These programs balance tissue homeostasis against pathology, and their dysregulation contributes to cancer, neurodegeneration, and autoimmune disease. Distinguishing regulated cell death modalities from passive necrosis remains an active area of mechanistic refinement.\n\n### Concepts\n- **Apoptosis** — The caspase-driven program of controlled cell dismantling that removes damaged or unneeded cells without inflammation.\n- **Necroptosis** — A regulated, inflammatory form of cell death executed by RIPK/MLKL signaling as a backup to apoptosis.\n- **Unfolded Protein Response** — The ER stress-sensing pathway that restores protein-folding homeostasis or triggers death if stress is unresolved.\n- **Autophagic Cell Death** — A death modality in which excessive self-digestion via autophagy contributes to cell demise."
   },
   {
@@ -285,7 +301,8 @@
    "ordinal": 2,
    "kind": "ext",
    "en": "Genetics is the study of heredity and hereditary variation: how discrete factors transmit from parents to offspring, recombine, and mutate, and how their frequencies shift across populations and generations. Spans Mendelian inheritance, chromosome mapping, mutation, population and quantitative genetics, epigenetic inheritance, and the molecular technologies that read and manipulate genomes. Distinct from Genomics & Bioinformatics, which analyzes genome-scale sequence data computationally rather than inheritance patterns themselves.",
-   "cs": "Genetika je nauka o dědičnosti a dědičné proměnlivosti: o tom, jak se diskrétní vlohy přenášejí z rodičů na potomky, rekombinují a mutují, a jak se jejich četnost mění v populacích napříč generacemi. Zahrnuje mendelovskou dědičnost, mapování chromozomů, mutace, populační a kvantitativní genetiku, epigenetickou dědičnost a molekulární technologie pro čtení a úpravu genomů. Liší se od Genomiky a bioinformatiky, která genomová sekvenční data analyzuje výpočetně, nikoli dědičné vzorce samotné."
+   "cs": "Genetika je nauka o dědičnosti a dědičné proměnlivosti: o tom, jak se diskrétní vlohy přenášejí z rodičů na potomky, rekombinují a mutují, a jak se jejich četnost mění v populacích napříč generacemi. Zahrnuje mendelovskou dědičnost, mapování chromozomů, mutace, populační a kvantitativní genetiku, epigenetickou dědičnost a molekulární technologie pro čtení a úpravu genomů. Liší se od Genomiky a bioinformatiky, která genomová sekvenční data analyzuje výpočetně, nikoli dědičné vzorce samotné.",
+   "brief": "Genetics is the study of heredity and hereditary variation — how discrete factors pass from parents to offspring, recombine, and mutate, and how their frequencies shift across populations and generations. It spans Mendelian transmission, chromosome mapping, mutation, population and quantitative genetics, and epigenetic inheritance, reaching from the single cross to the whole population.\n\nGenetics sits between [[01.03.11.01]] Molecular Biology, which supplies the physical chemistry of the gene, and [[01.03.11.06]] Evolutionary Biology, whose population-genetic core it shares — the boundary is one of timescale, a single generation versus deep time. It is distinct from [[01.03.11.04]] Genomics & Bioinformatics, which analyzes genome-scale sequence data computationally rather than inheritance patterns as such, even as its quantitative-trait methods increasingly draw on the genomic data that discipline produces."
   },
   {
    "id": "01.03.11.03.01",
@@ -296,6 +313,7 @@
    "ordinal": 0,
    "kind": "ext",
    "en": "Studies the rules by which discrete hereditary factors pass from parents to offspring, established by Mendel's crosses and extended to complex inheritance patterns. Covers segregation, independent assortment, dominance relationships, and pedigree analysis in humans and model organisms. Forms the conceptual foundation on which all later genetic theory is built.",
+   "cs": "Studuje pravidla, jimiž se diskrétní dědičné faktory přenášejí z rodičů na potomky, ustavená Mendelovými kříženci a rozšířená na složité vzorce dědičnosti. Zahrnuje segregaci, nezávislou kombinovatelnost, vztahy dominance a analýzu rodokmenů u člověka i modelových organismů. Tvoří pojmový základ, na němž stojí veškerá pozdější genetická teorie.",
    "brief": "Studies the rules by which discrete hereditary factors pass from parents to offspring, established by Mendel's crosses and extended to complex inheritance patterns. Covers segregation, independent assortment, dominance relationships, and pedigree analysis in humans and model organisms. Forms the conceptual foundation on which all later genetic theory is built.\n\n### Concepts\n- **Law of Segregation** — Each organism carries two alleles per gene that separate into different gametes during meiosis.\n- **Independent Assortment** — Alleles of genes on different chromosomes segregate into gametes independently of one another.\n- **Dominance and Codominance** — Allelic interactions range from complete dominance through incomplete dominance to codominance, shaping observed phenotype ratios.\n- **Pedigree Analysis** — Family-tree diagrams trace trait transmission to infer mode of inheritance and estimate recurrence risk.\n- **Non-Mendelian Inheritance** — Patterns such as X-linkage, mitochondrial inheritance, and genomic imprinting deviate from simple Mendelian ratios."
   },
   {
@@ -307,6 +325,7 @@
    "ordinal": 1,
    "kind": "ext",
    "en": "Examines how chromosomes physically carry and transmit genes, and how recombination frequency is used to order loci along a chromosome. Links cytological observation of meiosis to statistical inference of gene position. Underpins classical genetic maps and modern high-resolution recombination mapping alike.",
+   "cs": "Zkoumá, jak chromozomy fyzicky nesou a přenášejí geny a jak se frekvence rekombinace využívá k seřazení lokusů podél chromozomu. Propojuje cytologické pozorování meiózy se statistickým odvozením polohy genu. Je podkladem klasických genetických map i moderního mapování rekombinace s vysokým rozlišením.",
    "brief": "Examines how chromosomes physically carry and transmit genes, and how recombination frequency is used to order loci along a chromosome. Links cytological observation of meiosis to statistical inference of gene position. Underpins classical genetic maps and modern high-resolution recombination mapping alike.\n\n### Concepts\n- **Linkage** — Genes located near one another on a chromosome tend to be inherited together rather than independently.\n- **Crossing Over** — Homologous chromosomes exchange segments during meiotic prophase I, generating recombinant chromatids.\n- **Recombination Frequency Mapping** — The percentage of recombinant offspring between two loci estimates their physical distance in map units.\n- **Chromosome Theory of Heredity** — Genes are physical entities located at specific positions on chromosomes, first demonstrated in Drosophila.\n- **Cytogenetic Mapping** — Microscopic and molecular karyotype analysis localizes genes and structural rearrangements to chromosome bands."
   },
   {
@@ -318,6 +337,7 @@
    "ordinal": 2,
    "kind": "ext",
    "en": "Covers the origin, types, and consequences of heritable changes in DNA sequence, from point mutations to large-scale structural and chromosomal rearrangements. Addresses mutation rate, repair evasion, and the balance between deleterious and adaptive variants in populations. Central to understanding disease etiology, genome evolution, and standing genetic diversity.",
+   "cs": "Zahrnuje původ, typy a důsledky dědičných změn sekvence DNA, od bodových mutací po rozsáhlé strukturní a chromozomové přestavby. Věnuje se mutační rychlosti, úniku opravným mechanismům a rovnováze mezi škodlivými a adaptivními variantami v populacích. Je klíčová pro pochopení etiologie nemocí, evoluce genomu a stálé genetické rozmanitosti.",
    "brief": "Covers the origin, types, and consequences of heritable changes in DNA sequence, from point mutations to large-scale structural and chromosomal rearrangements. Addresses mutation rate, repair evasion, and the balance between deleterious and adaptive variants in populations. Central to understanding disease etiology, genome evolution, and standing genetic diversity.\n\n### Concepts\n- **Point Mutation** — A single-nucleotide substitution, insertion, or deletion that can alter protein sequence or gene expression.\n- **Structural Variation** — Duplications, deletions, inversions, and translocations rearrange large genomic segments and can disrupt gene function.\n- **Aneuploidy and Polyploidy** — Abnormal chromosome number arising from meiotic nondisjunction or whole-genome duplication events.\n- **Mutagenesis Mechanisms** — Replication errors, chemical mutagens, and radiation introduce sequence changes that repair pathways may fail to correct.\n- **Transposable Elements** — Mobile DNA sequences that copy or relocate within the genome, generating insertional mutations and structural variants."
   },
   {
@@ -329,6 +349,7 @@
    "ordinal": 3,
    "kind": "ext",
    "en": "Analyzes allele and genotype frequency dynamics within and between populations under selection, drift, migration, and mutation. Provides the mathematical framework (Hardy-Weinberg equilibrium, coalescent theory) linking Mendelian inheritance to evolutionary change. Essential for conservation biology, molecular evolution, and reconstructing population history.",
+   "cs": "Analyzuje dynamiku frekvencí alel a genotypů uvnitř populací i mezi nimi pod vlivem selekce, driftu, migrace a mutace. Poskytuje matematický rámec (Hardyho-Weinbergova rovnováha, koalescenční teorie) spojující mendelovskou dědičnost s evoluční změnou. Je nezbytná pro ochranářskou biologii, molekulární evoluci a rekonstrukci historie populací.",
    "brief": "Analyzes allele and genotype frequency dynamics within and between populations under selection, drift, migration, and mutation. Provides the mathematical framework (Hardy-Weinberg equilibrium, coalescent theory) linking Mendelian inheritance to evolutionary change. Essential for conservation biology, molecular evolution, and reconstructing population history.\n\n### Concepts\n- **Hardy-Weinberg Equilibrium** — A null model predicting stable allele and genotype frequencies in an infinite, randomly mating population absent evolutionary forces.\n- **Genetic Drift** — Random sampling of alleles across generations causes frequency fluctuations, especially pronounced in small populations.\n- **Natural Selection Models** — Differential reproductive success of genotypes shifts allele frequencies according to selection coefficients and fitness.\n- **Coalescent Theory** — A retrospective model tracing sampled alleles back to their most recent common ancestor to infer population history.\n- **Molecular Evolution** — Compares DNA and protein sequence divergence across taxa to estimate mutation rates and phylogenetic relationships."
   },
   {
@@ -340,6 +361,7 @@
    "ordinal": 4,
    "kind": "ext",
    "en": "Studies continuously varying traits governed by many loci of small effect interacting with environmental factors. Develops statistical tools—heritability estimation, QTL mapping, genome-wide association studies—to dissect the genetic architecture underlying complex phenotypes and disease risk. Bridges classical biometry with modern genomic data.",
+   "cs": "Studuje spojitě proměnlivé znaky řízené mnoha lokusy s malým účinkem, jež se vzájemně ovlivňují s faktory prostředí. Rozvíjí statistické nástroje — odhad dědivosti, mapování QTL, celogenomové asociační studie — k rozklíčování genetické architektury složitých fenotypů a rizika nemocí. Přemosťuje klasickou biometrii s moderními genomickými daty.",
    "brief": "Studies continuously varying traits governed by many loci of small effect interacting with environmental factors. Develops statistical tools—heritability estimation, QTL mapping, genome-wide association studies—to dissect the genetic architecture underlying complex phenotypes and disease risk. Bridges classical biometry with modern genomic data.\n\n### Concepts\n- **Heritability** — The proportion of phenotypic variance in a population attributable to genetic rather than environmental variation.\n- **QTL Mapping** — Statistical linkage of trait variation to chromosomal regions identifies quantitative trait loci influencing a phenotype.\n- **Genome-Wide Association Studies** — Genome-wide marker scans correlate common variants with trait or disease status across large cohorts.\n- **Polygenic Scores** — Aggregated weighted effects of many variants predict individual genetic liability for a complex trait.\n- **Gene-Environment Interaction** — Phenotypic outcome of a genotype depends on environmental context, complicating simple genetic prediction."
   },
   {
@@ -351,6 +373,7 @@
    "ordinal": 5,
    "kind": "ext",
    "en": "Investigates heritable changes in gene expression that occur without altering the underlying DNA sequence, mediated by chromatin state and small RNAs. Examines how such marks are established, maintained through cell division, and in some cases transmitted across generations. A rapidly expanding field reshaping views of inheritance beyond strict DNA sequence transmission.",
+   "cs": "Zkoumá dědičné změny genové exprese, k nimž dochází beze změny základní sekvence DNA a jež jsou zprostředkovány stavem chromatinu a malými RNA. Zabývá se tím, jak jsou tyto značky ustavovány, udržovány přes buněčné dělení a v některých případech přenášeny mezi generacemi. Jde o rychle se rozvíjející obor, který proměňuje pohled na dědičnost nad rámec striktního přenosu sekvence DNA.",
    "brief": "Investigates heritable changes in gene expression that occur without altering the underlying DNA sequence, mediated by chromatin state and small RNAs. Examines how such marks are established, maintained through cell division, and in some cases transmitted across generations. A rapidly expanding field reshaping views of inheritance beyond strict DNA sequence transmission.\n\n### Concepts\n- **DNA Methylation** — Addition of methyl groups to cytosine bases silences gene expression and is propagated through DNA replication.\n- **Histone Modification** — Chemical marks on histone tails alter chromatin accessibility and regulate transcriptional activity.\n- **Genomic Imprinting** — Parent-of-origin-specific epigenetic marks cause monoallelic expression of certain genes.\n- **Transgenerational Epigenetic Inheritance** — Epigenetic states transmitted across multiple generations without corresponding DNA sequence change, still debated in mechanism and scope.\n- **Non-Coding RNA Regulation** — microRNAs and long non-coding RNAs modulate gene expression post-transcriptionally and influence chromatin state."
   },
   {
@@ -362,6 +385,7 @@
    "ordinal": 6,
    "kind": "ext",
    "en": "Covers the experimental and computational methods used to sequence, edit, and manipulate genomes, from classical recombinant DNA techniques to CRISPR-based gene editing. Enables functional dissection of gene action and underlies modern genetic diagnostics, synthetic biology, and gene therapy. A fast-moving technical frontier that continually redefines what genetic questions are answerable.",
+   "cs": "Zahrnuje experimentální a výpočetní metody používané k sekvenování, editaci a manipulaci genomů, od klasických technik rekombinantní DNA po editaci genů založenou na CRISPR. Umožňuje funkční rozklad působení genů a je základem moderní genetické diagnostiky, syntetické biologie a genové terapie. Jde o rychle se pohybující technickou hranici, jež neustále nově vymezuje, které genetické otázky lze zodpovědět.",
    "brief": "Covers the experimental and computational methods used to sequence, edit, and manipulate genomes, from classical recombinant DNA techniques to CRISPR-based gene editing. Enables functional dissection of gene action and underlies modern genetic diagnostics, synthetic biology, and gene therapy. A fast-moving technical frontier that continually redefines what genetic questions are answerable.\n\n### Concepts\n- **DNA Sequencing** — Methods from Sanger chain-termination to massively parallel next-generation sequencing determine nucleotide order in a genome.\n- **CRISPR-Cas Gene Editing** — RNA-guided nuclease systems enable targeted cutting and modification of specific genomic sequences.\n- **Recombinant DNA Technology** — Cloning vectors and restriction enzymes allow isolation, amplification, and recombination of specific DNA fragments.\n- **Functional Genomics** — High-throughput screens and expression profiling assign function to genes at genome-wide scale.\n- **Gene Therapy** — Delivery of corrective genetic material into cells aims to treat disease caused by defective genes."
   },
   {
@@ -373,7 +397,8 @@
    "ordinal": 3,
    "kind": "ext",
    "en": "Genomics and bioinformatics studies living systems at the scale of the whole genome through sequencing and computational analysis, spanning assembly and annotation, comparative and functional genomics, sequence algorithms, and multi-omics integration. Where Genetics traces the inheritance of individual traits, Genomics operates on whole-genome data, supplying the computational infrastructure and reference datasets the other biological disciplines draw on.",
-   "cs": "Genomika a bioinformatika studuje živé systémy v měřítku celého genomu prostřednictvím sekvenování a výpočetní analýzy; zahrnuje sestavení a anotaci genomu, komparativní a funkční genomiku, sekvenční algoritmy a integraci multi-omických dat. Zatímco genetika sleduje dědičnost jednotlivých znaků, genomika pracuje s daty celého genomu a poskytuje výpočetní infrastrukturu a referenční datové sady, z nichž čerpají ostatní biologické obory."
+   "cs": "Genomika a bioinformatika studuje živé systémy v měřítku celého genomu prostřednictvím sekvenování a výpočetní analýzy; zahrnuje sestavení a anotaci genomu, komparativní a funkční genomiku, sekvenční algoritmy a integraci multi-omických dat. Zatímco genetika sleduje dědičnost jednotlivých znaků, genomika pracuje s daty celého genomu a poskytuje výpočetní infrastrukturu a referenční datové sady, z nichž čerpají ostatní biologické obory.",
+   "brief": "Genomics and bioinformatics study living systems at the scale of the entire genome, converting nucleic acids into read data and read data into biological meaning through sequencing platforms and computational analysis. The field spans assembly and annotation, comparative and functional genomics, the sequence algorithms beneath every pipeline, and the integration of genomic data with the other omics layers.\n\nWhere [[01.03.11.03]] Genetics traces the inheritance of individual traits, genomics operates on whole-genome data and supplies the reference datasets and computational infrastructure the rest of biology draws on — from [[01.03.11.06]] Evolutionary Biology's phylogenomics to [[01.03.11.11]] Microbiology & Virology's metagenomics. Its algorithmic and machine-learning core links it to the computational sciences, while its clinical arm, medical genomics, is the primary bridge between genomic research and healthcare."
   },
   {
    "id": "01.03.11.04.01",
@@ -384,6 +409,7 @@
    "ordinal": 0,
    "kind": "ext",
    "en": "The experimental substrate of genomics: platforms, chemistries, and protocols that convert nucleic acids into digital read data. Short-read (Illumina), long-read (PacBio HiFi, Oxford Nanopore), and single-cell/spatial chemistries each impose distinct error profiles, coverage biases, and length distributions that downstream analysis must model. Platform choice determines what genomic questions — SNPs, structural variants, phasing, isoforms — are even answerable.",
+   "cs": "Experimentální substrát genomiky: platformy, chemie a protokoly, které převádějí nukleové kyseliny na digitální čtecí data. Krátké čtení (Illumina), dlouhé čtení (PacBio HiFi, Oxford Nanopore) a jednobuněčné i prostorové chemie vnášejí odlišné chybové profily, zkreslení pokrytí a rozdělení délek, které musí navazující analýza modelovat. Volba platformy rozhoduje o tom, které genomické otázky — SNP, strukturní varianty, fázování, izoformy — jsou vůbec zodpověditelné.",
    "brief": "The experimental substrate of genomics: platforms, chemistries, and protocols that convert nucleic acids into digital read data. Short-read (Illumina), long-read (PacBio HiFi, Oxford Nanopore), and single-cell/spatial chemistries each impose distinct error profiles, coverage biases, and length distributions that downstream analysis must model. Platform choice determines what genomic questions — SNPs, structural variants, phasing, isoforms — are even answerable.\n\n### Concepts\n- **Short-Read Sequencing** — Illumina-style sequencing-by-synthesis produces high-accuracy reads of 50-300bp at low per-base cost.\n- **Long-Read Sequencing** — PacBio HiFi and Oxford Nanopore generate kilobase-to-megabase reads that resolve repeats and structural variants.\n- **Sequencing Error Models & Quality Scores** — Phred quality scores and platform-specific error profiles quantify per-base confidence for downstream calling.\n- **Library Preparation & Target Enrichment** — Fragmentation, adapter ligation, and hybridization capture prepare and enrich DNA/RNA for specific sequencing goals.\n- **Single-Cell Sequencing Chemistries** — Droplet- and plate-based barcoding protocols capture genome or transcriptome data from individual cells.\n- **Spatial Sequencing** — In situ or barcoded-array methods preserve tissue coordinates while capturing transcript or genomic signal."
   },
   {
@@ -395,6 +421,7 @@
    "ordinal": 1,
    "kind": "ext",
    "en": "Reconstructs contiguous genome sequences from fragmented read data and identifies the functional elements — genes, exons, regulatory regions — encoded within them. De novo and reference-guided assembly algorithms trade off computational cost against accuracy in resolving repeats, haplotypes, and structural variation. Annotation pipelines layer statistical and homology-based gene models onto finished assemblies to produce usable genome references.",
+   "cs": "Rekonstruuje souvislé sekvence genomu z fragmentovaných čtecích dat a identifikuje funkční prvky — geny, exony, regulační oblasti — v nich zakódované. Algoritmy sestavování de novo a řízeného referencí vyvažují výpočetní náklady proti přesnosti při řešení repetic, haplotypů a strukturní variability. Anotační pipeliny nanášejí statistické a homologií podložené genové modely na hotová sestavení a vytvářejí použitelné genomové reference.",
    "brief": "Reconstructs contiguous genome sequences from fragmented read data and identifies the functional elements — genes, exons, regulatory regions — encoded within them. De novo and reference-guided assembly algorithms trade off computational cost against accuracy in resolving repeats, haplotypes, and structural variation. Annotation pipelines layer statistical and homology-based gene models onto finished assemblies to produce usable genome references.\n\n### Concepts\n- **De Novo Assembly** — Overlap-layout-consensus and de Bruijn graph algorithms reconstruct genomes without a reference sequence.\n- **Reference-Guided Assembly & Mapping** — Reads are aligned against an existing reference genome to reconstruct or scaffold a new sample's sequence.\n- **Gene Prediction & Annotation Pipelines** — Ab initio and evidence-based models identify gene structures, exon boundaries, and functional elements in assembled DNA.\n- **Genome Quality Assessment** — Metrics like N50 and BUSCO completeness scores benchmark assembly contiguity and gene-content coverage.\n- **Pangenome Graphs** — Graph-based references represent shared and variable sequence across many individuals of a species.\n- **Structural Variant Detection** — Algorithms identify large insertions, deletions, inversions, and translocations from assembled or aligned data."
   },
   {
@@ -406,6 +433,7 @@
    "ordinal": 2,
    "kind": "ext",
    "en": "Compares genome sequences across species and lineages to infer evolutionary history, conserved function, and adaptive change. Synteny mapping and orthology inference trace how genomic content is rearranged and retained over evolutionary time, while phylogenomic methods reconstruct species relationships from whole-genome data. This sub-area underpins functional annotation transfer and the identification of lineage-specific innovation.",
+   "cs": "Porovnává sekvence genomů napříč druhy a liniemi a odvozuje z nich evoluční historii, konzervovanou funkci a adaptivní změny. Mapování syntenie a odvozování ortologie sledují, jak je genomový obsah přeskupován a zachováván v průběhu evolučního času, zatímco fylogenomické metody rekonstruují vztahy druhů z celogenomových dat. Tato podoblast je podkladem přenosu funkční anotace a identifikace liniově specifických inovací.",
    "brief": "Compares genome sequences across species and lineages to infer evolutionary history, conserved function, and adaptive change. Synteny mapping and orthology inference trace how genomic content is rearranged and retained over evolutionary time, while phylogenomic methods reconstruct species relationships from whole-genome data. This sub-area underpins functional annotation transfer and the identification of lineage-specific innovation.\n\n### Concepts\n- **Synteny & Orthology Inference** — Conserved gene order and sequence similarity identify orthologous and paralogous genes across genomes.\n- **Phylogenomics** — Whole-genome or multi-locus sequence data reconstructs evolutionary trees among species or populations.\n- **Molecular Evolution & Selection Signatures** — dN/dS ratios and related statistics detect purifying, neutral, or positive selection acting on coding sequence.\n- **Ancestral Genome Reconstruction** — Comparative algorithms infer the gene content and arrangement of extinct ancestral genomes.\n- **Comparative Annotation of Regulatory Elements** — Cross-species conservation of non-coding sequence identifies functionally constrained regulatory regions."
   },
   {
@@ -417,6 +445,7 @@
    "ordinal": 3,
    "kind": "ext",
    "en": "Studies gene function and regulation at genome scale, linking DNA sequence to expression output and phenotype. RNA-seq, ChIP-seq, and CRISPR-based screens generate genome-wide readouts of transcription, protein-DNA binding, and gene essentiality. Network inference methods integrate these readouts into models of regulatory circuitry governing cell state and identity.",
+   "cs": "Studuje funkci a regulaci genů v měřítku celého genomu a propojuje sekvenci DNA s výstupem exprese a fenotypem. RNA-seq, ChIP-seq a screeningy založené na CRISPR generují celogenomové odečty transkripce, vazby proteinů na DNA a esenciality genů. Metody odvozování sítí integrují tyto odečty do modelů regulačních obvodů řídících buněčný stav a identitu.",
    "brief": "Studies gene function and regulation at genome scale, linking DNA sequence to expression output and phenotype. RNA-seq, ChIP-seq, and CRISPR-based screens generate genome-wide readouts of transcription, protein-DNA binding, and gene essentiality. Network inference methods integrate these readouts into models of regulatory circuitry governing cell state and identity.\n\n### Concepts\n- **RNA-Seq & Transcriptomics** — High-throughput sequencing of RNA quantifies genome-wide transcript abundance and isoform structure.\n- **ChIP-Seq & Regulatory Element Mapping** — Chromatin immunoprecipitation followed by sequencing localizes transcription-factor binding and histone marks genome-wide.\n- **CRISPR Functional Screens** — Pooled CRISPR knockout or activation libraries systematically test gene function across the genome.\n- **Gene Regulatory Network Inference** — Computational models reconstruct regulatory relationships between transcription factors and target genes from expression data.\n- **Alternative Splicing Analysis** — Transcriptomic methods identify and quantify exon-inclusion variants generated from a single gene locus."
   },
   {
@@ -476,7 +505,8 @@
    "ordinal": 4,
    "kind": "ext",
    "en": "Developmental biology traces how a single fertilized cell generates a complete, patterned organism, encompassing embryogenesis, morphogenesis, and the molecular signaling that specifies cell fate and body plan. It integrates genetics and cell biology into a temporal, whole-organism framework covering stem cell potency, tissue regeneration, and the evolutionary conservation of developmental programs (evo-devo).",
-   "cs": "Vývojová biologie zkoumá, jak z jediné oplozené buňky vzniká kompletní, prostorově uspořádaný organismus, a zahrnuje embryogenezi, morfogenezi a molekulární signalizaci určující osud buněk a tělní plán. Integruje genetiku a buněčnou biologii do časového, celoorganismálního rámce zahrnujícího potenci kmenových buněk, regeneraci tkání a evoluční konzervaci vývojových programů (evo-devo)."
+   "cs": "Vývojová biologie zkoumá, jak z jediné oplozené buňky vzniká kompletní, prostorově uspořádaný organismus, a zahrnuje embryogenezi, morfogenezi a molekulární signalizaci určující osud buněk a tělní plán. Integruje genetiku a buněčnou biologii do časového, celoorganismálního rámce zahrnujícího potenci kmenových buněk, regeneraci tkání a evoluční konzervaci vývojových programů (evo-devo).",
+   "brief": "Developmental biology traces how a single fertilized cell becomes a complete, patterned organism — through fertilization and cleavage, axis specification, gastrulation, organogenesis, and the signaling that assigns each cell its fate. It integrates the mechanisms of [[01.03.11.01]] Molecular Biology and [[01.03.11.02]] Cell Biology into a temporal, whole-organism framework, adding the dimension of time and spatial pattern that neither supplies alone.\n\nIts comparative arm, evolutionary developmental biology, links it directly to [[01.03.11.06]] Evolutionary Biology, reframing morphological evolution as the rewiring of developmental gene-regulatory networks. Stem-cell potency and regeneration connect it to regenerative medicine, while the physical forces that sculpt tissue shape during morphogenesis draw on [[01.03.11.14]] Biophysics."
   },
   {
    "id": "01.03.11.05.01",
@@ -523,6 +553,7 @@
    "ordinal": 3,
    "kind": "ext",
    "en": "Covers how conserved signaling pathways drive reciprocal tissue interactions that build individual organs — limbs, heart, eye, gut — from patterned germ layers. Emphasizes induction, competence, and the reuse of a small signaling-pathway toolkit (Hedgehog, Wnt, FGF, Notch, BMP, RTK) in combinatorial, context-dependent ways. Explains both organ-specific architecture and the deep homology underlying disparate structures.",
+   "cs": "Zahrnuje, jak konzervované signální dráhy řídí vzájemné interakce tkání, které z uspořádaných zárodečných listů budují jednotlivé orgány — končetiny, srdce, oko, střevo. Zdůrazňuje indukci, kompetenci a opětovné využití malé sady signálních drah (Hedgehog, Wnt, FGF, Notch, BMP, RTK) kombinatorickými, kontextově závislými způsoby. Vysvětluje jak orgánově specifickou architekturu, tak hlubokou homologii, jež leží v základu odlišných struktur.",
    "brief": "Covers how conserved signaling pathways drive reciprocal tissue interactions that build individual organs — limbs, heart, eye, gut — from patterned germ layers. Emphasizes induction, competence, and the reuse of a small signaling-pathway toolkit (Hedgehog, Wnt, FGF, Notch, BMP, RTK) in combinatorial, context-dependent ways. Explains both organ-specific architecture and the deep homology underlying disparate structures.\n\n### Concepts\n- **Embryonic Induction** — One tissue signals to an adjacent competent tissue to specify its fate, exemplified by the Spemann-Mangold organizer inducing neural tissue.\n- **Conserved Signaling Pathways** — Hedgehog, Wnt, Notch, FGF, and BMP pathways are redeployed combinatorially across organs to control proliferation, fate, and boundary formation.\n- **Limb Development** — The apical ectodermal ridge and zone of polarizing activity pattern proximodistal and anteroposterior limb axes via FGF and Sonic hedgehog gradients.\n- **Neural Crest Biology** — A transient, highly migratory vertebrate cell population generates craniofacial skeleton, peripheral neurons, and pigment cells.\n- **Organ-Specific Morphogenesis** — Branching morphogenesis, tube formation, and epithelial folding generate the characteristic architecture of lung, kidney, and gut."
   },
   {
@@ -534,6 +565,7 @@
    "ordinal": 4,
    "kind": "ext",
    "en": "Investigates the molecular basis of pluripotency and multipotency, the niche signals maintaining stem cell identity, and the mechanisms by which some organisms regenerate lost structures. Connects classical developmental biology to regenerative medicine through reprogramming and blastema-based repair. A major translational frontier where mechanistic insight is still incomplete for mammals.",
+   "cs": "Zkoumá molekulární podstatu pluripotence a multipotence, signály niky udržující identitu kmenových buněk a mechanismy, jimiž některé organismy regenerují ztracené struktury. Propojuje klasickou vývojovou biologii s regenerativní medicínou skrze přeprogramování a opravu založenou na blastému. Jde o významnou translační hranici, kde je mechanistické poznání u savců stále neúplné.",
    "brief": "Investigates the molecular basis of pluripotency and multipotency, the niche signals maintaining stem cell identity, and the mechanisms by which some organisms regenerate lost structures. Connects classical developmental biology to regenerative medicine through reprogramming and blastema-based repair. A major translational frontier where mechanistic insight is still incomplete for mammals.\n\n### Concepts\n- **Pluripotency Network** — A core transcription factor circuit of Oct4, Sox2, and Nanog maintains embryonic stem cells in a self-renewing, lineage-uncommitted state.\n- **Cellular Reprogramming** — Forced expression of Yamanaka factors converts differentiated somatic cells into induced pluripotent stem cells.\n- **Stem Cell Niche** — Local signaling microenvironments regulate the balance between stem cell self-renewal and differentiation in adult tissues.\n- **Epimorphic Regeneration** — Amphibians and some fish regenerate amputated limbs and fins via a blastema of dedifferentiated progenitor cells.\n- **Organoid Systems** — Self-organizing three-dimensional stem cell cultures recapitulate organ architecture and are used to model organogenesis in vitro."
   },
   {
@@ -545,6 +577,7 @@
    "ordinal": 5,
    "kind": "ext",
    "en": "Compares developmental programs across taxa to explain how changes in gene regulation, rather than protein-coding sequence alone, generate morphological diversity and evolutionary novelty. Deep homology, heterochrony, and modularity are its unifying concepts. Reframes macroevolutionary change as a problem of developmental gene-regulatory network rewiring.",
+   "cs": "Porovnává vývojové programy napříč taxony a vysvětluje, jak změny v regulaci genů — spíše než v samotné sekvenci kódující proteiny — vytvářejí morfologickou rozmanitost a evoluční novost. Jejími sjednocujícími pojmy jsou hluboká homologie, heterochronie a modularita. Přerámovává makroevoluční změnu jako problém přestavby vývojových genových regulačních sítí.",
    "brief": "Compares developmental programs across taxa to explain how changes in gene regulation, rather than protein-coding sequence alone, generate morphological diversity and evolutionary novelty. Deep homology, heterochrony, and modularity are its unifying concepts. Reframes macroevolutionary change as a problem of developmental gene-regulatory network rewiring.\n\n### Concepts\n- **Deep Homology** — Distantly related taxa reuse the same conserved gene regulatory circuits, such as Pax6 in eye formation, to build analogous structures independently.\n- **Heterochrony** — Evolutionary shifts in the relative timing or rate of developmental events alter adult morphology, as in paedomorphic axolotls.\n- **Gene Regulatory Network Evolution** — Changes in cis-regulatory elements rather than coding sequence are the primary drivers of morphological divergence between species.\n- **Evolutionary Novelty** — Co-option of existing developmental modules for new functions explains the origin of structures like turtle shells or insect wings.\n- **Developmental Constraint** — Conserved developmental architecture biases the range of morphologies accessible to natural selection across lineages."
   },
   {
@@ -556,6 +589,7 @@
    "ordinal": 6,
    "kind": "ext",
    "en": "Focuses on the mechanisms — asymmetric division, lateral inhibition, lineage restriction, epigenetic memory — by which individual cells commit irreversibly to specific fates during development. Modern lineage-tracing and single-cell technologies now allow reconstruction of complete developmental trees. Central to understanding how a single genome generates hundreds of distinct cell types.",
+   "cs": "Zaměřuje se na mechanismy — asymetrické dělení, laterální inhibici, omezení linie, epigenetickou paměť — jimiž se jednotlivé buňky během vývoje nezvratně upínají ke konkrétním osudům. Moderní sledování buněčných linií a jednobuněčné technologie dnes umožňují rekonstrukci úplných vývojových stromů. Je klíčová pro pochopení, jak jediný genom vytváří stovky odlišných buněčných typů.",
    "brief": "Focuses on the mechanisms — asymmetric division, lateral inhibition, lineage restriction, epigenetic memory — by which individual cells commit irreversibly to specific fates during development. Modern lineage-tracing and single-cell technologies now allow reconstruction of complete developmental trees. Central to understanding how a single genome generates hundreds of distinct cell types.\n\n### Concepts\n- **Asymmetric Cell Division** — Unequal partitioning of fate determinants or spindle orientation produces two daughter cells with different developmental potentials.\n- **Lateral Inhibition** — Notch-Delta signaling amplifies small initial differences between equivalent neighboring cells to enforce mutually exclusive fates.\n- **Epigenetic Cell Memory** — Chromatin marks laid down by Polycomb and Trithorax group proteins stably maintain lineage-specific gene expression through cell divisions.\n- **Lineage Tracing** — Genetic and molecular barcoding methods reconstruct the clonal ancestry and fate trajectory of every cell in an embryo.\n- **Single-Cell Developmental Atlases** — Single-cell transcriptomics maps continuous differentiation trajectories, revealing intermediate states obscured by bulk analysis."
   },
   {
@@ -567,7 +601,8 @@
    "ordinal": 5,
    "kind": "ext",
    "en": "Evolutionary biology is the science of how populations and species change over generations and across deep time, as natural selection, genetic drift, mutation, and migration reshape allele frequencies and speciation splits lineages into new species. It spans population genetics, phylogenetic reconstruction, macroevolution and paleobiology, evolutionary developmental biology, coevolution, and human evolution — distinct from Genetics (inheritance mechanics within a single generation) and Ecology (organism-environment interaction) among its neighboring disciplines.",
-   "cs": "Evoluční biologie je věda o tom, jak se populace a druhy mění v průběhu generací a v hlubokém čase, když přirozený výběr, genetický drift, mutace a migrace přetvářejí frekvence alel a speciace štěpí linie na nové druhy. Zahrnuje populační genetiku, fylogenetickou rekonstrukci, makroevoluci a paleobiologii, evoluční vývojovou biologii, koevoluci a evoluci člověka — na rozdíl od genetiky (mechanismy dědičnosti v rámci jedné generace) a ekologie (interakce organismu s prostředím) mezi sousedními obory."
+   "cs": "Evoluční biologie je věda o tom, jak se populace a druhy mění v průběhu generací a v hlubokém čase, když přirozený výběr, genetický drift, mutace a migrace přetvářejí frekvence alel a speciace štěpí linie na nové druhy. Zahrnuje populační genetiku, fylogenetickou rekonstrukci, makroevoluci a paleobiologii, evoluční vývojovou biologii, koevoluci a evoluci člověka — na rozdíl od genetiky (mechanismy dědičnosti v rámci jedné generace) a ekologie (interakce organismu s prostředím) mezi sousedními obory.",
+   "brief": "Evolutionary biology is the science of how populations and species change across generations and deep time, as natural selection, drift, mutation, and migration reshape allele frequencies and speciation splits lineages. It spans population genetics, phylogenetic reconstruction, molecular and genomic evolution, macroevolution and paleobiology, coevolution, and human evolution — the unifying framework that gives every other biological discipline its historical logic.\n\nIt shares a mathematical core with [[01.03.11.03]] Genetics but differs in timescale, operating over many generations rather than one, and it draws its raw data increasingly from [[01.03.11.04]] Genomics & Bioinformatics. Its developmental arm connects to [[01.03.11.05]] Developmental Biology, its ecological arm to [[01.03.11.07]] Ecology, and its account of adaptation underpins the comparative reasoning used throughout [[01.03.11.16]] Zoology and [[01.03.11.15]] Botany."
   },
   {
    "id": "01.03.11.06.01",
@@ -578,6 +613,7 @@
    "ordinal": 0,
    "kind": "ext",
    "en": "Studies how allele and genotype frequencies change within populations under selection, drift, mutation, and migration. Provides the mathematical core of evolutionary theory — from Hardy-Weinberg equilibrium to Fisher's fundamental theorem — linking Mendelian inheritance to Darwinian change. Underpins conservation genetics, breeding, and disease-resistance modeling.",
+   "cs": "Studuje, jak se frekvence alel a genotypů mění uvnitř populací pod vlivem selekce, driftu, mutace a migrace. Poskytuje matematické jádro evoluční teorie — od Hardyho-Weinbergovy rovnováhy po Fisherův fundamentální teorém — spojující mendelovskou dědičnost s darwinovskou změnou. Je podkladem ochranářské genetiky, šlechtění a modelování odolnosti vůči nemocem.",
    "brief": "Studies how allele and genotype frequencies change within populations under selection, drift, mutation, and migration. Provides the mathematical core of evolutionary theory — from Hardy-Weinberg equilibrium to Fisher's fundamental theorem — linking Mendelian inheritance to Darwinian change. Underpins conservation genetics, breeding, and disease-resistance modeling.\n\n### Concepts\n- **Natural Selection** — Differential survival and reproduction of heritable variants drives directional, stabilizing, or disruptive change in populations.\n- **Genetic Drift** — Random sampling of alleles across generations causes frequency change independent of fitness, strongest in small populations.\n- **Hardy-Weinberg Equilibrium** — A null model predicting constant allele and genotype frequencies absent selection, drift, mutation, or migration.\n- **Fitness Landscapes** — Abstract surfaces mapping genotype or phenotype to reproductive fitness, used to visualize adaptive trajectories and peaks.\n- **Mutation-Selection Balance** — An equilibrium frequency for deleterious alleles set by the opposing forces of recurrent mutation and purifying selection.\n- **Sexual Selection** — Selection arising from differential mating success, explaining traits like ornaments and armaments that reduce survival but raise mating rate."
   },
   {
@@ -589,6 +625,7 @@
    "ordinal": 1,
    "kind": "ext",
    "en": "Reconstructs evolutionary relationships among taxa from morphological, molecular, and genomic data and organizes life into hierarchical classifications. Tree-inference methods (parsimony, maximum likelihood, Bayesian) underlie comparative biology, epidemiological tracing, and biodiversity cataloguing. The discipline anchors every other evolutionary inference in an explicit historical framework.",
+   "cs": "Rekonstruuje evoluční vztahy mezi taxony z morfologických, molekulárních a genomických dat a uspořádává život do hierarchických klasifikací. Metody odvozování stromů (parsimonie, maximální věrohodnost, bayesovské) jsou podkladem srovnávací biologie, epidemiologického sledování a katalogizace biodiverzity. Tento obor ukotvuje každý další evoluční závěr v explicitním historickém rámci.",
    "brief": "Reconstructs evolutionary relationships among taxa from morphological, molecular, and genomic data and organizes life into hierarchical classifications. Tree-inference methods (parsimony, maximum likelihood, Bayesian) underlie comparative biology, epidemiological tracing, and biodiversity cataloguing. The discipline anchors every other evolutionary inference in an explicit historical framework.\n\n### Concepts\n- **Cladistics** — A systematic method that groups taxa strictly by shared derived characters (synapomorphies) into monophyletic clades.\n- **Molecular Phylogenetics** — Infers evolutionary trees from DNA, RNA, or protein sequence divergence rather than morphology alone.\n- **Bayesian Phylogenetic Inference** — Estimates tree topology and branch lengths as a posterior probability distribution given sequence data and priors.\n- **Tree of Life** — A comprehensive phylogenetic hypothesis depicting the branching history of all known lineages from a universal common ancestor.\n- **Homology vs Homoplasy** — Distinguishes similarity from common ancestry (homology) from independently evolved similarity (convergence, parallelism, reversal).\n- **Molecular Clock** — A model that estimates divergence times from the accumulated rate of neutral sequence substitutions between lineages."
   },
   {
@@ -600,6 +637,7 @@
    "ordinal": 2,
    "kind": "ext",
    "en": "Examines the processes by which populations diverge into distinct, reproductively isolated species. Covers geographic and ecological modes of divergence, the genetics of hybrid incompatibility, and the maintenance of species boundaries in contact zones. Central to defining what a species is and how biodiversity accumulates.",
+   "cs": "Zkoumá procesy, jimiž se populace rozrůzňují na odlišné, reprodukčně izolované druhy. Zahrnuje geografické a ekologické způsoby divergence, genetiku hybridní neslučitelnosti a udržování hranic druhů v kontaktních zónách. Je klíčová pro vymezení toho, co je druh a jak se hromadí biodiverzita.",
    "brief": "Examines the processes by which populations diverge into distinct, reproductively isolated species. Covers geographic and ecological modes of divergence, the genetics of hybrid incompatibility, and the maintenance of species boundaries in contact zones. Central to defining what a species is and how biodiversity accumulates.\n\n### Concepts\n- **Allopatric Speciation** — Species formation driven by geographic separation that halts gene flow between diverging populations.\n- **Sympatric Speciation** — Divergence into new species within a single geographic range, typically via disruptive selection or polyploidy.\n- **Reinforcement** — Selection against low-fitness hybrids strengthens prezygotic isolation where diverging populations overlap.\n- **Reproductive Isolation** — The set of prezygotic and postzygotic barriers that prevent gene flow between distinct species.\n- **Hybrid Zones** — Geographic regions where genetically distinct populations meet, mate, and produce hybrids of varying fitness.\n- **Ring Species** — A chain of interbreeding populations encircling a barrier, where terminal populations coexist without interbreeding."
   },
   {
@@ -611,6 +649,7 @@
    "ordinal": 3,
    "kind": "ext",
    "en": "Analyzes evolutionary change at the level of DNA and genome architecture — substitution rates, gene and genome duplication, transposable elements, and lateral transfer. The neutral theory reframed much of molecular divergence as non-adaptive, while comparative genomics now resolves the origins of novel gene families across whole clades.",
+   "cs": "Analyzuje evoluční změny na úrovni DNA a architektury genomu — rychlosti substitucí, duplikace genů i celých genomů, transponovatelné elementy a laterální přenos. Neutrální teorie přerámovala velkou část molekulární divergence jako neadaptivní, zatímco srovnávací genomika dnes objasňuje původ nových genových rodin napříč celými kladami.",
    "brief": "Analyzes evolutionary change at the level of DNA and genome architecture — substitution rates, gene and genome duplication, transposable elements, and lateral transfer. The neutral theory reframed much of molecular divergence as non-adaptive, while comparative genomics now resolves the origins of novel gene families across whole clades.\n\n### Concepts\n- **Neutral Theory** — Kimura's model holds that most molecular substitutions are fixed by drift rather than positive selection.\n- **Gene Duplication** — Duplicated loci escape purifying selection and can neofunctionalize, subfunctionalize, or become pseudogenes.\n- **Horizontal Gene Transfer** — Movement of genetic material between unrelated lineages outside of vertical parent-to-offspring inheritance.\n- **Genome Evolution** — Studies changes in genome size, structure, and organization, including transposon activity and chromosomal rearrangement.\n- **Molecular Clock Calibration** — Anchors substitution-rate-based divergence estimates to fossil or geological dates for absolute timescales.\n- **Comparative Genomics** — Aligns whole genomes across taxa to identify conserved elements, gene family expansions, and lineage-specific innovation."
   },
   {
@@ -622,6 +661,7 @@
    "ordinal": 4,
    "kind": "ext",
    "en": "Investigates large-scale evolutionary patterns above the species level across deep time: adaptive radiations, mass extinctions, and long-term morphological trends recorded in the fossil record. Bridges evolutionary theory with stratigraphy and geochronology to test whether microevolutionary mechanisms scale up to explain macroevolutionary pattern.",
+   "cs": "Zkoumá rozsáhlé evoluční vzorce nad úrovní druhu v hlubokém čase: adaptivní radiace, hromadná vymírání a dlouhodobé morfologické trendy zaznamenané ve fosilním záznamu. Přemosťuje evoluční teorii se stratigrafií a geochronologií, aby prověřila, zda se mikroevoluční mechanismy škálují do vysvětlení makroevolučních vzorců.",
    "brief": "Investigates large-scale evolutionary patterns above the species level across deep time: adaptive radiations, mass extinctions, and long-term morphological trends recorded in the fossil record. Bridges evolutionary theory with stratigraphy and geochronology to test whether microevolutionary mechanisms scale up to explain macroevolutionary pattern.\n\n### Concepts\n- **Mass Extinction** — Geologically rapid, global losses of biodiversity that reset ecological dominance and open adaptive opportunity.\n- **Adaptive Radiation** — Rapid diversification of a lineage into ecologically distinct forms following access to new resources or niches.\n- **Punctuated Equilibrium** — A model proposing that morphological change concentrates at speciation events, separated by long stasis.\n- **Fossil Record Interpretation** — Uses taphonomy, stratigraphy, and dating to reconstruct extinct organisms and the tempo of lineage change.\n- **Evolutionary Trends** — Directional patterns in trait change across a clade's history, such as body-size increase (Cope's rule).\n- **Deep Homology** — Conservation of ancient developmental genetic toolkits underlying independently evolved structures across distant phyla."
   },
   {
@@ -633,6 +673,7 @@
    "ordinal": 5,
    "kind": "ext",
    "en": "Explores how changes in developmental gene regulation generate morphological evolution, connecting genotype to phenotype through ontogeny. Concepts like heterochrony and gene regulatory network rewiring explain how conserved toolkits produce vast morphological disparity. A young synthesis that reunited developmental and evolutionary biology after a century of separation.",
+   "cs": "Zkoumá, jak změny v regulaci vývojových genů vytvářejí morfologickou evoluci, a propojuje genotyp s fenotypem prostřednictvím ontogeneze. Pojmy jako heterochronie a přestavba genových regulačních sítí vysvětlují, jak konzervované sady nástrojů vytvářejí obrovskou morfologickou disparitu. Jde o mladou syntézu, která znovu sjednotila vývojovou a evoluční biologii po století oddělení.",
    "brief": "Explores how changes in developmental gene regulation generate morphological evolution, connecting genotype to phenotype through ontogeny. Concepts like heterochrony and gene regulatory network rewiring explain how conserved toolkits produce vast morphological disparity. A young synthesis that reunited developmental and evolutionary biology after a century of separation.\n\n### Concepts\n- **Hox Genes** — A conserved family of homeobox transcription factors that pattern the anterior-posterior body axis across bilaterians.\n- **Heterochrony** — Evolutionary shifts in the timing or rate of developmental events that reshape adult morphology.\n- **Developmental Constraint** — Biases imposed by developmental architecture that limit which phenotypic variants are producible for selection to act on.\n- **Phenotypic Plasticity** — The capacity of a single genotype to produce different phenotypes across environments, sometimes preceding genetic assimilation.\n- **Gene Regulatory Networks** — Interconnected sets of transcription factors and cis-regulatory elements whose rewiring drives morphological novelty.\n- **Homeotic Mutation** — A mutation that transforms one body segment or structure into the likeness of another, revealing patterning gene function."
   },
   {
@@ -644,6 +685,7 @@
    "ordinal": 6,
    "kind": "ext",
    "en": "Studies reciprocal evolutionary change between interacting species — predators and prey, hosts and parasites, plants and pollinators — and how ecological interaction shapes selection pressure. Explains persistent arms races, mutualistic dependency, and the maintenance of genetic variation via frequency-dependent dynamics. Links evolutionary theory directly to community ecology.",
+   "cs": "Studuje vzájemné evoluční změny mezi interagujícími druhy — predátory a kořistí, hostiteli a parazity, rostlinami a opylovači — a to, jak ekologická interakce formuje selekční tlak. Vysvětluje trvalé zbrojní závody, mutualistickou závislost a udržování genetické variability skrze frekvenčně závislou dynamiku. Propojuje evoluční teorii přímo s ekologií společenstev.",
    "brief": "Studies reciprocal evolutionary change between interacting species — predators and prey, hosts and parasites, plants and pollinators — and how ecological interaction shapes selection pressure. Explains persistent arms races, mutualistic dependency, and the maintenance of genetic variation via frequency-dependent dynamics. Links evolutionary theory directly to community ecology.\n\n### Concepts\n- **Host-Parasite Coevolution** — Reciprocal adaptation between hosts and their parasites, often driving cyclical shifts in resistance and virulence.\n- **Mutualism Evolution** — Explains the origin and stability of reciprocally beneficial interspecific interactions despite cheating incentives.\n- **Red Queen Hypothesis** — Proposes that species must continuously adapt merely to maintain fitness relative to coevolving antagonists.\n- **Evolutionary Arms Race** — Escalating reciprocal adaptation between antagonists, such as toxin resistance in predator-prey systems.\n- **Niche Construction** — Organisms modify environments in ways that alter the selection pressures acting on themselves and other species.\n- **Frequency-Dependent Selection** — Fitness of a phenotype depends on its frequency in the population, often maintaining polymorphism."
   },
   {
@@ -655,6 +697,7 @@
    "ordinal": 7,
    "kind": "ext",
    "en": "Traces the hominin lineage from its divergence with other apes through bipedalism, brain expansion, and dispersal across the globe, integrating fossil, archaeological, and ancient-genomic evidence. Ancient DNA has rewritten the field over the past two decades, revealing extensive interbreeding among hominin lineages. A distinctly interdisciplinary frontier bridging biology and anthropology.",
+   "cs": "Sleduje linii homininů od jejího rozštěpení s ostatními lidoopy přes bipedii, zvětšování mozku a rozšíření po celém světě a integruje fosilní, archeologické a paleogenomické doklady. Starobylá DNA za poslední dvě desetiletí obor přepsala a odhalila rozsáhlé křížení mezi liniemi homininů. Jde o výrazně mezioborovou hranici přemosťující biologii a antropologii.",
    "brief": "Traces the hominin lineage from its divergence with other apes through bipedalism, brain expansion, and dispersal across the globe, integrating fossil, archaeological, and ancient-genomic evidence. Ancient DNA has rewritten the field over the past two decades, revealing extensive interbreeding among hominin lineages. A distinctly interdisciplinary frontier bridging biology and anthropology.\n\n### Concepts\n- **Hominin Phylogeny** — The branching evolutionary tree of humans and extinct bipedal relatives since the split from chimpanzee ancestors.\n- **Out-of-Africa Model** — The predominant model holding that anatomically modern humans originated in Africa and later dispersed globally.\n- **Ancient DNA** — Sequencing of degraded genetic material from fossils, enabling direct genomic comparison across extinct hominin populations.\n- **Cultural Evolution** — Studies how socially transmitted behavior and technology interact with and shape genetic evolution in humans.\n- **Bipedalism Origins** — Investigates the anatomical and ecological drivers behind the evolution of habitual upright walking in hominins.\n- **Neanderthal Admixture** — Genomic evidence of interbreeding between modern humans and Neanderthals leaving detectable ancestry in living populations."
   },
   {
@@ -666,7 +709,8 @@
    "ordinal": 6,
    "kind": "ext",
    "en": "Ecology examines how organisms interact with each other and their physical environment across scales — population dynamics and regulation, community structure and species interactions, ecosystem energy flow and biogeochemical cycling, and the applied concerns of conservation and global environmental change. It is biology's outward-facing discipline, addressing the organism in its context rather than its internal structure or heredity.",
-   "cs": "Ekologie zkoumá, jak organismy interagují mezi sebou a se svým fyzickým prostředím napříč měřítky — dynamiku a regulaci populací, strukturu společenstev a mezidruhové interakce, tok energie a biogeochemické cykly v ekosystémech a aplikované otázky ochrany přírody a globální změny prostředí. Je to obor biologie zaměřený navenek, na organismus v jeho kontextu, nikoli na jeho vnitřní stavbu nebo dědičnost."
+   "cs": "Ekologie zkoumá, jak organismy interagují mezi sebou a se svým fyzickým prostředím napříč měřítky — dynamiku a regulaci populací, strukturu společenstev a mezidruhové interakce, tok energie a biogeochemické cykly v ekosystémech a aplikované otázky ochrany přírody a globální změny prostředí. Je to obor biologie zaměřený navenek, na organismus v jeho kontextu, nikoli na jeho vnitřní stavbu nebo dědičnost.",
+   "brief": "Ecology examines how organisms interact with one another and with their physical environment across scales — from single-species population dynamics through community structure and species interactions to ecosystem energy flow, biogeochemical cycling, and the applied concerns of conservation and global change. It is biology's outward-facing discipline, addressing the organism in its context rather than its internal structure or heredity.\n\nIts evolutionary dimension overlaps with [[01.03.11.06]] Evolutionary Biology through coevolution and adaptation, while its biogeochemical accounting connects to [[01.02]] Chemistry and the Earth sciences via the carbon, nitrogen, and phosphorus cycles. Population and community theory ground conservation biology, and microbial ecology ties it to [[01.03.11.11]] Microbiology & Virology's account of host-associated and environmental microbial communities."
   },
   {
    "id": "01.03.11.07.01",
@@ -677,6 +721,7 @@
    "ordinal": 0,
    "kind": "ext",
    "en": "Studies the dynamics of single-species populations — abundance, density, dispersion, growth, and regulation over time and space. Provides the mathematical core (exponential/logistic growth, life tables, matrix models) underlying demography, harvest management, and pest control. Classical theory is settled; stochastic and individual-based extensions remain active.",
+   "cs": "Studuje dynamiku populací jediného druhu — početnost, hustotu, rozmístění, růst a regulaci v čase a prostoru. Poskytuje matematické jádro (exponenciální a logistický růst, životní tabulky, maticové modely) ležící v základu demografie, řízení sklizně a regulace škůdců. Klasická teorie je ustálená; stochastická a individuálně založená rozšíření zůstávají aktivní.",
    "brief": "Studies the dynamics of single-species populations — abundance, density, dispersion, growth, and regulation over time and space. Provides the mathematical core (exponential/logistic growth, life tables, matrix models) underlying demography, harvest management, and pest control. Classical theory is settled; stochastic and individual-based extensions remain active.\n\n### Concepts\n- **Life Tables & Demography** — Age- or stage-structured survivorship and fecundity schedules used to compute population growth rates.\n- **Density Dependence** — Regulation of population growth by intraspecific competition intensifying as density rises, driving logistic dynamics.\n- **Metapopulation Dynamics** — Theory of spatially structured populations linked by dispersal among patches subject to local extinction and recolonization.\n- **Population Viability Analysis** — Quantitative modeling of extinction risk for small populations under demographic and environmental stochasticity.\n- **Life History Theory** — Framework explaining evolved trade-offs among growth, reproduction, and survival that shape organismal strategies."
   },
   {
@@ -760,7 +805,8 @@
    "ordinal": 7,
    "kind": "ext",
    "en": "Physiology is the study of how living systems function and maintain internal stability, spanning homeostatic regulation and the endocrine, nervous, cardiovascular, respiratory, renal, and metabolic processes that sustain organisms. Integrates mechanisms across scales, from molecular signaling to whole-organism control, and compares regulatory strategies across taxa.",
-   "cs": "Fyziologie je nauka o fungování živých soustav a udržování jejich vnitřní stability, zahrnující homeostatickou regulaci a endokrinní, nervové, kardiovaskulární, respirační, renální a metabolické procesy udržující organismus při životě. Propojuje mechanismy napříč měřítky od molekulární signalizace po řízení na úrovni celého organismu a srovnává regulační strategie mezi taxony."
+   "cs": "Fyziologie je nauka o fungování živých soustav a udržování jejich vnitřní stability, zahrnující homeostatickou regulaci a endokrinní, nervové, kardiovaskulární, respirační, renální a metabolické procesy udržující organismus při životě. Propojuje mechanismy napříč měřítky od molekulární signalizace po řízení na úrovni celého organismu a srovnává regulační strategie mezi taxony.",
+   "brief": "Physiology is the study of how living systems function and hold themselves stable, spanning homeostatic regulation and the endocrine, nervous, cardiovascular, respiratory, renal, and metabolic processes that keep an organism running. It integrates mechanism across scales — from molecular signaling to whole-body control — and compares the regulatory strategies different taxa have evolved for the same functional problems.\n\nIt builds upward from [[01.03.11.02]] Cell Biology, treating tissues and organs rather than single cells, and its neurophysiology arm overlaps with [[01.03.11.09]] Neuroscience, differing mainly in scope — organ-system control versus neural computation. Its comparative and environmental branch connects to [[01.03.11.06]] Evolutionary Biology and [[01.03.11.16]] Zoology, and disease framed as regulatory failure makes physiology the conceptual backbone of medicine."
   },
   {
    "id": "01.03.11.08.01",
@@ -867,7 +913,8 @@
    "ordinal": 8,
    "kind": "ext",
    "en": "Neuroscience is the study of the nervous system — its neurons, synapses, and circuits — and how their activity produces sensation, movement, cognition, and behavior. It spans molecular and cellular signaling mechanisms, circuit anatomy and connectomics, sensory and motor processing, synaptic plasticity, and computational models of neural function, distinguishing it from Physiology's broader organ-system scope and from Genetics' focus on heredity rather than neural computation.",
-   "cs": "Neurovědy jsou studiem nervové soustavy – neuronů, synapsí a neuronových obvodů – a toho, jak jejich aktivita vytváří vnímání, pohyb, poznávání a chování. Zahrnují molekulární a buněčné mechanismy signalizace, anatomii obvodů a konektomiku, senzorické a motorické zpracování, synaptickou plasticitu a výpočetní modely neuronové funkce, čímž se odlišují od fyziologie se širším zaměřením na orgánové soustavy a od genetiky zaměřené na dědičnost, nikoli neuronové výpočty."
+   "cs": "Neurovědy jsou studiem nervové soustavy – neuronů, synapsí a neuronových obvodů – a toho, jak jejich aktivita vytváří vnímání, pohyb, poznávání a chování. Zahrnují molekulární a buněčné mechanismy signalizace, anatomii obvodů a konektomiku, senzorické a motorické zpracování, synaptickou plasticitu a výpočetní modely neuronové funkce, čímž se odlišují od fyziologie se širším zaměřením na orgánové soustavy a od genetiky zaměřené na dědičnost, nikoli neuronové výpočty.",
+   "brief": "Neuroscience studies the nervous system — its neurons, synapses, and circuits — and how their activity produces sensation, movement, learning, cognition, and behavior. It runs from the molecular biophysics of the excitable membrane through circuit anatomy and connectomics to the computational and cognitive principles of whole-brain function.\n\nAt its cellular base it draws on [[01.03.11.02]] Cell Biology and [[01.03.11.14]] Biophysics — the neuron is, first, an excitable cell governed by ion-channel physics — and its neurophysiology overlaps with [[01.03.11.08]] Physiology, differing in that it treats neural computation rather than organ-system control specifically. Its computational and systems arm connects to the information and computer sciences, while synaptic plasticity, memory, and the neural basis of consciousness remain among biology's most open frontiers."
   },
   {
    "id": "01.03.11.09.01",
@@ -878,6 +925,7 @@
    "ordinal": 0,
    "kind": "ext",
    "en": "Studies the neuron as an excitable cell — membrane biophysics, ion channels, action-potential generation, and synaptic transmission — and the glial cells that support, insulate, and modulate neural signaling. This is the mechanistic substrate on which every higher-level neural computation ultimately rests. Classical Hodgkin-Huxley biophysics is settled theory; channel diversity and glial signaling remain active refinement areas.",
+   "cs": "Studuje neuron jako vzrušivou buňku — biofyziku membrány, iontové kanály, generování akčního potenciálu a synaptický přenos — a gliové buňky, které neurální signalizaci podpírají, izolují a modulují. Jde o mechanistický substrát, na němž nakonec spočívá každý výpočet na vyšší úrovni nervové soustavy. Klasická Hodgkinova-Huxleyho biofyzika je ustálená teorie; rozmanitost kanálů a gliová signalizace zůstávají aktivními oblastmi upřesňování.",
    "brief": "Studies the neuron as an excitable cell — membrane biophysics, ion channels, action-potential generation, and synaptic transmission — and the glial cells that support, insulate, and modulate neural signaling. This is the mechanistic substrate on which every higher-level neural computation ultimately rests. Classical Hodgkin-Huxley biophysics is settled theory; channel diversity and glial signaling remain active refinement areas.\n\n### Concepts\n- **Neuron Doctrine** — The neuron is the discrete structural and functional signaling unit of the nervous system, connected to others only at synapses.\n- **Action Potential** — A regenerative, all-or-none voltage spike propagated along an axon via voltage-gated sodium and potassium channels.\n- **Synaptic Transmission** — The process by which an electrical signal in a presynaptic neuron triggers neurotransmitter release that chemically excites or inhibits a postsynaptic cell.\n- **Ion Channels and Receptors** — Membrane proteins that gate ion flow in response to voltage or ligand binding, setting a neuron's excitability and response to neurotransmitters.\n- **Glia** — Astrocytes, oligodendrocytes, microglia, and Schwann cells that provide metabolic support, myelination, and immune surveillance for neurons."
   },
   {
@@ -889,6 +937,7 @@
    "ordinal": 1,
    "kind": "ext",
    "en": "Maps the physical organization of the nervous system, from gross brain regions to the wiring diagrams of individual circuits, and asks how anatomical structure constrains function. Modern connectomics extends classical lesion-and-tract-tracing anatomy with dense electron-microscopy and diffusion-imaging reconstructions of whole neural networks. Regional anatomy is textbook-settled; whole-brain connectome mapping is an active large-scale research frontier.",
+   "cs": "Mapuje fyzické uspořádání nervové soustavy, od hrubých mozkových oblastí po schémata zapojení jednotlivých obvodů, a ptá se, jak anatomická struktura omezuje funkci. Moderní konektomika rozšiřuje klasickou anatomii lézí a sledování drah o husté rekonstrukce celých neurálních sítí pomocí elektronové mikroskopie a difuzního zobrazování. Regionální anatomie je učebnicově ustálená; mapování celomozkového konektomu je aktivní velkokapacitní výzkumnou hranicí.",
    "brief": "Maps the physical organization of the nervous system, from gross brain regions to the wiring diagrams of individual circuits, and asks how anatomical structure constrains function. Modern connectomics extends classical lesion-and-tract-tracing anatomy with dense electron-microscopy and diffusion-imaging reconstructions of whole neural networks. Regional anatomy is textbook-settled; whole-brain connectome mapping is an active large-scale research frontier.\n\n### Concepts\n- **Cerebral Cortex** — The layered outer sheet of the forebrain organized into functionally specialized areas responsible for perception, cognition, and voluntary action.\n- **Basal Ganglia** — A set of subcortical nuclei that gate and select motor and cognitive actions through parallel cortico-striato-thalamic loops.\n- **Thalamus** — The central relay and gating structure that routes sensory and motor signals to and between cortical areas.\n- **Neural Circuit** — A defined set of interconnected neurons that together perform a specific computation or behavior.\n- **Connectome** — A comprehensive map of synaptic or structural connections within an organism's nervous system, from microcircuits to whole brains."
   },
   {
@@ -900,6 +949,7 @@
    "ordinal": 2,
    "kind": "ext",
    "en": "Examines how peripheral receptors transduce physical and chemical stimuli into neural signals and how central pathways process them into vision, hearing, touch, smell, and taste. Each modality has a well-characterized receptor-to-cortex pathway, established through over a century of psychophysics and electrophysiology. The core transduction and pathway anatomy is classical; higher perceptual integration remains an area of ongoing study.",
+   "cs": "Zkoumá, jak periferní receptory převádějí fyzikální a chemické podněty na neurální signály a jak je centrální dráhy zpracovávají do zraku, sluchu, hmatu, čichu a chuti. Každá modalita má dobře charakterizovanou dráhu od receptoru po kůru, ustavenou více než stoletím psychofyziky a elektrofyziologie. Jádro transdukce a anatomie drah je klasické; vyšší percepční integrace zůstává oblastí probíhajícího studia.",
    "brief": "Examines how peripheral receptors transduce physical and chemical stimuli into neural signals and how central pathways process them into vision, hearing, touch, smell, and taste. Each modality has a well-characterized receptor-to-cortex pathway, established through over a century of psychophysics and electrophysiology. The core transduction and pathway anatomy is classical; higher perceptual integration remains an area of ongoing study.\n\n### Concepts\n- **Sensory Transduction** — The conversion of a physical or chemical stimulus into an electrical receptor potential by specialized sensory cells.\n- **Visual System** — The retina-to-visual-cortex pathway that encodes light into representations of form, motion, and color.\n- **Auditory System** — The cochlea-to-auditory-cortex pathway that decomposes sound into frequency and temporal cues for hearing and localization.\n- **Somatosensation** — The system of touch, proprioception, and nociception receptors and pathways conveying body-surface and internal sensation to the brain.\n- **Chemosensation** — The olfactory and gustatory systems that detect airborne and dissolved chemicals via dedicated receptor families."
   },
   {
@@ -911,6 +961,7 @@
    "ordinal": 3,
    "kind": "ext",
    "en": "Covers how the nervous system plans, initiates, and coordinates voluntary and reflexive movement, from spinal reflex arcs to cortical motor planning and cerebellar fine-tuning. Classical descending-pathway anatomy and reflex circuitry are well established, while the computational principles of motor learning and coordination continue to be refined.",
+   "cs": "Zahrnuje, jak nervová soustava plánuje, zahajuje a koordinuje volní i reflexní pohyb, od míšních reflexních oblouků po korové plánování pohybu a jemné doladění mozečkem. Klasická anatomie sestupných drah a reflexní obvody jsou dobře ustaveny, zatímco výpočetní principy motorického učení a koordinace se stále upřesňují.",
    "brief": "Covers how the nervous system plans, initiates, and coordinates voluntary and reflexive movement, from spinal reflex arcs to cortical motor planning and cerebellar fine-tuning. Classical descending-pathway anatomy and reflex circuitry are well established, while the computational principles of motor learning and coordination continue to be refined.\n\n### Concepts\n- **Motor Cortex** — The frontal cortical region that plans and executes voluntary movement via descending corticospinal projections.\n- **Cerebellum** — A hindbrain structure that fine-tunes movement timing, coordination, and motor learning through error-correcting circuitry.\n- **Spinal Motor Circuits** — Spinal cord interneuron and motor neuron networks that generate reflexes and rhythmic locomotor patterns.\n- **Basal Ganglia Motor Loop** — A cortico-subcortical circuit that selects and gates which movements are executed while suppressing competing actions."
   },
   {
@@ -922,6 +973,7 @@
    "ordinal": 4,
    "kind": "ext",
    "en": "Investigates the activity-dependent mechanisms by which synapses strengthen or weaken, forming the cellular basis of learning and memory storage. Long-term potentiation and depression are foundational, experimentally reproducible phenomena; the identity and stability of the memory engram itself remains a debated frontier.",
+   "cs": "Zkoumá na aktivitě závislé mechanismy, jimiž synapse zesilují nebo zeslabují, tvořící buněčný základ učení a ukládání paměti. Dlouhodobá potenciace a deprese jsou základní, experimentálně reprodukovatelné jevy; identita a stabilita samotného paměťového engramu zůstávají předmětem sporu na výzkumné hranici.",
    "brief": "Investigates the activity-dependent mechanisms by which synapses strengthen or weaken, forming the cellular basis of learning and memory storage. Long-term potentiation and depression are foundational, experimentally reproducible phenomena; the identity and stability of the memory engram itself remains a debated frontier.\n\n### Concepts\n- **Long-Term Potentiation** — A persistent activity-dependent strengthening of synaptic transmission widely used as the cellular model of memory formation.\n- **Long-Term Depression** — A persistent activity-dependent weakening of synaptic strength that complements potentiation in refining circuit function.\n- **Hippocampal Memory System** — A medial temporal lobe structure essential for forming and consolidating new declarative memories before cortical storage.\n- **Engram** — The physical trace of a specific memory encoded in a distributed set of neurons and their synaptic changes.\n- **Synaptic Pruning** — The developmental and experience-dependent elimination of weak or unused synapses that refines circuit connectivity."
   },
   {
@@ -933,6 +985,7 @@
    "ordinal": 5,
    "kind": "ext",
    "en": "Studies the neural basis of higher mental functions — attention, working memory, language, decision-making, and consciousness — by linking brain activity measured with imaging and electrophysiology to behavior. Core attentional and language-network findings are well replicated, while the neural basis of consciousness and general intelligence remains a genuinely open frontier.",
+   "cs": "Studuje neurální podstatu vyšších duševních funkcí — pozornosti, pracovní paměti, jazyka, rozhodování a vědomí — propojováním mozkové aktivity měřené zobrazováním a elektrofyziologií s chováním. Jádrové poznatky o sítích pozornosti a jazyka jsou dobře replikovány, zatímco neurální podstata vědomí a obecné inteligence zůstává skutečně otevřenou hranicí.",
    "brief": "Studies the neural basis of higher mental functions — attention, working memory, language, decision-making, and consciousness — by linking brain activity measured with imaging and electrophysiology to behavior. Core attentional and language-network findings are well replicated, while the neural basis of consciousness and general intelligence remains a genuinely open frontier.\n\n### Concepts\n- **Attention** — The set of neural mechanisms that selectively prioritize processing of relevant sensory or internal information over competing input.\n- **Working Memory** — The capacity to actively hold and manipulate a limited amount of information over short timescales via sustained prefrontal-parietal activity.\n- **Language Processing** — The network of frontal and temporal regions, including Broca's and Wernicke's areas, that support speech production and comprehension.\n- **Decision-Making** — The neural evaluation and comparison of options and their expected value to select an action, studied via neuroeconomics.\n- **Neural Correlates of Consciousness** — The minimal set of neural events sufficient for a specific conscious experience to occur, an unresolved core question."
   },
   {
@@ -956,7 +1009,8 @@
    "ordinal": 9,
    "kind": "ext",
    "en": "Immunology studies how organisms recognize and defend against pathogens and aberrant cells, and how that defense is kept in check to avoid self-damage. It spans the innate and adaptive branches of host defense, the molecular basis of antigen recognition, and the clinical consequences of immune dysregulation — autoimmunity, immunodeficiency, hypersensitivity, and the vaccines and immunotherapies built on this knowledge. Distinct from Microbiology & Virology, which characterizes the pathogens themselves rather than the host response to them.",
-   "cs": "Imunologie zkoumá, jak organismy rozpoznávají patogeny a poškozené buňky a brání se proti nim a jak je tato obrana udržována v rovnováze, aby nedocházelo k poškození vlastní tkáně. Zahrnuje vrozenou a adaptivní větev imunitní obrany, molekulární podstatu rozpoznávání antigenů a klinické důsledky poruch imunitní regulace — autoimunitu, imunodeficienci, hypersenzitivitu i vakcinologii a imunoterapii, které na těchto poznatcích stavějí. Odlišuje se od mikrobiologie a virologie, jež popisují samotné patogeny, nikoli obrannou odpověď hostitele."
+   "cs": "Imunologie zkoumá, jak organismy rozpoznávají patogeny a poškozené buňky a brání se proti nim a jak je tato obrana udržována v rovnováze, aby nedocházelo k poškození vlastní tkáně. Zahrnuje vrozenou a adaptivní větev imunitní obrany, molekulární podstatu rozpoznávání antigenů a klinické důsledky poruch imunitní regulace — autoimunitu, imunodeficienci, hypersenzitivitu i vakcinologii a imunoterapii, které na těchto poznatcích stavějí. Odlišuje se od mikrobiologie a virologie, jež popisují samotné patogeny, nikoli obrannou odpověď hostitele.",
+   "brief": "Immunology studies how organisms recognize and defend against pathogens and aberrant cells, and how that defense is restrained to avoid attacking the self. It spans the innate and adaptive branches of host defense, the molecular basis of antigen recognition, cytokine signaling networks, and the clinical consequences of immune dysregulation — autoimmunity, immunodeficiency, hypersensitivity — together with the vaccines and immunotherapies built on this knowledge.\n\nIt is distinct from [[01.03.11.11]] Microbiology & Virology, which characterizes the pathogens themselves rather than the host response, though the two meet at host-pathogen interaction. Its cellular and signaling mechanisms rest on [[01.03.11.02]] Cell Biology and [[01.03.11.01]] Molecular Biology, its antibody and receptor structural work connects to [[01.03.11.12]] Structural Biology, and its cytokine-network arm is an active target for systems-level modeling."
   },
   {
    "id": "01.03.11.10.01",
@@ -1063,7 +1117,8 @@
    "ordinal": 10,
    "kind": "ext",
    "en": "Microbiology and virology cover the biology of microorganisms and viruses, from bacterial and archaeal cell physiology and genetics to the ecology of host-associated microbial communities, viral replication strategies, host-pathogen interactions, and the antimicrobial agents and resistance mechanisms that shape infection and treatment.",
-   "cs": "Mikrobiologie a virologie se zabývají biologií mikroorganismů a virů - od fyziologie a genetiky bakteriálních a archeálních buněk přes ekologii mikrobiálních společenstev spojených s hostitelem, replikační strategie virů a interakce hostitel-patogen až po antimikrobiální látky a mechanismy rezistence, které určují průběh infekce a léčby."
+   "cs": "Mikrobiologie a virologie se zabývají biologií mikroorganismů a virů - od fyziologie a genetiky bakteriálních a archeálních buněk přes ekologii mikrobiálních společenstev spojených s hostitelem, replikační strategie virů a interakce hostitel-patogen až po antimikrobiální látky a mechanismy rezistence, které určují průběh infekce a léčby.",
+   "brief": "Microbiology and virology cover the biology of microorganisms and viruses — bacterial and archaeal cell physiology and genetics, the ecology of host-associated and environmental microbial communities, viral replication strategies, host-pathogen interaction, and the antimicrobial agents and resistance mechanisms that shape infection and its treatment. They treat the smallest and most abundant forms of life, together with the acellular replicators that exploit them.\n\nThe discipline supplies the pathogen side of the host-pathogen relationship whose host side is [[01.03.11.10]] Immunology's subject, and its microbiome and microbial-ecology arm connects to [[01.03.11.07]] Ecology. Microbial genetics gave [[01.03.11.01]] Molecular Biology and [[01.03.11.13]] Systems & Synthetic Biology much of their toolkit — restriction enzymes, plasmids, CRISPR — and antimicrobial resistance is among the most urgent applied frontiers in all of biology."
   },
   {
    "id": "01.03.11.11.01",
@@ -1158,7 +1213,8 @@
    "ordinal": 11,
    "kind": "ext",
    "en": "Structural biology determines the three-dimensional architecture of proteins, nucleic acids, and macromolecular assemblies, and relates that architecture to biological function. It integrates experimental methods — X-ray crystallography, cryo-electron microscopy, and NMR spectroscopy — with computational structure prediction to resolve folding, conformational dynamics, and assembly at atomic resolution. It differs from Molecular Biology in its focus on physical structure rather than gene expression and regulatory mechanism.",
-   "cs": "Strukturní biologie určuje trojrozměrnou architekturu proteinů, nukleových kyselin a makromolekulárních komplexů a dává tuto architekturu do souvislosti s biologickou funkcí. Kombinuje experimentální metody – rentgenovou krystalografii, kryoelektronovou mikroskopii a NMR spektroskopii – s výpočetní predikcí struktury, aby popsala skládání, konformační dynamiku a sestavování na atomární úrovni. Na rozdíl od molekulární biologie se zaměřuje na fyzickou strukturu, nikoli na genovou expresi a regulační mechanismy."
+   "cs": "Strukturní biologie určuje trojrozměrnou architekturu proteinů, nukleových kyselin a makromolekulárních komplexů a dává tuto architekturu do souvislosti s biologickou funkcí. Kombinuje experimentální metody – rentgenovou krystalografii, kryoelektronovou mikroskopii a NMR spektroskopii – s výpočetní predikcí struktury, aby popsala skládání, konformační dynamiku a sestavování na atomární úrovni. Na rozdíl od molekulární biologie se zaměřuje na fyzickou strukturu, nikoli na genovou expresi a regulační mechanismy.",
+   "brief": "Structural biology determines the three-dimensional architecture of proteins, nucleic acids, and macromolecular assemblies and relates that architecture to function. It integrates experimental methods — X-ray crystallography, cryo-electron microscopy, and NMR spectroscopy — with computational structure prediction to resolve folding, conformational dynamics, and assembly at atomic resolution.\n\nIt differs from [[01.03.11.01]] Molecular Biology in focusing on physical structure rather than gene-expression mechanism, and it borrows heavily from [[01.01]] Physics and [[01.02]] Chemistry for its diffraction, imaging, and thermodynamic foundations. Its dynamic and force-oriented questions shade into [[01.03.11.14]] Biophysics, its structures of receptors and channels underpin structure-based drug design, and the deep-learning revolution in structure prediction has tied it firmly to the computational sciences."
   },
   {
    "id": "01.03.11.12.01",
@@ -1265,7 +1321,8 @@
    "ordinal": 12,
    "kind": "ext",
    "en": "Studies and engineers biological systems using quantitative, network-level models and applies that understanding to build new biological function. Spans systems-biology theory and network modeling, synthetic gene circuits, metabolic engineering, genome editing, and design-build-test-learn biofoundry workflows that turn biology into an engineering discipline.",
-   "cs": "Studuje a inženýrsky navrhuje biologické systémy pomocí kvantitativních, síťově pojatých modelů a toto porozumění využívá k vytváření nové biologické funkce. Zahrnuje teorii systémové biologie a modelování sítí, syntetické genové obvody, metabolické inženýrství, editaci genomu a workflow navrhni-postav-otestuj-uč se v biofoundry, které proměňují biologii v inženýrskou disciplínu."
+   "cs": "Studuje a inženýrsky navrhuje biologické systémy pomocí kvantitativních, síťově pojatých modelů a toto porozumění využívá k vytváření nové biologické funkce. Zahrnuje teorii systémové biologie a modelování sítí, syntetické genové obvody, metabolické inženýrství, editaci genomu a workflow navrhni-postav-otestuj-uč se v biofoundry, které proměňují biologii v inženýrskou disciplínu.",
+   "brief": "Systems and synthetic biology study and then engineer biological systems using quantitative, network-level models — turning biology from a descriptive into a design discipline. The field spans systems-biology theory and network modeling, synthetic gene circuits, metabolic engineering, genome editing, and the design-build-test-learn biofoundry workflows that aim to make strain engineering as reproducible as electronic-circuit design.\n\nIt builds on the mechanistic understanding of [[01.03.11.01]] Molecular Biology and the whole-cell perspective of [[01.03.11.02]] Cell Biology, and its modeling formalism connects to control theory, computation, and applied mathematics. Metabolic and chassis engineering draw on [[01.03.11.11]] Microbiology & Virology for their host organisms, while its cell-free and minimal-cell frontier reaches toward [[01.03.11.17]] Astrobiology & Origins of Life's bottom-up account of what the essential requirements of life actually are."
   },
   {
    "id": "01.03.11.13.01",
@@ -1312,6 +1369,7 @@
    "ordinal": 3,
    "kind": "ext",
    "en": "Encompasses the tools and strategies for precisely rewriting DNA sequence in living cells and whole genomes, from single-base edits to synthesized chromosomes. CRISPR-Cas systems since 2012 transformed the field from rare, laborious edits to routine, programmable ones. Editor precision, delivery, and whole-genome synthesis remain fast-moving research frontiers.",
+   "cs": "Zahrnuje nástroje a strategie pro přesné přepisování sekvence DNA v živých buňkách i celých genomech, od úprav jediné báze po syntetizované chromozomy. Systémy CRISPR-Cas od roku 2012 proměnily obor ze vzácných, pracných úprav na rutinní, programovatelné. Přesnost editorů, doručení a syntéza celých genomů zůstávají rychle se rozvíjejícími výzkumnými hranicemi.",
    "brief": "Encompasses the tools and strategies for precisely rewriting DNA sequence in living cells and whole genomes, from single-base edits to synthesized chromosomes. CRISPR-Cas systems since 2012 transformed the field from rare, laborious edits to routine, programmable ones. Editor precision, delivery, and whole-genome synthesis remain fast-moving research frontiers.\n\n### Concepts\n- **CRISPR-Cas Systems** — RNA-guided nucleases that generate targeted double-strand breaks or bind DNA for programmable genome modification and regulation.\n- **Base Editing & Prime Editing** — Nuclease-free or nick-based editors that install precise nucleotide changes without relying on double-strand-break repair.\n- **Genome Writing & Synthesis** — De novo chemical synthesis and assembly of whole chromosomes or genomes, exemplified by recoded synthetic Escherichia coli and yeast.\n- **Directed Evolution of Editing Tools** — Iterative mutagenesis and selection that improve nuclease specificity, PAM range, and delivery efficiency of genome editors.\n- **Multiplexed Automated Genome Engineering** — Recombineering-based methods, such as MAGE, that introduce many simultaneous mutations across a genome for combinatorial optimization.\n- **Epigenome Editing** — Uses catalytically dead nucleases fused to chromatin modifiers to reprogram gene expression without altering DNA sequence."
   },
   {
@@ -1323,6 +1381,7 @@
    "ordinal": 4,
    "kind": "ext",
    "en": "Formalizes synthetic biology as an engineering discipline through the iterative Design-Build-Test-Learn cycle, supported by standardized DNA assembly, robotic biofoundries, and computational design tools. Aims to make strain and circuit engineering as reproducible and scalable as electronic circuit design. An actively developing frontier where automation and machine learning are reshaping throughput.",
+   "cs": "Formalizuje syntetickou biologii jako inženýrskou disciplínu prostřednictvím iteračního cyklu návrh-stavba-test-učení, podporovaného standardizovaným skládáním DNA, robotickými biofoundry a výpočetními návrhovými nástroji. Usiluje o to, aby inženýrství kmenů a obvodů bylo stejně reprodukovatelné a škálovatelné jako návrh elektronických obvodů. Jde o aktivně se rozvíjející hranici, kde automatizace a strojové učení proměňují propustnost.",
    "brief": "Formalizes synthetic biology as an engineering discipline through the iterative Design-Build-Test-Learn cycle, supported by standardized DNA assembly, robotic biofoundries, and computational design tools. Aims to make strain and circuit engineering as reproducible and scalable as electronic circuit design. An actively developing frontier where automation and machine learning are reshaping throughput.\n\n### Concepts\n- **Standardized DNA Assembly** — Modular cloning frameworks, such as Golden Gate and MoClo, that enable predictable, hierarchical combination of genetic parts.\n- **Biofoundry Automation** — Robotic, high-throughput platforms that execute construct assembly, transformation, and screening at industrial scale.\n- **Machine-Learning-Guided Design** — Uses trained predictive models to select genetic parts, pathway combinations, or regulatory sequences prior to wet-lab testing.\n- **Genetic Part Characterization** — Quantifies promoter, RBS, and terminator performance under standardized conditions to build reusable, predictable part libraries.\n- **Computer-Aided Genetic Design** — Software tools that model, simulate, and auto-generate DNA sequences for target circuit or pathway function before synthesis."
   },
   {
@@ -1334,6 +1393,7 @@
    "ordinal": 5,
    "kind": "ext",
    "en": "Builds and studies biological function outside, or with a radically reduced version of, the living cell — using purified transcription-translation extracts, minimal genomes, and synthetic vesicles. Removes growth and viability constraints, enabling rapid prototyping and probing of life's essential requirements. A frontier area bridging synthetic biology with origin-of-life and bottom-up biophysics research.",
+   "cs": "Buduje a studuje biologickou funkci mimo živou buňku nebo s její radikálně zjednodušenou verzí — pomocí purifikovaných transkripčně-translačních extraktů, minimálních genomů a syntetických váčků. Odstraňuje omezení růstu a životaschopnosti, čímž umožňuje rychlé prototypování a zkoumání nezbytných požadavků života. Jde o hraniční oblast přemosťující syntetickou biologii s výzkumem vzniku života a biofyzikou zdola nahoru.",
    "brief": "Builds and studies biological function outside, or with a radically reduced version of, the living cell — using purified transcription-translation extracts, minimal genomes, and synthetic vesicles. Removes growth and viability constraints, enabling rapid prototyping and probing of life's essential requirements. A frontier area bridging synthetic biology with origin-of-life and bottom-up biophysics research.\n\n### Concepts\n- **Cell-Free Transcription-Translation Systems** — In vitro extracts or reconstituted systems that execute gene expression outside a living cell for rapid circuit prototyping.\n- **Minimal Genome Construction** — Identifies and builds the smallest gene set sufficient to sustain independent cellular life, as in the JCVI-syn3.0 program.\n- **Protocell & Synthetic Vesicle Engineering** — Constructs lipid- or polymer-bounded compartments that replicate basic cellular functions such as division and metabolism.\n- **In Vitro Biosensing Platforms** — Deploys cell-free circuits in portable, freeze-dried formats for point-of-need diagnostic and environmental sensing."
   },
   {
@@ -1345,6 +1405,7 @@
    "ordinal": 6,
    "kind": "ext",
    "en": "Extends synthetic biology beyond single circuits to engineered consortia, alternative chassis organisms, and coordinated multicellular behavior such as spatial patterning. Addresses how engineered function scales, evolves stably, and interacts within populations and ecosystems. A rapidly developing frontier central to bioproduction robustness and synthetic developmental biology.",
+   "cs": "Rozšiřuje syntetickou biologii za hranice jednotlivých obvodů na inženýrsky navržená konsorcia, alternativní šasi organismy a koordinované mnohobuněčné chování, jako je prostorové vzorování. Zabývá se tím, jak se navržená funkce škáluje, stabilně vyvíjí a působí v rámci populací a ekosystémů. Jde o rychle se rozvíjející hranici klíčovou pro robustnost bioprodukce a syntetickou vývojovou biologii.",
    "brief": "Extends synthetic biology beyond single circuits to engineered consortia, alternative chassis organisms, and coordinated multicellular behavior such as spatial patterning. Addresses how engineered function scales, evolves stably, and interacts within populations and ecosystems. A rapidly developing frontier central to bioproduction robustness and synthetic developmental biology.\n\n### Concepts\n- **Synthetic Microbial Consortia** — Engineers division of labor and stable coexistence among multiple interacting engineered strains or species.\n- **Chassis Organism Engineering** — Adapts non-model or extremophile organisms as production or sensing hosts to exploit traits absent in standard chassis.\n- **Spatial Pattern-Formation Circuits** — Synthetic genetic programs that generate reproducible spatial gene-expression patterns, such as synthetic Turing-like systems.\n- **Synthetic Multicellularity** — Engineers cell-cell adhesion and signaling programs that drive artificial developmental processes and tissue-like organization.\n- **Xenobiology & Orthogonal Biosystems** — Builds genetic systems using non-natural bases, amino acids, or codes that are functionally isolated from native biology for biocontainment."
   },
   {
@@ -1356,7 +1417,8 @@
    "ordinal": 13,
    "kind": "ext",
    "en": "Biophysics applies the quantitative methods and theoretical frameworks of physics — statistical mechanics, mechanics, and electromagnetism — to explain how molecular motors, membranes, ion channels, and folded proteins generate biological function from physical forces and energetics. It spans single-molecule measurement techniques through nonequilibrium and active-matter theory, distinguishing itself from structural biology by modeling dynamics and forces rather than static molecular architecture.",
-   "cs": "Biofyzika aplikuje kvantitativní metody a teoretické rámce fyziky – statistickou mechaniku, mechaniku a elektromagnetismus – na vysvětlení toho, jak molekulární motory, membrány, iontové kanály a sbalené proteiny vytvářejí biologickou funkci z fyzikálních sil a energetiky. Zahrnuje jak metody měření na úrovni jednotlivých molekul, tak teorii nerovnovážných a aktivních soustav, čímž se odlišuje od strukturní biologie důrazem na dynamiku a síly spíše než na statickou molekulární architekturu."
+   "cs": "Biofyzika aplikuje kvantitativní metody a teoretické rámce fyziky – statistickou mechaniku, mechaniku a elektromagnetismus – na vysvětlení toho, jak molekulární motory, membrány, iontové kanály a sbalené proteiny vytvářejí biologickou funkci z fyzikálních sil a energetiky. Zahrnuje jak metody měření na úrovni jednotlivých molekul, tak teorii nerovnovážných a aktivních soustav, čímž se odlišuje od strukturní biologie důrazem na dynamiku a síly spíše než na statickou molekulární architekturu.",
+   "brief": "Biophysics applies the quantitative methods and theoretical frameworks of physics — statistical mechanics, mechanics, and electromagnetism — to explain how molecular motors, membranes, ion channels, and folded proteins generate biological function from physical forces and energetics. It spans single-molecule measurement, mechanobiology, folding dynamics, and the nonequilibrium and active-matter theory that treats living matter as intrinsically energy-dissipating.\n\nIt draws its principles directly from [[01.01]] Physics and applies them across biology, distinguishing itself from [[01.03.11.12]] Structural Biology by modeling dynamics and forces rather than static architecture. Its ion-channel and electrophysiology work grounds [[01.03.11.09]] Neuroscience, its motor and cytoskeletal mechanics underlie [[01.03.11.02]] Cell Biology, and its statistical-thermodynamic core connects to [[01.02]] Chemistry's account of molecular energetics."
   },
   {
    "id": "01.03.11.14.01",
@@ -1367,6 +1429,7 @@
    "ordinal": 0,
    "kind": "ext",
    "en": "Applies equilibrium and near-equilibrium statistical mechanics to macromolecular conformation, binding, and self-assembly. Provides the free-energy, entropy, and fluctuation-dissipation framework underlying every quantitative model of biological structure and function. Forms the theoretical bedrock on which molecular motor, folding, and membrane models are built.",
+   "cs": "Aplikuje rovnovážnou a téměř rovnovážnou statistickou mechaniku na konformaci makromolekul, jejich vazbu a samoskládání. Poskytuje rámec volné energie, entropie a fluktuačně-disipačního vztahu, který leží v základu každého kvantitativního modelu biologické struktury a funkce. Tvoří teoretický základ, na němž stojí modely molekulárních motorů, sbalování a membrán.",
    "brief": "Applies equilibrium and near-equilibrium statistical mechanics to macromolecular conformation, binding, and self-assembly. Provides the free-energy, entropy, and fluctuation-dissipation framework underlying every quantitative model of biological structure and function. Forms the theoretical bedrock on which molecular motor, folding, and membrane models are built.\n\n### Concepts\n- **Polymer Physics of Biomolecules** — Describes DNA, RNA, and unfolded proteins as worm-like or freely-jointed chains governed by entropic elasticity.\n- **Ligand-Binding Thermodynamics** — Uses partition functions and binding polynomials to quantify cooperativity and allostery in receptor-ligand systems.\n- **Fluctuation Theorems** — Jarzynski and Crooks relations connect nonequilibrium work distributions to equilibrium free-energy differences.\n- **Osmotic and Electrostatic Interactions** — Poisson-Boltzmann and Donnan equilibrium theory quantify charge screening and osmotic pressure around biopolymers.\n- **Statistical Mechanics of Self-Assembly** — Predicts micelle, capsid, and fiber formation from pairwise interaction potentials and concentration-dependent equilibria."
   },
   {
@@ -1378,6 +1441,7 @@
    "ordinal": 1,
    "kind": "ext",
    "en": "Studies how ATP-hydrolyzing proteins convert chemical free energy into directed mechanical work along cytoskeletal filaments and nucleic acids. Covers force generation, stepping kinetics, and collective behavior of motors such as myosin, kinesin, dynein, and polymerases. Central to understanding muscle contraction, intracellular transport, and cell division.",
+   "cs": "Studuje, jak proteiny hydrolyzující ATP převádějí chemickou volnou energii na řízenou mechanickou práci podél cytoskeletálních filament a nukleových kyselin. Zahrnuje generování síly, kinetiku krokování a kolektivní chování motorů jako myozin, kinezin, dynein a polymerázy. Je klíčová pro pochopení svalové kontrakce, nitrobuněčného transportu a buněčného dělení.",
    "brief": "Studies how ATP-hydrolyzing proteins convert chemical free energy into directed mechanical work along cytoskeletal filaments and nucleic acids. Covers force generation, stepping kinetics, and collective behavior of motors such as myosin, kinesin, dynein, and polymerases. Central to understanding muscle contraction, intracellular transport, and cell division.\n\n### Concepts\n- **Myosin-Actin Crossbridge Cycle** — Describes the ATPase-coupled power stroke that generates sliding-filament force in muscle and non-muscle myosins.\n- **Kinesin and Dynein Stepping** — Characterizes hand-over-hand and inchworm mechanisms of processive transport along microtubules.\n- **Brownian Ratchet Models** — Explain directed motor motion as rectified thermal fluctuations biased by chemical-state-dependent potentials.\n- **Filament Polymerization Dynamics** — Treats actin and microtubule growth and catastrophe as stochastic, force-sensitive assembly processes.\n- **Collective Motor Ensembles** — Models how multiple motors sharing a cargo generate emergent force-velocity and tug-of-war behavior."
   },
   {
@@ -1389,6 +1453,7 @@
    "ordinal": 2,
    "kind": "ext",
    "en": "Examines the physical properties of lipid bilayers—curvature, elasticity, phase behavior, and fusion—and how they shape and are shaped by embedded proteins. Underpins mechanisms of vesicle trafficking, endocytosis, and organelle morphology. Bridges continuum elasticity theory with molecular-scale lipid organization.",
+   "cs": "Zkoumá fyzikální vlastnosti lipidových dvojvrstev — zakřivení, pružnost, fázové chování a fúzi — a to, jak formují vestavěné proteiny a jak jsou jimi samy formovány. Je podkladem mechanismů váčkového transportu, endocytózy a morfologie organel. Přemosťuje kontinuální teorii pružnosti s uspořádáním lipidů na molekulární úrovni.",
    "brief": "Examines the physical properties of lipid bilayers—curvature, elasticity, phase behavior, and fusion—and how they shape and are shaped by embedded proteins. Underpins mechanisms of vesicle trafficking, endocytosis, and organelle morphology. Bridges continuum elasticity theory with molecular-scale lipid organization.\n\n### Concepts\n- **Helfrich Elasticity Theory** — Models bilayer bending energy as a function of curvature, spontaneous curvature, and surface tension.\n- **Lipid Phase Behavior** — Describes liquid-ordered/disordered coexistence and raft formation from lipid composition and temperature.\n- **Membrane Fusion and Fission** — Characterizes the energetics of hemifusion intermediates driven by SNARE proteins and curvature-inducing coats.\n- **Protein-Induced Membrane Deformation** — Explains how BAR-domain and amphipathic-helix proteins sculpt local membrane curvature.\n- **Membrane Permeability and Transport** — Quantifies passive diffusion of solutes across bilayers using solubility-diffusion theory."
   },
   {
@@ -1400,6 +1465,7 @@
    "ordinal": 3,
    "kind": "ext",
    "en": "Analyzes the biophysical mechanisms of selective ion permeation, gating, and voltage sensing in membrane channels and pumps. Combines electrodiffusion theory, structural biology, and patch-clamp electrophysiology to explain excitability in neurons, muscle, and cardiac tissue. Foundational to pharmacology of channelopathies and neural signaling.",
+   "cs": "Analyzuje biofyzikální mechanismy selektivní permeace iontů, otevírání kanálů (gating) a snímání napětí v membránových kanálech a pumpách. Kombinuje teorii elektrodifúze, strukturní biologii a patch-clamp elektrofyziologii k vysvětlení vzrušivosti v neuronech, svalu a srdeční tkáni. Je základem farmakologie kanálopatií a neurální signalizace.",
    "brief": "Analyzes the biophysical mechanisms of selective ion permeation, gating, and voltage sensing in membrane channels and pumps. Combines electrodiffusion theory, structural biology, and patch-clamp electrophysiology to explain excitability in neurons, muscle, and cardiac tissue. Foundational to pharmacology of channelopathies and neural signaling.\n\n### Concepts\n- **Hodgkin-Huxley Formalism** — Models action-potential generation via voltage-dependent sodium and potassium conductances as coupled differential equations.\n- **Ion Permeation and Selectivity** — Explains selective ion conduction through channel pores via electrostatic filtering and partial dehydration energetics.\n- **Voltage-Sensor Gating** — Describes conformational coupling between transmembrane voltage-sensor domains and pore opening.\n- **Patch-Clamp Electrophysiology** — Measures single-channel and whole-cell currents to resolve gating kinetics and conductance states.\n- **Gap Junctions and Electrical Coupling** — Characterizes connexon-mediated direct cytoplasmic electrical coupling between adjacent cells."
   },
   {
@@ -1411,6 +1477,7 @@
    "ordinal": 4,
    "kind": "ext",
    "en": "Develops and applies techniques—optical/magnetic tweezers, single-molecule FRET, AFM, super-resolution microscopy—that resolve the behavior of individual biomolecules beyond ensemble averages. Reveals heterogeneity, rare conformational states, and force-dependent kinetics invisible to bulk assays. Drives much of modern experimental biophysics methodology.",
+   "cs": "Vyvíjí a používá techniky — optické a magnetické pinzety, jednomolekulový FRET, AFM, mikroskopii se superrozlišením — které rozlišují chování jednotlivých biomolekul nad rámec souborových průměrů. Odhaluje heterogenitu, vzácné konformační stavy a na síle závislou kinetiku neviditelnou pro objemové metody. Pohání velkou část moderní experimentální biofyzikální metodologie.",
    "brief": "Develops and applies techniques—optical/magnetic tweezers, single-molecule FRET, AFM, super-resolution microscopy—that resolve the behavior of individual biomolecules beyond ensemble averages. Reveals heterogeneity, rare conformational states, and force-dependent kinetics invisible to bulk assays. Drives much of modern experimental biophysics methodology.\n\n### Concepts\n- **Optical and Magnetic Tweezers** — Apply piconewton-scale forces to single molecules to measure force-extension curves and mechanochemical kinetics.\n- **Single-Molecule FRET** — Uses distance-dependent fluorescence energy transfer to track nanometer-scale conformational dynamics in real time.\n- **Atomic Force Microscopy** — Probes molecular topography and unfolding forces via cantilever deflection at sub-nanometer resolution.\n- **Super-Resolution Fluorescence Microscopy** — Circumvents the diffraction limit via stochastic switching or patterned illumination to localize molecules at tens of nanometers.\n- **Single-Particle Tracking** — Follows individual labeled molecules to extract diffusion coefficients and confinement dynamics in living cells."
   },
   {
@@ -1422,6 +1489,7 @@
    "ordinal": 5,
    "kind": "ext",
    "en": "Investigates how cells generate, sense, and respond to mechanical forces through the cytoskeleton, adhesion complexes, and mechanosensitive signaling. Explains phenomena from tissue morphogenesis to cancer invasion as products of physical force balance. An actively expanding frontier linking cell biology to soft-matter physics.",
+   "cs": "Zkoumá, jak buňky generují, snímají a reagují na mechanické síly prostřednictvím cytoskeletu, adhezních komplexů a mechanosenzitivní signalizace. Vysvětluje jevy od morfogeneze tkání po nádorovou invazi jako důsledky rovnováhy fyzikálních sil. Jde o aktivně se rozšiřující hranici propojující buněčnou biologii s fyzikou měkké hmoty.",
    "brief": "Investigates how cells generate, sense, and respond to mechanical forces through the cytoskeleton, adhesion complexes, and mechanosensitive signaling. Explains phenomena from tissue morphogenesis to cancer invasion as products of physical force balance. An actively expanding frontier linking cell biology to soft-matter physics.\n\n### Concepts\n- **Cytoskeletal Rheology** — Characterizes the viscoelastic response of actin, microtubule, and intermediate-filament networks to applied stress.\n- **Focal Adhesion Mechanotransduction** — Describes force-dependent conformational changes in talin and integrin complexes that convert mechanical load into signaling.\n- **Tissue-Scale Mechanics** — Applies continuum and vertex-model approaches to explain morphogenetic folding, flow, and jamming transitions in epithelia.\n- **Mechanosensitive Ion Channels** — Studies pressure- and stretch-gated channels such as Piezo1/2 that transduce membrane tension into electrical signals.\n- **Cell Migration Mechanics** — Models actin-driven protrusion, adhesion turnover, and traction-force generation underlying directed cell motility."
   },
   {
@@ -1433,6 +1501,7 @@
    "ordinal": 6,
    "kind": "ext",
    "en": "Addresses the physical principles governing how polypeptide chains fold into functional three-dimensional structures and undergo conformational transitions. Uses energy-landscape theory, molecular dynamics simulation, and spectroscopy to explain folding kinetics, misfolding, and allosteric transitions. Central to understanding both normal function and aggregation-linked disease.",
+   "cs": "Věnuje se fyzikálním principům, jimiž se polypeptidové řetězce sbalují do funkčních trojrozměrných struktur a procházejí konformačními přechody. Používá teorii energetické krajiny, simulaci molekulární dynamiky a spektroskopii k vysvětlení kinetiky sbalování, chybného sbalování a alosterických přechodů. Je klíčová pro pochopení jak normální funkce, tak nemocí spojených s agregací.",
    "brief": "Addresses the physical principles governing how polypeptide chains fold into functional three-dimensional structures and undergo conformational transitions. Uses energy-landscape theory, molecular dynamics simulation, and spectroscopy to explain folding kinetics, misfolding, and allosteric transitions. Central to understanding both normal function and aggregation-linked disease.\n\n### Concepts\n- **Energy Landscape Theory** — Describes folding as diffusion on a funneled free-energy surface biased toward the native conformation.\n- **Molecular Dynamics Simulation** — Numerically integrates classical force fields to predict atomistic trajectories of biomolecular motion.\n- **Allosteric Conformational Coupling** — Explains how ligand binding at one site propagates structural change to a distant functional site.\n- **Protein Misfolding and Aggregation** — Models the kinetics of amyloid nucleation and fibril growth underlying neurodegenerative disease.\n- **Intrinsically Disordered Proteins** — Characterizes conformational ensembles of proteins lacking stable tertiary structure yet retaining function."
   },
   {
@@ -1444,6 +1513,7 @@
    "ordinal": 7,
    "kind": "ext",
    "en": "Treats living systems as intrinsically nonequilibrium matter—continuously dissipating energy to sustain motion, pattern formation, and information processing. Encompasses active-gel theory, stochastic thermodynamics, and collective phenomena in cell populations. Represents the theoretical frontier connecting statistical physics to emergent biological order.",
+   "cs": "Pojímá živé systémy jako vnitřně nerovnovážnou hmotu — neustále rozptylující energii k udržení pohybu, tvorby vzorů a zpracování informace. Zahrnuje teorii aktivních gelů, stochastickou termodynamiku a kolektivní jevy v buněčných populacích. Představuje teoretickou hranici propojující statistickou fyziku s emergentním biologickým řádem.",
    "brief": "Treats living systems as intrinsically nonequilibrium matter—continuously dissipating energy to sustain motion, pattern formation, and information processing. Encompasses active-gel theory, stochastic thermodynamics, and collective phenomena in cell populations. Represents the theoretical frontier connecting statistical physics to emergent biological order.\n\n### Concepts\n- **Active Matter Theory** — Models self-propelled agents such as motor-filament mixtures generating spontaneous flow and pattern formation.\n- **Stochastic Thermodynamics of Biological Machines** — Quantifies entropy production and efficiency bounds for molecular processes operating far from equilibrium.\n- **Collective Cell Dynamics** — Describes flocking, swarming, and jamming transitions in migrating cell populations using active-fluid frameworks.\n- **Biological Pattern Formation** — Applies reaction-diffusion and Turing-instability theory to explain self-organized spatial patterning in tissues.\n- **Information Thermodynamics in Sensing** — Relates the energetic cost of biochemical sensing accuracy to fundamental thermodynamic bounds."
   },
   {
@@ -1455,7 +1525,8 @@
    "ordinal": 14,
    "kind": "ext",
    "en": "The biology of plants: their structure and development, photosynthesis and physiology, genetics and genomics, systematics and evolutionary relationships, ecological interactions, and the secondary metabolites they produce. Extends into crop science, the applied study of cultivated plants for agriculture.",
-   "cs": "Biologie rostlin: jejich stavba a vývoj, fotosyntéza a fyziologie, genetika a genomika, systematika a evoluční vztahy, ekologické interakce a sekundární metabolity, které produkují. Přesahuje do agronomie — aplikovaného studia pěstovaných rostlin pro zemědělství."
+   "cs": "Biologie rostlin: jejich stavba a vývoj, fotosyntéza a fyziologie, genetika a genomika, systematika a evoluční vztahy, ekologické interakce a sekundární metabolity, které produkují. Přesahuje do agronomie — aplikovaného studia pěstovaných rostlin pro zemědělství.",
+   "brief": "Botany is the biology of plants — their structure and development, photosynthesis and physiology, genetics and genomics, systematics and evolutionary relationships, ecological interactions, and the secondary metabolites they produce — extending into crop science, the applied study of cultivated plants for agriculture. It is the taxon-centered counterpart to [[01.03.11.16]] Zoology, organized around the plant kingdom specifically rather than around a single functional question.\n\nIts physiology, genetics, and ecology apply the general frameworks of [[01.03.11.08]] Physiology, [[01.03.11.03]] Genetics, and [[01.03.11.07]] Ecology to plant-specific problems — photosynthesis, polyploidy, mycorrhizal symbiosis — while its phytochemistry connects to [[01.02]] Chemistry and the pharmacology of plant-derived compounds. Crop science makes botany central to global food security, increasingly through genomic selection and gene editing."
   },
   {
    "id": "01.03.11.15.01",
@@ -1466,6 +1537,7 @@
    "ordinal": 0,
    "kind": "ext",
    "en": "Studies the organization of plant tissues, organs, and body plans, and the meristematic and hormonal mechanisms that generate them across the life cycle. Covers cell wall biology, vascular architecture, and the developmental genetics governing organ identity and polarity. Foundational to understanding growth, regeneration, and morphological diversity across land plants.",
+   "cs": "Studuje uspořádání rostlinných pletiv, orgánů a stavebních plánů těla a meristematické a hormonální mechanismy, které je vytvářejí v průběhu životního cyklu. Zahrnuje biologii buněčné stěny, architekturu cévních svazků a vývojovou genetiku řídící identitu a polaritu orgánů. Je základem pochopení růstu, regenerace a morfologické rozmanitosti napříč suchozemskými rostlinami.",
    "brief": "Studies the organization of plant tissues, organs, and body plans, and the meristematic and hormonal mechanisms that generate them across the life cycle. Covers cell wall biology, vascular architecture, and the developmental genetics governing organ identity and polarity. Foundational to understanding growth, regeneration, and morphological diversity across land plants.\n\n### Concepts\n- **Meristems & Growth** — Apical and lateral meristems maintain stem-cell niches that drive indeterminate plant growth.\n- **Vascular Tissue** — Xylem and phloem form the conducting system for water, minerals, and photoassimilates.\n- **Cell Wall Biology** — Cellulose, hemicellulose, and pectin networks give plant cells rigidity and control growth anisotropy.\n- **Organ Identity Genetics** — ABC(E)-model MADS-box transcription factors combinatorially specify floral organ identity.\n- **Root System Architecture** — Lateral root initiation and gravitropic signaling shape the below-ground foraging network."
   },
   {
@@ -1549,7 +1621,8 @@
    "ordinal": 15,
    "kind": "ext",
    "en": "Studies the structure, function, behavior, diversity, and evolutionary relationships of animals, spanning comparative anatomy and physiology, ethology, systematics, developmental biology, and physiological adaptation to environmental extremes. Integrates findings across taxa to explain how animal form and behavior arise from and respond to ecological and evolutionary pressures. Distinguished from general physiology and ecology by its taxon-centered organization around the animal kingdom specifically.",
-   "cs": "Zkoumá stavbu, funkci, chování, diverzitu a evoluční vztahy živočichů, od srovnávací anatomie a fyziologie přes etologii a systematiku po vývojovou biologii a fyziologickou adaptaci na environmentální extrémy. Propojuje poznatky napříč taxony a vysvětluje, jak tvar těla a chování živočichů vznikají v reakci na ekologické a evoluční tlaky. Od obecné fyziologie a ekologie se odlišuje tím, že je organizována kolem živočišné říše jako taxonomického celku."
+   "cs": "Zkoumá stavbu, funkci, chování, diverzitu a evoluční vztahy živočichů, od srovnávací anatomie a fyziologie přes etologii a systematiku po vývojovou biologii a fyziologickou adaptaci na environmentální extrémy. Propojuje poznatky napříč taxony a vysvětluje, jak tvar těla a chování živočichů vznikají v reakci na ekologické a evoluční tlaky. Od obecné fyziologie a ekologie se odlišuje tím, že je organizována kolem živočišné říše jako taxonomického celku.",
+   "brief": "Zoology studies the structure, function, behavior, diversity, and evolutionary relationships of animals, spanning comparative anatomy and physiology, ethology, systematics, developmental zoology, and physiological adaptation to environmental extremes. Organized around the animal kingdom specifically, it is the taxon-centered counterpart to [[01.03.11.15]] Botany, integrating findings across taxa to explain how animal form and behavior arise from ecological and evolutionary pressure.\n\nIt applies the general frameworks of [[01.03.11.08]] Physiology, [[01.03.11.06]] Evolutionary Biology, and [[01.03.11.05]] Developmental Biology to animals in particular, and its ethology arm connects behavior to [[01.03.11.09]] Neuroscience. Its conservation and wildlife-biology branch, shared with [[01.03.11.07]] Ecology, is a fast-growing applied frontier as habitat loss and climate change accelerate biodiversity decline."
   },
   {
    "id": "01.03.11.16.01",
@@ -1560,6 +1633,7 @@
    "ordinal": 0,
    "kind": "ext",
    "en": "Studies the structural organization of animal bodies across taxa, tracing homologous and analogous features to reconstruct evolutionary relationships and functional design. Encompasses gross dissection-based anatomy, histology, and skeletal, muscular, and organ-system comparison across phyla. Underpins systematics, functional morphology, and biomechanics by grounding form in evolutionary and mechanical context.",
+   "cs": "Studuje strukturní uspořádání těl živočichů napříč taxony a sleduje homologní a analogické znaky k rekonstrukci evolučních vztahů a funkčního uspořádání. Zahrnuje hrubou pitevní anatomii, histologii a srovnání kostry, svalstva a orgánových soustav napříč kmeny. Je podkladem systematiky, funkční morfologie a biomechaniky tím, že ukotvuje formu v evolučním a mechanickém kontextu.",
    "brief": "Studies the structural organization of animal bodies across taxa, tracing homologous and analogous features to reconstruct evolutionary relationships and functional design. Encompasses gross dissection-based anatomy, histology, and skeletal, muscular, and organ-system comparison across phyla. Underpins systematics, functional morphology, and biomechanics by grounding form in evolutionary and mechanical context.\n\n### Concepts\n- **Homology and Analogy** — Homology is shared structure from common ancestry, while analogy is similar function arising independently through convergent evolution.\n- **Body Plans (Bauplan)** — A body plan is the fundamental architectural pattern of symmetry, segmentation, and germ-layer organization shared by a major animal group.\n- **Skeletal and Muscular Systems** — Endoskeletons, exoskeletons, and hydrostatic skeletons work with muscle architecture to enable support, protection, and movement.\n- **Comparative Histology** — Comparative histology examines tissue-level organization to identify conserved and derived cellular arrangements across animal lineages.\n- **Functional Morphology** — Functional morphology relates anatomical structure to mechanical performance, such as feeding, locomotion, or respiration."
   },
   {
@@ -1571,6 +1645,7 @@
    "ordinal": 1,
    "kind": "ext",
    "en": "Examines how organ systems generate, regulate, and coordinate the physical and chemical processes of animal life, from gas exchange to neuromuscular control. Investigates physiological adaptations that let species inhabit extreme thermal, osmotic, hypoxic, and pressure regimes, linking whole-organism performance to ecological niche. Central to understanding thermoregulation, osmoregulation, metabolic scaling, and sensory-neural integration.",
+   "cs": "Zkoumá, jak orgánové soustavy vytvářejí, regulují a koordinují fyzikální a chemické procesy živočišného života, od výměny plynů po nervosvalovou kontrolu. Studuje fyziologické adaptace, které druhům umožňují osídlit extrémní teplotní, osmotické, hypoxické a tlakové režimy, a propojuje výkon celého organismu s ekologickou nikou. Je klíčová pro pochopení termoregulace, osmoregulace, metabolického škálování a senzoricko-neurální integrace.",
    "brief": "Examines how organ systems generate, regulate, and coordinate the physical and chemical processes of animal life, from gas exchange to neuromuscular control. Investigates physiological adaptations that let species inhabit extreme thermal, osmotic, hypoxic, and pressure regimes, linking whole-organism performance to ecological niche. Central to understanding thermoregulation, osmoregulation, metabolic scaling, and sensory-neural integration.\n\n### Concepts\n- **Thermoregulation** — Thermoregulation is the physiological control of body temperature via endothermic, ectothermic, or heterothermic strategies.\n- **Osmoregulation and Excretion** — Osmoregulation balances internal water and solute concentrations against external environments through specialized excretory organs.\n- **Respiratory and Circulatory Physiology** — Gas-exchange surfaces and circulatory pumps coordinate to deliver oxygen and remove carbon dioxide across diverse body sizes and habitats.\n- **Metabolic Scaling** — Metabolic scaling describes how resting and active metabolic rate change predictably with body mass across animal taxa.\n- **Sensory Physiology** — Sensory physiology studies how specialized receptors transduce mechanical, chemical, thermal, and electromagnetic stimuli into neural signals.\n- **Extremophile Adaptation** — Extremophile adaptation covers physiological mechanisms allowing animals to survive anoxia, freezing, desiccation, or deep-sea pressure."
   },
   {
@@ -1582,6 +1657,7 @@
    "ordinal": 2,
    "kind": "ext",
    "en": "Classifies and reconstructs the evolutionary relationships of animal taxa, from invertebrate phyla to vertebrate classes, using morphological and molecular phylogenetics. Documents the taxonomic breadth of the kingdom Animalia and revises classification as new phylogenomic evidence emerges. Provides the organizing framework that every other zoological sub-discipline references.",
+   "cs": "Klasifikuje a rekonstruuje evoluční vztahy živočišných taxonů, od bezobratlých kmenů po třídy obratlovců, pomocí morfologické a molekulární fylogenetiky. Dokumentuje taxonomickou šíři říše Animalia a reviduje klasifikaci, jakmile se objeví nové fylogenomické doklady. Poskytuje uspořádávající rámec, na který odkazuje každá další zoologická poddisciplína.",
    "brief": "Classifies and reconstructs the evolutionary relationships of animal taxa, from invertebrate phyla to vertebrate classes, using morphological and molecular phylogenetics. Documents the taxonomic breadth of the kingdom Animalia and revises classification as new phylogenomic evidence emerges. Provides the organizing framework that every other zoological sub-discipline references.\n\n### Concepts\n- **Invertebrate Zoology** — Invertebrate zoology studies the anatomy, diversity, and evolution of animals lacking a vertebral column, spanning most animal phyla.\n- **Vertebrate Zoology** — Vertebrate zoology studies fishes, amphibians, reptiles, birds, and mammals, unified by a vertebral column and cranium.\n- **Molecular Phylogenetics** — Molecular phylogenetics infers evolutionary trees from DNA and protein sequence data, often revising morphology-based classifications.\n- **Cladistics** — Cladistics classifies organisms by shared derived characters into monophyletic groups reflecting strict common ancestry.\n- **Taxonomic Nomenclature** — Taxonomic nomenclature applies standardized Linnaean naming rules to formally describe and register animal species."
   },
   {
@@ -1593,6 +1669,7 @@
    "ordinal": 3,
    "kind": "ext",
    "en": "Investigates the proximate mechanisms and evolutionary functions of animal behavior, from innate fixed-action patterns to learned and socially transmitted actions. Covers communication, mating systems, social organization, and cognition, integrating neuroscience with evolutionary theory. Foundational to behavioral ecology, animal welfare science, and comparative cognition research.",
+   "cs": "Zkoumá proximátní mechanismy a evoluční funkce chování živočichů, od vrozených fixních akčních vzorců po naučené a sociálně předávané jednání. Zahrnuje komunikaci, páření, sociální uspořádání a kognici a integruje neurovědu s evoluční teorií. Je základem behaviorální ekologie, vědy o dobrých životních podmínkách zvířat a srovnávacího výzkumu kognice.",
    "brief": "Investigates the proximate mechanisms and evolutionary functions of animal behavior, from innate fixed-action patterns to learned and socially transmitted actions. Covers communication, mating systems, social organization, and cognition, integrating neuroscience with evolutionary theory. Foundational to behavioral ecology, animal welfare science, and comparative cognition research.\n\n### Concepts\n- **Innate Behavior and Instinct** — Innate behavior comprises genetically programmed action patterns expressed without prior learning.\n- **Learning and Cognition** — Animal learning and cognition examine how experience, memory, and problem-solving shape behavioral flexibility across taxa.\n- **Communication Signals** — Animal communication studies visual, acoustic, chemical, and tactile signals used to transmit information between individuals.\n- **Social Behavior and Eusociality** — Social behavior research examines cooperation, dominance hierarchies, and eusociality where reproduction is divided among colony members.\n- **Mating Systems and Sexual Selection** — Mating-system research classifies monogamy, polygyny, and polyandry as outcomes of sexual selection pressures on reproductive strategy."
   },
   {
@@ -1604,6 +1681,7 @@
    "ordinal": 4,
    "kind": "ext",
    "en": "Traces the ontogeny of animals from fertilization through gastrulation, organogenesis, and metamorphosis, revealing conserved genetic programs across lineages. Compares developmental trajectories to inform evolutionary developmental biology (evo-devo) and explain morphological diversification. Central to understanding life-history strategies such as direct development, indirect development, and larval dispersal.",
+   "cs": "Sleduje ontogenezi živočichů od oplození přes gastrulaci, organogenezi a metamorfózu a odhaluje konzervované genetické programy napříč liniemi. Porovnává vývojové trajektorie, aby přispěla k evoluční vývojové biologii (evo-devo) a vysvětlila morfologickou diverzifikaci. Je klíčová pro pochopení životních strategií, jako je přímý vývoj, nepřímý vývoj a larvální rozptyl.",
    "brief": "Traces the ontogeny of animals from fertilization through gastrulation, organogenesis, and metamorphosis, revealing conserved genetic programs across lineages. Compares developmental trajectories to inform evolutionary developmental biology (evo-devo) and explain morphological diversification. Central to understanding life-history strategies such as direct development, indirect development, and larval dispersal.\n\n### Concepts\n- **Gastrulation and Germ Layers** — Gastrulation establishes the ectoderm, mesoderm, and endoderm germ layers that give rise to all animal organ systems.\n- **Metamorphosis** — Metamorphosis is a post-embryonic transformation between larval and adult body forms seen in amphibians, insects, and many marine invertebrates.\n- **Evolutionary Developmental Biology (Evo-Devo)** — Evo-devo compares gene regulatory networks like Hox genes across species to explain how developmental change drives morphological evolution.\n- **Life-History Strategies** — Life-history strategy research studies trade-offs among growth, reproduction timing, and offspring number shaped by developmental mode."
   },
   {
@@ -1615,6 +1693,7 @@
    "ordinal": 5,
    "kind": "ext",
    "en": "Applies population genetics, natural selection theory, and community ecology to explain how animal populations adapt, speciate, and interact within ecosystems. Covers predator-prey dynamics, foraging theory, biogeography, and coevolution as drivers of diversification. Bridges organismal zoology with broader evolutionary biology and ecosystem science.",
+   "cs": "Aplikuje populační genetiku, teorii přirozeného výběru a ekologii společenstev k vysvětlení, jak se živočišné populace adaptují, tvoří druhy a interagují v rámci ekosystémů. Zahrnuje dynamiku predátor-kořist, teorii sběru potravy, biogeografii a koevoluci jako hybatele diverzifikace. Přemosťuje organismální zoologii se širší evoluční biologií a ekosystémovou vědou.",
    "brief": "Applies population genetics, natural selection theory, and community ecology to explain how animal populations adapt, speciate, and interact within ecosystems. Covers predator-prey dynamics, foraging theory, biogeography, and coevolution as drivers of diversification. Bridges organismal zoology with broader evolutionary biology and ecosystem science.\n\n### Concepts\n- **Population Ecology** — Population ecology models how birth, death, and dispersal rates shape animal population growth and regulation over time.\n- **Speciation** — Speciation is the evolutionary process by which populations diverge into reproductively isolated new species.\n- **Foraging and Predator-Prey Theory** — Optimal foraging and predator-prey theory model how animals balance energy intake against predation risk and resource availability.\n- **Zoogeography** — Zoogeography studies the historical and ecological factors determining the geographic distribution of animal taxa.\n- **Coevolution** — Coevolution describes reciprocal evolutionary change between interacting species, such as hosts and parasites or predators and prey."
   },
   {
@@ -1626,6 +1705,7 @@
    "ordinal": 6,
    "kind": "ext",
    "en": "Applies zoological, genetic, and ecological methods to assess extinction risk, manage populations, and design interventions that sustain animal biodiversity under anthropogenic pressure. Integrates field census techniques, population viability analysis, and habitat management with policy and captive-breeding programs. A rapidly growing frontier as climate change and habitat loss accelerate biodiversity decline.",
+   "cs": "Aplikuje zoologické, genetické a ekologické metody k posouzení rizika vymření, řízení populací a návrhu zásahů, které udržují živočišnou biodiverzitu pod antropogenním tlakem. Integruje terénní sčítací techniky, analýzu životaschopnosti populací a péči o stanoviště s politikou a chovnými programy v zajetí. Jde o rychle rostoucí hranici, jak změna klimatu a úbytek stanovišť urychlují pokles biodiverzity.",
    "brief": "Applies zoological, genetic, and ecological methods to assess extinction risk, manage populations, and design interventions that sustain animal biodiversity under anthropogenic pressure. Integrates field census techniques, population viability analysis, and habitat management with policy and captive-breeding programs. A rapidly growing frontier as climate change and habitat loss accelerate biodiversity decline.\n\n### Concepts\n- **Population Viability Analysis** — Population viability analysis uses demographic and genetic models to estimate a species' extinction risk over time.\n- **Habitat Fragmentation Impact** — Habitat fragmentation research measures how landscape division isolates animal populations and disrupts gene flow and migration.\n- **Conservation Genetics** — Conservation genetics tracks inbreeding, genetic diversity, and effective population size to guide species management decisions.\n- **Captive Breeding and Reintroduction** — Captive breeding and reintroduction programs maintain assurance populations and restore locally extirpated species to the wild.\n- **Wildlife Monitoring Technology** — Wildlife monitoring technology uses camera traps, satellite telemetry, and environmental DNA to track animal populations non-invasively."
   },
   {
@@ -1637,7 +1717,8 @@
    "ordinal": 16,
    "kind": "ext",
    "en": "Astrobiology is the scientific study of the origin, distribution, and physiological limits of life, spanning both life's chemical emergence on early Earth and the search for life elsewhere in the universe. Integrates prebiotic chemistry, competing origin-of-life theoretical frameworks, extremophile physiology, planetary and lunar habitability assessment, and biosignature detection into a single cross-disciplinary frame bridging biology, chemistry, and planetary science.",
-   "cs": "Astrobiologie je vědní obor zkoumající původ, rozšíření a fyziologické meze života, zahrnující jak chemický vznik života na rané Zemi, tak hledání života jinde ve vesmíru. Propojuje prebiotickou chemii, konkurenční teoretické rámce vzniku života, fyziologii extremofilů, hodnocení obyvatelnosti planet a měsíců a detekci biosignatur do jednoho mezioborového rámce spojujícího biologii, chemii a planetární vědy."
+   "cs": "Astrobiologie je vědní obor zkoumající původ, rozšíření a fyziologické meze života, zahrnující jak chemický vznik života na rané Zemi, tak hledání života jinde ve vesmíru. Propojuje prebiotickou chemii, konkurenční teoretické rámce vzniku života, fyziologii extremofilů, hodnocení obyvatelnosti planet a měsíců a detekci biosignatur do jednoho mezioborového rámce spojujícího biologii, chemii a planetární vědy.",
+   "brief": "Astrobiology is the scientific study of the origin, distribution, and physiological limits of life — both life's chemical emergence on early Earth and the search for it elsewhere in the universe. It integrates prebiotic chemistry, competing origin-of-life frameworks, extremophile physiology, planetary and moon habitability, and biosignature detection into a single cross-disciplinary frame.\n\nMore than any other pillar it straddles the boundaries of biology with [[01.02]] Chemistry and [[01.01]] Physics — its prebiotic and astrochemistry arms are chemistry, its habitability and planetary-science arms are physics and astronomy. Extremophile biology connects it to [[01.03.11.11]] Microbiology & Virology, its bottom-up reconstruction of minimal life meets [[01.03.11.13]] Systems & Synthetic Biology's engineered minimal cells, and its account of life's chemical origin gives [[01.03.11.06]] Evolutionary Biology its deepest starting point."
   },
   {
    "id": "01.03.11.17.01",
@@ -2433,6 +2514,48 @@
    "source": "bio"
   },
   {
+   "from": "01.03.11.01",
+   "to": "01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.01",
+   "to": "01.03.11.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.01",
+   "to": "01.03.11.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.01",
+   "to": "01.03.11.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.01",
+   "to": "01.03.11.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.01",
+   "to": "01.03.11.10",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
    "from": "01.03.11.02.01",
    "to": "01.03.11.08.06",
    "type": "shared-structure",
@@ -2881,6 +3004,55 @@
    "source": "bio"
   },
   {
+   "from": "01.03.11.02",
+   "to": "01.03.11.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.02",
+   "to": "01.03.11.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.02",
+   "to": "01.03.11.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.02",
+   "to": "01.03.11.09",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.02",
+   "to": "01.03.11.10",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.02",
+   "to": "01.03.11.12",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.02",
+   "to": "01.03.11.14",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
    "from": "01.03.11.03.01",
    "to": "01.03.11.04.07",
    "type": "related-concept",
@@ -3096,6 +3268,27 @@
    "type": "shared-structure",
    "explored": "well",
    "source": "bio"
+  },
+  {
+   "from": "01.03.11.03",
+   "to": "01.03.11.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.03",
+   "to": "01.03.11.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.03",
+   "to": "01.03.11.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
   },
   {
    "from": "01.03.11.04.01",
@@ -3392,6 +3585,27 @@
    "source": "bio"
   },
   {
+   "from": "01.03.11.04",
+   "to": "01.03.11.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.04",
+   "to": "01.03.11.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.04",
+   "to": "01.03.11.11",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
    "from": "01.03.11.05.01",
    "to": "01.03.11.16.05",
    "type": "related-concept",
@@ -3558,6 +3772,34 @@
    "type": "conjecture",
    "explored": "partially",
    "source": "bio"
+  },
+  {
+   "from": "01.03.11.05",
+   "to": "01.03.11.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.05",
+   "to": "01.03.11.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.05",
+   "to": "01.03.11.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.05",
+   "to": "01.03.11.14",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
   },
   {
    "from": "01.03.11.06.01",
@@ -3875,6 +4117,48 @@
    "source": "bio"
   },
   {
+   "from": "01.03.11.06",
+   "to": "01.03.11.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.06",
+   "to": "01.03.11.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.06",
+   "to": "01.03.11.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.06",
+   "to": "01.03.11.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.06",
+   "to": "01.03.11.15",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.06",
+   "to": "01.03.11.16",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
    "from": "01.03.11.07.01",
    "to": "01.03.11.13.01",
    "type": "shared-math",
@@ -4062,6 +4346,27 @@
    "type": "shared-math",
    "explored": "barely",
    "source": "bio"
+  },
+  {
+   "from": "01.03.11.07",
+   "to": "01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.07",
+   "to": "01.03.11.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.07",
+   "to": "01.03.11.11",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
   },
   {
    "from": "01.03.11.08.01",
@@ -4302,6 +4607,34 @@
    "source": "bio"
   },
   {
+   "from": "01.03.11.08",
+   "to": "01.03.11.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.08",
+   "to": "01.03.11.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.08",
+   "to": "01.03.11.09",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.08",
+   "to": "01.03.11.16",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
    "from": "01.03.11.09.01",
    "to": "01.03.11.10.05",
    "type": "conjecture",
@@ -4428,6 +4761,27 @@
    "source": "bio"
   },
   {
+   "from": "01.03.11.09",
+   "to": "01.03.11.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.09",
+   "to": "01.03.11.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.09",
+   "to": "01.03.11.14",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
    "from": "01.03.11.10.01",
    "to": "01.03.11.11.04",
    "type": "related-concept",
@@ -4531,6 +4885,34 @@
    "type": "shared-math",
    "explored": "partially",
    "source": "bio"
+  },
+  {
+   "from": "01.03.11.10",
+   "to": "01.03.11.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.10",
+   "to": "01.03.11.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.10",
+   "to": "01.03.11.11",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.10",
+   "to": "01.03.11.12",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
   },
   {
    "from": "01.03.11.11.01",
@@ -4694,6 +5076,34 @@
    "source": "bio"
   },
   {
+   "from": "01.03.11.11",
+   "to": "01.03.11.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.11",
+   "to": "01.03.11.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.11",
+   "to": "01.03.11.10",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.11",
+   "to": "01.03.11.13",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
    "from": "01.03.11.12.01",
    "to": "01.03.11.14.01",
    "type": "shared-math",
@@ -4813,6 +5223,34 @@
    "source": "bio"
   },
   {
+   "from": "01.03.11.12",
+   "to": "01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.12",
+   "to": "01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.12",
+   "to": "01.03.11.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.12",
+   "to": "01.03.11.14",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
    "from": "01.03.11.13.01",
    "to": "01.03.11.14.01",
    "type": "shared-math",
@@ -4890,6 +5328,34 @@
    "source": "bio"
   },
   {
+   "from": "01.03.11.13",
+   "to": "01.03.11.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.13",
+   "to": "01.03.11.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.13",
+   "to": "01.03.11.11",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.13",
+   "to": "01.03.11.17",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
    "from": "01.03.11.14.01",
    "to": "01.03.11.17.02",
    "type": "conjecture",
@@ -4946,6 +5412,41 @@
    "source": "bio"
   },
   {
+   "from": "01.03.11.14",
+   "to": "01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.14",
+   "to": "01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.14",
+   "to": "01.03.11.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.14",
+   "to": "01.03.11.09",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.14",
+   "to": "01.03.11.12",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
    "from": "01.03.11.15.02",
    "to": "01.03.11.17.04",
    "type": "shared-structure",
@@ -4953,11 +5454,123 @@
    "source": "bio"
   },
   {
+   "from": "01.03.11.15",
+   "to": "01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.15",
+   "to": "01.03.11.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.15",
+   "to": "01.03.11.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.15",
+   "to": "01.03.11.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.15",
+   "to": "01.03.11.16",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
    "from": "01.03.11.16.02",
    "to": "01.03.11.17.03",
    "type": "related-concept",
    "explored": "partially",
    "source": "bio"
+  },
+  {
+   "from": "01.03.11.16",
+   "to": "01.03.11.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.16",
+   "to": "01.03.11.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.16",
+   "to": "01.03.11.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.16",
+   "to": "01.03.11.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.16",
+   "to": "01.03.11.09",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.16",
+   "to": "01.03.11.15",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.17",
+   "to": "01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.17",
+   "to": "01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.17",
+   "to": "01.03.11.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.17",
+   "to": "01.03.11.11",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.03.11.17",
+   "to": "01.03.11.13",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
   },
   {
    "from": "01.03",
