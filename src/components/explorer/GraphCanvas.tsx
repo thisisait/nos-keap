@@ -53,6 +53,10 @@ export interface CanvasNode {
   glyph?: string;
   distance?: number;
   categoryHue: number;
+  /** Knowledge scope = subtree size (descendants) — drives node SIZE. */
+  scope?: number;
+  /** Embedding-derived semantic-lens features (colour/size channels). */
+  features?: Record<string, number>;
   /** Baked position pin (U1) — d3-force never moves fx/fy/fz nodes. */
   fx?: number;
   fy?: number;
@@ -142,23 +146,27 @@ function nodeColor(n: CanvasNode, focusId: string | null, lens?: LensState): str
   return `hsl(${n.categoryHue} ${s}% ${l}%)`;
 }
 
+// Depth → celestial FORM (galaxy › constellation › star › planet › satellite);
+// knowledge scope (subtree size) → SIZE within the level, so extent reads at a
+// glance while the form still marks the taxonomy level.
+const LEVEL_BASE = [26, 14, 8, 5, 3.2];
+const LEVEL_SCOPE_REF = [600, 250, 130, 20, 10]; // typical subtree max per level
+
 function nodeSize(n: CanvasNode, lens?: LensState): number {
   let base: number;
-  // Celestial hierarchy by depth: galaxy › constellation › star › planet ›
-  // satellite. Clear size steps so a level reads at a glance AND the body is big
-  // enough to show its (lens) colour.
   if (n.object) base = FORM_SIZE[n.form ?? 'asteroid'] ?? 1.4;
   else if (n.star) base = 3;
-  else if (n.level === 0) base = 24; // galaxy
-  else if (n.level === 1) base = 13; // constellation
-  else if (n.level === 2) base = 7.5; // star
-  else if (n.level === 3) base = 4.5; // planet
-  else base = Math.max(2.2, 3.4 - (n.level - 4) * 0.6); // satellite / small body
-  // Semantic lens: scale taxonomy stars by centrality (hubs bigger). Keeps the
-  // level-graded base so structure stays legible; centrality (~0.1–0.5) modulates.
+  else {
+    const lvl = Math.min(n.level, 4);
+    const ref = LEVEL_SCOPE_REF[lvl] ?? 6;
+    // sparse node ~0.55×, knowledge-rich node ~1.9× its level base (noticeable).
+    const t = Math.min(1, Math.log1p(n.scope ?? 0) / Math.log1p(ref));
+    base = (LEVEL_BASE[lvl] ?? 2.6) * (0.55 + 1.35 * t);
+  }
+  // Semantic lens: additionally scale by centrality (hubs bigger).
   if (lens?.sizeByCentrality && !n.object && !n.star && (n.level ?? 2) >= 2) {
     const c = nodeFeature(n, 'centrality');
-    if (c !== undefined) base *= 0.7 + Math.max(0, Math.min(1, c)) * 2.0;
+    if (c !== undefined) base *= 0.7 + Math.max(0, Math.min(1, c)) * 1.6;
   }
   return base;
 }

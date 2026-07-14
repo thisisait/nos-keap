@@ -110,12 +110,33 @@ export default function Explore() {
     if (!graph) return { canvasNodes: [] as CanvasNode[], canvasLinks: [] as CanvasLink[] };
     // Taxonomy stars arrive PINNED to their baked coordinates (fx/fy/fz —
     // the spatial-memory contract); the force engine only places stars/dust.
+    // Knowledge scope = subtree size (how much knowledge sits under a node) —
+    // drives node SIZE so extent reads at a glance, while LEVEL drives the form.
+    const kids = new Map<string, string[]>();
+    for (const n of graph.nodes) {
+      if (n.parentId) {
+        const a = kids.get(n.parentId) ?? [];
+        a.push(n.id);
+        kids.set(n.parentId, a);
+      }
+    }
+    const scopeById = new Map<string, number>();
+    const scopeOf = (id: string): number => {
+      const cached = scopeById.get(id);
+      if (cached !== undefined) return cached;
+      let s = 0;
+      for (const c of kids.get(id) ?? []) s += 1 + scopeOf(c);
+      scopeById.set(id, s);
+      return s;
+    };
+    graph.nodes.forEach((n) => scopeOf(n.id));
     const nodes: CanvasNode[] = graph.nodes.map((n) => ({
       ...n,
       fx: n.x,
       fy: n.y,
       fz: n.z,
       categoryHue: hueByCategory.get(rootOf(n.id)) ?? 210,
+      scope: scopeById.get(n.id) ?? 0,
     }));
     const links: CanvasLink[] = graph.links.map((l) => ({ ...l }));
     // Orbital layer: anchored knowledge objects orbit their taxonomy star as
