@@ -1,0 +1,32 @@
+name: knowledge
+
+# Gates the canonical knowledge SoT (knowledge/canonical/**) on every push/PR:
+#   - lint: schema + house-style (id/level, ext structure, en 20-2000, NO
+#     Cyrillic in en/cs, id uniqueness, orphan ext parents)
+#   - round-trip: ingest(canonical) → dump → diff == 0 (proves ingest.mjs and
+#     dump.mjs are exact inverses, so canonical is a faithful, re-importable SoT)
+# These run BEFORE the pazny.keap role ever applies knowledge to a live system.
+
+on:
+  push:
+    paths: ['knowledge/**', '.github/workflows/knowledge.yml']
+  pull_request:
+    paths: ['knowledge/**']
+
+jobs:
+  knowledge:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      # Only libsql is needed for the knowledge tools; skip lifecycle scripts
+      # (wxt prepare etc.) so the gate stays fast and independent of the app build.
+      - run: npm ci --ignore-scripts
+      - name: Lint canonical knowledge
+        run: node knowledge/lint.mjs
+      - name: Round-trip identity (ingest → dump → diff == 0)
+        run: node knowledge/roundtrip.mjs
+      - name: Ingest dry-run
+        run: node knowledge/ingest.mjs --dry-run --canonical knowledge/canonical

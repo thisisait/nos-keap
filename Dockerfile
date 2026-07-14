@@ -49,28 +49,14 @@ COPY --from=build /app/dist-server ./dist-server
 # Opt-in fixture seed (run by the nOS keap role via `docker exec`, gated on
 # keap_seed_fixtures) — a standalone .mjs, no deps beyond global fetch.
 COPY --from=build /app/deploy/seed-fixtures.mjs ./deploy/seed-fixtures.mjs
-# One-time Theory-of-Everything import (raw-SQL, run via `docker exec node
-# deploy/import-toe.mjs` then a container restart to materialize). Ships its
-# source graph + the consolidated blocks alongside.
-COPY --from=build /app/deploy/import-toe.mjs ./deploy/import-toe.mjs
-COPY --from=build /app/deploy/toe-concept-graph.json ./deploy/toe-concept-graph.json
-COPY --from=build /app/deploy/toe-blocks.json ./deploy/toe-blocks.json
-# Generalized domain importer (`node deploy/import-domain.mjs <domain>` reads
-# deploy/<domain>-import.json) + the per-domain bundles it ingests. Same raw-SQL
-# + container-restart materialization contract as import-toe.mjs.
-COPY --from=build /app/deploy/import-domain.mjs ./deploy/import-domain.mjs
-COPY --from=build /app/deploy/math-import.json ./deploy/math-import.json
-COPY --from=build /app/deploy/chem-import.json ./deploy/chem-import.json
-COPY --from=build /app/deploy/bio-import.json ./deploy/bio-import.json
-# fable-authored core-physics fill (empty named branches 01.01.03-.10, rootIsSeed).
-COPY --from=build /app/deploy/phys-thermo-import.json ./deploy/phys-thermo-import.json
-COPY --from=build /app/deploy/phys-em-import.json ./deploy/phys-em-import.json
-COPY --from=build /app/deploy/phys-relativity-import.json ./deploy/phys-relativity-import.json
-COPY --from=build /app/deploy/phys-nuclear-import.json ./deploy/phys-nuclear-import.json
-COPY --from=build /app/deploy/phys-particle-import.json ./deploy/phys-particle-import.json
-COPY --from=build /app/deploy/phys-astro-import.json ./deploy/phys-astro-import.json
-COPY --from=build /app/deploy/phys-geo-import.json ./deploy/phys-geo-import.json
-COPY --from=build /app/deploy/phys-biophys-import.json ./deploy/phys-biophys-import.json
+# Knowledge pipeline tools (CODE only — the canonical data is NOT baked; the
+# pazny.keap role bind-mounts knowledge/canonical read-only and the ingest runs
+# from git, so a data change needs no image rebuild). ingest.mjs is the single
+# idempotent import path (replaces the retired import-domain/import-toe); dump.mjs
+# re-exports the live curated delta; lint.mjs validates canonical bundles.
+COPY --from=build /app/knowledge/ingest.mjs ./knowledge/ingest.mjs
+COPY --from=build /app/knowledge/dump.mjs ./knowledge/dump.mjs
+COPY --from=build /app/knowledge/lint.mjs ./knowledge/lint.mjs
 # /data must exist and belong to the runtime user BEFORE the VOLUME
 # declaration — an anonymous volume inherits these permissions; without the
 # chown the non-root process gets SQLITE_CANTOPEN on first boot.

@@ -24,6 +24,9 @@
     "postinstall": "wxt prepare",
     "start": "node dist-server/index.js",
     "lint": "eslint .",
+    "knowledge:lint": "node knowledge/lint.mjs",
+    "knowledge:roundtrip": "node knowledge/roundtrip.mjs",
+    "knowledge:dry-run": "node knowledge/ingest.mjs --dry-run --canonical knowledge/canonical",
     "preview": "vite preview"
   },
   "engines": {
