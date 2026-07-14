@@ -94,6 +94,8 @@ interface Props {
   mode: CameraMode;
   /** Called every engine tick with the current ship telemetry (ship mode only). */
   onShipUpdate?: (state: { speed: number; boosting: boolean; thrust: number }) => void;
+  /** Semantic lens: recolour stars by an embedding-derived axis + size by centrality. */
+  lens?: LensState;
 }
 
 const STAR_COLOR: Record<string, string> = {
@@ -280,7 +282,7 @@ function buildAssetMesh(node: CanvasNode): THREE.Object3D {
   return mesh;
 }
 
-export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width, height, mode, onShipUpdate }: Props) {
+export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width, height, mode, onShipUpdate, lens }: Props) {
   const fgRef = useRef<any>(null);
   const didFitRef = useRef(false);
   const modelRef = useRef<ShipModelParts | null>(null);
@@ -604,8 +606,8 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       nodeLabel={(n: any) =>
         n.star ? `☆ ${n.name}${n.distance ? ` · d=${n.distance.toFixed(2)}` : ''}` : n.name
       }
-      nodeVal={(n: any) => nodeSize(n)}
-      nodeColor={(n: any) => nodeColor(n, focusId)}
+      nodeVal={(n: any) => nodeSize(n, lens)}
+      nodeColor={(n: any) => nodeColor(n, focusId, lens)}
       nodeThreeObject={nodeThreeObject}
       nodeThreeObjectExtend={(n: any) => !n.object}
       linkColor={(l: any) =>
