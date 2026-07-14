@@ -62,6 +62,15 @@ COPY --from=build /app/deploy/import-domain.mjs ./deploy/import-domain.mjs
 COPY --from=build /app/deploy/math-import.json ./deploy/math-import.json
 COPY --from=build /app/deploy/chem-import.json ./deploy/chem-import.json
 COPY --from=build /app/deploy/bio-import.json ./deploy/bio-import.json
+# fable-authored core-physics fill (empty named branches 01.01.03-.10, rootIsSeed).
+COPY --from=build /app/deploy/phys-thermo-import.json ./deploy/phys-thermo-import.json
+COPY --from=build /app/deploy/phys-em-import.json ./deploy/phys-em-import.json
+COPY --from=build /app/deploy/phys-relativity-import.json ./deploy/phys-relativity-import.json
+COPY --from=build /app/deploy/phys-nuclear-import.json ./deploy/phys-nuclear-import.json
+COPY --from=build /app/deploy/phys-particle-import.json ./deploy/phys-particle-import.json
+COPY --from=build /app/deploy/phys-astro-import.json ./deploy/phys-astro-import.json
+COPY --from=build /app/deploy/phys-geo-import.json ./deploy/phys-geo-import.json
+COPY --from=build /app/deploy/phys-biophys-import.json ./deploy/phys-biophys-import.json
 # /data must exist and belong to the runtime user BEFORE the VOLUME
 # declaration — an anonymous volume inherits these permissions; without the
 # chown the non-root process gets SQLITE_CANTOPEN on first boot.
