@@ -50,5 +50,230 @@
    "brief": "Basic Transportation is the set of techniques and physical infrastructure for moving people and goods across local distances without depending on an industrial supply chain — animal traction (carts, sledges, pack animals), wheeled vehicles built from salvaged or hand-tooled parts, watercraft (rafts, rowboats, small sailing craft), and maintained footpaths or trail networks. It exists to keep trade, resource distribution, and emergency mobility functioning at whatever scale a community can build and repair itself, in contrast to industrial transportation systems that assume factories, refined fuel, and paved highway networks.\n\nWithin [[12.01]] Basic Infrastructure, Basic Transportation shares a firm boundary with [[12.01.04]] Communication Networks: the two subfields divide the same underlying problem — moving something between two points — along the line between material cargo and information, so a courier walking a message is communication while the same courier hauling grain is transportation. It also draws directly on [[12.01.01]] Basic Power Generation wherever a vehicle needs more than muscle — a water-wheel-driven winch hauling a barge, or a small combustion engine repurposed for a cart — and its footpaths and waterways depend on routes surveyed and maintained under the same infrastructure umbrella.\n\nAt industrial scale, the same problem is addressed by [[03.06]] Transportation, which assumes vehicle manufacturing, fuel refining, and engineered road and rail networks; Basic Transportation solves the identical need for moving people and cargo but reduced to hand tools, salvage, and animal power. The draft-animal side of the field overlaps with [[03.03.02]] Animal Husbandry, which covers the breeding, feeding, and health care that keeps working animals fit for hauling and traction. For concrete builds, [Low-tech Magazine](https://www.lowtechmagazine.com/) documents historical animal-powered and human-powered transport systems, and [Appropedia](https://www.appropedia.org/) catalogs buildable cart, boat, and trail designs for low-resource settings."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "12.01.01",
+   "to": "03.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "12.01.01",
+   "to": "12.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "12.01.01",
+   "to": "12.01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "12.01.01",
+   "to": "12.01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "12.01.01",
+   "to": "12.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "12.01.02",
+   "to": "08.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "12.01.02",
+   "to": "12.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "12.01.02",
+   "to": "12.01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "12.01.02",
+   "to": "12.01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "12.01.02",
+   "to": "12.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "12.01.03",
+   "to": "12.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "12.01.03",
+   "to": "12.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "12.01.03",
+   "to": "12.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "12.01.03",
+   "to": "12.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "12.01.04",
+   "to": "12.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "12.01.04",
+   "to": "12.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "12.01.04",
+   "to": "12.01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "12.01.04",
+   "to": "12.01.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "12.01.04",
+   "to": "12.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "12.01.05",
+   "to": "03.03.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "12.01.05",
+   "to": "03.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "12.01.05",
+   "to": "12.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "12.01.05",
+   "to": "12.01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "12.01.05",
+   "to": "12.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "12.01",
+   "to": "03.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "12.01",
+   "to": "08.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "12.01",
+   "to": "12.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "12.01",
+   "to": "12.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "12.01",
+   "to": "12.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "12.01",
+   "to": "12.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "12.01",
+   "to": "12.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "12.01",
+   "to": "12.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

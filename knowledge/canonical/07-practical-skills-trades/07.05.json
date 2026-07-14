@@ -50,5 +50,216 @@
    "brief": "Wood restoration returns a damaged, aged, or worn wooden piece to functional and aesthetic condition through a sequence of assessment, cleaning, structural repair, and refinishing, with the guiding constraint that the work preserve the piece's original character rather than remake it. Restoration differs from ordinary repair in its historical stakes — a period piece's value depends on how much original material and joinery survive, so a restorer must decide, joint by joint, whether to reinforce, reproduce, or replace.\n\nRestoration draws on every other discipline in [[07.05]] Carpentry: it re-cuts or reinforces failed connections using [[07.05.01]] Joinery technique, references [[07.05.02]] Furniture Making and [[07.05.03]] Cabinetry construction methods to reproduce period-correct parts, and finishes with [[07.05.04]] Wood Finishing after stripping and repairing the surface — usually the most visible and time-consuming stage of a restoration project. Structural assessment before any repair begins is what separates restoration from a simple refinish: a piece that looks merely worn may in fact have failed joints hidden under an intact finish.\n\nMuseums and conservators favor reversible repair methods — hide glue over synthetic adhesives, in-kind wood species matching — so a later restorer can undo an earlier intervention without damaging original material. The [American Institute for Conservation](https://www.culturalheritage.org/) publishes conservation standards that inform high-value furniture restoration practice."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "07.05.01",
+   "to": "07.05.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.05.01",
+   "to": "07.05.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.05.01",
+   "to": "07.05.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.05.01",
+   "to": "07.05.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.05.01",
+   "to": "07.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.05.02",
+   "to": "07.05.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.05.02",
+   "to": "07.05.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.05.02",
+   "to": "07.05.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.05.02",
+   "to": "07.05.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.05.02",
+   "to": "07.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.05.03",
+   "to": "07.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.05.03",
+   "to": "07.05.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.05.03",
+   "to": "07.05.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.05.03",
+   "to": "07.05.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.05.03",
+   "to": "07.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.05.04",
+   "to": "07.05.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.05.04",
+   "to": "07.05.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.05.04",
+   "to": "07.05.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.05.04",
+   "to": "07.05.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.05.04",
+   "to": "07.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.05.05",
+   "to": "07.05.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.05.05",
+   "to": "07.05.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.05.05",
+   "to": "07.05.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.05.05",
+   "to": "07.05.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.05.05",
+   "to": "07.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.05",
+   "to": "07.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.05",
+   "to": "07.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.05",
+   "to": "07.05.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.05",
+   "to": "07.05.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.05",
+   "to": "07.05.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

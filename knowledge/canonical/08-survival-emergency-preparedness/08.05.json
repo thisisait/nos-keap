@@ -50,5 +50,195 @@
    "brief": "Fire safety covers hazard prevention and damage control around an established flame — clearing a firebreak, keeping a water reserve on hand, siting the fire away from overhanging branches and dry ground cover, and managing smoke so it neither signals unwanted attention nor causes injury indoors. It treats fire as a controlled but always-escapable resource: every safety measure exists to keep a useful fire from becoming the emergency it was built to prevent.\n\nSafety is not a separate stage but runs through the other techniques in [[08.05]] Fire Making — the fuel load [[08.05.04]] fuel types stages and the airflow [[08.05.03]] fire maintenance regulates are the same variables that let a fire escape control if mismanaged, and both ignition families, [[08.05.01]] friction methods and [[08.05.02]] spark methods, produce open flame that safety practice must contain from the first spark onward. Fire sited to warm a shelter carries the added risk of proximity to flammable structure, which is why site selection is a safety decision as much as a comfort one.\n\nFire escapes are disproportionately caused by wind-driven spread and dry ground fuel rather than the ignition method itself, so site selection and a cleared perimeter matter more than any single technique. The [Wikipedia article on wildfire](https://en.wikipedia.org/wiki/Wildfire) covers how uncontrolled fire spreads and how firebreaks interrupt it, and the [National Fire Protection Association](https://www.nfpa.org/) publishes campfire and outdoor-fire safety guidance referenced across wilderness training programs."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "08.05.01",
+   "to": "08.05.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.05.01",
+   "to": "08.05.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.05.01",
+   "to": "08.05.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.05.01",
+   "to": "08.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.05.02",
+   "to": "08.05.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.05.02",
+   "to": "08.05.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.05.02",
+   "to": "08.05.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.05.02",
+   "to": "08.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.05.03",
+   "to": "08.05.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.05.03",
+   "to": "08.05.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.05.03",
+   "to": "08.05.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.05.03",
+   "to": "08.05.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.05.03",
+   "to": "08.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.05.04",
+   "to": "08.04.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.05.04",
+   "to": "08.05.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.05.04",
+   "to": "08.05.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.05.04",
+   "to": "08.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.05.05",
+   "to": "08.05.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.05.05",
+   "to": "08.05.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.05.05",
+   "to": "08.05.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.05.05",
+   "to": "08.05.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.05.05",
+   "to": "08.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.05",
+   "to": "08.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.05",
+   "to": "08.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.05",
+   "to": "08.05.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.05",
+   "to": "08.05.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.05",
+   "to": "08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

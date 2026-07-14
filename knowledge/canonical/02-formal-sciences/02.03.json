@@ -34,5 +34,118 @@
    "brief": "Computational logic studies how formal systems of inference can be represented, automated, and checked by machine. It formalizes propositions, proofs, and inference rules as data structures and algorithms, turning the question of whether an argument is valid into a computation that a program can carry out — the basis of automated theorem proving, logic programming, and formal verification.\n\nIt sits alongside its two siblings inside [[02.03]] Logic: [[02.03.01]] Mathematical Logic supplies the axiomatic systems (first-order logic, set theory, proof theory) that computational logic implements and automates, while [[02.03.02]] Philosophical Logic studies the informal reasoning and semantic questions (validity, meaning, modality) that computational systems must first formalize before they can check them. Computational logic is also where Logic's abstract inference meets [[02.02]] Computer Science directly: SAT and SMT solvers, proof assistants, and logic-programming languages such as Prolog are computational-logic techniques put to work inside compilers, verification tools, and symbolic-AI systems.\n\nBecause a theorem prover or a type checker is simultaneously a logical system and a running program, computational logic is the discipline that keeps that duality coherent. For a working survey of the field's methods, see the [Association for Symbolic Logic](https://aslonline.org/) and the [Association for Computing Machinery](https://www.acm.org/)'s coverage of automated reasoning and formal methods."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "02.03.01",
+   "to": "02.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.03.01",
+   "to": "02.03.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.03.01",
+   "to": "02.03.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.03.01",
+   "to": "02.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.03.02",
+   "to": "02.03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.03.02",
+   "to": "02.03.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.03.02",
+   "to": "02.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.03.03",
+   "to": "02.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.03.03",
+   "to": "02.03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.03.03",
+   "to": "02.03.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.03.03",
+   "to": "02.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.03",
+   "to": "02.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.03",
+   "to": "02.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.03",
+   "to": "02.03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.03",
+   "to": "02.03.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.03",
+   "to": "02.03.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

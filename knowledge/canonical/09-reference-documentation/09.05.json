@@ -10,5 +10,34 @@
    "brief": "Standards and specifications are formalized technical requirements and measurement baselines for materials, components, and processes. They enable interoperability and consistent quality across manufacturers and contexts, functioning as the shared agreement that lets independently produced parts and systems work together.\n\nWithin [[09]] Reference & Documentation, standards depend on [[09.02]] Dictionaries for terminology whose meaning is fixed and unambiguous, and they are consulted alongside [[09.03]] Technical Manuals, which apply a standard's tolerances to a specific piece of equipment's maintenance procedure. The branch also anchors [[03]] Applied Sciences & Technology broadly, since engineering disciplines from electronics to construction operate within the boundaries standards bodies define — a component is safe to combine with another precisely because both were built to the same specification.\n\nFor international standards across nearly every technical field, see the [International Organization for Standardization](https://www.iso.org/), and for U.S. national standards coordination, the [National Institute of Standards and Technology](https://www.nist.gov/)."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "09.05",
+   "to": "03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "09.05",
+   "to": "09.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "09.05",
+   "to": "09.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "09.05",
+   "to": "09",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

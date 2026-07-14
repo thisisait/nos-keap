@@ -50,5 +50,195 @@
    "brief": "Neuropsychology investigates how the structure and function of the brain give rise to behavior and cognition, and how injury, disease, or developmental disorder disrupts that mapping. It combines lesion studies, functional and structural neuroimaging, and standardized cognitive testing to link specific mental functions — memory, language, attention, executive control — to specific neural systems, most directly through cases where damage to a defined brain region produces a predictable, measurable deficit.\n\nWithin [[04.01]] Psychology, neuropsychology is the branch most directly anchored in biology. It complements [[04.01.01]] Cognitive Psychology's functional models of mental processes with an account of their neural implementation, and its assessments feed [[04.01.04]] Clinical Psychology's diagnostic work whenever a patient's symptoms suggest organic brain involvement rather than a purely psychiatric origin. Where [[04.01.02]] Developmental Psychology charts the typical trajectory of cognitive functions across the lifespan, neuropsychology is the discipline usually consulted once that trajectory is disrupted by stroke, trauma, or neurodegenerative disease.\n\nIts findings also inform rehabilitation medicine and forensic assessment, wherever a legal or clinical decision turns on the extent of a specific cognitive impairment. The [National Academy of Neuropsychology](https://nanonline.org/) documents professional standards and assessment practice, and the [Britannica overview of neuropsychology](https://www.britannica.com/science/neuropsychology) gives a concise account of the field's history and methods."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "04.01.01",
+   "to": "04.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.01.01",
+   "to": "04.01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.01.01",
+   "to": "04.01.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.01.01",
+   "to": "04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.01.02",
+   "to": "04.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.01.02",
+   "to": "04.01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.01.02",
+   "to": "04.01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.01.02",
+   "to": "04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.01.03",
+   "to": "04.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.01.03",
+   "to": "04.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.01.03",
+   "to": "04.01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.01.03",
+   "to": "04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.01.03",
+   "to": "04.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.01.04",
+   "to": "04.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.01.04",
+   "to": "04.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.01.04",
+   "to": "04.01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.01.04",
+   "to": "04.01.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.01.04",
+   "to": "04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.01.05",
+   "to": "04.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.01.05",
+   "to": "04.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.01.05",
+   "to": "04.01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.01.05",
+   "to": "04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.01",
+   "to": "04.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.01",
+   "to": "04.01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.01",
+   "to": "04.01.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.01",
+   "to": "04.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.01",
+   "to": "04.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

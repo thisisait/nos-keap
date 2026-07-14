@@ -90,5 +90,328 @@
    "brief": "Glaciology is the study of ice in the natural environment — glaciers, ice sheets, and ice caps, their formation, movement, and role in the climate system and sea-level change. It combines field measurement, remote sensing, and ice-core drilling to track how frozen water accumulates, flows, and melts.\n\nWithin [[01.04]], glaciology supplies [[01.04.04]] with some of its longest direct records: ice cores preserve trapped air and layered snowfall that reconstruct past temperature and atmospheric composition far beyond the instrumental era. It occupies the frozen end of the same water cycle [[01.04.09]] tracks in its liquid phase, and it shares a deep-time, physical-record approach with [[01.04.05]], whose fossils and glaciology's ice cores both preserve Earth's history for later reading.\n\nFor further reading, see the National Snow and Ice Data Center's [glaciers primer](https://nsidc.org/learn/parts-cryosphere/glaciers) and NASA's [Ice sheets resource](https://climate.nasa.gov/vital-signs/ice-sheets/)."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "01.04.01",
+   "to": "01.04.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.01",
+   "to": "01.04.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.01",
+   "to": "01.04.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.01",
+   "to": "01.04.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.01",
+   "to": "01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.02",
+   "to": "01.04.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.02",
+   "to": "01.04.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.02",
+   "to": "01.04.09",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.02",
+   "to": "01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.03",
+   "to": "01.04.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.03",
+   "to": "01.04.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.03",
+   "to": "01.04.09",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.03",
+   "to": "01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.04",
+   "to": "01.04.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.04",
+   "to": "01.04.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.04",
+   "to": "01.04.10",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.04",
+   "to": "01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.05",
+   "to": "01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.05",
+   "to": "01.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.05",
+   "to": "01.04.10",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.05",
+   "to": "01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.06",
+   "to": "01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.06",
+   "to": "01.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.06",
+   "to": "01.04.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.06",
+   "to": "01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.07",
+   "to": "01.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.07",
+   "to": "01.04.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.07",
+   "to": "01.04.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.07",
+   "to": "01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.08",
+   "to": "01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.08",
+   "to": "01.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.08",
+   "to": "01.04.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.08",
+   "to": "01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.09",
+   "to": "01.04.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.09",
+   "to": "01.04.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.09",
+   "to": "01.04.10",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.09",
+   "to": "01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.10",
+   "to": "01.04.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.10",
+   "to": "01.04.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.10",
+   "to": "01.04.09",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04.10",
+   "to": "01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04",
+   "to": "01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04",
+   "to": "01.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04",
+   "to": "01.04.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04",
+   "to": "01.04.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.04",
+   "to": "01.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

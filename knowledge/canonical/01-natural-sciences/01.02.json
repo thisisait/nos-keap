@@ -1622,6 +1622,230 @@
  ],
  "relations": [
   {
+   "from": "01.02.01",
+   "to": "01.02.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.01",
+   "to": "01.02.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.01",
+   "to": "01.02.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.01",
+   "to": "01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.02",
+   "to": "01.02.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.02",
+   "to": "01.02.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.02",
+   "to": "01.02.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.02",
+   "to": "01.02.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.03",
+   "to": "01.02.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.03",
+   "to": "01.02.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.03",
+   "to": "01.02.09",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.04",
+   "to": "01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.04",
+   "to": "01.02.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.04",
+   "to": "01.02.10",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.05",
+   "to": "01.02.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.05",
+   "to": "01.02.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.06",
+   "to": "01.02.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.06",
+   "to": "01.02.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.06",
+   "to": "01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.07",
+   "to": "01.02.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.07",
+   "to": "01.02.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.07",
+   "to": "01.02.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.08",
+   "to": "01.02.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.08",
+   "to": "01.02.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.08",
+   "to": "01.02.10",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.09",
+   "to": "01.02.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.09",
+   "to": "01.02.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.09",
+   "to": "01.02.10",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.10",
+   "to": "01.02.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.10",
+   "to": "01.02.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.10",
+   "to": "01.02.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02.10",
+   "to": "01.02.09",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
    "from": "01.02.11.01.01",
    "to": "01.02.11.03.03",
    "type": "shared-math",
@@ -4357,6 +4581,41 @@
    "type": "shared-structure",
    "explored": "partially",
    "source": "chem"
+  },
+  {
+   "from": "01.02",
+   "to": "01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02",
+   "to": "01.02.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02",
+   "to": "01.02.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02",
+   "to": "01.02.09",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.02",
+   "to": "01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
   }
  ]
 }

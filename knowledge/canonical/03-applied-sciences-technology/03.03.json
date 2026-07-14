@@ -230,5 +230,426 @@
    "brief": "Organic farming produces crops and livestock using natural inputs and biological processes, excluding synthetic pesticides, fertilizers, and genetically modified organisms. Fertility and pest management rely on crop rotation, composting, cover cropping, and biological controls rather than synthetic chemistry, and livestock are raised without routine antibiotics or synthetic growth hormones. The result is a certifiable production standard, not merely a philosophy: organic status is verified against defined rules rather than self-declared.\n\nOrganic farming draws directly on [[03.03.03]] Soil Science for the fertility-building techniques that replace synthetic fertilizer, and on [[03.03.02]] Animal Husbandry for the welfare and feeding standards that govern organic livestock. It shares its resource-conserving ethos with [[03.03.08]] Permaculture, but the two differ in scope: permaculture designs whole self-sustaining ecological systems, while organic farming is a narrower, certifiable set of input restrictions that can apply to a single crop or herd. [[03.03.01]] Crop Science, by contrast, studies plant production broadly, including the conventional and synthetic-input methods organic farming deliberately excludes.\n\nOrganic practice sits within [[03.03]] Agriculture and is governed by region-specific certification bodies. For the U.S. federal standard, see the [USDA National Organic Program](https://www.ams.usda.gov/services/organic-certification), and for the international movement's principles and standards, see [IFOAM Organics International](https://www.ifoam.bio/)."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "03.03.01",
+   "to": "03.03.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.01",
+   "to": "03.03.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.01",
+   "to": "03.03.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.01",
+   "to": "03.03.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.01",
+   "to": "03.03.09",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.01",
+   "to": "03.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.02",
+   "to": "03.03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.02",
+   "to": "03.03.02.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.02",
+   "to": "03.03.02.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.02",
+   "to": "03.03.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.02",
+   "to": "03.03.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.02",
+   "to": "03.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.03",
+   "to": "03.03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.03",
+   "to": "03.03.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.03",
+   "to": "03.03.03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.03",
+   "to": "03.03.03.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.03",
+   "to": "03.03.09",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.03",
+   "to": "03.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.04",
+   "to": "03.03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.04",
+   "to": "03.03.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.04",
+   "to": "03.03.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.04",
+   "to": "03.03.09",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.05",
+   "to": "03.03.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.05",
+   "to": "03.03.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.05",
+   "to": "03.03.09",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.05",
+   "to": "03.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.06",
+   "to": "03.03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.06",
+   "to": "03.03.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.06",
+   "to": "03.03.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.06",
+   "to": "03.03.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.06",
+   "to": "03.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.07",
+   "to": "03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.07",
+   "to": "03.03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.07",
+   "to": "03.03.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.07",
+   "to": "03.03.09",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.07",
+   "to": "03.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.08",
+   "to": "03.03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.08",
+   "to": "03.03.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.08",
+   "to": "03.03.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.08",
+   "to": "03.03.10",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.09",
+   "to": "03.03.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.09",
+   "to": "03.03.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.09",
+   "to": "03.03.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.09",
+   "to": "03.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.10",
+   "to": "03.03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.10",
+   "to": "03.03.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.10",
+   "to": "03.03.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.10",
+   "to": "03.03.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03.10",
+   "to": "03.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03",
+   "to": "03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03",
+   "to": "03.03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03",
+   "to": "03.03.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03",
+   "to": "03.03.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03",
+   "to": "03.03.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03",
+   "to": "03.03.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03",
+   "to": "03.03.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03",
+   "to": "03.03.09",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03",
+   "to": "03.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03",
+   "to": "03.09",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.03",
+   "to": "03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

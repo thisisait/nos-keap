@@ -10,5 +10,41 @@
    "brief": "Religious Studies investigates religions — their doctrines, practices, institutions, and social impacts — across cultures and history, using humanistic and social-scientific methods rather than doctrinal advocacy. It encompasses theology, ritual and worship, scripture and myth, religious experience and mysticism, and institutional history.\n\nWithin [[05]] Humanities, Religious Studies shares its analytical, argument-driven approach to belief with [[05.02]] Philosophy (philosophy of religion) while examining institutions and social impact alongside [[05.01]] History and [[04]] Social Sciences. It overlaps with [[10]] Cultural Preservation wherever scripture, ritual, and oral doctrine survive as endangered cultural heritage rather than living practice.\n\nDistinguished from theology, which advocates within a tradition, Religious Studies illuminates how belief systems shape — and are shaped by — human meaning-making and cultural diversity. For comparative scholarship and professional standards, see the [American Academy of Religion](https://www.aarweb.org/); for primary religious texts across traditions, the [Internet Sacred Text Archive](https://sacred-texts.com/)."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "05.05",
+   "to": "04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.05",
+   "to": "05.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.05",
+   "to": "05.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.05",
+   "to": "05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.05",
+   "to": "10",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

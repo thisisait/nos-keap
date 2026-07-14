@@ -50,5 +50,181 @@
    "brief": "Astrobiology studies the potential for life beyond Earth: the origin of life itself, the physical and chemical limits within which it can exist, the habitability of planets and moons other than our own, and the search for biosignatures — chemical or spectral traces that would indicate life is or was present. It is interdisciplinary by necessity, sitting at the boundary between astronomy and biology rather than fully inside either.\n\nWithin [[01.05]] Astronomy, astrobiology draws its targets from [[01.05.01]] Planetary Science, which characterizes the geology and atmospheres of candidate worlds, and its broader context from [[01.05.04]] Cosmology, since the conditions for life anywhere depend on the age, chemistry, and structure of the universe those worlds formed in.\n\nThe field reaches directly into [[01.03]] Biology for its account of what life requires and how it might arise from non-living chemistry — the same question of biogenesis that biology asks about Earth, astrobiology asks about every other world a telescope or a probe can reach. For further reading, see [NASA Astrobiology](https://astrobiology.nasa.gov/) and the Britannica entry on [astrobiology](https://www.britannica.com/science/astrobiology)."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "01.05.01",
+   "to": "01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.05.01",
+   "to": "01.05.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.05.01",
+   "to": "01.05.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.05.01",
+   "to": "01.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.05.02",
+   "to": "01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.05.02",
+   "to": "01.05.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.05.02",
+   "to": "01.05.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.05.02",
+   "to": "01.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.05.03",
+   "to": "01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.05.03",
+   "to": "01.05.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.05.03",
+   "to": "01.05.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.05.03",
+   "to": "01.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.05.04",
+   "to": "01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.05.04",
+   "to": "01.05.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.05.04",
+   "to": "01.05.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.05.04",
+   "to": "01.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.05.05",
+   "to": "01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.05.05",
+   "to": "01.05.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.05.05",
+   "to": "01.05.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.05.05",
+   "to": "01.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.05",
+   "to": "01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.05",
+   "to": "01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.05",
+   "to": "01.05.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.05",
+   "to": "01.05.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "01.05",
+   "to": "01.05.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

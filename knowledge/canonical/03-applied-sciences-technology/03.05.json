@@ -195,5 +195,412 @@
    "brief": "Manufacturing Safety identifies, assesses, and mitigates the hazards that arise wherever raw material is converted into finished goods, combining engineering controls, protective equipment, worker training, and regulatory compliance into a single discipline that runs across the whole production line rather than any one process step.\n\nBecause hazards differ by process, Manufacturing Safety draws its scope from its sibling disciplines: [[03.05.07]] Manufacturing Automation introduces machine-guarding and lockout/tagout requirements around robotic cells, [[03.05.01]] Metalworking carries chemical, thermal, and mechanical exposure risks specific to cutting and forming processes, and [[03.05.06]] Quality Control shares its inspection discipline but is aimed at the product rather than the worker. [[03.05.08]] Lean Manufacturing is its closest structural relative — both are cross-cutting programs applied to the whole line, one optimizing for waste, the other for harm.\n\nWithin [[03.05]] Manufacturing, safety compliance is what keeps automation, high-volume assembly, and supply-chain throughput sustainable rather than merely fast; regulators increasingly tie production permits to a documented safety management system. For the primary US regulatory framework, see the [Occupational Safety and Health Administration](https://www.osha.gov/), and for the international management-system standard, see [ISO 45001](https://www.iso.org/standard/63787.html)."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "03.05.01",
+   "to": "03.05.01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.01",
+   "to": "03.05.01.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.01",
+   "to": "03.05.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.01",
+   "to": "03.05.10",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.01",
+   "to": "03.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.02",
+   "to": "03.05.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.02",
+   "to": "03.05.02.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.02",
+   "to": "03.05.02.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.02",
+   "to": "03.05.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.02",
+   "to": "03.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.03",
+   "to": "03.05.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.03",
+   "to": "03.05.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.03",
+   "to": "03.05.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.03",
+   "to": "03.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.04",
+   "to": "03.05.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.04",
+   "to": "03.05.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.04",
+   "to": "03.05.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.04",
+   "to": "03.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.05",
+   "to": "03.05.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.05",
+   "to": "03.05.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.05",
+   "to": "03.05.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.05",
+   "to": "03.05.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.05",
+   "to": "03.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.06",
+   "to": "03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.06",
+   "to": "03.05.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.06",
+   "to": "03.05.09",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.06",
+   "to": "03.05.10",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.06",
+   "to": "03.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.07",
+   "to": "03.05.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.07",
+   "to": "03.05.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.07",
+   "to": "03.05.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.07",
+   "to": "03.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.08",
+   "to": "03.05.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.08",
+   "to": "03.05.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.08",
+   "to": "03.05.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.08",
+   "to": "03.05.09",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.08",
+   "to": "03.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.09",
+   "to": "03.05.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.09",
+   "to": "03.05.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.09",
+   "to": "03.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.09",
+   "to": "03.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.10",
+   "to": "03.05.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.10",
+   "to": "03.05.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.10",
+   "to": "03.05.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.10",
+   "to": "03.05.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05.10",
+   "to": "03.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05",
+   "to": "03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05",
+   "to": "03.05.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05",
+   "to": "03.05.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05",
+   "to": "03.05.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05",
+   "to": "03.05.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05",
+   "to": "03.05.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05",
+   "to": "03.05.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05",
+   "to": "03.05.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05",
+   "to": "03.05.09",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05",
+   "to": "03.05.10",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05",
+   "to": "03.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.05",
+   "to": "03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

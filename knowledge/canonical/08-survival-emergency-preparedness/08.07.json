@@ -50,5 +50,181 @@
    "brief": "Mesh Networks distribute communication across many devices instead of one: each node relays messages on behalf of its neighbors, so the network as a whole keeps functioning even when individual nodes fail, are destroyed, or simply go offline. There is no central tower or base station to knock out — the infrastructure is the collection of end-user devices itself.\n\nThis makes mesh the most infrastructure-independent subfield of [[08.07]] Emergency Communication, one step beyond [[08.07.01]] Radio Communication: traditional radio still typically relies on a single powerful transmitter or repeater, while a mesh network is built from many low-power radios cooperating, so it degrades gracefully instead of failing outright when part of it is knocked out. In disaster response the two are often combined — a mesh network carrying routine traffic locally while a long-range radio link bridges the mesh to the outside world, with [[08.07.04]] Emergency Codes still used within either channel to mark priority traffic during the handoff.\n\nFor open mesh-networking protocols used in disaster response, see the [goTenna and Meshtastic project documentation](https://meshtastic.org/), and for humanitarian deployment case studies, the [International Federation of Red Cross and Red Crescent Societies](https://www.ifrc.org/)."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "08.07.01",
+   "to": "08.07.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.07.01",
+   "to": "08.07.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.07.01",
+   "to": "08.07.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.07.01",
+   "to": "08.07.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.07.01",
+   "to": "08.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.07.02",
+   "to": "08.07.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.07.02",
+   "to": "08.07.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.07.02",
+   "to": "08.07.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.07.02",
+   "to": "08.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.07.03",
+   "to": "08.07.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.07.03",
+   "to": "08.07.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.07.03",
+   "to": "08.07.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.07.03",
+   "to": "08.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.07.04",
+   "to": "08.07.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.07.04",
+   "to": "08.07.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.07.04",
+   "to": "08.07.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.07.04",
+   "to": "08.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.07.05",
+   "to": "08.07.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.07.05",
+   "to": "08.07.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.07.05",
+   "to": "08.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.07",
+   "to": "03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.07",
+   "to": "08.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.07",
+   "to": "08.07.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.07",
+   "to": "08.07.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.07",
+   "to": "08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

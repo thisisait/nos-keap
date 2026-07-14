@@ -50,5 +50,216 @@
    "brief": "Building materials are the substances a shelter builder selects and works — wood, stone, earth, snow, metal salvage, and plant fiber — chosen for local availability, weather durability, thermal insulating value, and how readily they can be shaped with hand tools or none at all. Reading a site for its building materials is inseparable from reading it for shelter potential: standing dead timber supplies a frame, packed earth or sod adds thermal mass, bark or palm fronds shed rain, and plant fiber twists into cordage for lashings.\n\nThe knowledge underlies every shelter type in [[08.04]] Shelter Construction: [[08.04.01]] temporary shelters draw on whatever lies within arm's reach for a structure built in hours, while [[08.04.02]] permanent structures justify hauling or processing heavier, longer-lasting material for a site occupied over weeks. [[08.04.03]] Insulation techniques turn a chosen material's thermal property into an actual heat-retention strategy, and the same wood that frames a wall is a different resource from the dry, resinous wood [[08.05.04]] fuel types demands for burning — structural and combustible wood are selected on opposite criteria.\n\nMaterial identification is regionally specific, so a technique from a temperate forest guide translates poorly to arctic or desert terrain. The [Wikipedia article on building material](https://en.wikipedia.org/wiki/Building_material) surveys material categories and properties, and [Low-tech Magazine's coverage of earthen construction](https://www.lowtechmagazine.com/) documents traditional load-bearing earth and stone technique still viable without industrial tools."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "08.04.01",
+   "to": "08.04.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.04.01",
+   "to": "08.04.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.04.01",
+   "to": "08.04.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.04.01",
+   "to": "08.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.04.01",
+   "to": "08.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.04.02",
+   "to": "08.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.04.02",
+   "to": "08.04.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.04.02",
+   "to": "08.04.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.04.02",
+   "to": "08.04.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.04.02",
+   "to": "08.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.04.03",
+   "to": "08.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.04.03",
+   "to": "08.04.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.04.03",
+   "to": "08.04.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.04.03",
+   "to": "08.04.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.04.03",
+   "to": "08.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.04.04",
+   "to": "08.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.04.04",
+   "to": "08.04.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.04.04",
+   "to": "08.04.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.04.04",
+   "to": "08.04.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.04.04",
+   "to": "08.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.04.05",
+   "to": "08.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.04.05",
+   "to": "08.04.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.04.05",
+   "to": "08.04.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.04.05",
+   "to": "08.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.04.05",
+   "to": "08.05.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.04",
+   "to": "08.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.04",
+   "to": "08.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.04",
+   "to": "08.04.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.04",
+   "to": "08.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.04",
+   "to": "08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

@@ -50,5 +50,223 @@
    "brief": "Welding safety is the body of hazard-prevention protocols and protective equipment that every welding process must observe to protect the welder and bystanders from arc radiation, toxic fumes, fire, and electrical shock. It differs from the process-specific disciplines in [[07.06]] Welding by cutting across all of them: the retina-damaging ultraviolet flash of [[07.06.01]] arc welding, the fume load of [[07.06.02]] MIG welding's shielding-gas breakdown, the tungsten-electrode risks of [[07.06.03]] TIG welding, and the open-flame hazards of [[07.06.04]] gas welding all fall under the same umbrella of ventilation, eye and skin protection, and fire-watch discipline rather than technique.\n\nBecause the hazards are common to the trade rather than to any single joining method, welding safety is taught and certified as a standing prerequisite, not as an optional add-on: auto-darkening helmets, flame-resistant clothing, respiratory protection against metal fume fever, and grounding procedures to prevent electric shock apply whether the arc is struck with a stick electrode or a TIG torch. Fire watch and hot-work permitting extend the discipline beyond the welder to the surrounding workspace, since sparks and slag remain a fire risk long after the arc is extinguished.\n\nWelding safety sits within [[07.06]] Welding and, more broadly, within [[07]] Practical Skills & Trades, where hands-on trades generally carry occupational hazards that licensing and certification bodies formalize into enforceable standards. The [OSHA welding, cutting, and brazing standard](https://www.osha.gov/welding-cutting-brazing) sets the regulatory baseline in the United States, and the [American Welding Society's safety and health fact sheets](https://www.aws.org/) detail practice-level guidance for fume extraction and PPE selection."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "07.06.01",
+   "to": "07.06.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.06.01",
+   "to": "07.06.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.06.01",
+   "to": "07.06.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.06.01",
+   "to": "07.06.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.06.01",
+   "to": "07.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.06.02",
+   "to": "07.06.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.06.02",
+   "to": "07.06.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.06.02",
+   "to": "07.06.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.06.02",
+   "to": "07.06.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.06.02",
+   "to": "07.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.06.03",
+   "to": "07.06.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.06.03",
+   "to": "07.06.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.06.03",
+   "to": "07.06.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.06.03",
+   "to": "07.06.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.06.03",
+   "to": "07.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.06.04",
+   "to": "07.06.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.06.04",
+   "to": "07.06.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.06.04",
+   "to": "07.06.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.06.04",
+   "to": "07.06.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.06.04",
+   "to": "07.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.06.05",
+   "to": "07.06.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.06.05",
+   "to": "07.06.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.06.05",
+   "to": "07.06.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.06.05",
+   "to": "07.06.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.06.05",
+   "to": "07.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.06.05",
+   "to": "07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.06",
+   "to": "07.06.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.06",
+   "to": "07.06.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.06",
+   "to": "07.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.06",
+   "to": "07.10",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.06",
+   "to": "07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

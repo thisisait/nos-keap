@@ -50,5 +50,230 @@
    "brief": "Special diets modify cooking's raw materials and techniques to meet a constraint external to taste alone — an allergy, an intolerance, a medical prescription, a religious rule, or an ethical commitment such as veganism. Where [[07.08.01]] basic techniques teaches how to control heat and seasoning and [[07.08.04]] nutrition explains what a diet does inside the body, special diets applies both to a specific goal: substituting xanthan gum for gluten in a bread dough, replacing dairy fat with coconut oil in a sauce, or restructuring a meal plan around a diabetic's glycemic targets.\n\nThe practice sits alongside [[07.08.02]] baking and [[07.08.03]] food preservation as one of the specialized branches [[07.08]] Cooking divides into once basic technique is assumed — a gluten-free baker, for instance, must rebuild baking's flour chemistry from scratch rather than simply omitting an ingredient. Special diets also reaches outside cooking into [[08.01.05]] medication knowledge, since drug-nutrient interactions and prescribed elimination diets (low-sodium, low-potassium) originate in medical rather than culinary decisions.\n\nReliable guidance distinguishes allergy from intolerance and preference from prescription, since the margin for error differs sharply: a celiac reacting to trace gluten faces gut damage, not discomfort. The [Academy of Nutrition and Dietetics](https://www.eatright.org/health/wellness/diet-trends) and the [Celiac Disease Foundation](https://celiac.org/gluten-free-living/) document evidence-based approaches to the most common medical and lifestyle diets."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "07.08.01",
+   "to": "07.08.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.08.01",
+   "to": "07.08.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.08.01",
+   "to": "07.08.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.08.01",
+   "to": "07.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.08.01",
+   "to": "07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.08.02",
+   "to": "07.08.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.08.02",
+   "to": "07.08.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.08.02",
+   "to": "07.08.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.08.02",
+   "to": "07.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.08.02",
+   "to": "07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.08.03",
+   "to": "07.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.08.03",
+   "to": "07.08.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.08.03",
+   "to": "07.08.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.08.03",
+   "to": "07.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.08.03",
+   "to": "07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.08.03",
+   "to": "08.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.08.04",
+   "to": "07.08.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.08.04",
+   "to": "07.08.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.08.04",
+   "to": "07.08.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.08.04",
+   "to": "07.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.08.04",
+   "to": "07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.08.05",
+   "to": "07.08.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.08.05",
+   "to": "07.08.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.08.05",
+   "to": "07.08.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.08.05",
+   "to": "07.08.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.08.05",
+   "to": "07.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.08.05",
+   "to": "08.01.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.08",
+   "to": "07.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.08",
+   "to": "07.08.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.08",
+   "to": "07.08.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.08",
+   "to": "07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.08",
+   "to": "08.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

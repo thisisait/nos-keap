@@ -85,5 +85,167 @@
    "brief": "Hydraulic systems transmit and control mechanical power by pressurizing an incompressible fluid, typically oil, within a sealed circuit of pumps, valves, cylinders, and motors. Because the fluid is nearly incompressible, force applied at one point transfers with minimal loss to another point, and sizing the receiving piston relative to the driving piston multiplies force according to Pascal's law. This branch of [[07.02]] Mechanics covers the operation and maintenance of pumps, pressure regulators, hoses, seals, and actuators, plus the diagnostic work of tracing leaks, contamination, and pressure loss across vehicle and industrial fluid-power systems.\n\nHydraulics supplies the actuation muscle behind several sibling fields in Mechanics. [[07.02.04]] Brake Systems rely on hydraulic fluid to convert pedal force into clamping pressure at the wheels, and [[07.02.03]] Suspension & Steering uses hydraulic assist to lighten steering effort and, in some designs, to actively damp ride motion. [[07.02.02]] Transmission Systems overlaps at the torque converter and hydraulic clutch packs that couple engine output to the gearbox. Outside Mechanics, the same pump-cylinder-valve vocabulary reappears in heavy construction and industrial machinery, where hydraulics is often the only practical way to deliver high force in a compact package.\n\nReference material on the underlying physics and component design is widely available; the [Pascal's law](https://en.wikipedia.org/wiki/Pascal%27s_law) article covers the pressure-transmission principle, and the [hydraulic machinery](https://en.wikipedia.org/wiki/Hydraulic_machinery) overview surveys pump, valve, and actuator types across applications."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "07.02.01",
+   "to": "07.02.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.02.01",
+   "to": "07.02.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.02.01",
+   "to": "07.02.01.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.02.01",
+   "to": "07.02.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.02.01",
+   "to": "07.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.02.02",
+   "to": "07.02.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.02.02",
+   "to": "07.02.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.02.02",
+   "to": "07.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.02.03",
+   "to": "07.02.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.02.03",
+   "to": "07.02.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.02.03",
+   "to": "07.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.02.04",
+   "to": "07.02.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.02.04",
+   "to": "07.02.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.02.04",
+   "to": "07.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.02.05",
+   "to": "07.02.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.02.05",
+   "to": "07.02.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.02.05",
+   "to": "07.02.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.02.05",
+   "to": "07.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.02",
+   "to": "07.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.02",
+   "to": "07.02.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.02",
+   "to": "07.02.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.02",
+   "to": "07.02.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.02",
+   "to": "07.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

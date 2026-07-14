@@ -120,5 +120,188 @@
    "brief": "Water conservation is the set of practices that stretch a limited water supply further — rationing consumption, preventing losses to evaporation and leaks, and reusing water across successive purposes (cooking water becomes wash water becomes irrigation water) before it is finally discarded. It matters most precisely when procurement is hardest: after [[08.02.01]] finding water sources and [[08.02.02]] purification methods have converted raw water into a safe, finite supply, conservation determines how many days that supply actually lasts.\n\nWithin [[08.02]] Water Procurement & Purification, conservation is the discipline that closes the loop between acquisition and use: it works hand in hand with [[08.02.03]] water storage, since a well-sealed, properly sized container is what makes rationing possible in the first place, and it depends on water testing having already confirmed which water is safe to reuse for lower-priority tasks like washing. Where the other nodes in this branch answer \"how do I get and clean water,\" conservation answers \"how do I make it last.\"\n\nBecause dehydration degrades judgment and physical capability quickly, conservation practice must never cross into unsafe restriction of drinking water itself — the discipline applies to non-drinking uses first. The [Wikipedia article on water conservation](https://en.wikipedia.org/wiki/Water_conservation) surveys rationing and reuse techniques across household and emergency contexts."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "08.02.01",
+   "to": "08.02.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.02.01",
+   "to": "08.02.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.02.01",
+   "to": "08.02.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.02.01",
+   "to": "08.02.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.02.02",
+   "to": "08.02.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.02.02",
+   "to": "08.02.02.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.02.02",
+   "to": "08.02.02.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.02.02",
+   "to": "08.02.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.02.02",
+   "to": "08.02.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.02.03",
+   "to": "08.02.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.02.03",
+   "to": "08.02.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.02.03",
+   "to": "08.02.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.02.03",
+   "to": "08.02.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.02.04",
+   "to": "08.02.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.02.04",
+   "to": "08.02.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.02.04",
+   "to": "08.02.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.02.04",
+   "to": "08.02.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.02.05",
+   "to": "08.02.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.02.05",
+   "to": "08.02.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.02.05",
+   "to": "08.02.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.02.05",
+   "to": "08.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.02",
+   "to": "08.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.02",
+   "to": "08.02.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.02",
+   "to": "08.02.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.02",
+   "to": "08.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.02",
+   "to": "08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

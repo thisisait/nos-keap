@@ -10,5 +10,34 @@
    "brief": "Classics is the study of ancient Greek and Roman civilizations — their literature, philosophy, history, art and architecture, and languages (Ancient Greek, Latin) — and their influence on Western thought and institutions. It combines philological analysis of primary texts with archaeological and historical evidence.\n\nWithin [[05]] Humanities, Classics overlaps with [[05.01]] History in its study of Athens and Rome, though it privileges textual interpretation over chronological breadth, and with [[05.02]] Philosophy in its close reading of Plato and Aristotle as foundational texts rather than purely historical artifacts. It also intersects [[10]] Cultural Preservation, where surviving manuscripts, inscriptions, and archaeological sites require active conservation.\n\nFoundational to the Western intellectual tradition, Classics increasingly incorporates non-elite sources and postcolonial reinterpretation to broaden its account of antiquity beyond canonical elite texts. For open-access ancient texts and commentary, see the [Perseus Digital Library](http://www.perseus.tufts.edu/); for the discipline's professional body, the [Society for Classical Studies](https://classicalstudies.org/)."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "05.07",
+   "to": "05.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.07",
+   "to": "05.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.07",
+   "to": "05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.07",
+   "to": "10",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

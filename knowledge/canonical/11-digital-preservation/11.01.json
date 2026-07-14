@@ -50,5 +50,209 @@
    "brief": "Archive formats are standardized container and compression methods for bundling multiple files into a single unit and, usually, reducing its total size — ZIP, 7z, and RAR combine aggregation with compression, while TAR is a streaming archive that concatenates files losslessly and typically relies on a separate compressor like gzip for size reduction. The distinction from a media codec is one of level: a codec compresses the content of a single stream, while an archive format operates above that, packaging any number of already-formatted files — documents, images, audio, video — into one transportable object without caring what is inside each one.\n\nThat file-agnosticism is exactly why archive formats sit downstream of every other subfield in [[11.01]] File Formats: a preservation package routinely bundles [[11.01.01]] Document Formats, [[11.01.02]] Image Formats, [[11.01.03]] Audio Formats, and [[11.01.04]] Video Formats together inside a single archive for transfer or deposit, so an archive format's own openness and longevity gate access to everything it contains — an undecodable or proprietary archive locks away every file inside it regardless of how well each individual format was chosen. ZIP's wide, openly documented adoption is why it remains the default preservation-safe choice over RAR, whose specification has historically been more restricted.\n\nThe [PKWARE ZIP file format specification](https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT) is the canonical reference for the ZIP format, and the [Library of Congress Recommended Formats Statement](https://www.loc.gov/preservation/resources/rfs/textual/) lists preferred archive and compression formats for long-term deposit."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "11.01.01",
+   "to": "11.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "11.01.01",
+   "to": "11.01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "11.01.01",
+   "to": "11.01.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "11.01.01",
+   "to": "11.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "11.01.01",
+   "to": "11.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "11.01.02",
+   "to": "11.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "11.01.02",
+   "to": "11.01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "11.01.02",
+   "to": "11.01.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "11.01.02",
+   "to": "11.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "11.01.03",
+   "to": "11.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "11.01.03",
+   "to": "11.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "11.01.03",
+   "to": "11.01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "11.01.03",
+   "to": "11.01.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "11.01.03",
+   "to": "11.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "11.01.04",
+   "to": "11.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "11.01.04",
+   "to": "11.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "11.01.04",
+   "to": "11.01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "11.01.04",
+   "to": "11.01.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "11.01.04",
+   "to": "11.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "11.01.05",
+   "to": "11.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "11.01.05",
+   "to": "11.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "11.01.05",
+   "to": "11.01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "11.01.05",
+   "to": "11.01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "11.01.05",
+   "to": "11.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "11.01",
+   "to": "11.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "11.01",
+   "to": "11.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "11.01",
+   "to": "11.01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "11.01",
+   "to": "11.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "11.01",
+   "to": "11.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

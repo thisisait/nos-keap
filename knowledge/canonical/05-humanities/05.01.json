@@ -260,5 +260,223 @@
    "brief": "Military history studies warfare, armed conflict, and military institutions, and how they have shaped political, economic, and social change across epochs. It is distinguished from general history by its sustained focus on strategy, logistics, weaponry, and recruitment, alongside the lived experience of combatants and civilians caught in conflict.\n\nUnlike the other branches of [[05.01]] (History), it is organized by theme rather than confined to a single era: siege warfare in [[05.01.01]] (Ancient History), chivalric and crusading combat in [[05.01.02]] (Medieval History), and the professionalized armies of [[05.01.03]] (Modern History) are all studied through the same analytical lens of command, supply, and tactics.\n\nIts heaviest concentration of material falls within [[05.01.04]] (Contemporary History), where the [[05.01.04.01]] (World Wars) industrialized combat at a scale that made logistics and mass mobilization as decisive as tactics on the battlefield, a shift that continues to define how later, more asymmetric conflicts are analyzed.\n\nThe [West Point Department of History's military history resources](https://www.westpoint.edu/academics/academic-departments/history/american-military-history) and the [Osprey Publishing military history catalogue](https://ospreypublishing.com/us/military-history/) are standard reference points for campaign-level detail across periods."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "05.01.01",
+   "to": "05.01.01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.01.01",
+   "to": "05.01.01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.01.01",
+   "to": "05.01.01.10",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.01.01",
+   "to": "05.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.01.01",
+   "to": "05.01.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.01.02",
+   "to": "05.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.01.02",
+   "to": "05.01.02.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.01.02",
+   "to": "05.01.02.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.01.02",
+   "to": "05.01.02.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.01.02",
+   "to": "05.01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.01.03",
+   "to": "05.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.01.03",
+   "to": "05.01.03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.01.03",
+   "to": "05.01.03.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.01.03",
+   "to": "05.01.03.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.01.03",
+   "to": "05.01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.01.04",
+   "to": "05.01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.01.04",
+   "to": "05.01.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.01.04",
+   "to": "05.01.04.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.01.04",
+   "to": "05.01.04.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.01.04",
+   "to": "05.01.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.01.05",
+   "to": "05.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.01.05",
+   "to": "05.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.01.05",
+   "to": "05.01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.01.05",
+   "to": "05.01.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.01.05",
+   "to": "05.01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.01.05",
+   "to": "05.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.01",
+   "to": "04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.01",
+   "to": "05.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.01",
+   "to": "05.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.01",
+   "to": "05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.01",
+   "to": "10",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

@@ -50,5 +50,202 @@
    "brief": "Composting is the controlled decomposition of organic waste — fallen leaves, kitchen scraps, manure, garden trimmings — into humus, a nutrient-rich material that improves soil fertility, structure, and water retention. Unlike the plant-facing disciplines of [[07.07]] Gardening, composting works on the input side: it produces the amendment that [[07.07.01]] soil preparation then works into a bed, closing the loop between waste and the fertility a new planting depends on.\n\nEffective composting balances carbon-rich \"brown\" material (dry leaves, straw, cardboard) against nitrogen-rich \"green\" material (fresh scraps, grass clippings), along with moisture and aeration, to keep the microbial decomposition process active rather than stalling into anaerobic rot; a well-managed pile generates enough heat to break down material in weeks rather than the months a neglected pile takes. This makes composting a small-scale application of the same organic-matter cycling that underlies soil ecology more broadly, and a household practicing it converts what would otherwise be landfill waste into a renewable garden input.\n\nComposting closes the cycle within [[07.07]] Gardening and, more broadly, exemplifies the resourcefulness typical of [[07]] Practical Skills & Trades — turning a waste stream into a productive input rather than discarding it. The [US EPA composting guidance](https://www.epa.gov/recycle/composting-home) covers home methods and troubleshooting, and the [Wikipedia article on compost](https://en.wikipedia.org/wiki/Compost) surveys the microbiology and history of the practice."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "07.07.01",
+   "to": "07.07.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.07.01",
+   "to": "07.07.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.07.01",
+   "to": "07.07.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.07.01",
+   "to": "07.07.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.07.01",
+   "to": "07.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.07.01",
+   "to": "07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.07.02",
+   "to": "07.07.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.07.02",
+   "to": "07.07.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.07.02",
+   "to": "07.07.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.07.02",
+   "to": "07.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.07.02",
+   "to": "07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.07.03",
+   "to": "07.07.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.07.03",
+   "to": "07.07.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.07.03",
+   "to": "07.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.07.03",
+   "to": "07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.07.04",
+   "to": "07.07.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.07.04",
+   "to": "07.07.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.07.04",
+   "to": "07.07.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.07.04",
+   "to": "07.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.07.04",
+   "to": "07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.07.05",
+   "to": "07.07.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.07.05",
+   "to": "07.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.07.05",
+   "to": "07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.07",
+   "to": "07.07.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.07",
+   "to": "07.07.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.07",
+   "to": "07.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.07",
+   "to": "07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.07",
+   "to": "08.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

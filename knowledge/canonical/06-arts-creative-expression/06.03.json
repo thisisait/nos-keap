@@ -50,5 +50,181 @@
    "brief": "UX/UI Design is the creation of interactive digital experiences through interface design, user flows, and information architecture, shaping how a person navigates and understands a piece of software rather than how a static page is read.\n\nUX/UI Design shares its parent [[06.03]] with [[06.03.01]], whose typography and layout vocabulary it inherits and extends into interaction states, transitions, and responsive behavior, and with [[06.03.02]], as the design of physical products and their software interfaces increasingly converge in connected devices. It is the newest of the five design subfields but now the largest in practice, driven by the growth of software as the primary medium people interact with daily.\n\nThe [Nielsen Norman Group](https://www.nngroup.com/) and the [Interaction Design Foundation](https://www.interaction-design.org/) publish research and reference material on usability and interaction design practice."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "06.03.01",
+   "to": "06.03.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.03.01",
+   "to": "06.03.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.03.01",
+   "to": "06.03.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.03.01",
+   "to": "06.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.03.02",
+   "to": "06.03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.03.02",
+   "to": "06.03.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.03.02",
+   "to": "06.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.03.02",
+   "to": "06.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.03.02",
+   "to": "06.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.03.03",
+   "to": "06.03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.03.03",
+   "to": "06.03.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.03.03",
+   "to": "06.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.03.03",
+   "to": "06.04.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.03.04",
+   "to": "06.03.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.03.04",
+   "to": "06.03.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.03.04",
+   "to": "06.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.03.04",
+   "to": "06.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.03.05",
+   "to": "06.03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.03.05",
+   "to": "06.03.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.03.05",
+   "to": "06.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.03",
+   "to": "06.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.03",
+   "to": "06.03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.03",
+   "to": "06.03.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.03",
+   "to": "06.03.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.03",
+   "to": "06.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

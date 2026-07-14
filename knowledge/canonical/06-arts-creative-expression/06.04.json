@@ -50,5 +50,181 @@
    "brief": "Bookbinding is the craft of assembling printed or blank pages into a durable bound volume through sewing, gluing, and finishing. A binder joins signatures — folded and gathered sheets — with thread structures such as Coptic or long stitch, or bonds single leaves at the spine with adhesive in case and perfect binding, then attaches boards or wrappers covered in leather, cloth, or paper, finishing the volume with endpapers, headbands, and tooled or stamped decoration.\n\nBookbinding sits within [[06.04]], the craft field defined by hand-shaping a single material into a finished object rather than specifying a design for reproduction. It shares that parent with [[06.04.01]], which fires clay into vessels, [[06.04.02]], which builds cloth and fiber structures on a loom or by hand, and [[06.04.04]], which shapes molten glass by blowing or casting — each craft trading bookbinding's paper and thread for a different material's own working temperature and tolerance.\n\nThe [Guild of Book Workers](https://guildofbookworkers.org/) documents binding structures and conservation technique, and the [British Library's book conservation guidance](https://www.bl.uk/conservation) covers the repair and preservation side of the same discipline."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "06.04.01",
+   "to": "06.03.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.04.01",
+   "to": "06.04.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.04.01",
+   "to": "06.04.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.04.01",
+   "to": "06.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.04.02",
+   "to": "06.03.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.04.02",
+   "to": "06.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.04.02",
+   "to": "06.04.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.04.02",
+   "to": "06.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.04.03",
+   "to": "06.03.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.04.03",
+   "to": "06.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.04.03",
+   "to": "06.04.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.04.03",
+   "to": "06.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.04.04",
+   "to": "06.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.04.04",
+   "to": "06.04.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.04.04",
+   "to": "06.04.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.04.04",
+   "to": "06.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.04.05",
+   "to": "06.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.04.05",
+   "to": "06.04.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.04.05",
+   "to": "06.04.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.04.05",
+   "to": "06.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.04",
+   "to": "06.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.04",
+   "to": "06.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.04",
+   "to": "06.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.04",
+   "to": "06.04.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.04",
+   "to": "06.04.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

@@ -50,5 +50,195 @@
    "brief": "GPS Alternatives are the non-electronic positioning techniques a navigator falls back on when satellite systems are jammed, exhausted, or simply absent: dead reckoning tracks distance and heading from a known start point, terrain association matches visible landmarks against a mental or paper map, and celestial observation fixes position from the sun, moon, and stars. None of these require power or signal reception, which is exactly what makes them survive the failure modes that take GPS down.\n\nEach technique borrows directly from a sibling under [[08.06]] Navigation: dead reckoning is [[08.06.02]] Compass Usage paired with pace count and elapsed time, terrain association is [[08.06.04]] Map Reading run in reverse — terrain to map instead of map to terrain — and celestial observation is a field-expedient subset of the fuller methods taught under [[08.06.01]] Celestial Navigation. [[08.06.03]] Natural Navigation supplies the environmental cues — sun angle, prevailing wind, vegetation growth patterns — that make dead reckoning and terrain association reliable without instruments at all.\n\nRedundancy is the point: a party that has drilled these methods before a GPS outage does not need to relearn navigation under stress, they simply switch technique. For dead-reckoning procedure and error-correction tables, see the [American Practical Navigator (Bowditch)](https://msi.nga.mil/Publications/APN), and for a field-tested terrain-association method, the [US Army Survival Manual FM 21-76](https://www.globalsecurity.org/military/library/policy/army/fm/21-76/)."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "08.06.01",
+   "to": "08.06.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.06.01",
+   "to": "08.06.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.06.01",
+   "to": "08.06.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.06.01",
+   "to": "08.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.06.02",
+   "to": "08.06.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.06.02",
+   "to": "08.06.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.06.02",
+   "to": "08.06.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.06.02",
+   "to": "08.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.06.03",
+   "to": "08.06.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.06.03",
+   "to": "08.06.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.06.03",
+   "to": "08.06.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.06.03",
+   "to": "08.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.06.04",
+   "to": "08.06.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.06.04",
+   "to": "08.06.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.06.04",
+   "to": "08.06.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.06.04",
+   "to": "08.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.06.04",
+   "to": "09.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.06.05",
+   "to": "08.06.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.06.05",
+   "to": "08.06.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.06.05",
+   "to": "08.06.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.06.05",
+   "to": "08.06.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.06.05",
+   "to": "08.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.06",
+   "to": "08.06.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.06",
+   "to": "08.06.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.06",
+   "to": "08.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.06",
+   "to": "08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.06",
+   "to": "09.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

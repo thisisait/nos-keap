@@ -120,5 +120,188 @@
    "brief": "Electronics repair restores malfunctioning equipment through systematic fault diagnosis, component replacement, and circuit rework. Technicians use multimeters, oscilloscopes, and schematic diagrams to trace a failure to a specific component or connection, then desolder and replace parts before verifying that the repaired circuit meets its original specification.\n\nElectronics repair is the diagnostic capstone of [[07.03]] Electronics: it draws its measurement and desoldering technique from [[07.03.01]] Basic Circuits, and its most common patients are failures within [[07.03.03]] Power Supplies (the single most frequent point of failure in most equipment) and within [[07.03.02]] Microcontrollers-based designs, where a repair technician must distinguish a hardware fault from a firmware bug before reaching for the soldering iron. The same fault-isolation method extends to [[07.03.04]] Radio Electronics, adapted to RF-specific symptoms like drift and intermittent reception.\n\nThe [Electronics technician](https://en.wikipedia.org/wiki/Electronics_technician) overview and the [Troubleshooting](https://en.wikipedia.org/wiki/Troubleshooting) article describe the diagnostic methodology in general terms."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "07.03.01",
+   "to": "07.03.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.03.01",
+   "to": "07.03.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.03.01",
+   "to": "07.03.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.03.01",
+   "to": "07.03.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.03.01",
+   "to": "07.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.03.02",
+   "to": "07.03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.03.02",
+   "to": "07.03.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.03.02",
+   "to": "07.03.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.03.02",
+   "to": "07.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.03.03",
+   "to": "07.03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.03.03",
+   "to": "07.03.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.03.03",
+   "to": "07.03.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.03.03",
+   "to": "07.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.03.04",
+   "to": "07.03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.03.04",
+   "to": "07.03.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.03.04",
+   "to": "07.03.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.03.04",
+   "to": "07.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.03.05",
+   "to": "07.03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.03.05",
+   "to": "07.03.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.03.05",
+   "to": "07.03.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.03.05",
+   "to": "07.03.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.03.05",
+   "to": "07.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.03",
+   "to": "07.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.03",
+   "to": "07.03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.03",
+   "to": "07.03.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.03",
+   "to": "07.03.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

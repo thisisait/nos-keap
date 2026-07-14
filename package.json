@@ -27,6 +27,7 @@
     "knowledge:lint": "node knowledge/lint.mjs",
     "knowledge:roundtrip": "node knowledge/roundtrip.mjs",
     "knowledge:dry-run": "node knowledge/ingest.mjs --dry-run --canonical knowledge/canonical",
+    "knowledge:xrefs": "node knowledge/lift-xrefs.mjs",
     "preview": "vite preview"
   },
   "engines": {

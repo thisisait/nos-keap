@@ -195,5 +195,286 @@
    "brief": "Economic history traces how production systems, exchange mechanisms, and economic institutions have evolved across societies and eras, treating markets, money, and property regimes as historical artifacts rather than timeless constants. It draws on quantitative techniques from [[04.04.01]] (Microeconomics) and [[04.04.08]] (Financial Economics) to reinterpret archival and statistical evidence — price series, trade ledgers, census records — as evidence for long-run economic change.\n\nEconomic history occupies the border between [[04.04]] (Economics) and [[05.01]] (History): it borrows economics' formal tools while relying on history's source criticism and periodization. Episodes such as the [[05.01.03.04]] (Industrial Revolution) or medieval trade networks appear as case studies where the two disciplines converge, distinguishing economic history from the ahistorical, model-first approach of most other economics subfields.\n\nFurther reading: the [EH.Net Encyclopedia of Economic History](https://eh.net/encyclopedia/) collects peer-reviewed overviews of major episodes and debates, and the [Cliometric Society](https://cliometrics.org/) documents the quantitative (\"cliometric\") methodology that reshaped the field after the 1960s."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "04.04.01",
+   "to": "04.04.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.01",
+   "to": "04.04.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.01",
+   "to": "04.04.01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.01",
+   "to": "04.04.01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.01",
+   "to": "04.04.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.02",
+   "to": "04.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.02",
+   "to": "04.04.02.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.02",
+   "to": "04.04.02.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.02",
+   "to": "04.04.02.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.02",
+   "to": "04.04.02.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.03",
+   "to": "04.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.03",
+   "to": "04.04.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.03",
+   "to": "04.04.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.03",
+   "to": "04.04.09",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.04",
+   "to": "04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.04",
+   "to": "04.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.04",
+   "to": "04.04.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.05",
+   "to": "04.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.05",
+   "to": "04.04.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.05",
+   "to": "04.04.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.06",
+   "to": "04.04.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.06",
+   "to": "04.04.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.06",
+   "to": "04.04.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.07",
+   "to": "04.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.07",
+   "to": "04.04.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.08",
+   "to": "04.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.08",
+   "to": "04.04.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.09",
+   "to": "04.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.09",
+   "to": "04.04.02.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.09",
+   "to": "04.04.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.10",
+   "to": "04.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.10",
+   "to": "04.04.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.10",
+   "to": "04.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.10",
+   "to": "05.01.03.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04.10",
+   "to": "05.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04",
+   "to": "04.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04",
+   "to": "04.04.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04",
+   "to": "04.04.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04",
+   "to": "04.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.04",
+   "to": "04.09",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

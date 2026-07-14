@@ -50,5 +50,202 @@
    "brief": "Translation resources are the tools and reference works that let meaning cross from one language to another: bilingual and multilingual glossaries, terminology databases, and parallel texts aligning the same passage across languages. Unlike a single-language dictionary, a translation resource is built around correspondence — it records not just what a word means but which word or phrase in another language carries the closest equivalent meaning, while flagging the residue that never translates cleanly because it is tied to a specific culture's categories of thought.\n\nTranslation work depends on the language documentation that precedes it. [[10.01.01]] Language Dictionaries and [[10.01.02]] Grammars establish what a language's words mean and how they combine before a translator can map correspondences between two languages; Translation Resources is the layer built on top of both, once each side of the pair is documented. The need is sharpest for [[10.01.03]] Endangered Languages, where a parallel text or bilingual glossary may be the only record connecting a vanishing language to a widely known one, and it extends to [[10.10]] Oral Histories, whose testimony is preservable across audiences only if someone can translate the language it was told in — folklore and myth carried in a single community's tongue face the same barrier.\n\nWithin [[10.01]] Languages, Translation Resources is the outward-facing subfield — the other four subcategories document a language on its own terms, this one connects it to every other language a preservation effort needs to reach. The EU's [IATE terminology database](https://iate.europa.eu/) is a working example of a large multilingual terminology resource, and the [OPUS parallel corpus collection](https://opus.nlpl.eu/) aggregates aligned parallel texts across hundreds of language pairs for exactly this kind of correspondence work."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "10.01.01",
+   "to": "10.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "10.01.01",
+   "to": "10.01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "10.01.01",
+   "to": "10.01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "10.01.01",
+   "to": "10.01.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "10.01.01",
+   "to": "10.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "10.01.02",
+   "to": "10.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "10.01.02",
+   "to": "10.01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "10.01.02",
+   "to": "10.01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "10.01.02",
+   "to": "10.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "10.01.03",
+   "to": "10.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "10.01.03",
+   "to": "10.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "10.01.03",
+   "to": "10.01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "10.01.03",
+   "to": "10.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "10.01.03",
+   "to": "10.10",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "10.01.04",
+   "to": "10.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "10.01.04",
+   "to": "10.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "10.01.04",
+   "to": "10.01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "10.01.04",
+   "to": "10.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "10.01.05",
+   "to": "10.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "10.01.05",
+   "to": "10.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "10.01.05",
+   "to": "10.01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "10.01.05",
+   "to": "10.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "10.01.05",
+   "to": "10.10",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "10.01",
+   "to": "10.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "10.01",
+   "to": "10.01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "10.01",
+   "to": "10.01.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "10.01",
+   "to": "10.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "10.01",
+   "to": "10.10",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

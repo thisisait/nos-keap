@@ -155,5 +155,195 @@
    "brief": "Insulation is the thermal control layer — mineral fiber batts, spray or rigid foam, or loose-fill cellulose — installed within walls, roofs, and floors to slow heat transfer and reduce the energy a building needs for heating and cooling. It is installed inside the cavities [[07.01.02]] framing creates and beneath or above the covering [[07.01.04]] provides, so its placement and vapor-barrier detailing depend on decisions made in both of those subfields.\n\nInsulation is typically the last of [[07.01]]'s structural subfields to close, since a wall or roof cavity must be framed and weathertight before insulation can be installed without risking moisture entrapment; [[07.01.03]] achieves a comparable thermal effect through mass rather than a dedicated low-conductivity layer, trading insulation's thin profile for a wall that stores heat instead of blocking it.\n\nThe [North American Insulation Manufacturers Association](https://insulationinstitute.org/) publishes material and installation standards, and the [U.S. Department of Energy's insulation guidance](https://www.energy.gov/energysaver/insulation) sets recommended R-values by climate zone."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "07.01.01",
+   "to": "07.01.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.01.01",
+   "to": "07.01.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.01.01",
+   "to": "07.01.01.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.01.01",
+   "to": "07.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.01.01",
+   "to": "07.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.01.02",
+   "to": "07.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.01.02",
+   "to": "07.01.02.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.01.02",
+   "to": "07.01.02.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.01.02",
+   "to": "07.01.02.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.01.02",
+   "to": "07.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.01.03",
+   "to": "07.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.01.03",
+   "to": "07.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.01.03",
+   "to": "07.01.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.01.03",
+   "to": "07.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.01.04",
+   "to": "07.01.02.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.01.04",
+   "to": "07.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.01.04",
+   "to": "07.01.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.01.04",
+   "to": "07.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.01.05",
+   "to": "07.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.01.05",
+   "to": "07.01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.01.05",
+   "to": "07.01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.01.05",
+   "to": "07.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.01",
+   "to": "07.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.01",
+   "to": "07.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.01",
+   "to": "07.01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.01",
+   "to": "07.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.01",
+   "to": "07.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

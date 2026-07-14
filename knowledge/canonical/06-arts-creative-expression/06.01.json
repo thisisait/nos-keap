@@ -190,5 +190,188 @@
    "brief": "Printmaking is the artistic practice of creating multiple images by transferring pigment from an inked matrix — a wood block, engraved plate, stone, or screen — onto paper or another substrate. Because the matrix can be inked and pressed repeatedly, the medium is built around reproducibility: an edition of prints made from the same matrix is understood as multiple originals rather than copies of a single one, and the print run's size and the matrix's eventual wear are part of the work's meaning.\n\nPrintmaking shares its parent, Visual Arts, with [[06.01.01]] Painting, from which it borrows composition and color but not the direct, one-off application of pigment to a surface, and with [[06.01.04]] Digital Art, whose print-on-demand and generative-edition practices raise the same questions of seriality and authenticity in a purely digital register. It is closer in physical process to [[06.01.02]] Sculpture than the other visual arts — both carve or engrave a matrix before the finished work exists — though sculpture's matrix typically is the work, while printmaking's matrix only ever produces it.\n\nPrint collections document techniques and historical editions across centuries; see the [British Museum's prints and drawings collection](https://www.britishmuseum.org/collection) and the [International Print Center New York](https://ipcny.org/)."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "06.01.01",
+   "to": "06.01.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.01.01",
+   "to": "06.01.01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.01.01",
+   "to": "06.01.01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.01.01",
+   "to": "06.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.01.01",
+   "to": "06.01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.01.02",
+   "to": "06.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.01.02",
+   "to": "06.01.02.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.01.02",
+   "to": "06.01.02.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.01.02",
+   "to": "06.01.02.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.01.02",
+   "to": "06.01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.01.03",
+   "to": "06.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.01.03",
+   "to": "06.01.03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.01.03",
+   "to": "06.01.03.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.01.03",
+   "to": "06.01.03.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.01.03",
+   "to": "06.01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.01.04",
+   "to": "06.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.01.04",
+   "to": "06.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.01.04",
+   "to": "06.01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.01.04",
+   "to": "06.01.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.01.05",
+   "to": "06.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.01.05",
+   "to": "06.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.01.05",
+   "to": "06.01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.01",
+   "to": "06.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.01",
+   "to": "06.01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.01",
+   "to": "06.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.01",
+   "to": "06.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

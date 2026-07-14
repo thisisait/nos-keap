@@ -260,5 +260,237 @@
    "brief": "Power Distribution covers the infrastructure and systems that carry electrical power from generation sources to end users — transmission lines, substations, transformers, and local distribution networks that step voltage down for industrial, commercial, and domestic delivery.\n\nWithin Energy it is the delivery stage that all three primary generation sources feed into: [[03.07.01]] Renewable Energy, [[03.07.02]] Fossil Fuels, and [[03.07.03]] Nuclear Energy each produce power that Power Distribution carries to consumers, while [[03.07.04]] Energy Storage buffers supply before or after it enters the grid to match fluctuating generation with demand. It draws on [[03.01.03]] Electrical Engineering for the transformer, transmission-line, and grid-control disciplines that keep the network stable.\n\nFor grid reliability standards and technical background, see the [North American Electric Reliability Corporation](https://www.nerc.com/) and the [International Energy Agency's electricity overview](https://www.iea.org/topics/electricity)."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "03.07.01",
+   "to": "03.07.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.07.01",
+   "to": "03.07.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.07.01",
+   "to": "03.07.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.07.01",
+   "to": "03.07.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.07.01",
+   "to": "03.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.07.02",
+   "to": "03.07.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.07.02",
+   "to": "03.07.02.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.07.02",
+   "to": "03.07.02.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.07.02",
+   "to": "03.07.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.07.02",
+   "to": "03.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.07.03",
+   "to": "03.01.09",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.07.03",
+   "to": "03.07.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.07.03",
+   "to": "03.07.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.07.03",
+   "to": "03.07.03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.07.03",
+   "to": "03.07.03.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.07.04",
+   "to": "03.07.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.07.04",
+   "to": "03.07.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.07.04",
+   "to": "03.07.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.07.04",
+   "to": "03.07.04.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.07.04",
+   "to": "03.07.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.07.05",
+   "to": "03.01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.07.05",
+   "to": "03.07.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.07.05",
+   "to": "03.07.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.07.05",
+   "to": "03.07.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.07.05",
+   "to": "03.07.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.07",
+   "to": "03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.07",
+   "to": "03.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.07",
+   "to": "03.07.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.07",
+   "to": "03.07.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.07",
+   "to": "03.07.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.07",
+   "to": "03.07.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.07",
+   "to": "03.07.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "03.07",
+   "to": "03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

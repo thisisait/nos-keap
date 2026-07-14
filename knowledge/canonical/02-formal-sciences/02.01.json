@@ -2837,6 +2837,111 @@
  ],
  "relations": [
   {
+   "from": "02.01.01.01",
+   "to": "02.01.01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.01.01.01",
+   "to": "02.01.01.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.01.01.01",
+   "to": "02.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.01.01",
+   "to": "02.01.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.01.01",
+   "to": "02.01.01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.01.01",
+   "to": "02.01.01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.01.01",
+   "to": "02.01.01.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.01.01",
+   "to": "02.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.01.02",
+   "to": "02.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.01.02",
+   "to": "02.01.02.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.01.02",
+   "to": "02.01.02.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.01.02",
+   "to": "02.01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.01.03",
+   "to": "02.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.01.03",
+   "to": "02.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.01.03",
+   "to": "02.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
    "from": "02.01.04.01.01",
    "to": "02.01.04.01.02",
    "type": "related-concept",
@@ -7609,6 +7714,41 @@
    "type": "shared-math",
    "explored": "well",
    "source": "math"
+  },
+  {
+   "from": "02.01",
+   "to": "01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.01",
+   "to": "02.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.01",
+   "to": "02.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.01",
+   "to": "02.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.01",
+   "to": "02.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
   }
  ]
 }

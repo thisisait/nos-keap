@@ -50,5 +50,216 @@
    "brief": "Fermentation preserves food through controlled microbial action, typically lactic-acid bacteria that convert sugars into acids that make the environment hostile to spoilage organisms while the beneficial microbes themselves proliferate. It is the branch's outlier in mechanism: where [[08.03.01]] canning, [[08.03.02]] drying, [[08.03.03]] smoking, and [[08.03.04]] salting and curing all preserve by excluding or destroying microbial life, fermentation preserves by deliberately cultivating it.\n\nThat difference in mechanism produces a difference in outcome: fermented foods gain complex flavors and often improved nutrient bioavailability that the other four methods in [[08.03]] Food Preservation & Storage do not confer, which is why fermentation is chosen as much for what it adds to food as for how long it extends shelf life. It does still depend on the same food-safety discipline as the branch's other techniques — clean water and controlled salinity keep the fermentation dominated by the intended lactic-acid bacteria rather than competing, spoilage-causing organisms.\n\nVegetable fermentation (sauerkraut, kimchi, pickles) is the most accessible entry point, requiring only salt, water, and time. The [Wikipedia article on fermentation in food processing](https://en.wikipedia.org/wiki/Fermentation_in_food_processing) surveys the microbiology and traditional techniques across cuisines."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "08.03.01",
+   "to": "08.03.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.03.01",
+   "to": "08.03.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.03.01",
+   "to": "08.03.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.03.01",
+   "to": "08.03.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.03.01",
+   "to": "08.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.03.02",
+   "to": "08.03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.03.02",
+   "to": "08.03.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.03.02",
+   "to": "08.03.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.03.02",
+   "to": "08.03.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.03.02",
+   "to": "08.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.03.03",
+   "to": "08.03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.03.03",
+   "to": "08.03.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.03.03",
+   "to": "08.03.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.03.03",
+   "to": "08.03.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.03.03",
+   "to": "08.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.03.04",
+   "to": "08.03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.03.04",
+   "to": "08.03.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.03.04",
+   "to": "08.03.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.03.04",
+   "to": "08.03.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.03.04",
+   "to": "08.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.03.05",
+   "to": "08.03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.03.05",
+   "to": "08.03.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.03.05",
+   "to": "08.03.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.03.05",
+   "to": "08.03.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.03.05",
+   "to": "08.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.03",
+   "to": "07.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.03",
+   "to": "07.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.03",
+   "to": "08.03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.03",
+   "to": "08.03.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "08.03",
+   "to": "08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

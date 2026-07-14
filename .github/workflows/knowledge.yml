@@ -30,3 +30,5 @@ jobs:
         run: node knowledge/roundtrip.mjs
       - name: Ingest dry-run
         run: node knowledge/ingest.mjs --dry-run --canonical knowledge/canonical
+      - name: Brief cross-refs in sync
+        run: node knowledge/lift-xrefs.mjs && git diff --exit-code knowledge/canonical

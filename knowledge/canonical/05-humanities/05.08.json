@@ -10,5 +10,34 @@
    "brief": "Media Studies investigates how societies create, distribute, and interpret texts through technological systems — newspapers, radio, television, film, the Internet, and social media. It examines media's economic structures (ownership, advertising), representational practices (framing, stereotypes), audience reception, and media's roles in politics and identity formation.\n\nWithin [[05]] Humanities, Media Studies applies [[05.06]] Cultural Studies' concern with ideology and representation to specifically technological systems of distribution, and shares [[05.04]] Literature's tools of textual analysis when reading film and broadcast narrative. Its study of media economics and audience behavior connects it to [[04]] Social Sciences, particularly communication research and sociology.\n\nAs the technological systems for distributing texts have multiplied, Media Studies has become indispensable for understanding how power and representation operate at scale. For current research on communication technologies and their social effects, see the [International Communication Association](https://www.icahdq.org/); for data on media consumption and its societal impact, the [Pew Research Center](https://www.pewresearch.org/topic/news-habits-media/)."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "05.08",
+   "to": "04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.08",
+   "to": "05.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.08",
+   "to": "05.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "05.08",
+   "to": "05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

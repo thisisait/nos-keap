@@ -601,5 +601,377 @@
    "brief": "Computer Graphics studies the techniques and systems for generating, manipulating, and rendering visual images and animations by computational means, from the geometric representation of shapes and scenes to the algorithms that turn them into pixels on a screen. It covers rendering pipelines, geometric modeling, animation, and the real-time performance constraints that separate interactive graphics (games, simulations) from offline rendering (film, visualization).\n\nComputer Graphics draws heavily on [[02.02.02]] for the geometric and numerical algorithms — rasterization, ray tracing, spatial data structures — that make rendering tractable, and it depends on [[02.02.06]] for the device drivers that expose GPU hardware to an application. It also sits in an inverse relationship to [[02.02.09]]'s computer vision: graphics renders a scene description into an image, while computer vision recovers a scene description from an image, and the two fields increasingly share techniques (differentiable rendering, neural radiance fields).\n\nFor further reading, see the [Wikipedia overview of computer graphics](https://en.wikipedia.org/wiki/Computer_graphics) and the standard reference textbook [Computer Graphics: Principles and Practice](https://www.pearson.com/en-us/subject-catalog/p/computer-graphics-principles-and-practice/P200000003399), by Hughes, van Dam, et al."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "02.02.01",
+   "to": "02.02.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.01",
+   "to": "02.02.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.01",
+   "to": "02.02.01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.01",
+   "to": "02.02.01.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.01",
+   "to": "02.02.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.01",
+   "to": "02.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.02",
+   "to": "02.02.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.02",
+   "to": "02.02.02.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.02",
+   "to": "02.02.02.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.02",
+   "to": "02.02.02.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.02",
+   "to": "02.02.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.02",
+   "to": "02.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.03",
+   "to": "02.02.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.03",
+   "to": "02.02.03.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.03",
+   "to": "02.02.03.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.03",
+   "to": "02.02.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.04",
+   "to": "02.02.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.04",
+   "to": "02.02.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.04",
+   "to": "02.02.04.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.04",
+   "to": "02.02.04.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.04",
+   "to": "02.02.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.05",
+   "to": "02.02.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.05",
+   "to": "02.02.05.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.05",
+   "to": "02.02.05.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.05",
+   "to": "02.02.05.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.05",
+   "to": "02.02.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.06",
+   "to": "02.02.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.06",
+   "to": "02.02.06.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.06",
+   "to": "02.02.06.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.06",
+   "to": "02.02.06.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.06",
+   "to": "02.02.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.07",
+   "to": "02.02.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.07",
+   "to": "02.02.07.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.07",
+   "to": "02.02.07.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.07",
+   "to": "02.02.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.08",
+   "to": "02.02.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.08",
+   "to": "02.02.07",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.08",
+   "to": "02.02.08.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.08",
+   "to": "02.02.08.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.08",
+   "to": "02.02.08.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.09",
+   "to": "02.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.09",
+   "to": "02.02.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.09",
+   "to": "02.02.09.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.09",
+   "to": "02.02.09.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.09",
+   "to": "02.02.09.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.10",
+   "to": "02.02.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.10",
+   "to": "02.02.06",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02.10",
+   "to": "02.02.09",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02",
+   "to": "02.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02",
+   "to": "02.02.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02",
+   "to": "02.02.08",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02",
+   "to": "02.02.09",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "02.02",
+   "to": "02.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

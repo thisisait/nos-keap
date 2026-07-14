@@ -120,5 +120,167 @@
    "brief": "Opera is the dramatic form that sets a libretto to music, fusing sung vocal performance, orchestral accompaniment, staging, and spectacle into a single continuous work in which the story is carried by voice and orchestra rather than by spoken dialogue. A singer projects over a full orchestra without amplification, and the score paces the drama in a way spoken theater does not, giving the form its characteristic scale and emotional register.\n\nOpera shares its parent [[06.02]] with [[06.02.01]], whose vocal and instrumental techniques it draws on directly, and with [[06.02.03]], whose staging, blocking, and dramatic construction it inherits and subordinates to the score — opera is, historically, the fusion of these two forms. It is set apart from [[06.02.04]] by liveness: each performance is a singular, unrepeatable event shaped by the specific singers and conductor on stage that night, not a fixed recording watched the same way twice.\n\nReference recordings, librettos, and staging history are documented by the [Metropolitan Opera](https://www.metopera.org/) and surveyed in [Encyclopædia Britannica's opera entry](https://www.britannica.com/art/opera-music)."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "06.02.01",
+   "to": "06.02.01.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.02.01",
+   "to": "06.02.01.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.02.01",
+   "to": "06.02.01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.02.01",
+   "to": "06.02.01.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.02.01",
+   "to": "06.02.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.02.02",
+   "to": "06.02.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.02.02",
+   "to": "06.02.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.02.02",
+   "to": "06.02.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.02.03",
+   "to": "06.02.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.02.03",
+   "to": "06.02.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.02.03",
+   "to": "06.02.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.02.04",
+   "to": "06.01.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.02.04",
+   "to": "06.02.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.02.04",
+   "to": "06.02.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.02.05",
+   "to": "06.02.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.02.05",
+   "to": "06.02.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.02.05",
+   "to": "06.02.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.02.05",
+   "to": "06.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.02",
+   "to": "06.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.02",
+   "to": "06.02.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.02",
+   "to": "06.02.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.02",
+   "to": "06.02.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "06.02",
+   "to": "06.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }

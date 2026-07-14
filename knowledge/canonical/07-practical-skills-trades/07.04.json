@@ -50,5 +50,195 @@
    "brief": "Plumbing repair diagnoses and corrects failures across a building's water and drainage systems — leaking joints, frozen or burst pipes, clogged drains, and worn fixtures — turning inspection findings (visual checks, pressure testing, camera scoping) into a targeted fix rather than a blanket replacement. It draws on knowledge of both halves of plumbing's physics: pressurized supply lines that must hold static pressure without weeping, and gravity-fed drainage that must maintain a continuous fall or back up. Repair work splits into two tempos: emergency stabilization that stops active damage (shutoff valves, temporary patches, water extraction) and permanent repair that restores full function.\n\nPlumbing repair sits alongside the systems it fixes: [[07.04.01]] Pipe Systems supplies the pressurized network whose leaks and bursts are among repair's most common calls; [[07.04.04]] Drainage Systems is the gravity-fed counterpart whose clogs and slow drains define another large share of repair work; and [[07.04.02]] Fixtures Installation and [[07.04.03]] Water Heating are the endpoints — faucets, toilets, water heaters — whose failures repair technicians restore or, when beyond repair, hand off to. As part of [[07.04]] Plumbing, repair depends on the same code and material knowledge that governs new installation, applied under time pressure and often without the luxury of opening a wall.\n\nRepair diagnostics increasingly rely on non-destructive tools — pressure gauges, moisture meters, and small sewer cameras — that let a plumber locate a fault before cutting into a wall or slab. The [International Association of Plumbing and Mechanical Officials](https://www.iapmo.org/) code that governs new plumbing work also sets the baseline a repair must meet, and consumer guidance from [This Old House](https://www.thisoldhouse.com/plumbing) covers common household repair techniques."
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "07.04.01",
+   "to": "07.04.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.04.01",
+   "to": "07.04.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.04.01",
+   "to": "07.04.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.04.01",
+   "to": "07.04.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.04.01",
+   "to": "07.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.04.02",
+   "to": "07.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.04.02",
+   "to": "07.04.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.04.02",
+   "to": "07.04.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.04.02",
+   "to": "07.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.04.03",
+   "to": "07.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.04.03",
+   "to": "07.04.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.04.03",
+   "to": "07.04.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.04.03",
+   "to": "07.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.04.04",
+   "to": "07.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.04.04",
+   "to": "07.04.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.04.04",
+   "to": "07.04.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.04.04",
+   "to": "07.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.04.05",
+   "to": "07.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.04.05",
+   "to": "07.04.02",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.04.05",
+   "to": "07.04.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.04.05",
+   "to": "07.04.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.04.05",
+   "to": "07.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.04",
+   "to": "07.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.04",
+   "to": "07.04.01",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.04",
+   "to": "07.04.03",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.04",
+   "to": "07.04.04",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "07.04",
+   "to": "07.05",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
+  }
+ ]
 }
