@@ -11,7 +11,7 @@
 import { useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import {
   useReactTable,
   getCoreRowModel,
@@ -130,6 +130,9 @@ export default function TableEditor() {
     queryFn: () =>
       tablesApi.rows(id, sort ? { sortColumn: sort.column, sortDir: sort.dir, limit: 200 } : { limit: 200 }),
     enabled: Boolean(table),
+    // Keep the old rows on sort change: a data gap would hand useReactTable a
+    // fresh `?? []` identity every render — the classic infinite-loop freeze.
+    placeholderData: keepPreviousData,
   });
 
   const dimensions = useMemo(
@@ -210,8 +213,10 @@ export default function TableEditor() {
     [table, sort, t],
   );
 
+  const rows = rowData?.rows;
+  const gridData = useMemo(() => rows ?? [], [rows]);
   const grid = useReactTable({
-    data: rowData?.rows ?? [],
+    data: gridData,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });

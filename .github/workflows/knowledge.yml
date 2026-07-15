@@ -9,9 +9,12 @@ name: knowledge
 
 on:
   push:
-    paths: ['knowledge/**', '.github/workflows/knowledge.yml']
+    # package-lock.json is a real input: the gate's npm ci fails on a lock
+    # written for a different npm major (bitten once — v1.5.x era was all red).
+    paths: ['knowledge/**', '.github/workflows/knowledge.yml', 'package-lock.json']
   pull_request:
-    paths: ['knowledge/**']
+    paths: ['knowledge/**', 'package-lock.json']
+  workflow_dispatch:
 
 jobs:
   knowledge:

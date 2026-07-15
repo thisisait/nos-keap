@@ -20,7 +20,16 @@ import GraphCanvas, {
   type CanvasNode,
   type CanvasLink,
   type CameraMode,
+  type LensState,
 } from '@/components/explorer/GraphCanvas';
+
+// Semantic-lens axes the user can colour the map by (must match node_features).
+const LENS_AXES = [
+  { key: 'abstractness', label: 'Abstract ↔ Concrete' },
+  { key: 'scale', label: 'Macro ↔ Micro' },
+  { key: 'formalness', label: 'Formal ↔ Empirical' },
+  { key: 'dynamism', label: 'Dynamic ↔ Static' },
+] as const;
 import SidePanel from '@/components/explorer/SidePanel';
 import DetailPanel, { type DrawerTarget } from '@/components/explorer/DetailPanel';
 import {
@@ -46,6 +55,7 @@ export default function Explore() {
   const [jumpQuery, setJumpQuery] = useState('');
   const [jumpMiss, setJumpMiss] = useState(false);
   const [shipHud, setShipHud] = useState({ speed: 0, boosting: false, thrust: 0 });
+  const [lens, setLens] = useState<LensState>({});
 
   // Semantic hyperspace jump: hybrid search → plot course to the best hit's
   // star (objects/captures resolve to their anchor node). Focus does the
@@ -100,12 +110,33 @@ export default function Explore() {
     if (!graph) return { canvasNodes: [] as CanvasNode[], canvasLinks: [] as CanvasLink[] };
     // Taxonomy stars arrive PINNED to their baked coordinates (fx/fy/fz —
     // the spatial-memory contract); the force engine only places stars/dust.
+    // Knowledge scope = subtree size (how much knowledge sits under a node) —
+    // drives node SIZE so extent reads at a glance, while LEVEL drives the form.
+    const kids = new Map<string, string[]>();
+    for (const n of graph.nodes) {
+      if (n.parentId) {
+        const a = kids.get(n.parentId) ?? [];
+        a.push(n.id);
+        kids.set(n.parentId, a);
+      }
+    }
+    const scopeById = new Map<string, number>();
+    const scopeOf = (id: string): number => {
+      const cached = scopeById.get(id);
+      if (cached !== undefined) return cached;
+      let s = 0;
+      for (const c of kids.get(id) ?? []) s += 1 + scopeOf(c);
+      scopeById.set(id, s);
+      return s;
+    };
+    graph.nodes.forEach((n) => scopeOf(n.id));
     const nodes: CanvasNode[] = graph.nodes.map((n) => ({
       ...n,
       fx: n.x,
       fy: n.y,
       fz: n.z,
       categoryHue: hueByCategory.get(rootOf(n.id)) ?? 210,
+      scope: scopeById.get(n.id) ?? 0,
     }));
     const links: CanvasLink[] = graph.links.map((l) => ({ ...l }));
     // Orbital layer: anchored knowledge objects orbit their taxonomy star as
@@ -347,7 +378,37 @@ export default function Explore() {
               height={size.h}
               mode={cameraMode}
               onShipUpdate={setShipHud}
+              lens={lens}
             />
+          )}
+          {!isLoading && (
+            <div className="absolute bottom-3 left-3 z-10 flex items-center gap-1.5 rounded-lg border border-slate-500/25 bg-slate-950/85 px-2 py-1.5 text-xs text-slate-300">
+              <span className="opacity-60">Lens</span>
+              <button
+                className={`rounded px-1.5 py-0.5 ${!lens.axis ? 'bg-slate-200 text-slate-900' : 'hover:bg-slate-700/60'}`}
+                onClick={() => setLens((l) => ({ ...l, axis: undefined }))}
+              >
+                Off
+              </button>
+              {LENS_AXES.map((a) => (
+                <button
+                  key={a.key}
+                  title={a.label}
+                  className={`rounded px-1.5 py-0.5 ${lens.axis === a.key ? 'bg-sky-400 text-slate-900' : 'hover:bg-slate-700/60'}`}
+                  onClick={() => setLens((l) => ({ ...l, axis: a.key }))}
+                >
+                  {a.label.split(' ')[0]}
+                </button>
+              ))}
+              <label className="ml-1 flex items-center gap-1">
+                <input
+                  type="checkbox"
+                  checked={!!lens.sizeByCentrality}
+                  onChange={(e) => setLens((l) => ({ ...l, sizeByCentrality: e.target.checked }))}
+                />
+                hubs
+              </label>
+            </div>
           )}
           <DetailPanel
             target={drawer}

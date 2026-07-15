@@ -138,6 +138,9 @@ export function registerGraphRoutes(app: Express) {
     // Semantic-lens derived features (colour/size/texture channels). Empty until
     // keap-features-sync populates node_features — the client just skips the lens.
     const feats = db.getNodeFeatures();
+    // Linked-data enrichment (Wikidata QID + entity typing). Empty until the
+    // host-side resolve-typing.py job populates node_metadata — client skips it.
+    const meta = db.getNodeMetadata();
     const nodes = allNodes().map((n) => {
       const cur = curatedById.get(n.id);
       const ref = cur?.requiredData ?? n.requiredData;
@@ -163,6 +166,7 @@ export function registerGraphRoutes(app: Express) {
         y: p?.y,
         z: p?.z,
         features: feats.get(n.id),
+        meta: meta.get(n.id),
       };
     });
     const links = nodes

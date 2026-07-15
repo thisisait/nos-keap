@@ -28,7 +28,8 @@
     "knowledge:roundtrip": "node knowledge/roundtrip.mjs",
     "knowledge:dry-run": "node knowledge/ingest.mjs --dry-run --canonical knowledge/canonical",
     "knowledge:xrefs": "node knowledge/lift-xrefs.mjs",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test:e2e": "playwright test"
   },
   "engines": {
     "node": ">=20"
@@ -101,6 +102,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
+    "@playwright/test": "^1.61.1",
     "@tailwindcss/typography": "^0.5.15",
     "@types/express": "^4.17.21",
     "@types/node": "^22.5.5",

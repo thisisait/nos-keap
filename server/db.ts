@@ -286,6 +286,25 @@ const SCHEMA = [
      model TEXT,
      updated_at INTEGER DEFAULT (strftime('%s','now'))
    )`,
+
+  // Linked-data enrichment: each concept node's external identity + typing,
+  // resolved host-side (tools/keap-linked-data/resolve-typing.py) against
+  // Wikidata with disambiguation. Derived + optional per node (many deep leaves
+  // have no canonical entity) — a DERIVED layer like node_features, not curated
+  // git-SoT. qid = Wikidata QID, keap_type = render facet bucket, schema_type =
+  // schema.org-ish class, confidence = high|med. See docs/roadmap.md.
+  `CREATE TABLE IF NOT EXISTS node_metadata (
+     node_id TEXT PRIMARY KEY,
+     qid TEXT,
+     keap_type TEXT,
+     schema_type TEXT,
+     wd_label TEXT,
+     confidence TEXT,
+     scope_rank INTEGER,
+     scope_norm REAL,
+     model TEXT,
+     updated_at INTEGER DEFAULT (strftime('%s','now'))
+   )`,
 ];
 
 // ── Vector layer (libSQL native) ──────────────────────────────────────────────
@@ -341,6 +360,15 @@ export async function initDb(): Promise<void> {
     db.exec("ALTER TABLE promotions ADD COLUMN kind TEXT NOT NULL DEFAULT 'object'");
   } catch {
     /* duplicate column — already migrated */
+  }
+  // node_metadata scope-signal columns (QRank popularity) landed after the QID
+  // typing layer — idempotent add for DBs created at the type-only stage.
+  for (const col of ['scope_rank INTEGER', 'scope_norm REAL']) {
+    try {
+      db.exec(`ALTER TABLE node_metadata ADD COLUMN ${col}`);
+    } catch {
+      /* duplicate column — already migrated */
+    }
   }
   initializeAppMetadata();
 }
@@ -1003,6 +1031,55 @@ export function getNodeFeatures(): Map<string, Record<string, number>> {
     return new Map(rows.map((r) => [r.node_id, {
       abstractness: r.abstractness, scale: r.scale, formalness: r.formalness,
       dynamism: r.dynamism, centrality: r.centrality, cluster: r.cluster }]));
+  } catch { return new Map(); }
+}
+
+export interface NodeMetadataRow {
+  node_id: string;
+  qid?: string | null; keap_type?: string | null; schema_type?: string | null;
+  wd_label?: string | null; confidence?: string | null;
+  scope_rank?: number | null; scope_norm?: number | null;
+}
+
+/** Upsert linked-data metadata resolved host-side (resolve-typing.py). When
+ *  replace=true the derived layer is reconciled to the posted set — rows no
+ *  longer resolved (e.g. a node newly P31-rejected) are pruned, so the layer
+ *  always reflects the last full resolve. Prune deletes per-id (no bound-param
+ *  limit) to stay safe as the usable set grows. */
+export function upsertNodeMetadata(rows: NodeMetadataRow[], model: string, replace = false): { upserted: number; pruned: number } {
+  const d = getDb();
+  const stmt = d.prepare(
+    `INSERT INTO node_metadata (node_id, qid, keap_type, schema_type, wd_label, confidence, scope_rank, scope_norm, model, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%s','now'))
+     ON CONFLICT(node_id) DO UPDATE SET qid=excluded.qid, keap_type=excluded.keap_type,
+       schema_type=excluded.schema_type, wd_label=excluded.wd_label,
+       confidence=excluded.confidence, scope_rank=excluded.scope_rank,
+       scope_norm=excluded.scope_norm, model=excluded.model, updated_at=excluded.updated_at`);
+  const del = d.prepare('DELETE FROM node_metadata WHERE node_id = ?');
+  let pruned = 0;
+  const txn = d.transaction((rs: NodeMetadataRow[]) => {
+    for (const r of rs) stmt.run(r.node_id, r.qid ?? null, r.keap_type ?? null,
+      r.schema_type ?? null, r.wd_label ?? null, r.confidence ?? null,
+      r.scope_rank ?? null, r.scope_norm ?? null, model);
+    if (replace) {
+      const keep = new Set(rs.map((r) => r.node_id));
+      for (const { node_id } of d.prepare('SELECT node_id FROM node_metadata').all() as { node_id: string }[]) {
+        if (!keep.has(node_id)) { del.run(node_id); pruned++; }
+      }
+    }
+  });
+  txn(rows);
+  return { upserted: rows.length, pruned };
+}
+
+/** node_id → external identity + typing + scope, for the graph payload. */
+export function getNodeMetadata(): Map<string, Record<string, string | number>> {
+  try {
+    const rows = getDb().prepare('SELECT * FROM node_metadata').all() as any[];
+    return new Map(rows.map((r) => [r.node_id, {
+      qid: r.qid, keapType: r.keap_type, schemaType: r.schema_type,
+      wdLabel: r.wd_label, confidence: r.confidence,
+      scopeRank: r.scope_rank, scopeNorm: r.scope_norm }]));
   } catch { return new Map(); }
 }
 

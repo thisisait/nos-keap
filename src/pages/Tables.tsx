@@ -247,7 +247,12 @@ export default function Tables() {
                       <Checkbox checked={c.required} onCheckedChange={(on) => setCol(i, { required: Boolean(on) })} />
                       {t('tables.colRequired')}
                     </label>
-                    <Button variant="ghost" size="sm" onClick={() => setColumns((prev) => prev.filter((_, j) => j !== i))}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setColumns((prev) => prev.filter((_, j) => j !== i))}
+                      aria-label={`${t('common.delete')} ${c.key || i + 1}`}
+                    >
                       <Trash className="h-4 w-4" />
                     </Button>
                   </div>
@@ -315,7 +320,12 @@ export default function Tables() {
                     </p>
                   </Link>
                   <div className="flex shrink-0 flex-col items-end gap-1">
-                    <Button variant="ghost" size="sm" onClick={() => remove.mutate(tbl.id)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => remove.mutate(tbl.id)}
+                      aria-label={t('common.delete')}
+                    >
                       <Trash className="h-4 w-4" />
                     </Button>
                     {/* Owner/admin can re-scope sharing after creation (PATCH). */}

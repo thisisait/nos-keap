@@ -24,7 +24,7 @@
  * decide whether to restart (changed:true).
  */
 import Database from 'libsql';
-import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
@@ -50,7 +50,9 @@ function walk(dir) {
 }
 const files = walk(CANON).sort();
 
-const db = new Database(DB_PATH, DRY ? { readonly: true } : {});
+// Dry-run must survive a missing DB file (the CI gate runs on a bare runner):
+// no DB simply means "blank system — every domain file would apply".
+const db = DRY && !existsSync(DB_PATH) ? null : new Database(DB_PATH, DRY ? { readonly: true } : {});
 if (!DRY) db.exec('PRAGMA journal_mode=WAL');
 // Marker + relation tables (ship in server/db.ts SCHEMA; guard for a pre-boot DB).
 if (!DRY) {
@@ -58,6 +60,7 @@ if (!DRY) {
   db.exec(`CREATE TABLE IF NOT EXISTS concept_relations (from_id TEXT NOT NULL, to_id TEXT NOT NULL, type TEXT NOT NULL, explored TEXT, source TEXT DEFAULT 'toe', PRIMARY KEY (from_id, to_id, type))`);
 }
 const markerOf = (key) => {
+  if (!db) return null; // dry-run without a DB — nothing applied yet
   try { return (db.prepare('SELECT source_sha FROM knowledge_imports WHERE import_key = ?').get(key) || {}).source_sha ?? null; }
   catch { return null; } // table may not exist yet under --dry-run on a fresh DB
 };
@@ -126,4 +129,4 @@ for (const f of files) {
 const changed = applied.length > 0;
 console.log(`${DRY ? '[dry-run] ' : ''}${applied.length} applied, ${skipped.length} skipped${DRY && changed ? ' — RESTART would follow' : changed ? ' — RESTART to materialize' : ''}`);
 console.log(`INGEST_RESULT ${JSON.stringify({ applied, skipped, changed, dryRun: DRY })}`);
-db.close();
+db?.close();
