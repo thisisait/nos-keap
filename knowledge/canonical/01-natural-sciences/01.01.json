@@ -168,6 +168,14 @@
    "brief": "Quantum Optics studies the quantum behaviour of light and its interaction with matter: individual photons, coherent and squeezed states, cavity quantum electrodynamics, the quantum-level operation of lasers, and photonic implementations of entanglement and quantum communication. It treats the electromagnetic field itself as a quantum system rather than as a classical wave.\n\nIts photon-based experiments are frequently the most direct tests of the entanglement and Bell-inequality questions raised in [[01.01.02.01]] Quantum Foundations, and its squeezed and entangled photon states supply one of the hardware platforms used by [[01.01.02.03]] Quantum Computing and quantum communication. The quantized electromagnetic field it works with is a direct application of [[01.01.02.02]] Quantum Field Theory's field-quantization formalism to a single, experimentally accessible field.\n\nQuantum optics experiments — from single-photon interference to satellite-based quantum key distribution — have repeatedly closed loopholes in tests of quantum theory. See the [Optica (formerly OSA) quantum optics resources](https://www.optica.org/) and [HyperPhysics on the quantum nature of light](http://hyperphysics.phy-astr.gsu.edu/hbase/quantum/qm.html) for further reading."
   },
   {
+   "id": "01.01.03",
+   "level": 2,
+   "kind": "seed-override",
+   "en": "Heat, temperature, work and entropy: the four laws of thermodynamics, thermodynamic cycles and engines, phase transitions, and the statistical-mechanics view linking macroscopic quantities to microscopic behaviour.",
+   "cs": "Teplo, teplota, práce a entropie: čtyři termodynamické zákony, termodynamické cykly a tepelné stroje, fázové přechody a statisticko-mechanický pohled spojující makroskopické veličiny s mikroskopickým chováním.",
+   "brief": "Thermodynamics is the physics of heat, temperature, work and entropy — the four laws that govern how energy is exchanged, converted and irreversibly degraded in any physical system. It supplies the macroscopic account of thermodynamic cycles, heat engines and phase transitions, and connects to the statistical-mechanics view in which these bulk quantities emerge from the collective behaviour of vast numbers of particles.\n\nWithin [[01.01]], Thermodynamics complements [[01.01.01]]: where classical mechanics tracks the trajectories of individual bodies, thermodynamics and its statistical-mechanical foundation describe what happens when the number of particles becomes too large to track individually, a view shared with [[01.01.02]]'s treatment of quantum statistics. It also underlies [[01.01.04]]'s account of resistive heating and electromagnetic energy dissipation, and parallels [[01.02.04]], which applies the same laws to chemical reactions and phase equilibria.\n\nThe four laws, their historical derivation and worked examples of thermodynamic cycles are covered at [HyperPhysics](http://hyperphysics.phy-astr.gsu.edu/hbase/thermo/thermo.html) and in the [Stanford Encyclopedia of Philosophy's entry on the philosophy of statistical mechanics](https://plato.stanford.edu/entries/statphys-statmech/)."
+  },
+  {
    "id": "01.01.03.01",
    "level": 3,
    "parentId": "01.01.03",
@@ -414,6 +422,14 @@
    "brief": "Gradients of concentration, velocity or temperature drive fluxes of matter, momentum and heat — diffusion, viscosity and thermal conduction — each described by a linear transport law and a molecular transport coefficient.\n\n### Concepts\n- **Diffusion** — Net transport of particles down a concentration gradient, described by Fick's laws.\n- **Viscosity** — The transport of momentum across a velocity gradient in a flowing fluid.\n- **Thermal conduction** — The transport of heat down a temperature gradient, described by Fourier's law.\n- **Onsager reciprocity** — Symmetry relations among coupled transport coefficients near equilibrium.\n- **Non-equilibrium thermodynamics** — The framework describing entropy production in systems with steady fluxes."
   },
   {
+   "id": "01.01.04",
+   "level": 2,
+   "kind": "seed-override",
+   "en": "Electric and magnetic phenomena unified by Maxwell's equations: electrostatics, currents and circuits, magnetism, electromagnetic induction, and electromagnetic waves including light. Covers both the classical field theory and its applications in electrical technology.",
+   "cs": "Elektrické a magnetické jevy sjednocené Maxwellovými rovnicemi: elektrostatika, proudy a obvody, magnetismus, elektromagnetická indukce a elektromagnetické vlny včetně světla. Zahrnuje klasickou teorii pole i její aplikace v elektrotechnice.",
+   "brief": "Electromagnetism is the physics of electric and magnetic phenomena unified by Maxwell's equations: electrostatics, steady currents and circuits, magnetism, electromagnetic induction, and the electromagnetic waves — including visible light — that these fields support. It covers both the classical field theory and its direct technological applications in electrical engineering and telecommunications.\n\nWithin [[01.01]], the requirement that Maxwell's equations hold in every inertial frame was the direct historical motivation for [[01.01.05]], which reconciled electromagnetism with the relativity of motion; at the opposite end, the quantum theory of the electromagnetic field belongs to [[01.01.02.04]], and the exchange of thermal energy between charged systems ties it to [[01.01.03]]. The same field equations describe the geomagnetic field investigated by [[01.01.09]], which treats Earth's magnetism as a large-scale electromagnetic phenomenon.\n\nMaxwell's equations, their derivation and applications to circuits and waves are documented at [HyperPhysics](http://hyperphysics.phy-astr.gsu.edu/hbase/emcon.html) and the [Feynman Lectures on electromagnetism](https://www.feynmanlectures.caltech.edu/II_toc.html)."
+  },
+  {
    "id": "01.01.04.01",
    "level": 3,
    "parentId": "01.01.04",
@@ -648,6 +664,14 @@
    "brief": "Electromagnetic induction and the force on currents underlie machines that convert between electrical and mechanical energy — motors and generators — while accelerating charges in antennas radiate the electromagnetic waves of communication.\n\n### Concepts\n- **Electric motor** — A machine converting electrical energy to rotation via force on current loops.\n- **Electric generator** — A machine converting mechanical motion to electricity by induction.\n- **Antenna** — A conductor that radiates or receives electromagnetic waves from accelerating charge.\n- **Waveguide** — A structure that confines and directs electromagnetic waves along its length.\n- **Electromagnetic radiation from acceleration** — The principle that only accelerating charges radiate energy as waves."
   },
   {
+   "id": "01.01.05",
+   "level": 2,
+   "kind": "seed-override",
+   "en": "Einstein's theories of space, time and gravity: special relativity (invariance of the speed of light, time dilation, length contraction, mass–energy equivalence) and general relativity (curved spacetime, black holes, gravitational waves, cosmological models).",
+   "cs": "Einsteinovy teorie prostoru, času a gravitace: speciální relativita (invariance rychlosti světla, dilatace času, kontrakce délek, ekvivalence hmotnosti a energie) a obecná relativita (zakřivený prostoročas, černé díry, gravitační vlny, kosmologické modely).",
+   "brief": "Relativity is Einstein's physics of space, time and gravity, in two parts. Special relativity establishes the invariance of the speed of light and its consequences — time dilation, length contraction and mass–energy equivalence — for observers in uniform motion; general relativity extends this to gravitation itself, describing it as curved spacetime and predicting black holes, gravitational waves and the large-scale evolution of the universe.\n\nWithin [[01.01]], special relativity grew directly out of [[01.01.04]]'s requirement that Maxwell's equations hold in every inertial frame, and it revises the absolute space and time assumed by [[01.01.01]] once speeds approach that of light. General relativity's predictions are the working physics of [[01.01.08]], where black holes, gravitational lensing and cosmological expansion are observed and modelled, and its curved-spacetime description of strong gravity complements [[01.01.06]]'s account of the nuclear forces that bind matter at the opposite, subatomic extreme.\n\nSpecial and general relativity are introduced with worked derivations at [HyperPhysics](http://hyperphysics.phy-astr.gsu.edu/hbase/relativ.html) and in the [Stanford Encyclopedia of Philosophy's entry on the philosophy of general relativity](https://plato.stanford.edu/entries/spacetime-theories/)."
+  },
+  {
    "id": "01.01.05.01",
    "level": 3,
    "parentId": "01.01.05",
@@ -835,6 +859,14 @@
    "brief": "Satellite navigation must correct for both special-relativistic time dilation from orbital speed and general-relativistic speed-up from weaker gravity, without which position errors would accumulate at kilometres per day.\n\n### Concepts\n- **GPS time correction** — The net relativistic clock adjustment applied to navigation satellites.\n- **Orbital time dilation** — The special-relativistic slowing of a fast-moving satellite clock.\n- **Altitude clock speed-up** — The general-relativistic quickening of a clock in weaker gravity.\n- **Precision timekeeping** — The use of relativity in atomic clocks and geodesy at sub-nanosecond accuracy."
   },
   {
+   "id": "01.01.06",
+   "level": 2,
+   "kind": "seed-override",
+   "en": "The atomic nucleus: its structure and binding energy, radioactivity and decay chains, fission and fusion, and applications from reactors to nuclear medicine and radiometric dating. Distinct from Particle Physics, which studies the elementary constituents below the nuclear level.",
+   "cs": "Atomové jádro: jeho struktura a vazebná energie, radioaktivita a rozpadové řady, štěpení a fúze a aplikace od reaktorů po nukleární medicínu a radiometrické datování. Liší se od částicové fyziky, která zkoumá elementární složky pod úrovní jádra.",
+   "brief": "Nuclear Physics is the study of the atomic nucleus: its structure and binding energy, the radioactivity and decay chains by which unstable nuclei transform, and the fission and fusion reactions that release nuclear binding energy. Its applications range from power reactors and weapons to nuclear medicine and radiometric dating of rocks and archaeological material.\n\nWithin [[01.01]], the nucleus's structure and stability are governed by the quantum-mechanical forces described in more fundamental detail by [[01.01.02]] and by [[01.01.07]], which studies the quarks and gluons the nucleus is built from; Nuclear Physics itself works one level up, treating protons and neutrons as the relevant degrees of freedom. Fusion and heavy-element formation inside stars connect it to [[01.01.08]], and its medical applications share ground with [[01.01.10]]'s use of quantitative physical methods on living tissue.\n\nNuclear structure, decay processes and reactor physics are covered at [HyperPhysics](http://hyperphysics.phy-astr.gsu.edu/hbase/nuclear/nucon.html) and by the [IAEA's nuclear data and physics resources](https://www.iaea.org/resources/databases)."
+  },
+  {
    "id": "01.01.06.01",
    "level": 3,
    "parentId": "01.01.06",
@@ -996,6 +1028,14 @@
    "en": "The chemical elements are forged by nuclear reactions: the lightest in the first minutes of the Big Bang, heavier ones by fusion in stellar cores, and the heaviest by rapid neutron capture in supernovae and neutron-star mergers.",
    "cs": "Chemické prvky vznikají jadernými reakcemi: nejlehčí v prvních minutách velkého třesku, těžší fúzí v jádrech hvězd a nejtěžší rychlým záchytem neutronů v supernovách a při splývání neutronových hvězd.",
    "brief": "The chemical elements are forged by nuclear reactions: the lightest in the first minutes of the Big Bang, heavier ones by fusion in stellar cores, and the heaviest by rapid neutron capture in supernovae and neutron-star mergers.\n\n### Concepts\n- **Big Bang nucleosynthesis** — The formation of hydrogen, helium and lithium in the early universe.\n- **Stellar nucleosynthesis** — The building of elements up to iron by fusion in stars.\n- **s-process** — Slow neutron capture building heavy nuclei in evolved stars.\n- **r-process** — Rapid neutron capture forming the heaviest elements in explosive events.\n- **Cosmic abundance** — The observed proportions of the elements set by these processes."
+  },
+  {
+   "id": "01.01.07",
+   "level": 2,
+   "kind": "seed-override",
+   "en": "Elementary particles and their interactions: the quarks, leptons and bosons of the Standard Model, symmetries and conservation laws, accelerators and detectors, and open questions such as dark matter and physics beyond the Standard Model.",
+   "cs": "Elementární částice a jejich interakce: kvarky, leptony a bosony standardního modelu, symetrie a zákony zachování, urychlovače a detektory a otevřené otázky jako temná hmota a fyzika za standardním modelem.",
+   "brief": "Particle Physics studies the elementary constituents of matter and their interactions: the quarks, leptons and gauge bosons of the Standard Model, the symmetries and conservation laws that constrain their behaviour, and the accelerators and detectors used to probe them. It also frames the field's open questions — dark matter, the matter–antimatter asymmetry, and physics beyond the Standard Model.\n\nWithin [[01.01]], Particle Physics sits below [[01.01.06]] in scale: nuclear physics treats protons and neutrons as building blocks, while particle physics resolves them further into quarks bound by the strong force. Its formal apparatus is [[01.01.02.02]], the quantum field theory that unifies special relativity with quantum mechanics, and its unresolved questions about dark matter directly motivate [[01.01.08]]'s cosmological and astrophysical searches for it.\n\nThe Standard Model, its particle content and the experimental programs testing it are documented by [CERN](https://home.cern/science/physics/standard-model) and at [HyperPhysics](http://hyperphysics.phy-astr.gsu.edu/hbase/Particles/particles.html)."
   },
   {
    "id": "01.01.07.01",
@@ -1173,6 +1213,14 @@
    "brief": "The Standard Model omits gravity, dark matter and the origin of its parameters; proposed extensions include supersymmetry, grand unified theories merging the forces, and candidate dark-matter particles, none yet confirmed.\n\n### Concepts\n- **Dark matter** — The unseen mass whose gravity shapes galaxies, of unknown particle identity.\n- **Supersymmetry** — A proposed symmetry pairing fermions with bosons, so far unobserved.\n- **Grand unified theory** — A theory merging the strong, weak and electromagnetic forces at high energy.\n- **Hierarchy problem** — The puzzle of why the Higgs mass is so far below the unification scale.\n- **Proton decay** — A predicted rare decay of the proton in many unified theories, not yet seen."
   },
   {
+   "id": "01.01.08",
+   "level": 2,
+   "kind": "seed-override",
+   "en": "Physical processes in stars, galaxies and the universe at large: stellar structure and evolution, compact objects, interstellar matter, cosmology and high-energy phenomena. Applies physics to celestial objects; observational sky-mapping and instrumentation sit under the Astronomy branch.",
+   "cs": "Fyzikální procesy ve hvězdách, galaxiích a vesmíru jako celku: stavba a vývoj hvězd, kompaktní objekty, mezihvězdná hmota, kosmologie a vysokoenergetické jevy. Aplikuje fyziku na vesmírné objekty; pozorovací mapování oblohy a přístrojová technika patří do větve Astronomie.",
+   "brief": "Astrophysics applies the laws of physics to stars, galaxies and the universe at large: stellar structure and evolution, compact objects such as neutron stars and black holes, the interstellar medium, cosmology, and high-energy phenomena from supernovae to gamma-ray bursts. It is the physical explanation of celestial objects, distinct from the observational sky-mapping and instrumentation that belong to Astronomy.\n\nWithin [[01.01]], Astrophysics draws on [[01.01.05]]'s general relativity to model black holes and the expanding universe, on [[01.01.06]]'s fusion and decay processes to explain stellar energy generation and the nucleosynthesis of elements, and on [[01.01.07]]'s Standard Model physics to interpret dark matter and high-energy cosmic events. It sits beside [[01.05]], the sibling branch of Natural Sciences that catalogues and observes the same objects Astrophysics explains physically.\n\nStellar evolution, compact objects and cosmology are surveyed at [NASA's astrophysics portal](https://science.nasa.gov/astrophysics/) and at [HyperPhysics](http://hyperphysics.phy-astr.gsu.edu/hbase/astro/astcon.html)."
+  },
+  {
    "id": "01.01.08.01",
    "level": 3,
    "parentId": "01.01.08",
@@ -1348,6 +1396,14 @@
    "brief": "The universe is now observed through several messengers — electromagnetic radiation across the spectrum, neutrinos, cosmic rays and gravitational waves — whose combination pinpoints events such as neutron-star mergers and gamma-ray bursts.\n\n### Concepts\n- **Gamma-ray burst** — The brightest electromagnetic explosion, from collapsing stars or merging compact objects.\n- **Neutrino astronomy** — Observation of astrophysical neutrinos that escape dense sources.\n- **Gravitational-wave astronomy** — The detection of spacetime ripples from merging compact objects.\n- **Kilonova** — The optical glow of a neutron-star merger forging heavy elements.\n- **Messenger coincidence** — The joint detection of one event across multiple channels, localising its source."
   },
   {
+   "id": "01.01.09",
+   "level": 2,
+   "kind": "seed-override",
+   "en": "Physics of the Earth: seismology and the planet's internal structure, geomagnetism, the gravity field, the physical mechanics of plate tectonics, and geophysical survey methods. Physical methods applied to Earth — descriptive geology belongs under Earth Sciences.",
+   "cs": "Fyzika Země: seismologie a vnitřní stavba planety, geomagnetismus, tíhové pole, fyzikální mechanika deskové tektoniky a geofyzikální průzkumné metody. Fyzikální metody aplikované na Zemi — popisná geologie patří pod Vědy o Zemi.",
+   "brief": "Geophysics is the physics of the Earth: seismology and what seismic waves reveal about the planet's internal structure, geomagnetism, the gravity field, the physical mechanics of plate tectonics, and the survey methods — seismic, gravimetric, magnetic — used to probe the subsurface. It applies physical measurement and theory to the Earth, in contrast to the descriptive, materials-focused approach of geology.\n\nWithin [[01.01]], Geophysics shares its subject with [[01.04]] but not its method: Earth Sciences catalogues rocks, landforms and processes descriptively, while Geophysics measures and models them with the tools of [[01.01.04]] (electromagnetic surveying, geomagnetism) and gravitational theory drawn from [[01.01.01]]. Its seismological methods overlap directly with [[01.04.08]], which studies earthquakes and seismic waves from the Earth-science side of the same phenomena.\n\nGeophysical methods and the structure of the Earth's interior are covered at the [USGS](https://www.usgs.gov/programs/earthquake-hazards/science/geophysics) and at [HyperPhysics](http://hyperphysics.phy-astr.gsu.edu/hbase/geophys.html)."
+  },
+  {
    "id": "01.01.09.01",
    "level": 3,
    "parentId": "01.01.09",
@@ -1462,6 +1518,14 @@
    "en": "Heat from the planet's formation and radioactive decay drives slow convection in the solid mantle, the engine of plate motion; measured surface heat flow constrains the planet's thermal history and internal dynamics.",
    "cs": "Teplo z formování planety a z radioaktivního rozpadu pohání pomalou konvekci v pevném plášti, motor pohybu desek; měřený povrchový tepelný tok omezuje tepelnou historii planety a její vnitřní dynamiku.",
    "brief": "Heat from the planet's formation and radioactive decay drives slow convection in the solid mantle, the engine of plate motion; measured surface heat flow constrains the planet's thermal history and internal dynamics.\n\n### Concepts\n- **Mantle convection** — The slow creeping flow of the solid mantle transporting heat outward.\n- **Radiogenic heat** — Heat produced by the decay of radioactive isotopes in the Earth.\n- **Heat flow** — The rate at which heat escapes through the Earth's surface.\n- **Mantle plume** — An upwelling of hot mantle feeding volcanic hotspots.\n- **Rheology** — The deformation behaviour of rock that lets the solid mantle flow over long times."
+  },
+  {
+   "id": "01.01.10",
+   "level": 2,
+   "kind": "seed-override",
+   "en": "Physical principles and methods applied to living systems: molecular motors, membrane and nerve biophysics, the energetics of protein folding, and quantitative techniques such as spectroscopy, microscopy and modelling of biological processes. Physics-first, in contrast to Biochemistry's chemistry-first view of life.",
+   "cs": "Fyzikální principy a metody aplikované na živé systémy: molekulární motory, biofyzika membrán a nervů, energetika sbalování proteinů a kvantitativní techniky jako spektroskopie, mikroskopie a modelování biologických procesů. Přístup vycházející z fyziky, na rozdíl od biochemie, která na život nahlíží primárně chemicky.",
+   "brief": "Biophysics applies the principles and quantitative methods of physics to living systems: the mechanics of molecular motors, the electrical and structural biophysics of membranes and nerves, the energetics of protein folding, and techniques such as spectroscopy, microscopy and computational modelling used to study biological processes. It is a physics-first view of life, asking how physical law constrains and explains biological structure and function.\n\nWithin [[01.01]], Biophysics draws on the quantum-mechanical treatment of molecular bonding from [[01.01.02]] and on the statistical-mechanical machinery of [[01.01.03]] to explain energy flow and folding in biomolecules. It sits opposite [[01.02.06]], which studies the same living molecules from a chemistry-first perspective — reaction mechanisms and metabolic pathways rather than physical forces and energetics — and it overlaps with [[01.01.06]]'s nuclear-medicine applications wherever physical methods are used diagnostically on tissue.\n\nBiophysical methods and molecular-scale biology are introduced at [HyperPhysics](http://hyperphysics.phy-astr.gsu.edu/hbase/biology/biocon.html) and the [Biophysical Society's education resources](https://www.biophysics.org/education)."
   },
   {
    "id": "01.01.10.01",
