@@ -300,6 +300,8 @@ const SCHEMA = [
      schema_type TEXT,
      wd_label TEXT,
      confidence TEXT,
+     scope_rank INTEGER,
+     scope_norm REAL,
      model TEXT,
      updated_at INTEGER DEFAULT (strftime('%s','now'))
    )`,
@@ -358,6 +360,15 @@ export async function initDb(): Promise<void> {
     db.exec("ALTER TABLE promotions ADD COLUMN kind TEXT NOT NULL DEFAULT 'object'");
   } catch {
     /* duplicate column — already migrated */
+  }
+  // node_metadata scope-signal columns (QRank popularity) landed after the QID
+  // typing layer — idempotent add for DBs created at the type-only stage.
+  for (const col of ['scope_rank INTEGER', 'scope_norm REAL']) {
+    try {
+      db.exec(`ALTER TABLE node_metadata ADD COLUMN ${col}`);
+    } catch {
+      /* duplicate column — already migrated */
+    }
   }
   initializeAppMetadata();
 }
@@ -1027,32 +1038,36 @@ export interface NodeMetadataRow {
   node_id: string;
   qid?: string | null; keap_type?: string | null; schema_type?: string | null;
   wd_label?: string | null; confidence?: string | null;
+  scope_rank?: number | null; scope_norm?: number | null;
 }
 
 /** Upsert linked-data metadata resolved host-side (resolve-typing.py). */
 export function upsertNodeMetadata(rows: NodeMetadataRow[], model: string): number {
   const d = getDb();
   const stmt = d.prepare(
-    `INSERT INTO node_metadata (node_id, qid, keap_type, schema_type, wd_label, confidence, model, updated_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, strftime('%s','now'))
+    `INSERT INTO node_metadata (node_id, qid, keap_type, schema_type, wd_label, confidence, scope_rank, scope_norm, model, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%s','now'))
      ON CONFLICT(node_id) DO UPDATE SET qid=excluded.qid, keap_type=excluded.keap_type,
        schema_type=excluded.schema_type, wd_label=excluded.wd_label,
-       confidence=excluded.confidence, model=excluded.model, updated_at=excluded.updated_at`);
+       confidence=excluded.confidence, scope_rank=excluded.scope_rank,
+       scope_norm=excluded.scope_norm, model=excluded.model, updated_at=excluded.updated_at`);
   const txn = d.transaction((rs: NodeMetadataRow[]) => {
     for (const r of rs) stmt.run(r.node_id, r.qid ?? null, r.keap_type ?? null,
-      r.schema_type ?? null, r.wd_label ?? null, r.confidence ?? null, model);
+      r.schema_type ?? null, r.wd_label ?? null, r.confidence ?? null,
+      r.scope_rank ?? null, r.scope_norm ?? null, model);
   });
   txn(rows);
   return rows.length;
 }
 
-/** node_id → external identity + typing, for the graph payload's entity-type facet. */
-export function getNodeMetadata(): Map<string, Record<string, string>> {
+/** node_id → external identity + typing + scope, for the graph payload. */
+export function getNodeMetadata(): Map<string, Record<string, string | number>> {
   try {
     const rows = getDb().prepare('SELECT * FROM node_metadata').all() as any[];
     return new Map(rows.map((r) => [r.node_id, {
       qid: r.qid, keapType: r.keap_type, schemaType: r.schema_type,
-      wdLabel: r.wd_label, confidence: r.confidence }]));
+      wdLabel: r.wd_label, confidence: r.confidence,
+      scopeRank: r.scope_rank, scopeNorm: r.scope_norm }]));
   } catch { return new Map(); }
 }
 
