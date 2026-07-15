@@ -286,6 +286,23 @@ const SCHEMA = [
      model TEXT,
      updated_at INTEGER DEFAULT (strftime('%s','now'))
    )`,
+
+  // Linked-data enrichment: each concept node's external identity + typing,
+  // resolved host-side (tools/keap-linked-data/resolve-typing.py) against
+  // Wikidata with disambiguation. Derived + optional per node (many deep leaves
+  // have no canonical entity) — a DERIVED layer like node_features, not curated
+  // git-SoT. qid = Wikidata QID, keap_type = render facet bucket, schema_type =
+  // schema.org-ish class, confidence = high|med. See docs/roadmap.md.
+  `CREATE TABLE IF NOT EXISTS node_metadata (
+     node_id TEXT PRIMARY KEY,
+     qid TEXT,
+     keap_type TEXT,
+     schema_type TEXT,
+     wd_label TEXT,
+     confidence TEXT,
+     model TEXT,
+     updated_at INTEGER DEFAULT (strftime('%s','now'))
+   )`,
 ];
 
 // ── Vector layer (libSQL native) ──────────────────────────────────────────────
@@ -1003,6 +1020,39 @@ export function getNodeFeatures(): Map<string, Record<string, number>> {
     return new Map(rows.map((r) => [r.node_id, {
       abstractness: r.abstractness, scale: r.scale, formalness: r.formalness,
       dynamism: r.dynamism, centrality: r.centrality, cluster: r.cluster }]));
+  } catch { return new Map(); }
+}
+
+export interface NodeMetadataRow {
+  node_id: string;
+  qid?: string | null; keap_type?: string | null; schema_type?: string | null;
+  wd_label?: string | null; confidence?: string | null;
+}
+
+/** Upsert linked-data metadata resolved host-side (resolve-typing.py). */
+export function upsertNodeMetadata(rows: NodeMetadataRow[], model: string): number {
+  const d = getDb();
+  const stmt = d.prepare(
+    `INSERT INTO node_metadata (node_id, qid, keap_type, schema_type, wd_label, confidence, model, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, strftime('%s','now'))
+     ON CONFLICT(node_id) DO UPDATE SET qid=excluded.qid, keap_type=excluded.keap_type,
+       schema_type=excluded.schema_type, wd_label=excluded.wd_label,
+       confidence=excluded.confidence, model=excluded.model, updated_at=excluded.updated_at`);
+  const txn = d.transaction((rs: NodeMetadataRow[]) => {
+    for (const r of rs) stmt.run(r.node_id, r.qid ?? null, r.keap_type ?? null,
+      r.schema_type ?? null, r.wd_label ?? null, r.confidence ?? null, model);
+  });
+  txn(rows);
+  return rows.length;
+}
+
+/** node_id → external identity + typing, for the graph payload's entity-type facet. */
+export function getNodeMetadata(): Map<string, Record<string, string>> {
+  try {
+    const rows = getDb().prepare('SELECT * FROM node_metadata').all() as any[];
+    return new Map(rows.map((r) => [r.node_id, {
+      qid: r.qid, keapType: r.keap_type, schemaType: r.schema_type,
+      wdLabel: r.wd_label, confidence: r.confidence }]));
   } catch { return new Map(); }
 }
 

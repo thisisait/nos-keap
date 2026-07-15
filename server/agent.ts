@@ -181,6 +181,18 @@ export function registerAgentRoutes(app: Express) {
     ok(res, { upserted: db.upsertNodeFeatures(feats, model) });
   });
 
+  // Upsert linked-data metadata (Wikidata QID + typing) resolved by the host-side
+  // tools/keap-linked-data/resolve-typing.py job. Only high+med confidence lands;
+  // GraphCanvas reads node.meta.keapType for the entity-type facet. Derived layer,
+  // sibling of /agent/v1/features.
+  app.post('/agent/v1/metadata', agentAuth('rw'), (req, res) => {
+    const body = (req.body ?? {}) as { metadata?: unknown; model?: unknown };
+    const rows = Array.isArray(body.metadata) ? (body.metadata as db.NodeMetadataRow[]) : null;
+    if (!rows) return fail(res, 400, 'metadata[] required');
+    const model = String(body.model ?? 'wikidata');
+    ok(res, { upserted: db.upsertNodeMetadata(rows, model) });
+  });
+
   // Resolve a content ref ("kiwix:wikipedia_en") to a live nOS service URL.
   app.get('/agent/v1/content/resolve', agentAuth('ro'), (req, res) => {
     const ref = String(req.query.ref ?? '');

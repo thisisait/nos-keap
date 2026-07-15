@@ -57,6 +57,8 @@ export interface CanvasNode {
   scope?: number;
   /** Embedding-derived semantic-lens features (colour/size channels). */
   features?: Record<string, number>;
+  /** Linked-data enrichment (Wikidata QID + entity typing) — entity-type facet. */
+  meta?: { qid?: string; keapType?: string; schemaType?: string; wdLabel?: string; confidence?: string };
   /** Baked position pin (U1) — d3-force never moves fx/fy/fz nodes. */
   fx?: number;
   fy?: number;
