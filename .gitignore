@@ -33,3 +33,9 @@ data
 
 # TypeScript incremental build info
 *.tsbuildinfo
+
+# playwright
+e2e/.data
+test-results/
+playwright-report/
+e2e/screenshots/
