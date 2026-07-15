@@ -53,6 +53,13 @@ export interface CanvasNode {
   glyph?: string;
   distance?: number;
   categoryHue: number;
+  /** Knowledge scope = subtree size (descendants) — drives node SIZE. */
+  scope?: number;
+  /** Embedding-derived semantic-lens features (colour/size channels). */
+  features?: Record<string, number>;
+  /** Linked-data enrichment (Wikidata QID + entity typing + QRank scope). */
+  meta?: { qid?: string; keapType?: string; schemaType?: string; wdLabel?: string;
+    confidence?: string; scopeRank?: number; scopeNorm?: number };
   /** Baked position pin (U1) — d3-force never moves fx/fy/fz nodes. */
   fx?: number;
   fy?: number;
@@ -94,6 +101,8 @@ interface Props {
   mode: CameraMode;
   /** Called every engine tick with the current ship telemetry (ship mode only). */
   onShipUpdate?: (state: { speed: number; boosting: boolean; thrust: number }) => void;
+  /** Semantic lens: recolour stars by an embedding-derived axis + size by centrality. */
+  lens?: LensState;
 }
 
 const STAR_COLOR: Record<string, string> = {
@@ -140,18 +149,27 @@ function nodeColor(n: CanvasNode, focusId: string | null, lens?: LensState): str
   return `hsl(${n.categoryHue} ${s}% ${l}%)`;
 }
 
+// Depth → celestial FORM (galaxy › constellation › star › planet › satellite);
+// knowledge scope (subtree size) → SIZE within the level, so extent reads at a
+// glance while the form still marks the taxonomy level.
+const LEVEL_BASE = [26, 14, 8, 5, 3.2];
+const LEVEL_SCOPE_REF = [600, 250, 130, 20, 10]; // typical subtree max per level
+
 function nodeSize(n: CanvasNode, lens?: LensState): number {
   let base: number;
   if (n.object) base = FORM_SIZE[n.form ?? 'asteroid'] ?? 1.4;
   else if (n.star) base = 3;
-  else if (n.level === 0) base = 22; // nebula core
-  else if (n.level === 1) base = 11; // galaxy
-  else base = Math.max(2, 7 - (n.level - 2) * 1.1); // graded stars
-  // Semantic lens: scale taxonomy stars by centrality (hubs bigger). Keeps the
-  // level-graded base so structure stays legible; centrality (~0.1–0.5) modulates.
+  else {
+    const lvl = Math.min(n.level, 4);
+    const ref = LEVEL_SCOPE_REF[lvl] ?? 6;
+    // sparse node ~0.55×, knowledge-rich node ~1.9× its level base (noticeable).
+    const t = Math.min(1, Math.log1p(n.scope ?? 0) / Math.log1p(ref));
+    base = (LEVEL_BASE[lvl] ?? 2.6) * (0.55 + 1.35 * t);
+  }
+  // Semantic lens: additionally scale by centrality (hubs bigger).
   if (lens?.sizeByCentrality && !n.object && !n.star && (n.level ?? 2) >= 2) {
     const c = nodeFeature(n, 'centrality');
-    if (c !== undefined) base *= 0.7 + Math.max(0, Math.min(1, c)) * 2.0;
+    if (c !== undefined) base *= 0.7 + Math.max(0, Math.min(1, c)) * 1.6;
   }
   return base;
 }
@@ -243,6 +261,24 @@ function galaxyDisc(hue: number): THREE.Sprite {
   return noRaycast(s) as THREE.Sprite;
 }
 
+// A star's soft halo (L2) — makes the field-level "stars" twinkle above the
+// planets/satellites below them. Structural hue; the sphere core carries the
+// lens colour so the two read together.
+function starGlow(hue: number): THREE.Sprite {
+  const s = new THREE.Sprite(
+    new THREE.SpriteMaterial({
+      map: _discTex,
+      color: new THREE.Color(`hsl(${hue}, 78%, 66%)`),
+      transparent: true,
+      opacity: 0.5,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending,
+    }),
+  );
+  s.scale.setScalar(17);
+  return noRaycast(s) as THREE.Sprite;
+}
+
 /** One typed orbital body: a per-form mesh (new Mesh off shared geometry). */
 function buildAssetMesh(node: CanvasNode): THREE.Object3D {
   const form = node.form ?? 'asteroid';
@@ -280,11 +316,18 @@ function buildAssetMesh(node: CanvasNode): THREE.Object3D {
   return mesh;
 }
 
-export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width, height, mode, onShipUpdate }: Props) {
+export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width, height, mode, onShipUpdate, lens }: Props) {
   const fgRef = useRef<any>(null);
   const didFitRef = useRef(false);
   const modelRef = useRef<ShipModelParts | null>(null);
   const lastTimeRef = useRef<number | null>(null);
+
+  // react-force-graph caches node styling; when the semantic lens changes, force
+  // it to re-read nodeColor/nodeVal so the recolour/resize applies live (without
+  // this the accessors only re-run on a graphData change). Camera is untouched.
+  useEffect(() => {
+    fgRef.current?.refresh?.();
+  }, [lens?.axis, lens?.sizeByCentrality]);
   const { shipRef, tick, reset } = useShipController(mode === 'ship');
 
   const _camOffset = useMemo(() => new THREE.Vector3(0, 3.5, -14), []);
@@ -568,10 +611,13 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
   const nodeThreeObject = useCallback((node: any) => {
     // Objects: a typed body REPLACES the default sphere (extend=false below).
     if (node.object) return buildAssetMesh(node);
-    // Taxonomy: nebula/galaxy halo + label ADDED next to the default sphere.
+    // Taxonomy celestial hierarchy — a level-appropriate halo ADDED next to the
+    // default sphere (the sphere is the lens-coloured body): galaxy › constellation
+    // › star, then planets (L3) and satellites (L4+) are the bare sphere by size.
     const g = new THREE.Group();
-    if (node.level === 0) g.add(nebulaSprite(node.categoryHue));
-    if (node.level === 1) g.add(galaxyDisc(node.categoryHue));
+    if (node.level === 0) g.add(nebulaSprite(node.categoryHue)); // galaxy
+    else if (node.level === 1) g.add(galaxyDisc(node.categoryHue)); // constellation
+    else if (node.level === 2) g.add(starGlow(node.categoryHue)); // star
     if (node.level <= 1 || node.star) {
       const sprite = new SpriteText(node.name);
       sprite.color = '#e9eefc';
@@ -604,8 +650,8 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       nodeLabel={(n: any) =>
         n.star ? `☆ ${n.name}${n.distance ? ` · d=${n.distance.toFixed(2)}` : ''}` : n.name
       }
-      nodeVal={(n: any) => nodeSize(n)}
-      nodeColor={(n: any) => nodeColor(n, focusId)}
+      nodeVal={(n: any) => nodeSize(n, lens)}
+      nodeColor={(n: any) => nodeColor(n, focusId, lens)}
       nodeThreeObject={nodeThreeObject}
       nodeThreeObjectExtend={(n: any) => !n.object}
       linkColor={(l: any) =>
