@@ -1041,8 +1041,12 @@ export interface NodeMetadataRow {
   scope_rank?: number | null; scope_norm?: number | null;
 }
 
-/** Upsert linked-data metadata resolved host-side (resolve-typing.py). */
-export function upsertNodeMetadata(rows: NodeMetadataRow[], model: string): number {
+/** Upsert linked-data metadata resolved host-side (resolve-typing.py). When
+ *  replace=true the derived layer is reconciled to the posted set — rows no
+ *  longer resolved (e.g. a node newly P31-rejected) are pruned, so the layer
+ *  always reflects the last full resolve. Prune deletes per-id (no bound-param
+ *  limit) to stay safe as the usable set grows. */
+export function upsertNodeMetadata(rows: NodeMetadataRow[], model: string, replace = false): { upserted: number; pruned: number } {
   const d = getDb();
   const stmt = d.prepare(
     `INSERT INTO node_metadata (node_id, qid, keap_type, schema_type, wd_label, confidence, scope_rank, scope_norm, model, updated_at)
@@ -1051,13 +1055,21 @@ export function upsertNodeMetadata(rows: NodeMetadataRow[], model: string): numb
        schema_type=excluded.schema_type, wd_label=excluded.wd_label,
        confidence=excluded.confidence, scope_rank=excluded.scope_rank,
        scope_norm=excluded.scope_norm, model=excluded.model, updated_at=excluded.updated_at`);
+  const del = d.prepare('DELETE FROM node_metadata WHERE node_id = ?');
+  let pruned = 0;
   const txn = d.transaction((rs: NodeMetadataRow[]) => {
     for (const r of rs) stmt.run(r.node_id, r.qid ?? null, r.keap_type ?? null,
       r.schema_type ?? null, r.wd_label ?? null, r.confidence ?? null,
       r.scope_rank ?? null, r.scope_norm ?? null, model);
+    if (replace) {
+      const keep = new Set(rs.map((r) => r.node_id));
+      for (const { node_id } of d.prepare('SELECT node_id FROM node_metadata').all() as { node_id: string }[]) {
+        if (!keep.has(node_id)) { del.run(node_id); pruned++; }
+      }
+    }
   });
   txn(rows);
-  return rows.length;
+  return { upserted: rows.length, pruned };
 }
 
 /** node_id → external identity + typing + scope, for the graph payload. */

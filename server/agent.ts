@@ -186,11 +186,11 @@ export function registerAgentRoutes(app: Express) {
   // GraphCanvas reads node.meta.keapType for the entity-type facet. Derived layer,
   // sibling of /agent/v1/features.
   app.post('/agent/v1/metadata', agentAuth('rw'), (req, res) => {
-    const body = (req.body ?? {}) as { metadata?: unknown; model?: unknown };
+    const body = (req.body ?? {}) as { metadata?: unknown; model?: unknown; replace?: unknown };
     const rows = Array.isArray(body.metadata) ? (body.metadata as db.NodeMetadataRow[]) : null;
     if (!rows) return fail(res, 400, 'metadata[] required');
     const model = String(body.model ?? 'wikidata');
-    ok(res, { upserted: db.upsertNodeMetadata(rows, model) });
+    ok(res, db.upsertNodeMetadata(rows, model, body.replace === true));
   });
 
   // Resolve a content ref ("kiwix:wikipedia_en") to a live nOS service URL.
