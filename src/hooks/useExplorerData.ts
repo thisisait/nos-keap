@@ -48,6 +48,10 @@ export interface GraphObject {
   glyph: string;
   hue: number;
   anchors: string[];
+  /** Filesystem identity (doctrine tree / fs-sync) — drives the files core. */
+  path?: string;
+  /** Owner uid — lets an admin's files core keep users' trees apart. */
+  owner?: string;
 }
 
 /** A typed cross-node relation (imported research graph overlay, e.g. ToE). */
