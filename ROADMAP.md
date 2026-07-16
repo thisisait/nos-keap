@@ -72,6 +72,13 @@ nOS-side counterparts flagged **[nOS]**).
   `links`, `user_id`, `visibility`, `content_hash`.
 - **S2 — explorer integration**: objects as a new source kind; `[[link]]` extraction →
   untyped directed edges; nebula rendering around anchor stars.
+- **S2′ — doctrine filesystem mirror** *(shipped 2026-07-16)*: `server/fs-sync.ts` walks
+  the class-3 per-user tree (`KEAP_USER_FILES_DIR` ← nOS fs-doctrine
+  `tenants/<t>/users/<uid>/{documents,library,inbox}`) and mirrors files as owner-scoped
+  objects (`frontmatter.source='fs'`, path/size/mtime; text excerpt for md/txt/csv);
+  curated links survive syncs, prune refuses an empty mount, `agents/` scratch excluded.
+  Boot + interval + `POST /agent/v1/fs/sync`. **Open**: nOS-side users/ bind-mount + env,
+  binary text extraction (pdf/docx), rename = new id.
 - **S3 — OKF bundle export/import** (zip of markdown+frontmatter; dedup by id+hash).
   Interop with Google tooling & openknowledge CLI; the future sharing unit (Phase S).
 - **S4 — RRF hybrid search**: FTS5(BM25) ⊕ vectors ⊕ one-hop taxonomy/link neighbors,
@@ -132,6 +139,13 @@ nOS-side counterparts flagged **[nOS]**).
 - **U2 — nebulae & dust**: objects/captures rendered as instanced particle clouds around
   their anchor stars (density = knowledge mass); LOD so 100k+ points stay smooth
   (instanced meshes, impostors; three.js now, WebGPU when it pays).
+- **U2′ — files core** *(shipped 2026-07-16)*: explore toggle relocating every knowledge
+  object into a 3D core at the (empty) galaxy-ring center; taxonomy stars never move,
+  teal rays tether objects to their anchors. Reorder modes: **Folders** (default —
+  folder constellations along `frontmatter.path`, synthetic `dir:` hubs), **Taxonomy**
+  (clusters at their galaxy's ring angle scaled inward), **Topics** (TBD — needs
+  object-vector clustering server-side; k-means over `kind='object'` embeddings +
+  stable cluster→slot assignment, see Track K features pipeline as the template).
 - **U3 — the ship**: first-person camera with inertial flight (pointer/WASD/gamepad),
   smooth warp between galaxies, HUD compass to search hits ("semantic hyperspace jump":
   search → course plotted to the star). Ship position, visited-star log and **spatial
