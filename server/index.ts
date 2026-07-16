@@ -25,6 +25,7 @@ import { initDb, rebuildTaxonomyFts } from './db';
 import * as dbmod from './db';
 import { allNodes, registerExtNode, applyDescriptionOverride } from './taxonomy';
 import { ensureLayout } from './layout';
+import { startFsSync } from './fs-sync';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT ?? 8080);
@@ -88,6 +89,10 @@ async function main() {
   app.listen(PORT, () => {
     // eslint-disable-next-line no-console
     console.log(`[keap] listening on :${PORT} — static from ${STATIC_DIR}`);
+    // Doctrine-tree mirror (class-3 per-user files → knowledge objects) —
+    // AFTER listen so a large first scan never stalls the nOS health probe.
+    // Inert without KEAP_USER_FILES_DIR — see server/fs-sync.ts.
+    startFsSync();
   });
 }
 

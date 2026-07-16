@@ -173,8 +173,9 @@ export function registerGraphRoutes(app: Express) {
       .filter((n) => n.parentId)
       .map((n) => ({ source: n.parentId as string, target: n.id }));
     // Nebula layer: the user's knowledge objects hung on their taxonomy
-    // anchors ([[node-id]] refs in the card body). Cards without an anchor
-    // stay panel/search-only — free-floating dust would break spatial memory.
+    // anchors ([[node-id]] refs in the card body). ALL objects ship — the
+    // orbital view renders only anchored ones (free-floating dust would break
+    // spatial memory), but the files-core view needs the unanchored rest too.
     const objects = db
       .getObjects(req.user.id, req.user.isAdmin)
       .map((o) => {
@@ -191,9 +192,14 @@ export function registerGraphRoutes(app: Express) {
           glyph: d.glyph,
           hue: d.hue,
           anchors: anchorNodeIds((o.links ?? []) as ObjectRef[]).filter((a) => getNode(a)),
+          // Filesystem identity (doctrine tree / fs-sync) — the files-core
+          // view folds objects into folder constellations along this path.
+          path: typeof o.frontmatter?.path === 'string' ? o.frontmatter.path : undefined,
+          // Owner uid — an admin sees every user's objects; without this,
+          // two users' "documents/…" trees would merge in the files core.
+          owner: o.userId,
         };
-      })
-      .filter((o) => o.anchors.length > 0);
+      });
     // Concept-relation overlay (imported research graphs, e.g. ToE) — a SEPARATE
     // typed-edge layer, NOT folded into the parent-child `links` skeleton. Typed
     // research edges by default; `?relations=all` adds the generic related-concept.

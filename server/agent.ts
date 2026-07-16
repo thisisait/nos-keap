@@ -29,6 +29,7 @@ import { runLint, lastLintReport } from './lint';
 import { propose, proposeNode, proposeDescription, proposeBrief, moderationPolicy } from './promotions';
 import { allNodes } from './taxonomy';
 import { normalizeAndSaveCapture, parseEnvelope } from './intake';
+import { syncUserFiles, fsSyncStatus } from './fs-sync';
 import { TOKEN_RO, TOKEN_RW, tokenEquals } from './tokens';
 
 const ok = (res: Response, data?: unknown) => res.json({ success: true, data });
@@ -275,6 +276,17 @@ export function registerAgentRoutes(app: Express) {
     }
     const upserted = db.upsertEmbeddings(String(model), EMBED_DIM, rows);
     ok(res, { upserted, submittedBy: `agent:${req.agentName}` });
+  });
+
+  // ── Filesystem sync (server/fs-sync.ts) — the doctrine-tree mirror ─────────
+  // A host job that just wrote into tenants/<t>/users/<uid>/ kicks this so the
+  // files appear as objects immediately (boot + interval cover the rest).
+  app.get('/agent/v1/fs/status', agentAuth('ro'), (_req, res) => ok(res, fsSyncStatus()));
+
+  app.post('/agent/v1/fs/sync', agentAuth('rw'), (_req, res) => {
+    const result = syncUserFiles();
+    if (!result.configured) return fail(res, 503, 'fs sync disabled: KEAP_USER_FILES_DIR not set');
+    ok(res, result);
   });
 
   // ── Knowledge lint (server/lint.ts) — the cortex's periodic health check ───
@@ -1006,6 +1018,12 @@ const OPENAPI_SPEC = {
           },
         },
       },
+    },
+    '/agent/v1/fs/status': {
+      get: { summary: 'Filesystem-sync status (doctrine users/ tree mirror) — dir, interval, last run' },
+    },
+    '/agent/v1/fs/sync': {
+      post: { summary: 'Run one fs→objects mirror pass now (write scope; call after writing user files)' },
     },
     '/agent/v1/objects': {
       get: {
