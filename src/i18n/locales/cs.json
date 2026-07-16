@@ -335,6 +335,18 @@
       "children": "Poduzly ({{count}})",
       "anchored": "Ukotvené znalosti ({{count}})",
       "brief": "Článek"
+    },
+    "core": {
+      "toggle": "Jádro",
+      "tooltip": "Přesunout soubory do středu prstence jako 3D jádro",
+      "root": "Soubory",
+      "unfiled": "karty",
+      "topicSoon": "Tematické shlukování mimo taxonomii — již brzy",
+      "order": {
+        "fs": "Složky",
+        "taxonomy": "Taxonomie",
+        "topic": "Témata"
+      }
     }
   },
   "tables": {

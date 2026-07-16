@@ -12,7 +12,7 @@
 import { useMemo, useState, useRef, useLayoutEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Rocket, Orbit, Search, Waypoints } from 'lucide-react';
+import { ArrowLeft, Rocket, Orbit, Search, Waypoints, Boxes } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { apiFetch } from '@/services/api/client';
@@ -40,6 +40,7 @@ import {
   type GraphObject,
 } from '@/hooks/useExplorerData';
 import { orbitalPosition } from '@/components/explorer/orbital';
+import { computeCore, type CoreOrder } from '@/components/explorer/core';
 
 export default function Explore() {
   const { t, i18n } = useTranslation();
@@ -56,6 +57,9 @@ export default function Explore() {
   const [jumpMiss, setJumpMiss] = useState(false);
   const [shipHud, setShipHud] = useState({ speed: 0, boosting: false, thrust: 0 });
   const [lens, setLens] = useState<LensState>({});
+  // Files core: objects leave their orbital slots and form a 3D core at the
+  // ring center, reordered by filesystem / taxonomy / (later) topic.
+  const [core, setCore] = useState<{ on: boolean; order: CoreOrder }>({ on: false, order: 'fs' });
 
   // Semantic hyperspace jump: hybrid search → plot course to the best hit's
   // star (objects/captures resolve to their anchor node). Focus does the
@@ -81,12 +85,15 @@ export default function Explore() {
     }
   };
 
-  const neighbors = useNeighbors(focusId, mode, kinds);
-
   const nodeById = useMemo(
     () => new Map((graph?.nodes ?? []).map((n) => [n.id, n])),
     [graph],
   );
+
+  // Focus can land on a synthetic core node (`dir:…`) — the camera warps
+  // there, but the semantic-neighbourhood query is taxonomy-only.
+  const taxonomyFocus = focusId && nodeById.has(focusId) ? focusId : null;
+  const neighbors = useNeighbors(taxonomyFocus, mode, kinds);
 
   // Hue per top-level category — the constellation's colour identity.
   const hueByCategory = useMemo(() => {
@@ -139,50 +146,92 @@ export default function Explore() {
       scope: scopeById.get(n.id) ?? 0,
     }));
     const links: CanvasLink[] = graph.links.map((l) => ({ ...l }));
-    // Orbital layer: anchored knowledge objects orbit their taxonomy star as
-    // TYPED bodies (planet/moon/asteroid/comet/station by data type). Positions
-    // are PINNED around the star's baked coordinate — not force dust — so
-    // dragging the star never scatters them. Grouped by anchor so each body's
-    // (index, count) is stable across renders. Only the first anchor is used;
-    // remaining anchors stay panel/drawer facts.
-    const byAnchor = new Map<string, GraphObject[]>();
-    for (const o of graph.objects ?? []) {
-      const anchor = o.anchors[0];
-      if (!anchor) continue;
-      const g = byAnchor.get(anchor);
-      if (g) g.push(o);
-      else byAnchor.set(anchor, [o]);
-    }
-    for (const [anchor, group] of byAnchor) {
-      const star = nodeById.get(anchor);
-      if (!star || star.x === undefined) continue;
-      group.forEach((o, i) => {
-        const [ox, oy, oz] = orbitalPosition(
-          { x: star.x!, y: star.y!, z: star.z! },
-          i,
-          group.length,
-          o.form,
-          o.id,
-          5,
-        );
-        nodes.push({
-          id: `obj:${o.id}`,
-          name: o.title,
-          kind: 'object',
-          level: (star.level ?? 0) + 1,
-          childCount: 0,
-          hasNote: false,
-          dataType: o.type,
-          object: true,
-          form: o.form,
-          glyph: o.glyph,
-          // Body colour encodes its DATA TYPE (asset hue), not the constellation.
-          categoryHue: o.hue,
-          fx: ox,
-          fy: oy,
-          fz: oz,
-        });
+    const objectNode = (o: GraphObject, level: number, p: [number, number, number]): CanvasNode => ({
+      id: `obj:${o.id}`,
+      name: o.title,
+      kind: 'object',
+      level,
+      childCount: 0,
+      hasNote: false,
+      dataType: o.type,
+      object: true,
+      form: o.form,
+      glyph: o.glyph,
+      // Body colour encodes its DATA TYPE (asset hue), not the constellation.
+      categoryHue: o.hue,
+      fx: p[0],
+      fy: p[1],
+      fz: p[2],
+    });
+    if (core.on) {
+      // Files core: EVERY object (anchored or not) relocates to the 3D core at
+      // the ring center; taxonomy stars stay pinned, rays tether objects to
+      // their anchors across space. See core.ts for the reorder geometries.
+      const layout = computeCore(graph.objects ?? [], core.order, {
+        unfiledLabel: t('explore.core.unfiled'),
+        galaxyOf: (o) => {
+          const anchor = o.anchors[0];
+          if (!anchor) return null;
+          const g = nodeById.get(rootOf(anchor));
+          return g && g.x !== undefined ? { id: g.id, x: g.x, y: g.y!, z: g.z! } : null;
+        },
       });
+      for (const o of graph.objects ?? []) {
+        const p = layout.positions.get(`obj:${o.id}`);
+        if (p) nodes.push(objectNode(o, 99, p));
+      }
+      for (const f of layout.folders) {
+        const p = layout.positions.get(f.id);
+        if (!p) continue;
+        nodes.push({
+          id: f.id,
+          name: f.depth === 0 ? t('explore.core.root') : f.name,
+          kind: 'folder',
+          level: 98,
+          childCount: f.count,
+          hasNote: false,
+          folder: true,
+          categoryHue: 215,
+          fx: p[0],
+          fy: p[1],
+          fz: p[2],
+        });
+      }
+      for (const l of layout.fsLinks) links.push({ ...l, fs: true });
+      for (const r of layout.rays) {
+        if (nodeById.has(r.target)) links.push({ ...r, ray: true });
+      }
+    } else {
+      // Orbital layer: anchored knowledge objects orbit their taxonomy star as
+      // TYPED bodies (planet/moon/asteroid/comet/station by data type). Positions
+      // are PINNED around the star's baked coordinate — not force dust — so
+      // dragging the star never scatters them. Grouped by anchor so each body's
+      // (index, count) is stable across renders. Only the first anchor is used;
+      // remaining anchors stay panel/drawer facts. Unanchored objects render
+      // only in the core view — free-floating dust would break spatial memory.
+      const byAnchor = new Map<string, GraphObject[]>();
+      for (const o of graph.objects ?? []) {
+        const anchor = o.anchors[0];
+        if (!anchor) continue;
+        const g = byAnchor.get(anchor);
+        if (g) g.push(o);
+        else byAnchor.set(anchor, [o]);
+      }
+      for (const [anchor, group] of byAnchor) {
+        const star = nodeById.get(anchor);
+        if (!star || star.x === undefined) continue;
+        group.forEach((o, i) => {
+          const p = orbitalPosition(
+            { x: star.x!, y: star.y!, z: star.z! },
+            i,
+            group.length,
+            o.form,
+            o.id,
+            5,
+          );
+          nodes.push(objectNode(o, (star.level ?? 0) + 1, p));
+        });
+      }
     }
     // Concept-relation overlay (imported research graph, e.g. ToE) — typed
     // cross-node edges between taxonomy stars, gated by the toggle. Both
@@ -224,7 +273,7 @@ export default function Explore() {
       }
     }
     return { canvasNodes: nodes, canvasLinks: links };
-  }, [graph, focusId, starItems, hueByCategory, nodeById, showRelations]);
+  }, [graph, focusId, starItems, hueByCategory, nodeById, showRelations, core, t]);
 
   const availableTypes = useMemo(
     () => [...new Set((neighbors.data?.items ?? []).map((i) => i.dataType).filter(Boolean))] as string[],
@@ -232,6 +281,13 @@ export default function Explore() {
   );
 
   const openTarget = (id: string) => {
+    if (id.startsWith('dir:')) {
+      // Core folder hub: just warp the camera to it — folders are structure,
+      // not knowledge; their contents are the clickable bodies around them.
+      setFocusId(null);
+      requestAnimationFrame(() => setFocusId(id));
+      return;
+    }
     if (id.startsWith('obj:')) {
       const o = (graph?.objects ?? []).find((x) => `obj:${x.id}` === id);
       if (o) {
@@ -359,6 +415,16 @@ export default function Explore() {
             <Waypoints className="h-3.5 w-3.5" />
             Vazby
           </Button>
+          <Button
+            variant={core.on ? 'default' : 'outline'}
+            size="sm"
+            className="h-8 gap-1.5 text-xs"
+            onClick={() => setCore((c) => ({ ...c, on: !c.on }))}
+            title={t('explore.core.tooltip')}
+          >
+            <Boxes className="h-3.5 w-3.5" />
+            {t('explore.core.toggle')}
+          </Button>
         </div>
       </header>
 
@@ -379,7 +445,30 @@ export default function Explore() {
               mode={cameraMode}
               onShipUpdate={setShipHud}
               lens={lens}
+              coreView={core.on}
             />
+          )}
+          {!isLoading && core.on && (
+            <div className="absolute bottom-14 left-3 z-10 flex items-center gap-1.5 rounded-lg border border-slate-500/25 bg-slate-950/85 px-2 py-1.5 text-xs text-slate-300">
+              <span className="opacity-60">{t('explore.core.toggle')}</span>
+              {(['fs', 'taxonomy', 'topic'] as const).map((o) => (
+                <button
+                  key={o}
+                  disabled={o === 'topic'}
+                  title={o === 'topic' ? t('explore.core.topicSoon') : undefined}
+                  className={`rounded px-1.5 py-0.5 ${
+                    core.order === o
+                      ? 'bg-teal-400 text-slate-900'
+                      : o === 'topic'
+                        ? 'cursor-not-allowed opacity-40'
+                        : 'hover:bg-slate-700/60'
+                  }`}
+                  onClick={() => setCore((c) => ({ ...c, order: o }))}
+                >
+                  {t(`explore.core.order.${o}`)}
+                </button>
+              ))}
+            </div>
           )}
           {!isLoading && (
             <div className="absolute bottom-3 left-3 z-10 flex items-center gap-1.5 rounded-lg border border-slate-500/25 bg-slate-950/85 px-2 py-1.5 text-xs text-slate-300">

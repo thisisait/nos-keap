@@ -335,6 +335,18 @@
       "children": "Sub-nodes ({{count}})",
       "anchored": "Anchored knowledge ({{count}})",
       "brief": "Brief"
+    },
+    "core": {
+      "toggle": "Core",
+      "tooltip": "Move files into the ring center as a 3D core",
+      "root": "Files",
+      "unfiled": "cards",
+      "topicSoon": "Topic clustering outside the taxonomy — coming soon",
+      "order": {
+        "fs": "Folders",
+        "taxonomy": "Taxonomy",
+        "topic": "Topics"
+      }
     }
   },
   "tables": {

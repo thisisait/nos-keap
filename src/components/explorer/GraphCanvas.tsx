@@ -48,6 +48,8 @@ export interface CanvasNode {
   star?: boolean;
   /** Anchored knowledge object rendering as a typed body orbiting its star. */
   object?: boolean;
+  /** Synthetic files-core folder node (`dir:<path>`) — a hub, not data. */
+  folder?: boolean;
   /** Celestial form (objects only) — planet | moon | asteroid | comet | station. */
   form?: CelestialForm;
   glyph?: string;
@@ -76,6 +78,10 @@ export interface CanvasLink {
   relation?: boolean;
   relType?: string;
   explored?: string | null;
+  /** Files-core folder-tree edge (dir→dir, dir→file). */
+  fs?: boolean;
+  /** Files-core tether: object → its taxonomy anchor, across space. */
+  ray?: boolean;
 }
 
 // Concept-relation edge palette (ToE research edges). Generic 'related-concept'
@@ -103,6 +109,8 @@ interface Props {
   onShipUpdate?: (state: { speed: number; boosting: boolean; thrust: number }) => void;
   /** Semantic lens: recolour stars by an embedding-derived axis + size by centrality. */
   lens?: LensState;
+  /** Files core active — flying the camera in/out of the ring center. */
+  coreView?: boolean;
 }
 
 const STAR_COLOR: Record<string, string> = {
@@ -139,6 +147,7 @@ function nodeColor(n: CanvasNode, focusId: string | null, lens?: LensState): str
     const s = nodeFeature(n, lens.axis);
     if (s !== undefined) return lensColor(s, n.id === focusId);
   }
+  if (n.folder) return 'hsl(215 22% 64% / 0.9)'; // core folder hub — neutral slate
   if (n.object) return `hsl(${n.categoryHue} 72% 60%)`; // hue = data-type identity
   if (n.star) return STAR_COLOR[n.kind] ?? STAR_COLOR[n.dataType ?? ''] ?? '#fbbf24';
   if (n.level === 0) return `hsl(${n.categoryHue} 55% 55% / 0.22)`; // faint nebula core
@@ -157,7 +166,8 @@ const LEVEL_SCOPE_REF = [600, 250, 130, 20, 10]; // typical subtree max per leve
 
 function nodeSize(n: CanvasNode, lens?: LensState): number {
   let base: number;
-  if (n.object) base = FORM_SIZE[n.form ?? 'asteroid'] ?? 1.4;
+  if (n.folder) base = 2 + Math.min(3, Math.sqrt(n.childCount || 1));
+  else if (n.object) base = FORM_SIZE[n.form ?? 'asteroid'] ?? 1.4;
   else if (n.star) base = 3;
   else {
     const lvl = Math.min(n.level, 4);
@@ -316,9 +326,10 @@ function buildAssetMesh(node: CanvasNode): THREE.Object3D {
   return mesh;
 }
 
-export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width, height, mode, onShipUpdate, lens }: Props) {
+export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width, height, mode, onShipUpdate, lens, coreView }: Props) {
   const fgRef = useRef<any>(null);
   const didFitRef = useRef(false);
+  const coreViewRef = useRef(coreView);
   const modelRef = useRef<ShipModelParts | null>(null);
   const lastTimeRef = useRef<number | null>(null);
 
@@ -328,6 +339,25 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
   useEffect(() => {
     fgRef.current?.refresh?.();
   }, [lens?.axis, lens?.sizeByCentrality]);
+
+  // Files core: fly INTO the ring center when the core switches on, back out
+  // to the whole sky when it switches off. Ship mode owns its own camera.
+  useEffect(() => {
+    if (coreViewRef.current === coreView) return;
+    coreViewRef.current = coreView;
+    if (mode === 'ship') return;
+    const ref = fgRef.current;
+    if (!ref) return;
+    try {
+      if (coreView) {
+        ref.cameraPosition({ x: 0, y: -220, z: 820 }, { x: 0, y: 0, z: 0 }, warpMs(1200));
+      } else {
+        ref.zoomToFit(warpMs(900), 60);
+      }
+    } catch {
+      // Renderer not ready — the toggle just skips the flight.
+    }
+  }, [coreView, mode]);
   const { shipRef, tick, reset } = useShipController(mode === 'ship');
 
   const _camOffset = useMemo(() => new THREE.Vector3(0, 3.5, -14), []);
@@ -611,6 +641,27 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
   const nodeThreeObject = useCallback((node: any) => {
     // Objects: a typed body REPLACES the default sphere (extend=false below).
     if (node.object) return buildAssetMesh(node);
+    // Files-core folders: the default sphere is the hub, a permanent label
+    // names it — folder names ARE the orientation inside the core.
+    if (node.folder) {
+      const g = new THREE.Group();
+      const sprite = new SpriteText(node.name);
+      sprite.color = '#cfd8ec';
+      sprite.textHeight = 2.8;
+      sprite.fontSize = 110;
+      sprite.fontWeight = '600';
+      sprite.backgroundColor = 'rgba(8,12,22,0.86)';
+      sprite.padding = 1.6;
+      sprite.borderRadius = 1.5;
+      sprite.borderWidth = 0.4;
+      sprite.borderColor = 'rgba(180,195,225,0.35)';
+      const label = sprite as unknown as THREE.Sprite;
+      label.position.y = -(Math.sqrt(nodeSize(node)) * 2.4 + 4);
+      label.material.depthWrite = false;
+      noRaycast(label);
+      g.add(label);
+      return g;
+    }
     // Taxonomy celestial hierarchy — a level-appropriate halo ADDED next to the
     // default sphere (the sphere is the lens-coloured body): galaxy › constellation
     // › star, then planets (L3) and satellites (L4+) are the bare sphere by size.
@@ -657,9 +708,13 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       linkColor={(l: any) =>
         l.relation
           ? REL_COLOR[l.relType] ?? 'rgba(148,163,184,0.5)'
-          : l.semantic
-            ? 'rgba(251,191,36,0.55)'
-            : 'rgba(120,130,150,0.25)'
+          : l.ray
+            ? 'rgba(45,212,191,0.4)' // core tether — teal, the objects' colour family
+            : l.fs
+              ? 'rgba(148,163,184,0.45)' // folder skeleton — quiet slate
+              : l.semantic
+                ? 'rgba(251,191,36,0.55)'
+                : 'rgba(120,130,150,0.25)'
       }
       linkWidth={(l: any) =>
         l.relation
@@ -670,9 +725,13 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
               : l.explored === 'well'
                 ? 0.6
                 : 0.8
-          : l.semantic
-            ? 1.2
-            : 0.4
+          : l.ray
+            ? 0.7
+            : l.fs
+              ? 0.5
+              : l.semantic
+                ? 1.2
+                : 0.4
       }
       onNodeClick={handleClick}
       backgroundColor="rgba(0,0,0,0)"
