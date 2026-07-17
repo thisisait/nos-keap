@@ -830,6 +830,205 @@ export function objectTypes(): string[] {
   );
 }
 
+// ── Mapped folders (fs_mappings) + owner-scoped object helpers ───────────────
+// Admin-managed read-only mirrors of KEAP_FS_ROOTS directories (migration
+// 004-fs-mappings). Mirrored objects reuse knowledge_objects unchanged, keyed
+// by the synthetic owner 'fsmap:<id>' (precedent: 'agent:<name>') with object
+// ids 'fsm:…' — disjoint from the users-pass 'fs:' mirrors by construction.
+// The walk/upsert engine lives in server/fs-sync.ts, the admin routes in
+// server/fs-mappings.ts.
+
+export interface FsMappingRow {
+  id: string;
+  rootKey: string;
+  relPath: string;
+  label: string;
+  description?: string;
+  nestUnderFiles: boolean;
+  /** Object-materialization template: type override + static frontmatter. */
+  schema: { type?: string; frontmatter?: Record<string, any> };
+  tags: string[];
+  taxonomyRoot?: string;
+  taxonomyLinks: string[];
+  visibility: string;
+  enabled: boolean;
+  createdBy: string;
+  lastSyncAt?: number;
+  /** Parsed last FsMappingSyncResult (fs-sync.ts) — survives restarts. */
+  lastSync?: any;
+  createdAt: number;
+  updatedAt: number;
+}
+
+function mapFsMappingRow(row: any): FsMappingRow {
+  return {
+    id: row.id,
+    rootKey: row.root_key,
+    relPath: row.rel_path,
+    label: row.label,
+    description: row.description ?? undefined,
+    nestUnderFiles: Boolean(row.nest_under_files),
+    schema: JSON.parse(row.schema_json || '{}'),
+    tags: JSON.parse(row.tags || '[]'),
+    taxonomyRoot: row.taxonomy_root ?? undefined,
+    taxonomyLinks: JSON.parse(row.taxonomy_links || '[]'),
+    visibility: row.visibility,
+    enabled: Boolean(row.enabled),
+    createdBy: row.created_by,
+    lastSyncAt: row.last_sync_at ?? undefined,
+    lastSync: row.last_sync_json ? JSON.parse(row.last_sync_json) : undefined,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export function listFsMappings(): FsMappingRow[] {
+  return (getDb().prepare('SELECT * FROM fs_mappings ORDER BY created_at, id').all() as any[]).map(
+    mapFsMappingRow,
+  );
+}
+
+export function getFsMapping(id: string): FsMappingRow | null {
+  const row = getDb().prepare('SELECT * FROM fs_mappings WHERE id = ?').get(id) as any;
+  return row ? mapFsMappingRow(row) : null;
+}
+
+/** Insert a new mapping. The caller mints the id ('m-'+8 hex — routes layer). */
+export function insertFsMapping(
+  m: Omit<FsMappingRow, 'lastSyncAt' | 'lastSync' | 'createdAt' | 'updatedAt'>,
+): FsMappingRow {
+  getDb()
+    .prepare(
+      `INSERT INTO fs_mappings (id, root_key, rel_path, label, description, nest_under_files, schema_json, tags, taxonomy_root, taxonomy_links, visibility, enabled, created_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    )
+    .run(
+      m.id,
+      m.rootKey,
+      m.relPath,
+      m.label,
+      m.description ?? null,
+      m.nestUnderFiles ? 1 : 0,
+      JSON.stringify(m.schema ?? {}),
+      JSON.stringify(m.tags ?? []),
+      m.taxonomyRoot ?? null,
+      JSON.stringify(m.taxonomyLinks ?? []),
+      m.visibility,
+      m.enabled ? 1 : 0,
+      m.createdBy,
+    );
+  return getFsMapping(m.id)!;
+}
+
+/** Everything PATCHable — id/created_by/sync status stay immutable here. */
+export type FsMappingPatch = Partial<{
+  rootKey: string;
+  relPath: string;
+  label: string;
+  description: string | null;
+  nestUnderFiles: boolean;
+  schema: FsMappingRow['schema'];
+  tags: string[];
+  taxonomyRoot: string | null;
+  taxonomyLinks: string[];
+  visibility: string;
+  enabled: boolean;
+}>;
+
+export function updateFsMapping(id: string, patch: FsMappingPatch): FsMappingRow | null {
+  const sets: string[] = [];
+  const params: any[] = [];
+  const put = (col: string, val: any) => {
+    sets.push(`${col} = ?`);
+    params.push(val);
+  };
+  if (patch.rootKey !== undefined) put('root_key', patch.rootKey);
+  if (patch.relPath !== undefined) put('rel_path', patch.relPath);
+  if (patch.label !== undefined) put('label', patch.label);
+  if (patch.description !== undefined) put('description', patch.description ?? null);
+  if (patch.nestUnderFiles !== undefined) put('nest_under_files', patch.nestUnderFiles ? 1 : 0);
+  if (patch.schema !== undefined) put('schema_json', JSON.stringify(patch.schema ?? {}));
+  if (patch.tags !== undefined) put('tags', JSON.stringify(patch.tags ?? []));
+  if (patch.taxonomyRoot !== undefined) put('taxonomy_root', patch.taxonomyRoot ?? null);
+  if (patch.taxonomyLinks !== undefined) put('taxonomy_links', JSON.stringify(patch.taxonomyLinks ?? []));
+  if (patch.visibility !== undefined) put('visibility', patch.visibility);
+  if (patch.enabled !== undefined) put('enabled', patch.enabled ? 1 : 0);
+  if (sets.length) {
+    getDb()
+      .prepare(`UPDATE fs_mappings SET ${sets.join(', ')}, updated_at = strftime('%s','now') WHERE id = ?`)
+      .run(...params, id);
+  }
+  return getFsMapping(id);
+}
+
+export function deleteFsMapping(id: string): boolean {
+  return getDb().prepare('DELETE FROM fs_mappings WHERE id = ?').run(id).changes > 0;
+}
+
+/** Persist one sync pass's outcome. Deliberately does NOT bump updated_at —
+ *  that column tracks config edits, not the every-pass status heartbeat. */
+export function setFsMappingSyncStatus(id: string, at: number, resultJson: string): void {
+  getDb()
+    .prepare('UPDATE fs_mappings SET last_sync_at = ?, last_sync_json = ? WHERE id = ?')
+    .run(at, resultJson, id);
+}
+
+export function countObjectsByOwner(userId: string): number {
+  return (getDb().prepare('SELECT COUNT(*) AS c FROM knowledge_objects WHERE user_id = ?').get(userId) as any).c;
+}
+
+/** Purge one owner's objects in a single transaction (mapping delete). The
+ *  orphaned vectors are reaped by the next pruneEmbeddings pass. */
+export function deleteObjectsByOwner(userId: string): number {
+  const d = getDb();
+  let removed = 0;
+  const tx = d.transaction(() => {
+    removed = d.prepare('DELETE FROM knowledge_objects WHERE user_id = ?').run(userId).changes;
+  });
+  tx();
+  return removed;
+}
+
+export interface ObjectSyncIndexEntry {
+  id: string;
+  links: any[];
+  frontmatter?: any;
+}
+
+/** id → {links, frontmatter} for one owner — the sync engine's skip/prune
+ *  index. Deliberately NOT getObjects: no bodies (a full pass would otherwise
+ *  haul up to 20k × 4000-char bodies through JSON.parse for nothing). */
+export function getObjectSyncIndex(userId: string): Map<string, ObjectSyncIndexEntry> {
+  const rows = getDb()
+    .prepare('SELECT id, links, frontmatter FROM knowledge_objects WHERE user_id = ?')
+    .all(userId) as any[];
+  return new Map(
+    rows.map((r) => [
+      r.id,
+      {
+        id: r.id,
+        links: r.links ? JSON.parse(r.links) : [],
+        frontmatter: r.frontmatter ? JSON.parse(r.frontmatter) : undefined,
+      },
+    ]),
+  );
+}
+
+/** Graph-scope visibility: own objects + anything shared. Used ONLY by
+ *  /api/graph — /api/objects lists stay owner-scoped (admins see all), so a
+ *  5k-file shared mapping never floods every user's Objects page. */
+export function getVisibleObjects(userId: string, seeAll: boolean): KnowledgeObject[] {
+  const d = getDb();
+  const rows = seeAll
+    ? d.prepare('SELECT * FROM knowledge_objects ORDER BY updated_at DESC').all()
+    : d
+        .prepare(
+          "SELECT * FROM knowledge_objects WHERE user_id = ? OR visibility = 'shared' ORDER BY updated_at DESC",
+        )
+        .all(userId);
+  return (rows as any[]).map(mapObjectRow);
+}
+
 // ── Baked layout (U1 — deterministic star positions) ─────────────────────────
 
 export function getLayoutVersion(): string | null {

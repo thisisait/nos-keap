@@ -149,6 +149,39 @@ const MIGRATIONS: Migration[] = [
       );
     `,
   },
+  {
+    // Mapped folders (admin-managed read-only mirrors): each row maps a
+    // directory inside a KEAP_FS_ROOTS mount onto a mirrored object set in
+    // knowledge_objects (owner 'fsmap:<id>', object ids 'fsm:…'). CRUD lives
+    // in server/db.ts, the walk in server/fs-sync.ts, the roots registry in
+    // server/fs-roots.ts.
+    id: '004-fs-mappings',
+    sql: `
+      CREATE TABLE IF NOT EXISTS fs_mappings (
+        id               TEXT PRIMARY KEY,              -- 'm-'+8 hex, server-minted, immutable
+        root_key         TEXT NOT NULL,                 -- key into KEAP_FS_ROOTS
+        rel_path         TEXT NOT NULL DEFAULT '',      -- '/'-separated inside the root; '' = whole root
+        label            TEXT NOT NULL,                 -- popisek; constellation hub name
+        description      TEXT,
+        nest_under_files INTEGER NOT NULL DEFAULT 1,    -- 1 = under central Files core, 0 = standalone
+        schema_json      TEXT NOT NULL DEFAULT '{}',    -- {"type"?:string,"frontmatter"?:object}
+        tags             TEXT NOT NULL DEFAULT '[]',    -- JSON string[]
+        taxonomy_root    TEXT,                          -- primary anchor node id
+        taxonomy_links   TEXT NOT NULL DEFAULT '[]',    -- JSON string[] of extra node ids
+        visibility       TEXT NOT NULL DEFAULT 'shared',-- 'shared'|'private', copied to objects
+        enabled          INTEGER NOT NULL DEFAULT 1,    -- 0 = paused: no sync, objects retained
+        created_by       TEXT NOT NULL,                 -- admin uid (audit)
+        last_sync_at     INTEGER,
+        last_sync_json   TEXT,                          -- last FsMappingSyncResult (status survives restarts)
+        created_at       INTEGER DEFAULT (strftime('%s','now')),
+        updated_at       INTEGER DEFAULT (strftime('%s','now'))
+      );
+      CREATE UNIQUE INDEX IF NOT EXISTS fs_mappings_root_path_idx ON fs_mappings(root_key, rel_path);
+      -- knowledge_objects has NO user_id index before this migration; the
+      -- owner-scoped count/delete/sync-index queries (db.ts) need it.
+      CREATE INDEX IF NOT EXISTS knowledge_objects_user_idx ON knowledge_objects(user_id);
+    `,
+  },
 ];
 
 export function runMigrations(db: Database.Database): void {
