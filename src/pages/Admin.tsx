@@ -19,6 +19,7 @@ import ObjectsTab from '@/components/admin/ObjectsTab';
 import type { ApiTaxonomyMetadata } from '@/types/database';
 import { LintPanel } from '@/components/admin/LintPanel';
 import { ModerationPanel } from '@/components/admin/ModerationPanel';
+import { FsMappingsPanel } from '@/components/admin/FsMappingsPanel';
 
 const TILE_TYPES = ['recent-pages', 'recent-cities', 'custom-todo', 'progress-stats', 'explore-map'] as const;
 
@@ -223,14 +224,19 @@ export default function Admin() {
 
       <div className="container mx-auto px-4 py-6">
         <Tabs defaultValue="captures" className="space-y-6">
-          <TabsList className="w-full max-w-xl">
+          <TabsList className="w-full max-w-2xl">
             <TabsTrigger value="captures" className="flex-1">{t('admin.tabs.captures')}</TabsTrigger>
             <TabsTrigger value="objects" className="flex-1">{t('admin.tabs.objects')}</TabsTrigger>
             <TabsTrigger value="homepage" className="flex-1">{t('admin.tabs.homepage')}</TabsTrigger>
             <TabsTrigger value="taxonomy" className="flex-1">{t('admin.tabs.taxonomy')}</TabsTrigger>
             <TabsTrigger value="lint" className="flex-1">{t('admin.tabs.lint')}</TabsTrigger>
             <TabsTrigger value="moderation" className="flex-1">{t('admin.tabs.moderation')}</TabsTrigger>
+            <TabsTrigger value="fs" className="flex-1">{t('admin.tabs.fsMappings')}</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="fs" className="space-y-6">
+            <FsMappingsPanel />
+          </TabsContent>
 
           <TabsContent value="moderation" className="space-y-6">
             <ModerationPanel />
