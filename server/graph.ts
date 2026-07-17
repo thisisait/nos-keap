@@ -176,8 +176,11 @@ export function registerGraphRoutes(app: Express) {
     // anchors ([[node-id]] refs in the card body). ALL objects ship — the
     // orbital view renders only anchored ones (free-floating dust would break
     // spatial memory), but the files-core view needs the unanchored rest too.
+    // Graph-scope visibility (getVisibleObjects): own + shared, so shared
+    // mapped-folder mirrors appear in every user's Explore — /api/objects
+    // lists stay owner-scoped.
     const objects = db
-      .getObjects(req.user.id, req.user.isAdmin)
+      .getVisibleObjects(req.user.id, req.user.isAdmin)
       .map((o) => {
         // A card typed 'file' whose resource is `kiwix:…` is really an
         // encyclopedia — the resolved content type wins over the raw type.
@@ -198,8 +201,29 @@ export function registerGraphRoutes(app: Express) {
           // Owner uid — an admin sees every user's objects; without this,
           // two users' "documents/…" trees would merge in the files core.
           owner: o.userId,
+          // Mapped-folder provenance (fs_mappings id) — the files core groups
+          // these under their mapping's hub instead of the owner's tree.
+          mapping: typeof o.frontmatter?.mapping === 'string' ? o.frontmatter.mapping : undefined,
         };
       });
+    // Mapped-folder hubs (fs_mappings) — label + placement metadata for the
+    // files-core view. Admins get every row; non-admins only shared ones.
+    // DISABLED mappings ship too (enabled:false): their retained objects
+    // still need placement + labels. Dangling taxonomy anchors (deleted ext
+    // nodes) are filtered here; the Admin panel shows them as a warning.
+    const fsMappings = db
+      .listFsMappings()
+      .filter((m) => req.user.isAdmin || m.visibility === 'shared')
+      .map((m) => ({
+        id: m.id,
+        label: m.label,
+        nested: m.nestUnderFiles,
+        taxonomyRoot: m.taxonomyRoot && getNode(m.taxonomyRoot) ? m.taxonomyRoot : undefined,
+        taxonomyLinks: m.taxonomyLinks.filter((l) => getNode(l)),
+        tags: m.tags,
+        enabled: m.enabled,
+        count: db.countObjectsByOwner(`fsmap:${m.id}`),
+      }));
     // Concept-relation overlay (imported research graphs, e.g. ToE) — a SEPARATE
     // typed-edge layer, NOT folded into the parent-child `links` skeleton. Typed
     // research edges by default; `?relations=all` adds the generic related-concept.
@@ -213,6 +237,7 @@ export function registerGraphRoutes(app: Express) {
       links,
       objects,
       relations,
+      fsMappings,
       meta: {
         vectors: db.vectorSearchAvailable(),
         embeddings: db.embeddingStats(),

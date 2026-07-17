@@ -17,6 +17,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { registerApiRoutes } from './routes';
 import { registerAgentRoutes } from './agent';
+import { registerFsMappingRoutes } from './fs-mappings';
 import { registerGraphRoutes } from './graph';
 import { registerIngestRoutes } from './intake';
 import { registerExtensionRoutes } from './extension/routes';
@@ -75,6 +76,7 @@ async function main() {
   // Graph/explorer surface first — registerApiRoutes ends with the /api/*
   // 404 fallback, so anything mounted after it is unreachable.
   registerGraphRoutes(app); // /api/graph* + /api/search/semantic
+  registerFsMappingRoutes(app); // /api/fs/* — admin mapped-folders CRUD + roots/browse
   registerApiRoutes(app);
 
   // SPA static + history-fallback (replaces the Apache RewriteRule from the

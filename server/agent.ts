@@ -29,7 +29,8 @@ import { runLint, lastLintReport } from './lint';
 import { propose, proposeNode, proposeDescription, proposeBrief, moderationPolicy } from './promotions';
 import { allNodes } from './taxonomy';
 import { normalizeAndSaveCapture, parseEnvelope } from './intake';
-import { syncUserFiles, fsSyncStatus } from './fs-sync';
+import { syncAllFs, syncMapping, fsSyncStatus, USER_FILES_DIR } from './fs-sync';
+import { listRoots } from './fs-roots';
 import { TOKEN_RO, TOKEN_RW, tokenEquals } from './tokens';
 
 const ok = (res: Response, data?: unknown) => res.json({ success: true, data });
@@ -281,12 +282,40 @@ export function registerAgentRoutes(app: Express) {
   // ── Filesystem sync (server/fs-sync.ts) — the doctrine-tree mirror ─────────
   // A host job that just wrote into tenants/<t>/users/<uid>/ kicks this so the
   // files appear as objects immediately (boot + interval cover the rest).
+  // Status carries the additive roots + mappings blocks (mapped folders).
   app.get('/agent/v1/fs/status', agentAuth('ro'), (_req, res) => ok(res, fsSyncStatus()));
 
-  app.post('/agent/v1/fs/sync', agentAuth('rw'), (_req, res) => {
-    const result = syncUserFiles();
-    if (!result.configured) return fail(res, 503, 'fs sync disabled: KEAP_USER_FILES_DIR not set');
-    ok(res, result);
+  app.post('/agent/v1/fs/sync', agentAuth('rw'), (req, res) => {
+    // Targeted pass: {"mapping":"m-…"} syncs ONE mapped folder (the host-job
+    // twin of the admin panel's Sync now).
+    const mappingId = req.body?.mapping;
+    if (typeof mappingId === 'string' && mappingId) {
+      const m = db.getFsMapping(mappingId);
+      if (!m) return fail(res, 404, 'unknown mapping');
+      if (!m.enabled) return fail(res, 409, 'mapping disabled');
+      return ok(res, syncMapping(m));
+    }
+    // Full pass: users tree (if configured) + every enabled mapping. 503 only
+    // when NOTHING at all is configured — mappings sync without the users tree.
+    if (!USER_FILES_DIR && listRoots().length === 0) {
+      return fail(res, 503, 'fs sync disabled: neither KEAP_USER_FILES_DIR nor KEAP_FS_ROOTS configured');
+    }
+    const r = syncAllFs();
+    if (!r) return fail(res, 409, 'sync in progress');
+    // Users-result fields spread at the TOP level so any host job reading
+    // scanned/upserted keeps working; mappings is the additive block.
+    ok(res, {
+      ...(r.users ?? {}),
+      mappings: r.mappings.map((x) => ({
+        id: x.id,
+        scanned: x.scanned,
+        upserted: x.upserted,
+        removed: x.removed,
+        unchanged: x.unchanged,
+        capped: x.capped,
+        pruneRefused: x.pruneRefused,
+      })),
+    });
   });
 
   // ── Knowledge lint (server/lint.ts) — the cortex's periodic health check ───
@@ -1020,10 +1049,31 @@ const OPENAPI_SPEC = {
       },
     },
     '/agent/v1/fs/status': {
-      get: { summary: 'Filesystem-sync status (doctrine users/ tree mirror) — dir, interval, last run' },
+      get: {
+        summary:
+          'Filesystem-sync status: doctrine users/ tree mirror (dir, interval, last run) + mounted knowledge roots + per-mapping sync status (mapped folders)',
+      },
     },
     '/agent/v1/fs/sync': {
-      post: { summary: 'Run one fs→objects mirror pass now (write scope; call after writing user files)' },
+      post: {
+        summary:
+          'Run one fs→objects mirror pass now (write scope): users tree + every enabled mapped folder, or one mapping via {"mapping":"m-…"}',
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  mapping: {
+                    type: 'string',
+                    description: 'Sync only this fs_mappings id (404 unknown, 409 disabled); omit for the full pass',
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     },
     '/agent/v1/objects': {
       get: {

@@ -977,16 +977,13 @@ export function countObjectsByOwner(userId: string): number {
   return (getDb().prepare('SELECT COUNT(*) AS c FROM knowledge_objects WHERE user_id = ?').get(userId) as any).c;
 }
 
-/** Purge one owner's objects in a single transaction (mapping delete). The
- *  orphaned vectors are reaped by the next pruneEmbeddings pass. */
+/** Purge one owner's objects (mapping delete) — one DELETE statement, atomic
+ *  on its own and safe inside a caller's transaction (the libsql driver can't
+ *  nest BEGINs, so this must NOT open one; the mapping-delete route wraps
+ *  this + the row delete in ONE enclosing transaction). The orphaned vectors
+ *  are reaped by the next pruneEmbeddings pass. */
 export function deleteObjectsByOwner(userId: string): number {
-  const d = getDb();
-  let removed = 0;
-  const tx = d.transaction(() => {
-    removed = d.prepare('DELETE FROM knowledge_objects WHERE user_id = ?').run(userId).changes;
-  });
-  tx();
-  return removed;
+  return getDb().prepare('DELETE FROM knowledge_objects WHERE user_id = ?').run(userId).changes;
 }
 
 export interface ObjectSyncIndexEntry {

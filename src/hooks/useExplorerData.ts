@@ -52,6 +52,24 @@ export interface GraphObject {
   path?: string;
   /** Owner uid — lets an admin's files core keep users' trees apart. */
   owner?: string;
+  /** Mapped-folder provenance (fs_mappings id) — groups the object under its
+   *  mapping's hub instead of the owner's tree. */
+  mapping?: string;
+}
+
+/** One admin-managed mapped folder (fs_mappings) — hub label + placement. */
+export interface GraphMapping {
+  id: string;
+  label: string;
+  /** true = nested under the central Files core; false = standalone constellation. */
+  nested: boolean;
+  /** Primary taxonomy anchor (hub ray target); dangling ids are filtered server-side. */
+  taxonomyRoot?: string;
+  taxonomyLinks: string[];
+  tags: string[];
+  /** Disabled mappings still ship — their retained objects need placement + labels. */
+  enabled: boolean;
+  count: number;
 }
 
 /** A typed cross-node relation (imported research graph overlay, e.g. ToE). */
@@ -69,6 +87,8 @@ export interface GraphPayload {
   objects: GraphObject[];
   /** Typed concept-relation overlay (beyond parent-child) — rendered behind a toggle. */
   relations?: GraphRelation[];
+  /** Mapped-folder hubs — labels + placement for the files core (admin-managed). */
+  fsMappings?: GraphMapping[];
   meta: {
     vectors: boolean;
     embeddings: { total: number; byKind: Record<string, number>; model: string | null };
