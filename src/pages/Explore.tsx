@@ -41,7 +41,7 @@ import {
 } from '@/hooks/useExplorerData';
 import { orbitalPosition } from '@/components/explorer/orbital';
 import { computeCore, type CoreLayout, type CoreOrder } from '@/components/explorer/core';
-import { repoLangs } from '@/components/explorer/repoVisuals';
+import { repoLangs, hash01 } from '@/components/explorer/repoVisuals';
 
 export default function Explore() {
   const { t, i18n } = useTranslation();
@@ -291,12 +291,30 @@ export default function Explore() {
       }
     }
     if (focusId) {
+      // Focus-halo center: the focused node's coordinates (baked taxonomy
+      // star, or a core layout position for dir: hubs).
+      const fc = nodeById.get(focusId);
+      const fp = fc && fc.x !== undefined ? [fc.x, fc.y!, fc.z!] : coreLayout?.positions.get(focusId);
+      let dustIdx = 0;
       for (const item of starItems) {
         if (item.kind === 'taxonomy' && item.nodeId && nodeById.has(item.nodeId)) {
           // Tree member: no new node, just the dashed semantic edge.
           links.push({ source: focusId, target: item.nodeId, semantic: true, distance: item.distance });
         } else {
           const id = `star:${item.kind}:${item.refId}`;
+          // Deterministic ORBIT around the focus, not force dust: the d3
+          // engine spawned these at the ring center and the pinned-star
+          // charge field shot them out of view. Radius = semantic distance
+          // (closer hit = tighter orbit), golden-angle spread, hash tilt;
+          // GraphCanvas animates the very slow revolution + tether lines.
+          const r = 24 + Math.min(item.distance ?? 0.8, 1.4) * 70;
+          const phase = dustIdx * 2.399963 + hash01(id) * 0.6;
+          const tilt = (hash01(`${id}:t`) - 0.5) * 1.1;
+          const speed = (0.03 + hash01(`${id}:w`) * 0.03) * (hash01(`${id}:d`) < 0.5 ? 1 : -1);
+          dustIdx++;
+          const orbit = fp
+            ? { cx: fp[0], cy: fp[1], cz: fp[2], r, phase, tilt, speed }
+            : undefined;
           nodes.push({
             id,
             name: item.name,
@@ -308,8 +326,21 @@ export default function Explore() {
             star: true,
             distance: item.distance,
             categoryHue: 45,
+            orbit,
+            // Pinned at the orbit's t=0 point — NOTHING in the scene is
+            // force-free anymore, so nothing can ever fly away.
+            ...(orbit
+              ? {
+                  fx: orbit.cx + r * Math.cos(phase),
+                  fy: orbit.cy + r * Math.sin(phase) * Math.sin(tilt),
+                  fz: orbit.cz + r * Math.sin(phase) * Math.cos(tilt),
+                }
+              : {}),
           });
-          links.push({ source: focusId, target: id, semantic: true, distance: item.distance });
+          // The tether to the focus is drawn by the orbit animator (a link
+          // into graphData would freeze at the spawn position once the sim
+          // cools down). Orbit-less fallbacks keep the engine link.
+          if (!orbit) links.push({ source: focusId, target: id, semantic: true, distance: item.distance });
         }
       }
     }

@@ -59,7 +59,8 @@ const EXT_LANG: Record<string, string> = {
   r: 'R', jl: 'Julia', zig: 'Zig', tf: 'HCL', hcl: 'HCL', sql: 'SQL',
 };
 
-function hash01(s: string): number {
+/** FNV-ish 0..1 string hash — deterministic seeds for textures and orbits. */
+export function hash01(s: string): number {
   let h = 2166136261;
   for (let i = 0; i < s.length; i++) {
     h ^= s.charCodeAt(i);

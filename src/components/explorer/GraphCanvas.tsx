@@ -78,6 +78,8 @@ export interface CanvasNode {
   categoryHue: number;
   /** Knowledge scope = subtree size (descendants) — drives node SIZE. */
   scope?: number;
+  /** Focus-halo orbit (semantic dust): slow revolution around the focus. */
+  orbit?: { cx: number; cy: number; cz: number; r: number; phase: number; tilt: number; speed: number };
   /** Embedding-derived semantic-lens features (colour/size channels). */
   features?: Record<string, number>;
   /** Linked-data enrichment (Wikidata QID + entity typing + QRank scope). */
@@ -860,6 +862,71 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     }
     return g.children.length ? g : (false as any);
   }, [coreView, fileLabels]);
+
+  // Focus-halo orbits: semantic dust circles the focused node VERY slowly
+  // (a revolution takes ~2–3.5 min). Runs outside the d3 engine — the sim
+  // cools down and stops syncing, so the animator drives the nodes' three
+  // objects directly and draws its own tether lines to the focus center.
+  useEffect(() => {
+    const dust = graphData.nodes.filter((n: CanvasNode) => n.orbit) as Array<
+      CanvasNode & { x?: number; y?: number; z?: number; __threeObj?: THREE.Object3D }
+    >;
+    if (!dust.length || mode === 'ship') return;
+    const geo = new THREE.BufferGeometry();
+    const pos = new Float32Array(dust.length * 6);
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    const mat = new THREE.LineBasicMaterial({ color: 0x8a6a14, transparent: true, opacity: 0.55 });
+    const lines = new THREE.LineSegments(geo, mat);
+    noRaycast(lines);
+    let sceneObj: THREE.Scene | null = null;
+    let raf = 0;
+    const t0 = performance.now();
+    const step = () => {
+      const ref = fgRef.current;
+      if (ref) {
+        if (!sceneObj) {
+          try {
+            sceneObj = ref.scene();
+            sceneObj!.add(lines);
+          } catch {
+            // Renderer not ready yet — retry next frame.
+          }
+        }
+        // Reduced motion: the halo still forms (placement is information),
+        // it just does not revolve.
+        const t = REDUCED_MOTION ? 0 : (performance.now() - t0) / 1000;
+        dust.forEach((n, i) => {
+          const o = n.orbit!;
+          const th = o.phase + t * o.speed;
+          const x = o.cx + o.r * Math.cos(th);
+          const y = o.cy + o.r * Math.sin(th) * Math.sin(o.tilt);
+          const z = o.cz + o.r * Math.sin(th) * Math.cos(o.tilt);
+          // Keep the data-side coords in step (raycast targets, future focus)
+          // AND move the rendered object — the engine stopped syncing.
+          n.fx = n.x = x;
+          n.fy = n.y = y;
+          n.fz = n.z = z;
+          n.__threeObj?.position.set(x, y, z);
+          pos[i * 6] = o.cx;
+          pos[i * 6 + 1] = o.cy;
+          pos[i * 6 + 2] = o.cz;
+          pos[i * 6 + 3] = x;
+          pos[i * 6 + 4] = y;
+          pos[i * 6 + 5] = z;
+        });
+        geo.attributes.position.needsUpdate = true;
+      }
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => {
+      cancelAnimationFrame(raf);
+      sceneObj?.remove(lines);
+      geo.dispose();
+      mat.dispose();
+    };
+  }, [graphData, mode]);
+
 
   return (
     <ForceGraph3D
