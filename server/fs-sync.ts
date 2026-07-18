@@ -143,15 +143,20 @@ interface UserFoundFile extends FoundFile {
 }
 
 /** Walk one subtree. Hidden entries and symlinks are skipped. Shared by the
- *  users pass and the mapping pass — identical rules for both. */
-function walkDir(dir: string, rel: string, out: FoundFile[], cap: number): void {
-  if (out.length >= cap) return;
+ *  users pass and the mapping pass — identical rules for both. Returns false
+ *  when ANY readdir failed (EACCES, a dropped sub-mount): the found-set is
+ *  then TRUNCATED exactly like a capped one — every file under the unreadable
+ *  subtree is missing — so callers must not prune against it. Cap-hits are
+ *  not flagged here; callers detect those via out.length >= cap. */
+function walkDir(dir: string, rel: string, out: FoundFile[], cap: number): boolean {
+  if (out.length >= cap) return true;
   let entries: string[];
   try {
     entries = readdirSync(dir);
   } catch {
-    return; // unreadable dir — doctrine perms may hide it; not our file then
+    return false; // unreadable dir — this subtree was NOT enumerated
   }
+  let complete = true;
   for (const e of entries) {
     if (e.startsWith('.')) continue;
     const abs = path.join(dir, e);
@@ -159,16 +164,22 @@ function walkDir(dir: string, rel: string, out: FoundFile[], cap: number): void 
     if (!st) continue;
     if (st.isSymbolicLink()) continue; // realpath ∈ scope — never follow links
     const childRel = rel ? `${rel}/${e}` : e;
-    if (st.isDirectory()) walkDir(abs, childRel, out, cap);
-    else if (st.isFile()) {
+    if (st.isDirectory()) {
+      if (!walkDir(abs, childRel, out, cap)) complete = false;
+    } else if (st.isFile()) {
       out.push({ relPath: childRel, size: st.size, mtime: Math.floor(st.mtimeMs / 1000), absPath: abs });
-      if (out.length >= cap) return;
+      if (out.length >= cap) return complete;
     }
   }
+  return complete;
 }
 
 /** Walk one user's subtree — walkDir + uid stamping. The MAX_FILES cap is
- *  shared across ALL users via the shared out array (unchanged behavior). */
+ *  shared across ALL users via the shared out array (unchanged behavior).
+ *  The incomplete-walk flag is deliberately DROPPED here: the users pass is
+ *  behaviorally frozen, and it has always pruned against a walk truncated by
+ *  an unreadable subdir (same pre-existing gap as its capped-prune hazard —
+ *  flagged for a future users-pass fix mirroring the mapping rule). */
 function walkUser(uid: string, dir: string, rel: string, out: UserFoundFile[]): void {
   const before = out.length;
   walkDir(dir, rel, out, MAX_FILES);
@@ -342,7 +353,7 @@ export function syncMapping(m: db.FsMappingRow): FsMappingSyncResult {
       return result;
     }
     const found: FoundFile[] = [];
-    walkDir(resolved.abs, '', found, MAX_FILES);
+    const walkComplete = walkDir(resolved.abs, '', found, MAX_FILES);
     result.scanned = found.length;
     // Capped walk = truncated found-set. Pruning against it would delete
     // objects for files the walk never reached, so prune is skipped entirely.
@@ -404,6 +415,17 @@ export function syncMapping(m: db.FsMappingRow): FsMappingSyncResult {
 
     if (result.capped) {
       // no prune — see above
+    } else if (!walkComplete && index.size > 0) {
+      // A readdir failed mid-walk (EACCES, a dropped sub-mount under the
+      // root): the found-set is truncated the same way the cap truncates it,
+      // except PARTIALLY — sibling dirs still listed, so scanned > 0 and the
+      // zero-scan guard below never fires. Pruning here would mass-delete
+      // every mirror under the unreadable subtree (and reap its vectors);
+      // refuse instead — the mirrors survive until the subtree reads again.
+      result.pruneRefused = true;
+      console.warn(
+        `[fs-sync] mapping ${m.id}: walk under ${m.rootKey}/${m.relPath} truncated by an unreadable subtree with ${index.size} unseen mirrored object(s) — refusing to prune`,
+      );
     } else if (result.scanned === 0 && index.size > 0) {
       // Per-mapping twin of the users-pass guard: zero files while mirrors
       // exist reads as an emptied dir vs mount race, not a mass delete.

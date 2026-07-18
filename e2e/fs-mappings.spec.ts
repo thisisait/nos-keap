@@ -204,6 +204,36 @@ test.describe('mapped folders', () => {
     expect(r.data.pruneRefused).toBe(false);
   });
 
+  test('an unreadable subtree truncates the walk — prune refused, mirrors survive', async ({ request }) => {
+    // A readable sibling keeps scanned > 0: this is the PARTIAL case the
+    // zero-scan guard cannot see — sibling files still list while the subtree
+    // holding every existing mirror silently drops out of the found-set.
+    fs.writeFileSync(path.join(FSROOT, 'papers', 'sibling.md'), 'still readable\n');
+    let r = (await (await request.post(`/api/fs/mappings/${mapId}/sync`)).json()) as {
+      data: SyncResult;
+    };
+    expect(r.data.upserted).toBe(1); // sibling.md mirrored → 2 objects now
+    const locked = path.join(FSROOT, 'papers', '2024');
+    fs.chmodSync(locked, 0o000); // readdir → EACCES; a dropped sub-mount reads the same
+    try {
+      r = (await (await request.post(`/api/fs/mappings/${mapId}/sync`)).json()) as {
+        data: SyncResult;
+      };
+    } finally {
+      fs.chmodSync(locked, 0o755); // always restore — the next run's rm -rf needs it
+    }
+    expect(r.data.scanned).toBe(1); // only sibling.md — the zero-scan guard is blind here
+    expect(r.data.pruneRefused).toBe(true);
+    expect(r.data.removed).toBe(0); // intro.md's mirror SURVIVES the hiccup
+    // Subtree readable again + sibling gone → an ordinary reconcile pass.
+    fs.rmSync(path.join(FSROOT, 'papers', 'sibling.md'));
+    r = (await (await request.post(`/api/fs/mappings/${mapId}/sync`)).json()) as {
+      data: SyncResult;
+    };
+    expect(r.data.removed).toBe(1);
+    expect(r.data.unchanged).toBe(1);
+  });
+
   test('overlapping and reserved-root mappings are refused', async ({ request }) => {
     // Descendant of the existing mapping → 409.
     const child = await request.post('/api/fs/mappings', {
@@ -247,6 +277,43 @@ test.describe('mapped folders', () => {
     expect((await request.delete('/api/objects/e2e-fsm-iso')).ok()).toBeTruthy();
   });
 
+  test('a visibility patch is enforced even while the mapping cannot resync', async ({ request }) => {
+    // Non-admin viewer (dev fallback is header-driven, no admin groups) — the
+    // audience a shared→private flip must actually hide the mirrors from.
+    const bob = { 'x-authentik-username': 'bob' };
+    let graph = (await (await request.get('/api/graph', { headers: bob })).json()) as GraphData;
+    expect(graph.data.objects.filter((o) => o.mapping === mapId)).toHaveLength(1);
+
+    // Disable first — in this state the sync engine can never run, which is
+    // exactly the window the direct row flip has to cover.
+    expect(
+      (await request.patch(`/api/fs/mappings/${mapId}`, { data: { enabled: false } })).ok(),
+    ).toBeTruthy();
+    const res = await request.patch(`/api/fs/mappings/${mapId}`, {
+      data: { visibility: 'private' },
+    });
+    expect(res.ok()).toBeTruthy();
+    expect(((await res.json()) as { data: { resync: SyncResult | null } }).data.resync).toBeNull();
+
+    // The mirror and its hub drop out of the non-admin graph immediately.
+    graph = (await (await request.get('/api/graph', { headers: bob })).json()) as GraphData;
+    expect(graph.data.objects.filter((o) => o.mapping === mapId)).toHaveLength(0);
+    expect(graph.data.fsMappings.find((m) => m.id === mapId)).toBeUndefined();
+
+    // Restore shared + enabled. The resync SKIPS every row (frontmatter.cfg
+    // still matches the shared-era config) — proof the direct flip, not the
+    // sync engine, moves the ACL in both directions.
+    const restore = (await (
+      await request.patch(`/api/fs/mappings/${mapId}`, {
+        data: { visibility: 'shared', enabled: true },
+      })
+    ).json()) as { data: { resync: SyncResult } };
+    expect(restore.data.resync.upserted).toBe(0);
+    expect(restore.data.resync.unchanged).toBe(1);
+    graph = (await (await request.get('/api/graph', { headers: bob })).json()) as GraphData;
+    expect(graph.data.objects.filter((o) => o.mapping === mapId)).toHaveLength(1);
+  });
+
   test('admin UI: status strip, mapping card, folder picker, delete confirm', async ({ page }) => {
     await page.goto('/admin');
     await page.getByRole('tab', { name: 'Mapped folders' }).click();
@@ -256,9 +323,13 @@ test.describe('mapped folders', () => {
     await expect(page.getByText('Papers', { exact: true })).toBeVisible();
     await expect(page.getByText('1 objects')).toBeVisible();
 
-    // Sync now → toast with the pass's counts.
+    // Sync now → toast with the pass's counts. .first(): the toast text is
+    // duplicated into an aria-live announcement span while it is on screen,
+    // which trips strict mode depending on timing.
     await page.getByRole('button', { name: 'Sync now' }).click();
-    await expect(page.getByText('Synced — 1 scanned, 0 updated, 0 removed.')).toBeVisible();
+    await expect(
+      page.getByText('Synced — 1 scanned, 0 updated, 0 removed.').first(),
+    ).toBeVisible();
 
     // FolderBrowser: descend into the mapped folder → pre-emptive warning +
     // Save-path blocked; ascend; descend elsewhere and commit it.

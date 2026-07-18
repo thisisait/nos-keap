@@ -386,6 +386,14 @@ export function registerFsMappingRoutes(app: Express) {
         if (String(e).includes('UNIQUE')) return fail(res, 409, 'a mapping for this root and path already exists');
         throw e;
       }
+      // A visibility change is an ACL edit and CANNOT wait for a resync — a
+      // disabled mapping or an unmounted root can't run one, and previously-
+      // shared mirrors would stay in every user's graph until it could. Flip
+      // the rows directly; the next successful sync's cfg-hash rewrite
+      // reconciles the (deliberately stale) frontmatter.cfg.
+      if (patch.visibility !== undefined && updated.visibility !== m.visibility) {
+        db.setObjectVisibilityByOwner(`fsmap:${m.id}`, updated.visibility);
+      }
       const pathChanged = updated.rootKey !== m.rootKey || updated.relPath !== m.relPath;
       const cfgChanged = mappingCfgHash(updated) !== mappingCfgHash(m);
       const resync = updated.enabled && (cfgChanged || pathChanged) ? syncMapping(updated) : null;

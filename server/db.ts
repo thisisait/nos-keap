@@ -986,6 +986,19 @@ export function deleteObjectsByOwner(userId: string): number {
   return getDb().prepare('DELETE FROM knowledge_objects WHERE user_id = ?').run(userId).changes;
 }
 
+/** Flip visibility on every object of one owner — the ACL half of a mapping
+ *  visibility PATCH. Must work WITHOUT a sync pass: a disabled mapping or an
+ *  unmounted root can't resync, and leaving previously-shared mirrors in
+ *  every user's graph until one succeeds would silently ignore the admin's
+ *  intent. frontmatter.cfg stays stale on purpose — the next successful
+ *  sync's cfg-hash mismatch rewrites the rows fully (idempotent after).
+ *  Visibility is not part of objectText, so no corpus-dirty mark is needed. */
+export function setObjectVisibilityByOwner(userId: string, visibility: string): number {
+  return getDb()
+    .prepare('UPDATE knowledge_objects SET visibility = ? WHERE user_id = ?')
+    .run(visibility, userId).changes;
+}
+
 export interface ObjectSyncIndexEntry {
   id: string;
   links: any[];
@@ -1011,9 +1024,11 @@ export function getObjectSyncIndex(userId: string): Map<string, ObjectSyncIndexE
   );
 }
 
-/** Graph-scope visibility: own objects + anything shared. Used ONLY by
- *  /api/graph — /api/objects lists stay owner-scoped (admins see all), so a
- *  5k-file shared mapping never floods every user's Objects page. */
+/** Graph-scope visibility: own objects + ANYTHING shared — mapping mirrors
+ *  and manually shared cards alike (deliberate: 'shared' has always meant
+ *  world-readable via direct GET; the graph lists what was already readable).
+ *  Used ONLY by /api/graph — /api/objects lists stay owner-scoped (admins see
+ *  all), so a 5k-file shared mapping never floods every user's Objects page. */
 export function getVisibleObjects(userId: string, seeAll: boolean): KnowledgeObject[] {
   const d = getDb();
   const rows = seeAll

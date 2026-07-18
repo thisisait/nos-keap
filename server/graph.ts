@@ -178,7 +178,10 @@ export function registerGraphRoutes(app: Express) {
     // spatial memory), but the files-core view needs the unanchored rest too.
     // Graph-scope visibility (getVisibleObjects): own + shared, so shared
     // mapped-folder mirrors appear in every user's Explore — /api/objects
-    // lists stay owner-scoped.
+    // lists stay owner-scoped. DELIBERATE (spec decision #8): the predicate is
+    // visibility='shared', not owner-prefix — a manually shared card was
+    // already readable by anyone via direct GET; the graph now lists what was
+    // always readable. 'shared' means graph-listed tenant-wide.
     const objects = db
       .getVisibleObjects(req.user.id, req.user.isAdmin)
       .map((o) => {
