@@ -838,6 +838,18 @@ export function objectTypes(): string[] {
 // The walk/upsert engine lives in server/fs-sync.ts, the admin routes in
 // server/fs-mappings.ts.
 
+export interface FsMappingSyncSnapshot {
+  scanned?: number;
+  upserted?: number;
+  removed?: number;
+  unchanged?: number;
+  capped?: boolean;
+  pruneRefused?: boolean;
+  rootAvailable?: boolean;
+  tookMs?: number;
+  error?: string | null;
+}
+
 export interface FsMappingRow {
   id: string;
   rootKey: string;
@@ -846,7 +858,7 @@ export interface FsMappingRow {
   description?: string;
   nestUnderFiles: boolean;
   /** Object-materialization template: type override + static frontmatter. */
-  schema: { type?: string; frontmatter?: Record<string, any> };
+  schema: { type?: string; frontmatter?: Record<string, unknown> };
   tags: string[];
   taxonomyRoot?: string;
   taxonomyLinks: string[];
@@ -855,12 +867,33 @@ export interface FsMappingRow {
   createdBy: string;
   lastSyncAt?: number;
   /** Parsed last FsMappingSyncResult (fs-sync.ts) — survives restarts. */
-  lastSync?: any;
+  lastSync?: FsMappingSyncSnapshot;
   createdAt: number;
   updatedAt: number;
 }
 
-function mapFsMappingRow(row: any): FsMappingRow {
+/** Raw fs_mappings row — snake_case DB columns before mapping. */
+interface FsMappingDbRow {
+  id: string;
+  root_key: string;
+  rel_path: string;
+  label: string;
+  description: string | null;
+  nest_under_files: number;
+  schema_json: string | null;
+  tags: string | null;
+  taxonomy_root: string | null;
+  taxonomy_links: string | null;
+  visibility: string;
+  enabled: number;
+  created_by: string;
+  last_sync_at: number | null;
+  last_sync_json: string | null;
+  created_at: number;
+  updated_at: number;
+}
+
+function mapFsMappingRow(row: FsMappingDbRow): FsMappingRow {
   return {
     id: row.id,
     rootKey: row.root_key,
@@ -883,13 +916,15 @@ function mapFsMappingRow(row: any): FsMappingRow {
 }
 
 export function listFsMappings(): FsMappingRow[] {
-  return (getDb().prepare('SELECT * FROM fs_mappings ORDER BY created_at, id').all() as any[]).map(
-    mapFsMappingRow,
-  );
+  return (
+    getDb().prepare('SELECT * FROM fs_mappings ORDER BY created_at, id').all() as FsMappingDbRow[]
+  ).map(mapFsMappingRow);
 }
 
 export function getFsMapping(id: string): FsMappingRow | null {
-  const row = getDb().prepare('SELECT * FROM fs_mappings WHERE id = ?').get(id) as any;
+  const row = getDb().prepare('SELECT * FROM fs_mappings WHERE id = ?').get(id) as
+    | FsMappingDbRow
+    | undefined;
   return row ? mapFsMappingRow(row) : null;
 }
 
@@ -937,8 +972,8 @@ export type FsMappingPatch = Partial<{
 
 export function updateFsMapping(id: string, patch: FsMappingPatch): FsMappingRow | null {
   const sets: string[] = [];
-  const params: any[] = [];
-  const put = (col: string, val: any) => {
+  const params: Array<string | number | null> = [];
+  const put = (col: string, val: string | number | null) => {
     sets.push(`${col} = ?`);
     params.push(val);
   };
@@ -974,7 +1009,11 @@ export function setFsMappingSyncStatus(id: string, at: number, resultJson: strin
 }
 
 export function countObjectsByOwner(userId: string): number {
-  return (getDb().prepare('SELECT COUNT(*) AS c FROM knowledge_objects WHERE user_id = ?').get(userId) as any).c;
+  return (
+    getDb().prepare('SELECT COUNT(*) AS c FROM knowledge_objects WHERE user_id = ?').get(userId) as {
+      c: number;
+    }
+  ).c;
 }
 
 /** Purge one owner's objects (mapping delete) — one DELETE statement, atomic
@@ -1001,8 +1040,8 @@ export function setObjectVisibilityByOwner(userId: string, visibility: string): 
 
 export interface ObjectSyncIndexEntry {
   id: string;
-  links: any[];
-  frontmatter?: any;
+  links: unknown[];
+  frontmatter?: Record<string, unknown>;
 }
 
 /** id → {links, frontmatter} for one owner — the sync engine's skip/prune
@@ -1011,7 +1050,7 @@ export interface ObjectSyncIndexEntry {
 export function getObjectSyncIndex(userId: string): Map<string, ObjectSyncIndexEntry> {
   const rows = getDb()
     .prepare('SELECT id, links, frontmatter FROM knowledge_objects WHERE user_id = ?')
-    .all(userId) as any[];
+    .all(userId) as Array<{ id: string; links: string | null; frontmatter: string | null }>;
   return new Map(
     rows.map((r) => [
       r.id,
@@ -1038,7 +1077,7 @@ export function getVisibleObjects(userId: string, seeAll: boolean): KnowledgeObj
           "SELECT * FROM knowledge_objects WHERE user_id = ? OR visibility = 'shared' ORDER BY updated_at DESC",
         )
         .all(userId);
-  return (rows as any[]).map(mapObjectRow);
+  return rows.map((r) => mapObjectRow(r));
 }
 
 // ── Baked layout (U1 — deterministic star positions) ─────────────────────────
