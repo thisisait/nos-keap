@@ -19,6 +19,7 @@
 import { useMemo, useRef, useEffect, useCallback } from 'react';
 import ForceGraph3D from 'react-force-graph-3d';
 import SpriteText from 'three-spritetext';
+import { repoLangs, repoTexture, langOfPath, langColor } from './repoVisuals';
 import * as THREE from 'three';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { forceCollide } from 'd3-force-3d';
@@ -62,6 +63,14 @@ export interface CanvasNode {
   object?: boolean;
   /** Synthetic files-core folder node (`dir:<path>`) — a hub, not data. */
   folder?: boolean;
+  /** fs path (objects: file relPath; used for core-view cubes + lang colour). */
+  path?: string;
+  /** Repo folder hub — renders as a textured language sphere. */
+  repo?: boolean;
+  /** Subtree file bytes (repo hubs) — modulates the sphere size. */
+  bytes?: number;
+  /** Extension byte buckets (repo hubs) — the language mix source. */
+  exts?: Array<[string, number]>;
   /** Celestial form (objects only) — planet | moon | asteroid | comet | station. */
   form?: CelestialForm;
   glyph?: string;
@@ -180,7 +189,10 @@ const LEVEL_SCOPE_REF = [600, 250, 130, 20, 10]; // typical subtree max per leve
 
 function nodeSize(n: CanvasNode, lens?: LensState): number {
   let base: number;
-  if (n.folder) base = 2 + Math.min(3, Math.sqrt(n.childCount || 1));
+  // Repo hubs: size follows the subtree's file bytes (log scale) — a 1 MB
+  // toy and a 500 MB monorepo should read differently at a glance.
+  if (n.repo) base = 3 + Math.min(5, Math.log10(1 + (n.bytes ?? 0) / 2048));
+  else if (n.folder) base = 2 + Math.min(3, Math.sqrt(n.childCount || 1));
   else if (n.object) base = FORM_SIZE[n.form ?? 'asteroid'] ?? 1.4;
   else if (n.star) base = 3;
   else {
@@ -338,6 +350,75 @@ function buildAssetMesh(node: CanvasNode): THREE.Object3D {
     return g;
   }
   return mesh;
+}
+
+const _repoGeo = new THREE.SphereGeometry(1, 24, 16);
+const _cubeGeo = new THREE.BoxGeometry(1, 1, 1);
+
+/** Permanent hub/name plate shared by folder + repo hubs. */
+function hubLabel(node: CanvasNode, radius: number): THREE.Sprite {
+  const sprite = new SpriteText(node.name);
+  sprite.color = '#cfd8ec';
+  sprite.textHeight = 2.8;
+  sprite.fontSize = 110;
+  sprite.fontWeight = '600';
+  sprite.backgroundColor = 'rgba(8,12,22,0.86)';
+  sprite.padding = 1.6;
+  sprite.borderRadius = 1.5;
+  sprite.borderWidth = 0.4;
+  sprite.borderColor = 'rgba(180,195,225,0.35)';
+  const label = sprite as unknown as THREE.Sprite;
+  label.position.y = -(radius + 4);
+  label.material.depthWrite = false;
+  return noRaycast(label) as THREE.Sprite;
+}
+
+/** Repo folder hub: language-banded identicon sphere, sized by subtree bytes. */
+function buildRepoMesh(node: CanvasNode): THREE.Object3D {
+  const langs = repoLangs(node.exts ?? []);
+  const tex = repoTexture(node.name, langs);
+  const mesh = new THREE.Mesh(_repoGeo, new THREE.MeshBasicMaterial({ map: tex }));
+  const r = Math.sqrt(nodeSize(node)) * 2.4; // matches the collide-force radius
+  mesh.scale.setScalar(r);
+  // Name-seeded axis tilt — repos read as individual "worlds", not a grid of
+  // identically-oriented beach balls.
+  mesh.rotation.z = (hash01v(node.id) - 0.5) * 0.9;
+  mesh.rotation.y = hash01v(`${node.id}:y`) * Math.PI * 2;
+  const g = new THREE.Group();
+  g.add(mesh, hubLabel(node, r));
+  return g;
+}
+
+/** Core-view file leaf: a small satellite cube, lang-coloured, optional name. */
+function buildFileCube(node: CanvasNode, withLabel: boolean): THREE.Object3D {
+  const lang = node.path ? langOfPath(node.path) : undefined;
+  const color = lang ? langColor(lang) : `hsl(${node.categoryHue}, 70%, 60%)`;
+  const mesh = new THREE.Mesh(_cubeGeo, new THREE.MeshBasicMaterial({ color: new THREE.Color(color) }));
+  mesh.scale.setScalar(2.6);
+  mesh.rotation.y = hash01v(node.id) * Math.PI; // deterministic variety
+  mesh.rotation.x = hash01v(`${node.id}:x`) * 0.5;
+  if (!withLabel) return mesh;
+  const sprite = new SpriteText(node.name);
+  sprite.color = '#aeb8d0';
+  sprite.textHeight = 2;
+  sprite.fontSize = 110;
+  const label = sprite as unknown as THREE.Sprite;
+  label.position.y = -3.6;
+  label.material.depthWrite = false;
+  noRaycast(label);
+  const g = new THREE.Group();
+  g.add(mesh, label);
+  return g;
+}
+
+/** FNV-ish 0..1 hash — deterministic per-node variety (rotation, tilt). */
+function hash01v(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return ((h >>> 0) % 100000) / 100000;
 }
 
 export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width, height, mode, onShipUpdate, lens, coreView }: Props) {
@@ -567,13 +648,28 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       const cam = (typeof ref.camera === 'function' ? ref.camera() : null) as {
         position?: { x: number; y: number; z: number };
       } | null;
+      const nz = node.z ?? 0;
       if (ctrl?.target && cam?.position) {
-        const nz = node.z ?? 0;
         const dTarget = Math.hypot(node.x - ctrl.target.x, node.y - ctrl.target.y, nz - ctrl.target.z);
         const dCamera = Math.hypot(node.x - cam.position.x, node.y - cam.position.y, nz - cam.position.z);
         if (dTarget < NEAR_HOP_TARGET && dCamera < NEAR_HOP_CAMERA) return;
       }
-      ref.cameraPosition({ x: node.x, y: node.y, z: (node.z ?? 0) + 260 }, node, warpMs(1100));
+      // Approach from the CURRENT viewing side. A fixed +z destination flipped
+      // the camera to the node's far side whenever the user had orbited past
+      // it — the scene mirror-swung mid-flight. Flying along the existing
+      // camera→node sightline keeps the same framing distance with no flip.
+      let dest = { x: node.x, y: node.y, z: nz + 260 };
+      if (cam?.position) {
+        const vx = cam.position.x - node.x;
+        const vy = cam.position.y - node.y;
+        const vz = cam.position.z - nz;
+        const len = Math.hypot(vx, vy, vz);
+        if (len > 1e-3) {
+          const k = 260 / len;
+          dest = { x: node.x + vx * k, y: node.y + vy * k, z: nz + vz * k };
+        }
+      }
+      ref.cameraPosition(dest, node, warpMs(1100));
     }, 400);
     return () => clearTimeout(t);
   }, [focusId, graphData, mode]);
@@ -659,6 +755,13 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     };
   }, [mode, updateFrame]);
 
+  // Cube name plates are per-node canvas textures — cap them to small fields
+  // so a 20k-file mapping doesn't allocate 20k sprite canvases at once.
+  const fileLabels = useMemo(
+    () => Boolean(coreView) && nodes.filter((n) => n.object && n.path).length <= 400,
+    [nodes, coreView],
+  );
+
   // Always-on labels: galaxy names (categories) so the observer never loses
   // orientation, and star names so semantic hits are readable at a glance.
   // Everything else keeps the hover tooltip only. Returning a falsy object
@@ -666,7 +769,15 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
   // ADDED next to it, not a replacement.
   const nodeThreeObject = useCallback((node: any) => {
     // Objects: a typed body REPLACES the default sphere (extend=false below).
-    if (node.object) return buildAssetMesh(node);
+    // In the core view, fs-file leaves become satellite CUBES (lang-coloured,
+    // named while the field is small enough to stay legible).
+    if (node.object) {
+      if (coreView && node.path) return buildFileCube(node, fileLabels);
+      return buildAssetMesh(node);
+    }
+    // Repo folder hubs: the language-banded identicon sphere REPLACES the
+    // default hub sphere (extend=false below).
+    if (node.repo) return buildRepoMesh(node);
     // Files-core folders: the default sphere is the hub, a permanent label
     // names it — folder names ARE the orientation inside the core.
     if (node.folder) {
@@ -715,7 +826,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       g.add(label);
     }
     return g.children.length ? g : (false as any);
-  }, []);
+  }, [coreView, fileLabels]);
 
   return (
     <ForceGraph3D
@@ -730,7 +841,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       nodeVal={(n: any) => nodeSize(n, lens)}
       nodeColor={(n: any) => nodeColor(n, focusId, lens)}
       nodeThreeObject={nodeThreeObject}
-      nodeThreeObjectExtend={(n: any) => !n.object}
+      nodeThreeObjectExtend={(n: any) => !n.object && !n.repo}
       linkColor={(l: any) =>
         l.relation
           ? REL_COLOR[l.relType] ?? 'rgba(148,163,184,0.5)'
