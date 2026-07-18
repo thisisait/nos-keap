@@ -9,7 +9,7 @@
  * (related / most-unrelated), source kinds, and dataType facets. One toggle
  * lifts the same graph into full 3D.
  */
-import { useMemo, useState, useRef, useLayoutEffect } from 'react';
+import { useCallback, useMemo, useState, useRef, useLayoutEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Rocket, Orbit, Search, Waypoints, Boxes } from 'lucide-react';
@@ -116,11 +116,14 @@ export default function Explore() {
     return new Map(cats.map((c, i) => [c.id, Math.round((i / Math.max(cats.length, 1)) * 360)]));
   }, [graph]);
 
-  const rootOf = (id: string): string => {
-    let cur = nodeById.get(id);
-    while (cur?.parentId) cur = nodeById.get(cur.parentId);
-    return cur?.id ?? id;
-  };
+  const rootOf = useCallback(
+    (id: string): string => {
+      let cur = nodeById.get(id);
+      while (cur?.parentId) cur = nodeById.get(cur.parentId);
+      return cur?.id ?? id;
+    },
+    [nodeById],
+  );
 
   const starItems = useMemo(() => {
     const items = neighbors.data?.items ?? [];
@@ -359,7 +362,7 @@ export default function Explore() {
       }
     }
     return { canvasNodes: nodes, canvasLinks: links, coreLayout };
-  }, [graph, focusId, starItems, hueByCategory, nodeById, showRelations, core, t]);
+  }, [graph, focusId, starItems, hueByCategory, nodeById, showRelations, core, t, dirStatByPath, mappingById, rootOf]);
 
   const availableTypes = useMemo(
     () => [...new Set((neighbors.data?.items ?? []).map((i) => i.dataType).filter(Boolean))] as string[],
@@ -662,7 +665,8 @@ export default function Explore() {
           onTypeToggle={(dt) =>
             setTypeFilter((prev) => {
               const next = new Set(prev);
-              next.has(dt) ? next.delete(dt) : next.add(dt);
+              if (next.has(dt)) next.delete(dt);
+              else next.add(dt);
               return next;
             })
           }

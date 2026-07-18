@@ -1,6 +1,7 @@
 import React from 'react';
-import Select from 'react-select';
+import Select, { type StylesConfig } from 'react-select';
 import { taxonomyData } from '@/game/data/taxonomy';
+import type { TaxonomySubcategory } from '@/game/types/taxonomy';
 
 interface TaxonomyOption {
   value: string;
@@ -25,23 +26,23 @@ export const TaxonomySelect: React.FC<TaxonomySelectProps> = ({
   const generateOptions = (): TaxonomyOption[] => {
     const options: TaxonomyOption[] = [];
 
-    const walk = (node: any, level: number) => {
+    const walk = (node: TaxonomySubcategory, level: number) => {
       options.push({ value: node.id, label: `${node.id} - ${node.name}`, level });
-      Object.values(node.subcategories ?? {}).forEach((child: any) => walk(child, level + 1));
-      (node.items ?? []).forEach((item: any) =>
+      Object.values(node.subcategories ?? {}).forEach((child) => walk(child, level + 1));
+      (node.items ?? []).forEach((item) =>
         options.push({ value: item.id, label: `${item.id} - ${item.name}`, level: level + 1 }),
       );
     };
 
-    Object.values(taxonomyData).forEach((category: any) => walk(category, 0));
+    Object.values(taxonomyData).forEach((category) => walk(category, 0));
     return options;
   };
 
   const options = generateOptions();
   const selectedOption = options.find(opt => opt.value === value);
 
-  const customStyles = {
-    option: (provided: any, state: any) => ({
+  const customStyles: StylesConfig<TaxonomyOption, false> = {
+    option: (provided, state) => ({
       ...provided,
       paddingLeft: `${(state.data.level * 20) + 12}px`,
       fontSize: state.data.level > 0 ? '14px' : '16px',
@@ -56,7 +57,7 @@ export const TaxonomySelect: React.FC<TaxonomySelectProps> = ({
         : 'hsl(var(--foreground))',
       borderBottom: state.data.level === 0 ? '1px solid hsl(var(--border))' : 'none',
     }),
-    control: (provided: any) => ({
+    control: (provided) => ({
       ...provided,
       backgroundColor: 'hsl(var(--background))',
       borderColor: 'hsl(var(--border))',
@@ -64,21 +65,21 @@ export const TaxonomySelect: React.FC<TaxonomySelectProps> = ({
         borderColor: 'hsl(var(--border))'
       }
     }),
-    menu: (provided: any) => ({
+    menu: (provided) => ({
       ...provided,
       backgroundColor: 'hsl(var(--background))',
       border: '1px solid hsl(var(--border))',
       zIndex: 50
     }),
-    singleValue: (provided: any) => ({
+    singleValue: (provided) => ({
       ...provided,
       color: 'hsl(var(--foreground))'
     }),
-    placeholder: (provided: any) => ({
+    placeholder: (provided) => ({
       ...provided,
       color: 'hsl(var(--muted-foreground))'
     }),
-    input: (provided: any) => ({
+    input: (provided) => ({
       ...provided,
       color: 'hsl(var(--foreground))'
     })

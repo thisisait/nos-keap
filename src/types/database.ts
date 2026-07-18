@@ -20,7 +20,8 @@ export interface TaxonomyMetadata {
   translations: string;
   /** Content ref into an nOS service, e.g. "kiwix:wikipedia_en" */
   requiredData?: string;
-  data?: any;
+  /** Raw server-side payload (arbitrary JSON); the UI edits the flat fields above. */
+  data?: unknown;
   updatedAt?: number;
 }
 
@@ -31,7 +32,13 @@ export interface ApiTaxonomyMetadata {
   description?: string;
   url?: string;
   domain?: string;
-  metadata?: any;
+  /** Arbitrary capture payload (JSON); known keys are what the Admin captures list renders. */
+  metadata?: {
+    icon?: string;
+    taxonomyId?: string;
+    links?: { priority?: string; tags?: string[]; [key: string]: unknown };
+    [key: string]: unknown;
+  } | null;
   createdAt: number;
   updatedAt: number;
 }
@@ -42,7 +49,8 @@ export interface HomepageTile {
   type: 'progress' | 'custom-todo' | 'recent-cities' | 'recent-pages' | 'progress-stats' | 'explore-map';
   position: number;
   visible: boolean;
-  config?: any;
+  /** Per-tile options (opaque to the client today; tiles render from `type`). */
+  config?: unknown;
 }
 
 export interface AppMetadata {

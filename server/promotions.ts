@@ -117,17 +117,17 @@ export function decide(
     return { status: 'rejected' };
   }
 
-  if ((p as any).kind === 'node') {
+  if (p.kind === 'node') {
     const { nodeId } = materializeNode(promotionId, decidedBy);
     return { status: 'approved', objectId: nodeId };
   }
 
-  if ((p as any).kind === 'desc') {
+  if (p.kind === 'desc') {
     const { nodeId } = materializeDescription(promotionId, decidedBy);
     return { status: 'approved', objectId: nodeId };
   }
 
-  if ((p as any).kind === 'brief') {
+  if (p.kind === 'brief') {
     const { nodeId } = materializeBrief(promotionId, decidedBy);
     return { status: 'approved', objectId: nodeId };
   }
@@ -213,7 +213,7 @@ export function proposeNode(
   };
 
   const existing = db.openPromotions()
-    .find((p) => (p as any).kind === 'node' && p.object?.parentId === parent.id
+    .find((p) => p.kind === 'node' && p.object?.parentId === parent.id
       && String(p.object?.name).toLowerCase() === name.toLowerCase());
   const id = existing?.id ?? crypto.randomUUID();
   db.upsertPromotion({ id, kind: 'node', captureId: `node:${parent.id}`, proposedBy, rationale: rationale?.slice(0, 1000), object: normalized });
@@ -263,7 +263,7 @@ export function proposeDescription(
   // English is fine, the Czech translation is wrong) must not be rejected just
   // because EN is unchanged, else the caller is forced to churn EN to slip the
   // real CS fix past this guard.
-  const curCs = ((node as any).descriptionCs ?? null) as string | null;
+  const curCs = node.descriptionCs ?? null;
   const enSame = normalized.descriptionEn === node.description;
   const csSame =
     normalized.descriptionCs === undefined || (normalized.descriptionCs ?? null) === curCs;
@@ -272,7 +272,7 @@ export function proposeDescription(
   }
   // One open desc proposal per node — a re-proposal updates it.
   const existing = db.openPromotions()
-    .find((p) => (p as any).kind === 'desc' && p.object?.nodeId === node.id);
+    .find((p) => p.kind === 'desc' && p.object?.nodeId === node.id);
   const id = existing?.id ?? crypto.randomUUID();
   db.upsertPromotion({
     id,
@@ -363,7 +363,7 @@ export function proposeBrief(
   }
   const normalized: BriefDraft = { nodeId: node.id, briefEn: en, briefCs: cs };
   const existing = db.openPromotions()
-    .find((p) => (p as any).kind === 'brief' && p.object?.nodeId === node.id);
+    .find((p) => p.kind === 'brief' && p.object?.nodeId === node.id);
   const id = existing?.id ?? crypto.randomUUID();
   db.upsertPromotion({
     id,

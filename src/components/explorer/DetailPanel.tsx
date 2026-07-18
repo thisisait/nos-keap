@@ -165,14 +165,14 @@ export default function DetailPanel({ target, nodeById, objects, objectLinks, on
 
   const node = target && !target.isStar ? nodeById.get(target.id) : null;
   // Curated note layer — the node's brief (taxonomy-brief skill output).
-  const { data: curatedRow } = useQuery<{ data?: Record<string, unknown> } | null>({
+  const { data: curatedRow } = useQuery<{ data?: { brief?: string; briefCs?: string; [key: string]: unknown } } | null>({
     queryKey: ['node-meta', node?.id],
     queryFn: () => apiFetch(`/api/taxonomy-metadata/${node!.id}`),
     enabled: Boolean(node),
   });
   const brief = curatedRow?.data
-    ? ((i18n.language?.startsWith('cs') && (curatedRow.data as any).briefCs) ||
-        (curatedRow.data as any).brief) as string | undefined
+    ? (i18n.language?.startsWith('cs') && curatedRow.data.briefCs) ||
+        curatedRow.data.brief
     : undefined;
   const crumb = useMemo(() => (node ? ancestors(node.id, nodeById) : []), [node, nodeById]);
   const children = useMemo(() => {

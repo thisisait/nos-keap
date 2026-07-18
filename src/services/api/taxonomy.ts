@@ -6,9 +6,18 @@ import { TaxonomyMetadata } from '../../types/database';
  * The UI edits flat fields (name/description/icon/links/translations), so
  * this client is the flatten/unflatten seam.
  */
+interface ServerTaxonomyData {
+  name?: string;
+  description?: string;
+  icon?: string;
+  links?: string | Record<string, unknown>;
+  requiredData?: string;
+  translations?: string | Record<string, unknown>;
+}
+
 interface ServerTaxonomyMetadata {
   id: string;
-  data: any;
+  data: ServerTaxonomyData | null;
   updatedAt: number;
 }
 
