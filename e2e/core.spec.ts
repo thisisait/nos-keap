@@ -33,7 +33,9 @@ test.describe('files core', () => {
       expect(res.ok()).toBeTruthy();
     }
     const graph = (await (await request.get('/api/graph')).json()) as {
-      data: { objects: Array<{ id: string; anchors: string[]; path?: string; owner?: string }> };
+      data: {
+        objects: Array<{ id: string; anchors: string[]; path?: string; owner?: string; mapping?: string }>;
+      };
     };
     const byId = new Map(graph.data.objects.map((o) => [o.id, o]));
     // Anchored file: path + the taxonomy anchor extracted from its body.
@@ -44,6 +46,10 @@ test.describe('files core', () => {
     expect(byId.get('e2e-core-photo')?.path).toBe('library/photos/photo.png');
     expect(byId.get('e2e-core-loose')?.path).toBeUndefined();
     expect(byId.get('e2e-core-report')?.owner).toBe('local');
+    // Isolation regression (mapped folders): users-tree/manual objects never
+    // gain mapping provenance — fsm: mirrors are the only carriers.
+    expect(byId.get('e2e-core-report')?.mapping).toBeUndefined();
+    expect(byId.get('e2e-core-loose')?.mapping).toBeUndefined();
   });
 
   test('core toggle forms the 3D core and offers reorder modes', async ({ page }) => {

@@ -23,7 +23,11 @@ export default defineConfig({
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
   webServer: {
-    command: `rm -rf e2e/.data && PORT=${PORT} KEAP_DATA_DIR=e2e/.data node dist-server/index.js`,
+    // Mapped-folders env: one throwaway root (e2e/.fsroot, fixtures written by
+    // fs-mappings.spec.ts), interval 0 so syncs happen only via explicit POSTs,
+    // and an ro agent token for the /agent/v1/fs/status coverage.
+    // KEAP_USER_FILES_DIR stays unset — the per-user tree pipeline is inert.
+    command: `rm -rf e2e/.data e2e/.fsroot && PORT=${PORT} KEAP_DATA_DIR=e2e/.data KEAP_FS_ROOTS=e2e=e2e/.fsroot KEAP_FS_SYNC_INTERVAL_S=0 KEAP_AGENT_TOKEN_RO=e2e-ro node dist-server/index.js`,
     port: PORT,
     reuseExistingServer: false,
     timeout: 60_000,

@@ -39,3 +39,4 @@ e2e/.data
 test-results/
 playwright-report/
 e2e/screenshots/
+e2e/.fsroot
