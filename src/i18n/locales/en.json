@@ -393,7 +393,10 @@
       "descProposed": "Description proposed — awaits the moderator.",
       "children": "Sub-nodes ({{count}})",
       "anchored": "Anchored knowledge ({{count}})",
-      "brief": "Brief"
+      "brief": "Brief",
+      "folderBadge": "Folder",
+      "folderContents": "Contents ({{count}})",
+      "folderEmpty": "No synced files here yet — mapped folders and the user tree fill this in as fs-sync runs."
     },
     "core": {
       "toggle": "Core",

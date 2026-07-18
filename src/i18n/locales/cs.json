@@ -393,7 +393,10 @@
       "descProposed": "Popis navržen — čeká na moderátora.",
       "children": "Poduzly ({{count}})",
       "anchored": "Ukotvené znalosti ({{count}})",
-      "brief": "Článek"
+      "brief": "Článek",
+      "folderBadge": "Složka",
+      "folderContents": "Obsah ({{count}})",
+      "folderEmpty": "Zatím žádné synchronizované soubory — mapované složky a uživatelský strom se sem doplní, jakmile fs-sync poběží."
     },
     "core": {
       "toggle": "Jádro",

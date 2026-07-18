@@ -21,6 +21,8 @@ import {
   GitBranchPlus,
   ChevronRight,
   Loader2,
+  Folder,
+  FileText,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -29,6 +31,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { apiFetch } from '@/services/api/client';
 import type { GraphNode, GraphObject } from '@/hooks/useExplorerData';
+
+/** Direct child of a core folder hub — subfolder or contained object. */
+export interface FolderChild {
+  id: string;
+  name: string;
+  folder?: boolean;
+  count?: number;
+  dataType?: string;
+}
 
 export interface DrawerTarget {
   id: string;
@@ -40,6 +51,9 @@ export interface DrawerTarget {
   distance?: number;
   isStar: boolean;
   nodeId?: string;
+  /** Core folder hubs only: fs path ('' = root) + direct contents. */
+  path?: string;
+  children?: FolderChild[];
 }
 
 interface Props {
@@ -228,11 +242,17 @@ export default function DetailPanel({ target, nodeById, objects, onClose, onFocu
             {target.isStar ? '☆ ' : ''}
             {target.name}
           </h2>
+          {target.path !== undefined && target.path !== '' && (
+            <p className="mt-0.5 truncate font-mono text-[11px] text-muted-foreground">{target.path}</p>
+          )}
           <div className="mt-1 flex flex-wrap items-center gap-1">
             {zone && (
               <Badge variant={zoneVariant[zone]} className="text-[10px]">
                 {t(`explore.detail.zone.${zone}`)}
               </Badge>
+            )}
+            {target.kind === 'folder' && (
+              <Badge variant="outline" className="text-[10px]">{t('explore.detail.folderBadge')}</Badge>
             )}
             {node?.ext && <Badge variant="outline" className="text-[10px]">{t('explore.detail.grown')}</Badge>}
             {target.dataType && <Badge variant="secondary" className="text-[10px]">{target.dataType}</Badge>}
@@ -251,8 +271,45 @@ export default function DetailPanel({ target, nodeById, objects, onClose, onFocu
           {description ? (
             <p className="text-xs leading-relaxed text-muted-foreground">{description}</p>
           ) : (
-            !target.isStar && <p className="text-xs italic text-muted-foreground/70">{t('explore.detail.noDescription')}</p>
+            !target.isStar &&
+            target.kind !== 'folder' && (
+              <p className="text-xs italic text-muted-foreground/70">{t('explore.detail.noDescription')}</p>
+            )
           )}
+
+          {target.kind === 'folder' &&
+            (target.children && target.children.length > 0 ? (
+              <div>
+                <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  {t('explore.detail.folderContents', { count: target.children.length })}
+                </p>
+                <ul className="space-y-0.5">
+                  {target.children.map((c) => (
+                    <li key={c.id}>
+                      <button
+                        className="flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-left text-xs hover:bg-muted/60"
+                        onClick={() => onSelect(c.id)}
+                      >
+                        {c.folder ? (
+                          <Folder className="h-3 w-3 shrink-0 text-muted-foreground" />
+                        ) : (
+                          <FileText className="h-3 w-3 shrink-0 text-muted-foreground" />
+                        )}
+                        <span className="truncate">{c.name}</span>
+                        {c.folder && (c.count ?? 0) > 0 && (
+                          <span className="ml-auto shrink-0 tabular-nums text-[10px] text-muted-foreground">{c.count}</span>
+                        )}
+                        {!c.folder && c.dataType && (
+                          <Badge variant="outline" className="ml-auto shrink-0 px-1 text-[9px]">{c.dataType}</Badge>
+                        )}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
+              <p className="text-xs italic text-muted-foreground/70">{t('explore.detail.folderEmpty')}</p>
+            ))}
 
           {node && brief && (
             <div>

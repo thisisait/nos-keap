@@ -61,6 +61,8 @@ export interface GraphObject {
 export interface GraphMapping {
   id: string;
   label: string;
+  /** Admin-entered popisek — surfaces in the hub's folder panel. */
+  description?: string;
   /** true = nested under the central Files core; false = standalone constellation. */
   nested: boolean;
   /** Primary taxonomy anchor (hub ray target); dangling ids are filtered server-side. */

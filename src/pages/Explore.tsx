@@ -40,7 +40,7 @@ import {
   type GraphObject,
 } from '@/hooks/useExplorerData';
 import { orbitalPosition } from '@/components/explorer/orbital';
-import { computeCore, type CoreOrder } from '@/components/explorer/core';
+import { computeCore, type CoreLayout, type CoreOrder } from '@/components/explorer/core';
 
 export default function Explore() {
   const { t, i18n } = useTranslation();
@@ -120,8 +120,13 @@ export default function Explore() {
   }, [neighbors.data, typeFilter]);
 
   // Merge the static constellation with the semantic star field.
-  const { canvasNodes, canvasLinks } = useMemo(() => {
-    if (!graph) return { canvasNodes: [] as CanvasNode[], canvasLinks: [] as CanvasLink[] };
+  const { canvasNodes, canvasLinks, coreLayout } = useMemo(() => {
+    if (!graph)
+      return {
+        canvasNodes: [] as CanvasNode[],
+        canvasLinks: [] as CanvasLink[],
+        coreLayout: null as CoreLayout | null,
+      };
     // Taxonomy stars arrive PINNED to their baked coordinates (fx/fy/fz —
     // the spatial-memory contract); the force engine only places stars/dust.
     // Knowledge scope = subtree size (how much knowledge sits under a node) —
@@ -170,6 +175,7 @@ export default function Explore() {
       fy: p[1],
       fz: p[2],
     });
+    let coreLayout: CoreLayout | null = null;
     if (core.on) {
       // Files core: EVERY object (anchored or not) relocates to the 3D core at
       // the ring center; taxonomy stars stay pinned, rays tether objects to
@@ -222,6 +228,7 @@ export default function Explore() {
       for (const r of layout.mrays) {
         if (nodeById.has(r.target)) links.push({ ...r, mray: true });
       }
+      coreLayout = layout;
     } else {
       // Orbital layer: anchored knowledge objects orbit their taxonomy star as
       // TYPED bodies (planet/moon/asteroid/comet/station by data type). Positions
@@ -293,7 +300,7 @@ export default function Explore() {
         }
       }
     }
-    return { canvasNodes: nodes, canvasLinks: links };
+    return { canvasNodes: nodes, canvasLinks: links, coreLayout };
   }, [graph, focusId, starItems, hueByCategory, nodeById, showRelations, core, t]);
 
   const availableTypes = useMemo(
@@ -303,8 +310,34 @@ export default function Explore() {
 
   const openTarget = (id: string) => {
     if (id.startsWith('dir:')) {
-      // Core folder hub: just warp the camera to it — folders are structure,
-      // not knowledge; their contents are the clickable bodies around them.
+      // Core folder hub: warp the camera AND open a light folder panel —
+      // name, mapping popisek, direct contents. Without it a click on the
+      // (possibly empty) root hub reads as a dead click.
+      const f = coreLayout?.folders.find((x) => x.id === id);
+      if (f) {
+        const folderById = new Map(coreLayout!.folders.map((x) => [x.id, x]));
+        const children = coreLayout!.fsLinks
+          .filter((l) => l.source === id)
+          .map((l) => {
+            if (l.target.startsWith('obj:')) {
+              const o = (graph?.objects ?? []).find((x) => `obj:${x.id}` === l.target);
+              return o ? { id: l.target, name: o.title, dataType: o.type } : null;
+            }
+            const cf = folderById.get(l.target);
+            return cf ? { id: cf.id, name: cf.name, folder: true, count: cf.count } : null;
+          })
+          .filter((c): c is NonNullable<typeof c> => c !== null);
+        const mapping = f.mapping ? mappingById.get(f.mapping) : undefined;
+        setDrawer({
+          id,
+          name: f.depth === 0 && !f.mapping ? t('explore.core.root') : f.name,
+          kind: 'folder',
+          description: mapping?.description,
+          isStar: false,
+          path: f.path.startsWith('@') ? undefined : f.path,
+          children,
+        });
+      }
       setFocusId(null);
       requestAnimationFrame(() => setFocusId(id));
       return;

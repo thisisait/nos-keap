@@ -220,6 +220,7 @@ export function registerGraphRoutes(app: Express) {
       .map((m) => ({
         id: m.id,
         label: m.label,
+        description: m.description || undefined,
         nested: m.nestUnderFiles,
         taxonomyRoot: m.taxonomyRoot && getNode(m.taxonomyRoot) ? m.taxonomyRoot : undefined,
         taxonomyLinks: m.taxonomyLinks.filter((l) => getNode(l)),
