@@ -84,6 +84,12 @@ export interface GraphMapping {
   count: number;
 }
 
+/** One object→object ref edge ([[object:<id>]] wiki link) — bare object ids. */
+export interface GraphObjectLink {
+  source: string;
+  target: string;
+}
+
 /** A typed cross-node relation (imported research graph overlay, e.g. ToE). */
 export interface GraphRelation {
   source: string;
@@ -97,6 +103,8 @@ export interface GraphPayload {
   links: GraphLink[];
   /** The user's knowledge objects anchored to taxonomy nodes — the nebula layer. */
   objects: GraphObject[];
+  /** Object→object ref edges (both endpoints visible, deduped, server-capped). */
+  objectLinks?: GraphObjectLink[];
   /** Typed concept-relation overlay (beyond parent-child) — rendered behind a toggle. */
   relations?: GraphRelation[];
   /** Mapped-folder hubs — labels + placement for the files core (admin-managed). */

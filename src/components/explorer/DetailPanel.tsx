@@ -30,7 +30,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { apiFetch } from '@/services/api/client';
-import type { GraphNode, GraphObject } from '@/hooks/useExplorerData';
+import type { GraphNode, GraphObject, GraphObjectLink } from '@/hooks/useExplorerData';
 import { fmtBytes, type RepoLang } from './repoVisuals';
 
 /** Direct child of a core folder hub — subfolder or contained object. */
@@ -65,6 +65,8 @@ interface Props {
   target: DrawerTarget | null;
   nodeById: Map<string, GraphNode>;
   objects: GraphObject[];
+  /** Object→object ref edges (bare ids) — the drawer's "linked objects" lists. */
+  objectLinks: GraphObjectLink[];
   onClose: () => void;
   onFocus: (nodeId: string) => void;
   onSelect: (id: string) => void;
@@ -150,7 +152,7 @@ function BriefBody({
   );
 }
 
-export default function DetailPanel({ target, nodeById, objects, onClose, onFocus, onSelect }: Props) {
+export default function DetailPanel({ target, nodeById, objects, objectLinks, onClose, onFocus, onSelect }: Props) {
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
   const [growOpen, setGrowOpen] = useState(false);
@@ -182,6 +184,29 @@ export default function DetailPanel({ target, nodeById, objects, onClose, onFocu
   const anchored = useMemo(
     () => (node ? objects.filter((o) => o.anchors.includes(node.id)) : []),
     [node, objects],
+  );
+  // Object drawer: [[object:<id>]] ref edges resolved to cards, both directions.
+  const bareObjId = target?.id.startsWith('obj:') ? target.id.slice(4) : null;
+  const objById = useMemo(() => new Map(objects.map((o) => [o.id, o])), [objects]);
+  const linkedOut = useMemo(
+    () =>
+      bareObjId
+        ? objectLinks
+            .filter((l) => l.source === bareObjId)
+            .map((l) => objById.get(l.target))
+            .filter((o): o is GraphObject => o !== undefined)
+        : [],
+    [bareObjId, objectLinks, objById],
+  );
+  const linkedIn = useMemo(
+    () =>
+      bareObjId
+        ? objectLinks
+            .filter((l) => l.target === bareObjId)
+            .map((l) => objById.get(l.source))
+            .filter((o): o is GraphObject => o !== undefined)
+        : [],
+    [bareObjId, objectLinks, objById],
   );
 
   const growMut = useMutation({
@@ -487,6 +512,36 @@ export default function DetailPanel({ target, nodeById, objects, onClose, onFocu
               </ul>
             </div>
           )}
+
+          {/* Object drawer: cards this one references / is referenced by
+              ([[object:<id>]] ref edges) — same list style as anchored. */}
+          {bareObjId &&
+            ([
+              [t('explore.detail.linkedOut', { count: linkedOut.length }), linkedOut],
+              [t('explore.detail.linkedIn', { count: linkedIn.length }), linkedIn],
+            ] as const).map(
+              ([label, list]) =>
+                list.length > 0 && (
+                  <div key={label}>
+                    <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                      {label}
+                    </p>
+                    <ul className="space-y-0.5">
+                      {list.map((o) => (
+                        <li key={o.id}>
+                          <button
+                            className="flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-left text-xs hover:bg-muted/60"
+                            onClick={() => onSelect(`obj:${o.id}`)}
+                          >
+                            <Badge variant="outline" className="shrink-0 px-1 text-[9px]">{o.type}</Badge>
+                            <span className="truncate">{o.title}</span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ),
+            )}
         </div>
       </ScrollArea>
     </div>

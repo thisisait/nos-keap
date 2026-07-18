@@ -86,9 +86,11 @@ nOS-side counterparts flagged **[nOS]**).
   pass by construction), visibility default `shared`, cfg-hash edit propagation, prune
   guards (capped/partial/empty walks never prune). Admin tab + FolderBrowser;
   `/api/fs/*` + `/agent/v1/fs/*` surfaces. **Option C**: `KEAP_FS_SHARED_UIDS` makes
-  reserved users-tree uids (nOS self-model `nos-docs`) tenant-shared. **Open**: object→
-  object links as drawn edges, per-mapping `embed:false` policy, mapping default
-  visibility once multi-user.
+  reserved users-tree uids (nOS self-model `nos-docs`) tenant-shared. **Open**:
+  per-mapping `embed:false` policy, mapping default visibility once multi-user.
+- **S2‴ — object→object link edges** *(shipped 2026-07-18)*: `[[object:<id>]]` refs ship
+  as `/api/graph` `objectLinks` (both-endpoints-visible, deduped, capped) and draw as
+  violet GL lines in Explore; object drawers list linked cards both directions.
 - **S3 — OKF bundle export/import** (zip of markdown+frontmatter; dedup by id+hash).
   Interop with Google tooling & openknowledge CLI; the future sharing unit (Phase S).
 - **S4 — RRF hybrid search**: FTS5(BM25) ⊕ vectors ⊕ one-hop taxonomy/link neighbors,

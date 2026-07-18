@@ -183,9 +183,8 @@ export function registerGraphRoutes(app: Express) {
     // visibility='shared', not owner-prefix — a manually shared card was
     // already readable by anyone via direct GET; the graph now lists what was
     // always readable. 'shared' means graph-listed tenant-wide.
-    const objects = db
-      .getVisibleObjects(req.user.id, req.user.isAdmin)
-      .map((o) => {
+    const visibleRows = db.getVisibleObjects(req.user.id, req.user.isAdmin);
+    const objects = visibleRows.map((o) => {
         // A card typed 'file' whose resource is `kiwix:…` is really an
         // encyclopedia — the resolved content type wins over the raw type.
         const contentType = o.resource ? resolveContentRef(o.resource)?.type : undefined;
@@ -210,6 +209,28 @@ export function registerGraphRoutes(app: Express) {
           mapping: typeof o.frontmatter?.mapping === 'string' ? o.frontmatter.mapping : undefined,
         };
       });
+    // Object→object refs ([[object:<id>]] wiki links) as drawn edges. Bare ids
+    // in the payload — the client adds its obj: prefix. Both-endpoints-visible
+    // is automatic: sources and the visible set derive from the same
+    // getVisibleObjects call, so a private card referenced by a shared one is
+    // silently dropped (graph-scope doctrine above).
+    const visibleIds = new Set(objects.map((o) => o.id));
+    const OBJ_LINK_CAP = 5000;
+    const seenObjLinks = new Set<string>();
+    const objectLinks: Array<{ source: string; target: string }> = [];
+    outer: for (const row of visibleRows) {
+      for (const r of (row.links ?? []) as ObjectRef[]) {
+        if (r.kind !== 'object' || r.ref === row.id || !visibleIds.has(r.ref)) continue;
+        const key = `${row.id}→${r.ref}`;
+        if (seenObjLinks.has(key)) continue;
+        if (objectLinks.length >= OBJ_LINK_CAP) {
+          console.warn(`[graph] objectLinks capped at ${OBJ_LINK_CAP}`);
+          break outer;
+        }
+        seenObjLinks.add(key);
+        objectLinks.push({ source: row.id, target: r.ref });
+      }
+    }
     // Mapped-folder hubs (fs_mappings) — label + placement metadata for the
     // files-core view. Admins get every row; non-admins only shared ones.
     // DISABLED mappings ship too (enabled:false): their retained objects
@@ -246,6 +267,7 @@ export function registerGraphRoutes(app: Express) {
       nodes,
       links,
       objects,
+      objectLinks,
       relations,
       fsMappings,
       fsDirs,

@@ -393,6 +393,8 @@
       "descProposed": "Popis navržen — čeká na moderátora.",
       "children": "Poduzly ({{count}})",
       "anchored": "Ukotvené znalosti ({{count}})",
+      "linkedOut": "Odkazuje na ({{count}})",
+      "linkedIn": "Odkazováno z ({{count}})",
       "brief": "Článek",
       "folderBadge": "Složka",
       "folderContents": "Obsah ({{count}})",

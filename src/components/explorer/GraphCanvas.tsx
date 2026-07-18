@@ -107,6 +107,8 @@ export interface CanvasLink {
   ray?: boolean;
   /** Mapping-hub tether: mapped-folder hub → its taxonomy root/links. */
   mray?: boolean;
+  /** Object→object ref edge ([[object:<id>]] wiki link between cards). */
+  olink?: boolean;
 }
 
 // Concept-relation edge palette (ToE research edges). Generic 'related-concept'
@@ -951,11 +953,13 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
               // Lines (width 0) ignore per-link alpha — the dimming is baked
               // into the rgb instead (teal ×0.4, slate ×0.45, base ×0.25).
               ? '#12554c' // core tether — teal, the objects' colour family
-              : l.fs
-                ? '#434953' // folder skeleton — quiet slate
-                : l.semantic
-                  ? 'rgba(251,191,36,0.55)'
-                  : '#1e2126'
+              : l.olink
+                ? '#433064' // object→object ref — violet (#a78bfa ×0.4)
+                : l.fs
+                  ? '#434953' // folder skeleton — quiet slate
+                  : l.semantic
+                    ? 'rgba(251,191,36,0.55)'
+                    : '#1e2126'
       }
       linkWidth={(l: any) =>
         // PERF: any non-zero width promotes the link to a TubeGeometry MESH

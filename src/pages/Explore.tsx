@@ -274,6 +274,20 @@ export default function Explore() {
         });
       }
     }
+    // Object→object ref edges ([[object:<id>]] wiki links) — violet GL lines
+    // between bodies actually present in the scene. The drawn-endpoint filter
+    // is load-bearing: the orbital branch renders only anchored objects, and a
+    // link to an undrawn endpoint would crash force-graph.
+    if (graph.objectLinks?.length) {
+      const drawnObj = new Set(
+        nodes.filter((n) => n.id.startsWith('obj:')).map((n) => n.id),
+      );
+      for (const l of graph.objectLinks) {
+        const s = `obj:${l.source}`;
+        const tg = `obj:${l.target}`;
+        if (drawnObj.has(s) && drawnObj.has(tg)) links.push({ source: s, target: tg, olink: true });
+      }
+    }
     // Concept-relation overlay (imported research graph, e.g. ToE) — typed
     // cross-node edges between taxonomy stars, gated by the toggle. Both
     // endpoints are pinned taxonomy nodes, so these are pure drawn edges.
@@ -603,6 +617,7 @@ export default function Explore() {
             target={drawer}
             nodeById={nodeById}
             objects={graph?.objects ?? []}
+            objectLinks={graph?.objectLinks ?? []}
             onClose={() => setDrawer(null)}
             onFocus={(id) => {
               setDrawer(null);

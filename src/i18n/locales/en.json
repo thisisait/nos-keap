@@ -393,6 +393,8 @@
       "descProposed": "Description proposed — awaits the moderator.",
       "children": "Sub-nodes ({{count}})",
       "anchored": "Anchored knowledge ({{count}})",
+      "linkedOut": "Links to ({{count}})",
+      "linkedIn": "Linked from ({{count}})",
       "brief": "Brief",
       "folderBadge": "Folder",
       "folderContents": "Contents ({{count}})",

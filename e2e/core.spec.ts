@@ -24,6 +24,15 @@ const SEED = [
     frontmatter: { source: 'fs', path: 'library/photos/photo.png' },
   },
   { id: 'e2e-core-loose', type: 'note', title: 'Loose card' },
+  {
+    id: 'e2e-core-linker',
+    type: 'note',
+    title: 'Linking card',
+    // Two refs to the same card must dedupe to ONE edge; the ghost ref points
+    // at a nonexistent object and must ship no edge at all.
+    body:
+      'See [[object:e2e-core-report]] and again [[object:e2e-core-report]], plus [[object:e2e-core-ghost]].',
+  },
 ];
 
 test.describe('files core', () => {
@@ -35,6 +44,7 @@ test.describe('files core', () => {
     const graph = (await (await request.get('/api/graph')).json()) as {
       data: {
         objects: Array<{ id: string; anchors: string[]; path?: string; owner?: string; mapping?: string }>;
+        objectLinks: Array<{ source: string; target: string }>;
       };
     };
     const byId = new Map(graph.data.objects.map((o) => [o.id, o]));
@@ -50,6 +60,15 @@ test.describe('files core', () => {
     // gain mapping provenance — fsm: mirrors are the only carriers.
     expect(byId.get('e2e-core-report')?.mapping).toBeUndefined();
     expect(byId.get('e2e-core-loose')?.mapping).toBeUndefined();
+    // Object→object refs ship as edges: deduped (two body refs = one edge)…
+    const edges = graph.data.objectLinks;
+    expect(
+      edges.filter((l) => l.source === 'e2e-core-linker' && l.target === 'e2e-core-report'),
+    ).toHaveLength(1);
+    // …and a ref to a nonexistent/non-visible object never ships an edge.
+    expect(
+      edges.some((l) => l.source === 'e2e-core-ghost' || l.target === 'e2e-core-ghost'),
+    ).toBe(false);
   });
 
   test('core toggle forms the 3D core and offers reorder modes', async ({ page }) => {
