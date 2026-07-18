@@ -68,7 +68,7 @@ test.describe('mapped folders', () => {
     fs.writeFileSync(path.join(FSROOT, 'other', 'note.txt'), 'not mapped\n');
   });
 
-  test('roots registry announces the e2e mount, no user-files root', async ({ request }) => {
+  test('roots registry announces the e2e mount + the user-files tree', async ({ request }) => {
     const r = (await (await request.get('/api/fs/roots')).json()) as {
       data: {
         roots: Array<{ key: string; path: string; exists: boolean }>;
@@ -78,8 +78,9 @@ test.describe('mapped folders', () => {
     expect(r.data.roots).toHaveLength(1);
     expect(r.data.roots[0].key).toBe('e2e');
     expect(r.data.roots[0].exists).toBe(true);
-    // KEAP_USER_FILES_DIR is unset — the per-user pipeline is inert here.
-    expect(r.data.userFiles.configured).toBe(false);
+    // The per-user tree is configured (shared-uids.spec.ts exercises it) but
+    // stays a SEPARATE pipeline — never announced as a mapping root above.
+    expect(r.data.userFiles.configured).toBe(true);
   });
 
   test('browse lists the level with counts; traversal + hidden paths are 400', async ({ request }) => {

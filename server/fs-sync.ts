@@ -61,6 +61,18 @@ const SYNC_DIRS = new Set(
     .map((s) => s.trim())
     .filter(Boolean),
 );
+/** Reserved uids whose mirrors are TENANT-SHARED (Option C for the nOS
+ *  self-model: a class-2 shared tree bind-mounted as uid 'nos-docs' should
+ *  render in every user's ring, not just its synthetic owner's). Objects of
+ *  these uids get visibility 'shared' — /api/graph's getVisibleObjects then
+ *  lists them for everyone. Default unset: every users-pass mirror stays
+ *  private and the pass is byte-identical to v1.7.0. */
+const SHARED_UIDS = new Set(
+  (process.env.KEAP_FS_SHARED_UIDS ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean),
+);
 
 /** object.type by extension — feeds assetDescriptor (asset-types.ts ALIAS). */
 const TYPE_BY_EXT: Record<string, string> = {
@@ -100,6 +112,7 @@ export const fsSyncStatus = () => ({
   // roots + per-mapping status for the admin panel and /agent/v1/fs/status.
   roots: listRoots(),
   mappings: mappingStatusBlock(),
+  sharedUids: [...SHARED_UIDS],
 });
 
 /** Per-mapping status summary. Hard caps (50 items, 60-char labels) keep the
@@ -250,7 +263,16 @@ export function syncUserFiles(): FsSyncResult {
     const id = `fs:${f.uid}:${crypto.createHash('sha1').update(f.relPath).digest('hex').slice(0, 16)}`;
     const prev = existing.get(id);
     existing.delete(id); // seen → not pruned
-    if (prev && prev.frontmatter?.size === f.size && prev.frontmatter?.mtime === f.mtime) {
+    // Visibility is part of the skip key: flipping KEAP_FS_SHARED_UIDS must
+    // propagate to already-mirrored files exactly once (mtime/size alone
+    // would skip them forever).
+    const visibility = SHARED_UIDS.has(f.uid) ? 'shared' : 'private';
+    if (
+      prev &&
+      prev.frontmatter?.size === f.size &&
+      prev.frontmatter?.mtime === f.mtime &&
+      (prev.visibility ?? 'private') === visibility
+    ) {
       result.unchanged++;
       continue;
     }
@@ -274,7 +296,7 @@ export function syncUserFiles(): FsSyncResult {
       frontmatter: { source: 'fs', path: f.relPath, size: f.size, mtime: f.mtime },
       body,
       links: [...links.values()],
-      visibility: 'private',
+      visibility,
     });
     result.upserted++;
     changed = true;
