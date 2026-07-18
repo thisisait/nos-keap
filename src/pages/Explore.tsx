@@ -90,6 +90,13 @@ export default function Explore() {
     [graph],
   );
 
+  // Mapped-folder hubs (fs_mappings) — labels, nesting and taxonomy anchors
+  // for the files core; disabled mappings ship too (their objects remain).
+  const mappingById = useMemo(
+    () => new Map((graph?.fsMappings ?? []).map((m) => [m.id, m])),
+    [graph],
+  );
+
   // Focus can land on a synthetic core node (`dir:…`) — the camera warps
   // there, but the semantic-neighbourhood query is taxonomy-only.
   const taxonomyFocus = focusId && nodeById.has(focusId) ? focusId : null;
@@ -167,14 +174,21 @@ export default function Explore() {
       // Files core: EVERY object (anchored or not) relocates to the 3D core at
       // the ring center; taxonomy stars stay pinned, rays tether objects to
       // their anchors across space. See core.ts for the reorder geometries.
+      const galaxyPosOf = (nodeId: string) => {
+        const g = nodeById.get(rootOf(nodeId));
+        return g && g.x !== undefined ? { id: g.id, x: g.x, y: g.y!, z: g.z! } : null;
+      };
       const layout = computeCore(graph.objects ?? [], core.order, {
         unfiledLabel: t('explore.core.unfiled'),
         galaxyOf: (o) => {
-          const anchor = o.anchors[0];
-          if (!anchor) return null;
-          const g = nodeById.get(rootOf(anchor));
-          return g && g.x !== undefined ? { id: g.id, x: g.x, y: g.y!, z: g.z! } : null;
+          // Mapped objects without body-extracted anchors cluster under their
+          // mapping's taxonomy root instead of ~unanchored (taxonomy order).
+          const anchor =
+            o.anchors[0] ?? (o.mapping ? mappingById.get(o.mapping)?.taxonomyRoot : undefined);
+          return anchor ? galaxyPosOf(anchor) : null;
         },
+        mappings: graph.fsMappings ?? [],
+        galaxyPosOf,
       });
       for (const o of graph.objects ?? []) {
         const p = layout.positions.get(`obj:${o.id}`);
@@ -185,7 +199,9 @@ export default function Explore() {
         if (!p) continue;
         nodes.push({
           id: f.id,
-          name: f.depth === 0 ? t('explore.core.root') : f.name,
+          // Only the CENTRAL core root is "Root" — standalone mapping hubs are
+          // depth 0 too, but carry their mapping label.
+          name: f.depth === 0 && !f.mapping ? t('explore.core.root') : f.name,
           kind: 'folder',
           level: 98,
           childCount: f.count,
@@ -200,6 +216,11 @@ export default function Explore() {
       for (const l of layout.fsLinks) links.push({ ...l, fs: true });
       for (const r of layout.rays) {
         if (nodeById.has(r.target)) links.push({ ...r, ray: true });
+      }
+      // Mapping-hub tethers (hub → taxonomy root/links); the nodeById filter
+      // drops dangling anchors (deleted ext taxonomy nodes) silently.
+      for (const r of layout.mrays) {
+        if (nodeById.has(r.target)) links.push({ ...r, mray: true });
       }
     } else {
       // Orbital layer: anchored knowledge objects orbit their taxonomy star as

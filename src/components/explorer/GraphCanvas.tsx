@@ -82,6 +82,8 @@ export interface CanvasLink {
   fs?: boolean;
   /** Files-core tether: object → its taxonomy anchor, across space. */
   ray?: boolean;
+  /** Mapping-hub tether: mapped-folder hub → its taxonomy root/links. */
+  mray?: boolean;
 }
 
 // Concept-relation edge palette (ToE research edges). Generic 'related-concept'
@@ -708,13 +710,15 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       linkColor={(l: any) =>
         l.relation
           ? REL_COLOR[l.relType] ?? 'rgba(148,163,184,0.5)'
-          : l.ray
-            ? 'rgba(45,212,191,0.4)' // core tether — teal, the objects' colour family
-            : l.fs
-              ? 'rgba(148,163,184,0.45)' // folder skeleton — quiet slate
-              : l.semantic
-                ? 'rgba(251,191,36,0.55)'
-                : 'rgba(120,130,150,0.25)'
+          : l.mray
+            ? 'rgba(45,212,191,0.6)' // mapping-hub tether — the loudest teal
+            : l.ray
+              ? 'rgba(45,212,191,0.4)' // core tether — teal, the objects' colour family
+              : l.fs
+                ? 'rgba(148,163,184,0.45)' // folder skeleton — quiet slate
+                : l.semantic
+                  ? 'rgba(251,191,36,0.55)'
+                  : 'rgba(120,130,150,0.25)'
       }
       linkWidth={(l: any) =>
         l.relation
@@ -725,13 +729,15 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
               : l.explored === 'well'
                 ? 0.6
                 : 0.8
-          : l.ray
-            ? 0.7
-            : l.fs
-              ? 0.5
-              : l.semantic
-                ? 1.2
-                : 0.4
+          : l.mray
+            ? 1.4
+            : l.ray
+              ? 0.7
+              : l.fs
+                ? 0.5
+                : l.semantic
+                  ? 1.2
+                  : 0.4
       }
       onNodeClick={handleClick}
       backgroundColor="rgba(0,0,0,0)"
