@@ -37,6 +37,18 @@ export function warpMs(ms: number): number {
   return REDUCED_MOTION ? 0 : ms;
 }
 
+/**
+ * Near-hop guard: clicking a node the user is ALREADY looking at from close
+ * up must not yank the camera into the canonical (+z axis) frame — that
+ * re-center loses the place they were inspecting. Skip all camera motion
+ * when the new focus sits within NEAR_HOP_TARGET of the current orbit
+ * target AND the camera itself is within NEAR_HOP_CAMERA of the node
+ * (i.e. the node is legible in the current close-up). Far jumps — search,
+ * cross-galaxy clicks, zoomed-out picks — still warp.
+ */
+const NEAR_HOP_TARGET = 300;
+const NEAR_HOP_CAMERA = 750;
+
 export interface CanvasNode {
   id: string;
   name: string;
@@ -549,6 +561,18 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       const ref = fgRef.current;
       const node = graphData.nodes.find((n: any) => n.id === focusId) as any;
       if (!ref || !node || node.x === undefined) return;
+      const ctrl = (typeof ref.controls === 'function' ? ref.controls() : null) as {
+        target?: { x: number; y: number; z: number };
+      } | null;
+      const cam = (typeof ref.camera === 'function' ? ref.camera() : null) as {
+        position?: { x: number; y: number; z: number };
+      } | null;
+      if (ctrl?.target && cam?.position) {
+        const nz = node.z ?? 0;
+        const dTarget = Math.hypot(node.x - ctrl.target.x, node.y - ctrl.target.y, nz - ctrl.target.z);
+        const dCamera = Math.hypot(node.x - cam.position.x, node.y - cam.position.y, nz - cam.position.z);
+        if (dTarget < NEAR_HOP_TARGET && dCamera < NEAR_HOP_CAMERA) return;
+      }
       ref.cameraPosition({ x: node.x, y: node.y, z: (node.z ?? 0) + 260 }, node, warpMs(1100));
     }, 400);
     return () => clearTimeout(t);
