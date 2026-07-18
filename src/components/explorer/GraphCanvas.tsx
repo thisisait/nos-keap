@@ -474,6 +474,13 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
         cam.far = 40000;
         cam.updateProjectionMatrix();
 
+        // PERF: full Retina DPR (2–3×) quadruples the fragment load — and the
+        // bloom composer multiplies it again. 1.5 is visually indistinguishable
+        // on this dense additive scene and roughly halves the GPU bill.
+        const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+        ref.renderer()?.setPixelRatio(dpr);
+        ref.postProcessingComposer()?.setPixelRatio?.(dpr);
+
         const N = 1600;
         const positions = new Float32Array(N * 3);
         for (let i = 0; i < N; i++) {
@@ -500,8 +507,15 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
         // Subtle bloom only — a faint core glow on the brightest stars, not a
         // scene-wide neon wash (scientific, not sci-fi). High threshold so most
         // pixels (and text labels) stay crisp; low strength/radius so the halo
-        // is tight. (strength, radius, threshold)
-        const bloom = new UnrealBloomPass(new THREE.Vector2(width, height), 0.22, 0.18, 0.75);
+        // is tight. (strength, radius, threshold) PERF: the blur mip chain runs
+        // at HALF resolution — for a glow this soft the difference is invisible,
+        // the ~13 fullscreen blur passes get 4× cheaper.
+        const bloom = new UnrealBloomPass(
+          new THREE.Vector2(Math.round(width / 2), Math.round(height / 2)),
+          0.22,
+          0.18,
+          0.75,
+        );
         ref.postProcessingComposer().addPass(bloom);
 
         return; // cleanup handled below via closure capture
@@ -527,8 +541,27 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
         modelRef.current = model;
         scene.add(model.group);
 
-        // Start the ship where the camera is, facing the same way.
-        reset(cam.position, cam.quaternion);
+        // Start the ship where the camera is, facing the same way — UNLESS the
+        // camera sits inside the galaxy ring (initial frame, files-core
+        // close-up): a pilot spawned in the empty ring center sees nothing.
+        // Those starts relocate to a hangar vantage outside the ring, nose
+        // toward the center, the whole sky ahead.
+        const camDist = Math.hypot(cam.position.x, cam.position.y, cam.position.z);
+        if (camDist < 1900) {
+          // Hangar vantage: the galaxy ring lives in the XY plane (r=1400).
+          // Park outside the rim, slightly above the plane, nose at the
+          // nearest arc — galaxies ~800u ahead fill the canopy while the rest
+          // of the ring curves away to both sides. (The ring CENTER is empty
+          // space — aiming there, or spawning inside it, shows a blank sky.)
+          const pos = new THREE.Vector3(0, -2050, 420);
+          const target = new THREE.Vector3(0, -1350, 0);
+          // Ship forward is LOCAL +Z (thrust convention) — Matrix4.lookAt is
+          // camera-convention (-z view), so eye/target swap to point +z there.
+          const look = new THREE.Matrix4().lookAt(target, pos, new THREE.Vector3(0, 1, 0));
+          reset(pos, new THREE.Quaternion().setFromRotationMatrix(look));
+        } else {
+          reset(cam.position, cam.quaternion);
+        }
 
         // Disable the graph's camera controls so we own the camera.
         if (typeof ref.enableNavigationControls === 'function') {
@@ -848,14 +881,20 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
           : l.mray
             ? 'rgba(45,212,191,0.6)' // mapping-hub tether — the loudest teal
             : l.ray
-              ? 'rgba(45,212,191,0.4)' // core tether — teal, the objects' colour family
+              // Lines (width 0) ignore per-link alpha — the dimming is baked
+              // into the rgb instead (teal ×0.4, slate ×0.45, base ×0.25).
+              ? '#12554c' // core tether — teal, the objects' colour family
               : l.fs
-                ? 'rgba(148,163,184,0.45)' // folder skeleton — quiet slate
+                ? '#434953' // folder skeleton — quiet slate
                 : l.semantic
                   ? 'rgba(251,191,36,0.55)'
-                  : 'rgba(120,130,150,0.25)'
+                  : '#1e2126'
       }
       linkWidth={(l: any) =>
+        // PERF: any non-zero width promotes the link to a TubeGeometry MESH
+        // (one draw call each); width 0 renders a GL line. Bulk links (tree
+        // skeleton, fs edges, per-object rays — thousands at scale) MUST stay
+        // lines; only the sparse overlays may afford tubes.
         l.relation
           ? l.explored === 'barely'
             ? 1.8 // research frontier — brightest/thickest
@@ -865,14 +904,10 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
                 ? 0.6
                 : 0.8
           : l.mray
-            ? 1.4
-            : l.ray
-              ? 0.7
-              : l.fs
-                ? 0.5
-                : l.semantic
-                  ? 1.2
-                  : 0.4
+            ? 1.4 // mapping-hub tethers — a handful per mapping
+            : l.semantic
+              ? 1.2 // focus star field — dozens at most
+              : 0
       }
       onNodeClick={handleClick}
       backgroundColor="rgba(0,0,0,0)"
@@ -880,6 +915,12 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       height={height}
       linkOpacity={0.4}
       nodeOpacity={0.92}
+      // PERF: the d3 tick (charge + collide over every node) halves the frame
+      // rate while it runs, and EVERY graphData change reheats it. Settle
+      // faster and stop sooner — pinned stars don't need the sim at all, only
+      // the semantic dust does.
+      cooldownTime={6000}
+      d3AlphaDecay={0.04}
       showNavInfo={false}
       enablePointerInteraction={mode !== 'ship'}
       enableNodeDrag={mode !== 'ship'}
