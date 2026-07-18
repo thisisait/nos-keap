@@ -24,8 +24,9 @@ jobs:
         with:
           node-version: '22'
       - run: npm ci
-      # Lint is NOT a gate yet — the repo carries standing debt (121 errors,
-      # mostly explicit-any); gate it once the debt is paid down.
+      # Lint gates since the 2026-07-19 burndown: 0 errors, warnings frozen at
+      # the post-burndown count — new warnings fail the build too.
+      - run: npx eslint . --max-warnings 31
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
