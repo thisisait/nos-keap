@@ -31,6 +31,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { apiFetch } from '@/services/api/client';
 import type { GraphNode, GraphObject } from '@/hooks/useExplorerData';
+import { fmtBytes, type RepoLang } from './repoVisuals';
 
 /** Direct child of a core folder hub — subfolder or contained object. */
 export interface FolderChild {
@@ -54,6 +55,10 @@ export interface DrawerTarget {
   /** Core folder hubs only: fs path ('' = root) + direct contents. */
   path?: string;
   children?: FolderChild[];
+  /** Repo folder hubs: subtree size + primary-language mix. */
+  repo?: boolean;
+  bytes?: number;
+  langs?: RepoLang[];
 }
 
 interface Props {
@@ -254,6 +259,10 @@ export default function DetailPanel({ target, nodeById, objects, onClose, onFocu
             {target.kind === 'folder' && (
               <Badge variant="outline" className="text-[10px]">{t('explore.detail.folderBadge')}</Badge>
             )}
+            {target.repo && <Badge className="text-[10px]">{t('explore.detail.repoBadge')}</Badge>}
+            {target.repo && target.bytes !== undefined && (
+              <span className="text-[11px] tabular-nums text-muted-foreground">{fmtBytes(target.bytes)}</span>
+            )}
             {node?.ext && <Badge variant="outline" className="text-[10px]">{t('explore.detail.grown')}</Badge>}
             {target.dataType && <Badge variant="secondary" className="text-[10px]">{target.dataType}</Badge>}
             {target.distance !== undefined && (
@@ -275,6 +284,22 @@ export default function DetailPanel({ target, nodeById, objects, onClose, onFocu
             target.kind !== 'folder' && (
               <p className="text-xs italic text-muted-foreground/70">{t('explore.detail.noDescription')}</p>
             )
+          )}
+
+          {target.repo && target.langs && target.langs.length > 0 && (
+            <div>
+              <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                {t('explore.detail.repoLangs')}
+              </p>
+              <div className="mb-1 flex h-1.5 w-full overflow-hidden rounded-full bg-muted/40">
+                {target.langs.map((l) => (
+                  <div key={l.lang} style={{ width: `${l.pct * 100}%`, backgroundColor: l.color }} />
+                ))}
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                {target.langs.map((l) => `${l.lang} ${(l.pct * 100).toFixed(0)} %`).join(' · ')}
+              </p>
+            </div>
           )}
 
           {target.kind === 'folder' &&

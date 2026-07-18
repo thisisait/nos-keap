@@ -58,6 +58,16 @@ export interface GraphObject {
 }
 
 /** One admin-managed mapped folder (fs_mappings) — hub label + placement. */
+/** Repo-flagged directory aggregate (fs walks) — textures + sizes repo hubs. */
+export interface GraphDirStat {
+  /** Folder path in the client's core-tree namespace (`@<mapId>/…` for mappings). */
+  path: string;
+  bytes: number;
+  repo: boolean;
+  /** Extension byte buckets, largest first. */
+  exts: Array<[string, number]>;
+}
+
 export interface GraphMapping {
   id: string;
   label: string;
@@ -91,6 +101,7 @@ export interface GraphPayload {
   relations?: GraphRelation[];
   /** Mapped-folder hubs — labels + placement for the files core (admin-managed). */
   fsMappings?: GraphMapping[];
+  fsDirs?: GraphDirStat[];
   meta: {
     vectors: boolean;
     embeddings: { total: number; byKind: Record<string, number>; model: string | null };

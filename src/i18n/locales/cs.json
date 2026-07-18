@@ -396,7 +396,9 @@
       "brief": "Článek",
       "folderBadge": "Složka",
       "folderContents": "Obsah ({{count}})",
-      "folderEmpty": "Zatím žádné synchronizované soubory — mapované složky a uživatelský strom se sem doplní, jakmile fs-sync poběží."
+      "folderEmpty": "Zatím žádné synchronizované soubory — mapované složky a uživatelský strom se sem doplní, jakmile fs-sync poběží.",
+      "repoBadge": "Repo",
+      "repoLangs": "Jazyky"
     },
     "core": {
       "toggle": "Jádro",

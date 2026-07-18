@@ -30,6 +30,12 @@ test.describe('shared uids (Option C)', () => {
       'nOS platform overview — see [[04]] for computing.\n',
     );
     writeFileSync(path.join(root, 'alice', 'documents', 'diary.md'), 'private notes\n');
+    // A repo inside alice's tree — `.git` presence flags it in fsDirs; the
+    // marker itself is a hidden entry, so it must never mirror as an object.
+    mkdirSync(path.join(root, 'alice', 'documents', 'proj', '.git'), { recursive: true });
+    writeFileSync(path.join(root, 'alice', 'documents', 'proj', '.git', 'HEAD'), 'ref: refs/heads/main\n');
+    writeFileSync(path.join(root, 'alice', 'documents', 'proj', 'main.ts'), 'export const answer = 42;\n');
+    writeFileSync(path.join(root, 'alice', 'documents', 'proj', 'tool.py'), 'print("hi")\n');
   });
 
   test('sync mirrors the tree; shared uid objects are tenant-shared', async ({ request }) => {
@@ -68,5 +74,25 @@ test.describe('shared uids (Option C)', () => {
       await request.get('/agent/v1/fs/status', { headers: { Authorization: 'Bearer e2e-ro' } })
     ).json()).data;
     expect(status.sharedUids).toEqual(['nos-docs']);
+  });
+
+  test('fsDirs flags repos for the owner/admin, never leaks private trees', async ({ request }) => {
+    type DirStat = { path: string; bytes: number; repo: boolean; exts: Array<[string, number]> };
+    // Admin: alice's repo dir ships with byte totals + extension buckets.
+    const admin = (await (await request.get('/api/graph')).json()) as { data: { fsDirs: DirStat[] } };
+    const proj = admin.data.fsDirs.find((d) => d.path === 'documents/proj');
+    expect(proj?.repo).toBe(true);
+    expect(proj!.bytes).toBeGreaterThan(0);
+    expect(proj!.exts.map(([e]) => e)).toEqual(expect.arrayContaining(['ts', 'py']));
+    // The `.git` marker never mirrors as an object.
+    const graph = (await (await request.get('/api/graph')).json()) as {
+      data: { objects: Array<{ path?: string }> };
+    };
+    expect(graph.data.objects.some((o) => o.path?.includes('.git'))).toBe(false);
+    // Non-admin: alice's private repo dir must not leak through stats.
+    const bob = (await (
+      await request.get('/api/graph', { headers: BOB })
+    ).json()) as { data: { fsDirs: DirStat[] } };
+    expect(bob.data.fsDirs.some((d) => d.path === 'documents/proj')).toBe(false);
   });
 });

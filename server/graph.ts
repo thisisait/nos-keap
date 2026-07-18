@@ -19,6 +19,7 @@ import { allNodes, getNode, getAncestors } from './taxonomy';
 import { resolveContentRef, inferCaptureType } from './content-links';
 import { assetDescriptor } from './asset-types';
 import { liveEmbedAvailable } from './embeddings';
+import { getFsDirStats } from './fs-sync';
 import { anchorNodeIds, type ObjectRef } from './objects';
 import { hybridSearch } from './search';
 
@@ -236,12 +237,18 @@ export function registerGraphRoutes(app: Express) {
       .listConceptRelations(typedOnly)
       .filter((r) => getNode(r.from) && getNode(r.to))
       .map((r) => ({ source: r.from, target: r.to, type: r.type, explored: r.explored }));
+    // Repo-flagged directory aggregates (fs walks) — the client textures +
+    // sizes repo spheres from these. Scoped like objects: own + shared uids
+    // for non-admins, everything for admins, mapping namespaces by the
+    // VISIBLE mapping set above.
+    const fsDirs = getFsDirStats(req.user.id, req.user.isAdmin, new Set(fsMappings.map((m) => m.id)));
     ok(res, {
       nodes,
       links,
       objects,
       relations,
       fsMappings,
+      fsDirs,
       meta: {
         vectors: db.vectorSearchAvailable(),
         embeddings: db.embeddingStats(),

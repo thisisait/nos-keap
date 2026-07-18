@@ -155,13 +155,102 @@ interface UserFoundFile extends FoundFile {
   uid: string;
 }
 
+// ── Per-directory aggregates for the explore renderers ──────────────────────
+// Collected DURING the walks — purely observational, the mirror behavior
+// (ids, skips, prune) is untouched: direct file bytes + extension byte
+// buckets per directory, and a repo flag when the dir holds a `.git` entry
+// (dir or worktree gitfile — both mean "this folder is a repository").
+// Rolled up to subtree totals after each pass; /api/graph ships only the
+// repo-flagged dirs so the client can texture + size repo spheres.
+
+interface DirAgg {
+  bytes: number;
+  repo?: boolean;
+  ext: Map<string, number>;
+}
+
+/** uid → (dir relPath → subtree agg); rebuilt by every users pass. */
+let userDirStats = new Map<string, Map<string, DirAgg>>();
+/** mapping id → (dir relPath → subtree agg); rebuilt per mapping sync. */
+const mappingDirStats = new Map<string, Map<string, DirAgg>>();
+
+function dirAggAt(stats: Map<string, DirAgg>, rel: string): DirAgg {
+  let s = stats.get(rel);
+  if (!s) {
+    s = { bytes: 0, ext: new Map() };
+    stats.set(rel, s);
+  }
+  return s;
+}
+
+/** Roll direct per-dir aggregates up to subtree totals ('' = the walk root). */
+function rollupDirStats(direct: Map<string, DirAgg>): Map<string, DirAgg> {
+  const total = new Map<string, DirAgg>();
+  for (const [rel, s] of direct) {
+    let key = rel;
+    for (;;) {
+      const t = dirAggAt(total, key);
+      t.bytes += s.bytes;
+      for (const [e, b] of s.ext) t.ext.set(e, (t.ext.get(e) ?? 0) + b);
+      if (key === '') break;
+      const i = key.lastIndexOf('/');
+      key = i === -1 ? '' : key.slice(0, i);
+    }
+    if (s.repo) dirAggAt(total, rel).repo = true;
+  }
+  return total;
+}
+
+export interface FsDirStat {
+  path: string;
+  bytes: number;
+  repo: true;
+  /** Extension byte buckets, largest first (client maps ext → language). */
+  exts: Array<[string, number]>;
+}
+
+/**
+ * Repo-flagged directories visible to this user: own users-tree dirs, shared
+ * uids' dirs (Option C), everything for admins — mirroring exactly which
+ * OBJECTS the graph ships, so no private tree structure leaks through stats.
+ * Mapping namespaces use the client's `@<mapId>/…` folder-path convention.
+ */
+export function getFsDirStats(userId: string, isAdmin: boolean, mappingIds: Set<string>): FsDirStat[] {
+  const merged = new Map<string, DirAgg>();
+  for (const [uid, stats] of userDirStats) {
+    if (!isAdmin && uid !== userId && !SHARED_UIDS.has(uid)) continue;
+    for (const [rel, s] of stats) {
+      const t = dirAggAt(merged, rel);
+      t.bytes += s.bytes;
+      if (s.repo) t.repo = true;
+      for (const [e, b] of s.ext) t.ext.set(e, (t.ext.get(e) ?? 0) + b);
+    }
+  }
+  const out: FsDirStat[] = [];
+  const push = (p: string, s: DirAgg) => {
+    if (!s.repo) return;
+    out.push({
+      path: p,
+      bytes: s.bytes,
+      repo: true,
+      exts: [...s.ext.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12),
+    });
+  };
+  for (const [rel, s] of merged) push(rel, s);
+  for (const [id, stats] of mappingDirStats) {
+    if (!mappingIds.has(id)) continue;
+    for (const [rel, s] of stats) push(rel ? `@${id}/${rel}` : `@${id}`, s);
+  }
+  return out;
+}
+
 /** Walk one subtree. Hidden entries and symlinks are skipped. Shared by the
  *  users pass and the mapping pass — identical rules for both. Returns false
  *  when ANY readdir failed (EACCES, a dropped sub-mount): the found-set is
  *  then TRUNCATED exactly like a capped one — every file under the unreadable
  *  subtree is missing — so callers must not prune against it. Cap-hits are
  *  not flagged here; callers detect those via out.length >= cap. */
-function walkDir(dir: string, rel: string, out: FoundFile[], cap: number): boolean {
+function walkDir(dir: string, rel: string, out: FoundFile[], cap: number, stats?: Map<string, DirAgg>): boolean {
   if (out.length >= cap) return true;
   let entries: string[];
   try {
@@ -169,6 +258,9 @@ function walkDir(dir: string, rel: string, out: FoundFile[], cap: number): boole
   } catch {
     return false; // unreadable dir — this subtree was NOT enumerated
   }
+  // `.git` itself is a hidden entry (skipped below) — but its PRESENCE marks
+  // this dir as a repository for the renderer stats.
+  if (stats && entries.includes('.git')) dirAggAt(stats, rel).repo = true;
   let complete = true;
   for (const e of entries) {
     if (e.startsWith('.')) continue;
@@ -178,8 +270,14 @@ function walkDir(dir: string, rel: string, out: FoundFile[], cap: number): boole
     if (st.isSymbolicLink()) continue; // realpath ∈ scope — never follow links
     const childRel = rel ? `${rel}/${e}` : e;
     if (st.isDirectory()) {
-      if (!walkDir(abs, childRel, out, cap)) complete = false;
+      if (!walkDir(abs, childRel, out, cap, stats)) complete = false;
     } else if (st.isFile()) {
+      if (stats) {
+        const s = dirAggAt(stats, rel);
+        s.bytes += st.size;
+        const ext = path.extname(e).slice(1).toLowerCase();
+        if (ext) s.ext.set(ext, (s.ext.get(ext) ?? 0) + st.size);
+      }
       out.push({ relPath: childRel, size: st.size, mtime: Math.floor(st.mtimeMs / 1000), absPath: abs });
       if (out.length >= cap) return complete;
     }
@@ -193,9 +291,9 @@ function walkDir(dir: string, rel: string, out: FoundFile[], cap: number): boole
  *  behaviorally frozen, and it has always pruned against a walk truncated by
  *  an unreadable subdir (same pre-existing gap as its capped-prune hazard —
  *  flagged for a future users-pass fix mirroring the mapping rule). */
-function walkUser(uid: string, dir: string, rel: string, out: UserFoundFile[]): void {
+function walkUser(uid: string, dir: string, rel: string, out: UserFoundFile[], stats?: Map<string, DirAgg>): void {
   const before = out.length;
-  walkDir(dir, rel, out, MAX_FILES);
+  walkDir(dir, rel, out, MAX_FILES, stats);
   for (let i = before; i < out.length; i++) out[i].uid = uid;
 }
 
@@ -233,20 +331,24 @@ export function syncUserFiles(): FsSyncResult {
   }
 
   const found: UserFoundFile[] = [];
+  const dirSink = new Map<string, Map<string, DirAgg>>();
   for (const uid of readdirSync(USER_FILES_DIR)) {
     if (uid.startsWith('.')) continue;
     const userDir = path.join(USER_FILES_DIR, uid);
     const st = lstatSync(userDir, { throwIfNoEntry: false });
     if (!st?.isDirectory()) continue;
     result.users.push(uid);
+    const uidSink = new Map<string, DirAgg>();
+    dirSink.set(uid, uidSink);
     // Only the knowledge classes sync — agents/ scratch stays out of the corpus.
     for (const top of readdirSync(userDir)) {
       if (!SYNC_DIRS.has(top)) continue;
       const topDir = path.join(userDir, top);
       const ts = lstatSync(topDir, { throwIfNoEntry: false });
-      if (ts?.isDirectory()) walkUser(uid, topDir, top, found);
+      if (ts?.isDirectory()) walkUser(uid, topDir, top, found, uidSink);
     }
   }
+  userDirStats = new Map([...dirSink].map(([uid, m]) => [uid, rollupDirStats(m)]));
   result.scanned = found.length;
   if (found.length >= MAX_FILES) result.skipped = -1; // sentinel: tree was capped
 
@@ -375,7 +477,9 @@ export function syncMapping(m: db.FsMappingRow): FsMappingSyncResult {
       return result;
     }
     const found: FoundFile[] = [];
-    const walkComplete = walkDir(resolved.abs, '', found, MAX_FILES);
+    const mapSink = new Map<string, DirAgg>();
+    const walkComplete = walkDir(resolved.abs, '', found, MAX_FILES, mapSink);
+    mappingDirStats.set(m.id, rollupDirStats(mapSink));
     result.scanned = found.length;
     // Capped walk = truncated found-set. Pruning against it would delete
     // objects for files the walk never reached, so prune is skipped entirely.

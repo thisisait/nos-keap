@@ -156,6 +156,12 @@ nOS-side counterparts flagged **[nOS]**).
   (clusters at their galaxy's ring angle scaled inward), **Topics** (TBD — needs
   object-vector clustering server-side; k-means over `kind='object'` embeddings +
   stable cluster→slot assignment, see Track K features pipeline as the template).
+  *2026-07-18 renderer pass*: repo folders (`.git` detected in the fs walks, shipped as
+  `fsDirs` aggregates) render as language-banded identicon spheres sized by subtree
+  bytes (linguist-style ext→language mix, name-seeded texture); core-view file leaves
+  are lang-coloured satellite cubes (names capped to ≤400-file fields); folder/repo
+  hub panel shows path, contents, language bar + size. Camera: near-hop guard + a
+  view-relative warp approach (no mirror flip past an orbited node).
 - **U3 — the ship**: first-person camera with inertial flight (pointer/WASD/gamepad),
   smooth warp between galaxies, HUD compass to search hits ("semantic hyperspace jump":
   search → course plotted to the star). Ship position, visited-star log and **spatial

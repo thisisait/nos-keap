@@ -41,6 +41,7 @@ import {
 } from '@/hooks/useExplorerData';
 import { orbitalPosition } from '@/components/explorer/orbital';
 import { computeCore, type CoreLayout, type CoreOrder } from '@/components/explorer/core';
+import { repoLangs } from '@/components/explorer/repoVisuals';
 
 export default function Explore() {
   const { t, i18n } = useTranslation();
@@ -94,6 +95,13 @@ export default function Explore() {
   // for the files core; disabled mappings ship too (their objects remain).
   const mappingById = useMemo(
     () => new Map((graph?.fsMappings ?? []).map((m) => [m.id, m])),
+    [graph],
+  );
+
+  // Repo-flagged dir aggregates keyed by core-tree folder path — repo hubs
+  // render as language spheres sized by these.
+  const dirStatByPath = useMemo(
+    () => new Map((graph?.fsDirs ?? []).map((d) => [d.path, d])),
     [graph],
   );
 
@@ -169,6 +177,8 @@ export default function Explore() {
       object: true,
       form: o.form,
       glyph: o.glyph,
+      // fs relPath — the core view renders file leaves as satellite cubes.
+      path: o.path,
       // Body colour encodes its DATA TYPE (asset hue), not the constellation.
       categoryHue: o.hue,
       fx: p[0],
@@ -203,6 +213,8 @@ export default function Explore() {
       for (const f of layout.folders) {
         const p = layout.positions.get(f.id);
         if (!p) continue;
+        // Repo dirs (server-side `.git` detection) upgrade to language spheres.
+        const ds = dirStatByPath.get(f.path);
         nodes.push({
           id: f.id,
           // Only the CENTRAL core root is "Root" — standalone mapping hubs are
@@ -213,6 +225,7 @@ export default function Explore() {
           childCount: f.count,
           hasNote: false,
           folder: true,
+          ...(ds?.repo ? { repo: true, bytes: ds.bytes, exts: ds.exts } : {}),
           categoryHue: 215,
           fx: p[0],
           fy: p[1],
@@ -328,6 +341,7 @@ export default function Explore() {
           })
           .filter((c): c is NonNullable<typeof c> => c !== null);
         const mapping = f.mapping ? mappingById.get(f.mapping) : undefined;
+        const ds = dirStatByPath.get(f.path);
         setDrawer({
           id,
           name: f.depth === 0 && !f.mapping ? t('explore.core.root') : f.name,
@@ -336,6 +350,7 @@ export default function Explore() {
           isStar: false,
           path: f.path.startsWith('@') ? undefined : f.path,
           children,
+          ...(ds?.repo ? { repo: true, bytes: ds.bytes, langs: repoLangs(ds.exts) } : {}),
         });
       }
       setFocusId(null);

@@ -396,7 +396,9 @@
       "brief": "Brief",
       "folderBadge": "Folder",
       "folderContents": "Contents ({{count}})",
-      "folderEmpty": "No synced files here yet — mapped folders and the user tree fill this in as fs-sync runs."
+      "folderEmpty": "No synced files here yet — mapped folders and the user tree fill this in as fs-sync runs.",
+      "repoBadge": "Repo",
+      "repoLangs": "Languages"
     },
     "core": {
       "toggle": "Core",
