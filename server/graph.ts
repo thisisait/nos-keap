@@ -34,11 +34,6 @@ function nodeLevel(id: string): number {
   return getAncestors(id).length;
 }
 
-/** dataType facet of a taxonomy node = the content TYPE behind its ref. */
-function nodeDataType(ref?: string): string | undefined {
-  return resolveContentRef(ref)?.type;
-}
-
 // ── Neighbor hit enrichment: join vector hits back to their source rows ──────
 
 interface EnrichedHit {

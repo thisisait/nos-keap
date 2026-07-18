@@ -16,6 +16,7 @@ import { useTheme } from '@/hooks/useTheme';
 import { todosApi } from '@/services/api/todos';
 import { completionApi } from '@/services/api/completion';
 import { metadataApi } from '@/services/api/metadata';
+import type { AppMetadata } from '@/types/database';
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ export default function Settings() {
   const { toast } = useToast();
   const { isInitialized, saveSetting, getAppMetadata } = useDatabase();
   const { isDark, setTheme } = useTheme();
-  const [appMetadata, setAppMetadata] = useState<any>(null);
+  const [appMetadata, setAppMetadata] = useState<AppMetadata | null>(null);
 
   useEffect(() => {
     if (!isInitialized) return;

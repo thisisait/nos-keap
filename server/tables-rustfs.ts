@@ -249,9 +249,11 @@ export const rustfsStore: TableStore = {
     if (q.sort) {
       const { column, dir } = q.sort;
       rows = rows.sort((a, b) => {
-        const av = a.values[column] as any;
-        const bv = b.values[column] as any;
-        const cmp = av === bv ? 0 : av === undefined || av === null || av < bv ? -1 : 1;
+        // Cells are JSON scalars for sortable columns; keep JS `<` semantics.
+        const av = a.values[column] as string | number | null | undefined;
+        const bv = b.values[column] as string | number | null | undefined;
+        const cmp =
+          av === bv ? 0 : av === undefined || av === null || av < (bv as string | number) ? -1 : 1;
         return dir === 'desc' ? -cmp : cmp;
       });
     }

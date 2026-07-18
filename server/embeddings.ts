@@ -113,6 +113,11 @@ export function liveEmbedAvailable(): boolean {
   return Boolean(OLLAMA_URL);
 }
 
+/** Ollama POST /api/embed response — only the field we read; runtime-guarded below. */
+interface OllamaEmbedResponse {
+  embeddings?: number[][];
+}
+
 /** Embed a free-text query via the operator-wired Ollama; null when unwired/failing. */
 export async function embedText(text: string): Promise<number[] | null> {
   if (!OLLAMA_URL) return null;
@@ -124,7 +129,7 @@ export async function embedText(text: string): Promise<number[] | null> {
       signal: AbortSignal.timeout(10_000),
     });
     if (!res.ok) return null;
-    const json: any = await res.json();
+    const json = (await res.json()) as OllamaEmbedResponse | null;
     const vec = json?.embeddings?.[0];
     return Array.isArray(vec) && vec.length === EMBED_DIM ? vec : null;
   } catch {

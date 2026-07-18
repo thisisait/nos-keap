@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Telescope, ArrowRight } from 'lucide-react';
 import { apiFetch } from '@/services/api/client';
+import { type GraphPayload } from '@/hooks/useExplorerData';
 
 interface ExploreMapTileProps {
   title?: string;
@@ -15,7 +16,7 @@ export const ExploreMapTile: React.FC<ExploreMapTileProps> = ({ title }) => {
   const { t } = useTranslation();
   const { data } = useQuery({
     queryKey: ['graph'],
-    queryFn: () => apiFetch<any>('/api/graph'),
+    queryFn: () => apiFetch<GraphPayload>('/api/graph'),
     staleTime: 5 * 60 * 1000,
   });
 

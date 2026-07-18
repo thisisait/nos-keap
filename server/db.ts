@@ -420,10 +420,9 @@ export function updateCourseProgress(
 // ── Completed items ───────────────────────────────────────────────────────────
 
 export function getCompletedItems(userId: string): string[] {
-  return getDb()
-    .prepare('SELECT id FROM completed_items WHERE user_id = ?')
-    .all(userId)
-    .map((r: any) => r.id);
+  return (
+    getDb().prepare('SELECT id FROM completed_items WHERE user_id = ?').all(userId) as Array<{ id: string }>
+  ).map((r) => r.id);
 }
 
 export function toggleCompletedItem(userId: string, itemId: string): void {
@@ -438,24 +437,40 @@ export function toggleCompletedItem(userId: string, itemId: string): void {
 
 // ── Curated taxonomy metadata (GLOBAL knowledge layer, admin-written) ─────────
 
+/** Curated note payload — arbitrary admin-authored JSON. `requiredData`
+ *  (a content ref) is the one key the server itself reads. */
+export interface CuratedNoteData {
+  requiredData?: string;
+  [key: string]: unknown;
+}
+
 export interface TaxonomyMetadata {
   id: string;
-  data: any;
+  data: CuratedNoteData;
   updatedAt: number;
+}
+
+/** Raw taxonomy_metadata row — snake_case DB columns before mapping. */
+interface CuratedNoteDbRow {
+  id: string;
+  data: string;
+  updated_at: number;
 }
 
 export function getTaxonomyMetadata(id?: string): TaxonomyMetadata[] | TaxonomyMetadata | null {
   const d = getDb();
   if (id) {
-    const row = d.prepare('SELECT * FROM taxonomy_metadata WHERE id = ?').get(id) as any;
+    const row = d.prepare('SELECT * FROM taxonomy_metadata WHERE id = ?').get(id) as
+      | CuratedNoteDbRow
+      | undefined;
     if (!row) return null;
     return { id: row.id, data: JSON.parse(row.data), updatedAt: row.updated_at };
   }
-  const rows = d.prepare('SELECT * FROM taxonomy_metadata').all() as any[];
+  const rows = d.prepare('SELECT * FROM taxonomy_metadata').all() as CuratedNoteDbRow[];
   return rows.map((row) => ({ id: row.id, data: JSON.parse(row.data), updatedAt: row.updated_at }));
 }
 
-export function saveTaxonomyMetadata(metadata: { id: string; data: any }, updatedBy: string): void {
+export function saveTaxonomyMetadata(metadata: { id: string; data: CuratedNoteData }, updatedBy: string): void {
   getDb()
     .prepare(
       `INSERT INTO taxonomy_metadata (id, data, updated_by, updated_at)
@@ -481,7 +496,7 @@ export interface ApiTaxonomyMetadata {
   description?: string;
   url?: string;
   domain?: string;
-  metadata?: any;
+  metadata?: Record<string, unknown> | null;
   /** Intake attribution: which ENTRY POINT class produced this capture. */
   source?: string;
   /** Intake modality: url | text | geo | media | audio-transcript. */
@@ -490,7 +505,23 @@ export interface ApiTaxonomyMetadata {
   updatedAt: number;
 }
 
-function mapCaptureRow(row: any): ApiTaxonomyMetadata {
+/** Raw api_taxonomy_metadata row — nullable text columns are typed as their
+ *  mapped shapes (the mapper passes them straight through). */
+interface CaptureDbRow {
+  id: string;
+  user_id: string;
+  title: string;
+  description?: string;
+  url?: string;
+  domain?: string;
+  metadata: string | null;
+  source: string | null;
+  modality: string | null;
+  created_at: number;
+  updated_at: number;
+}
+
+function mapCaptureRow(row: CaptureDbRow): ApiTaxonomyMetadata {
   return {
     id: row.id,
     userId: row.user_id,
@@ -511,11 +542,13 @@ export function getAllMetadataApi(userId: string, seeAll: boolean): ApiTaxonomyM
   const rows = seeAll
     ? d.prepare('SELECT * FROM api_taxonomy_metadata ORDER BY updated_at DESC').all()
     : d.prepare('SELECT * FROM api_taxonomy_metadata WHERE user_id = ? ORDER BY updated_at DESC').all(userId);
-  return (rows as any[]).map(mapCaptureRow);
+  return (rows as CaptureDbRow[]).map(mapCaptureRow);
 }
 
 export function getMetadataApi(id: string): ApiTaxonomyMetadata | null {
-  const row = getDb().prepare('SELECT * FROM api_taxonomy_metadata WHERE id = ?').get(id) as any;
+  const row = getDb().prepare('SELECT * FROM api_taxonomy_metadata WHERE id = ?').get(id) as
+    | CaptureDbRow
+    | undefined;
   return row ? mapCaptureRow(row) : null;
 }
 
@@ -533,7 +566,7 @@ export function getMetadataByDomainApi(userId: string, seeAll: boolean, domain: 
     : d
         .prepare('SELECT * FROM api_taxonomy_metadata WHERE user_id = ? AND domain = ? ORDER BY updated_at DESC')
         .all(userId, domain);
-  return (rows as any[]).map(mapCaptureRow);
+  return (rows as CaptureDbRow[]).map(mapCaptureRow);
 }
 
 export function saveMetadataApi(
@@ -576,13 +609,20 @@ export interface HomepageTile {
   type: string;
   position: number;
   visible: boolean;
-  config?: any;
+  config?: unknown;
 }
 
 export function getHomepageTiles(userId: string): HomepageTile[] {
   const rows = getDb()
     .prepare('SELECT * FROM homepage_tiles WHERE user_id = ? ORDER BY position')
-    .all(userId) as any[];
+    .all(userId) as Array<{
+    id: string;
+    title: string;
+    type: string;
+    position: number;
+    visible: number;
+    config: string | null;
+  }>;
   return rows.map((row) => ({
     id: row.id,
     title: row.title,
@@ -623,16 +663,24 @@ export function trackActivity(userId: string, itemId: string, itemType: string):
     .run(userId, itemId, itemType);
 }
 
-export function getRecentActivity(userId: string, type?: string, limit = 10): any[] {
+export interface RecentActivityRow {
+  id: number;
+  user_id: string;
+  item_id: string;
+  item_type: string;
+  timestamp: number;
+}
+
+export function getRecentActivity(userId: string, type?: string, limit = 10): RecentActivityRow[] {
   const d = getDb();
   if (type) {
     return d
       .prepare('SELECT * FROM recent_activity WHERE user_id = ? AND item_type = ? ORDER BY timestamp DESC LIMIT ?')
-      .all(userId, type, limit);
+      .all(userId, type, limit) as RecentActivityRow[];
   }
   return d
     .prepare('SELECT * FROM recent_activity WHERE user_id = ? ORDER BY timestamp DESC LIMIT ?')
-    .all(userId, limit);
+    .all(userId, limit) as RecentActivityRow[];
 }
 
 // ── App metadata (global) ─────────────────────────────────────────────────────
@@ -654,7 +702,9 @@ function initializeAppMetadata(): void {
 }
 
 export function getAppMetadata(): AppMetadata | null {
-  const row = getDb().prepare("SELECT * FROM app_metadata WHERE id = 'main'").get() as any;
+  const row = getDb().prepare("SELECT * FROM app_metadata WHERE id = 'main'").get() as
+    | { id: string; version: string; last_updated: number; total_items: number; completed_items: number }
+    | undefined;
   if (!row) return null;
   return {
     id: row.id,
@@ -678,7 +728,9 @@ export function saveSetting(userId: string, key: string, value: string): void {
 }
 
 export function getSetting(userId: string, key: string): string | null {
-  const row = getDb().prepare('SELECT value FROM app_settings WHERE user_id = ? AND key = ?').get(userId, key) as any;
+  const row = getDb().prepare('SELECT value FROM app_settings WHERE user_id = ? AND key = ?').get(userId, key) as
+    | { value: string }
+    | undefined;
   return row ? row.value : null;
 }
 
@@ -695,7 +747,13 @@ export interface TodoItem {
 export function getTodos(userId: string): TodoItem[] {
   const rows = getDb()
     .prepare('SELECT * FROM todos WHERE user_id = ? ORDER BY created_at DESC')
-    .all(userId) as any[];
+    .all(userId) as Array<{
+    id: string;
+    title: string;
+    completed: number;
+    created_at: number;
+    updated_at: number;
+  }>;
   return rows.map((row) => ({
     id: row.id,
     title: row.title,
@@ -736,15 +794,32 @@ export interface KnowledgeObject {
   description?: string;
   resource?: string;
   tags?: string[];
-  frontmatter?: any;
+  frontmatter?: Record<string, unknown>;
   body?: string;
-  links?: any[];
+  links?: unknown[];
   visibility?: string;
   createdAt: number;
   updatedAt: number;
 }
 
-function mapObjectRow(row: any): KnowledgeObject {
+/** Raw knowledge_objects row — snake_case DB columns before mapping. */
+interface ObjectDbRow {
+  id: string;
+  user_id: string;
+  type: string;
+  title: string;
+  description: string | null;
+  resource: string | null;
+  tags: string | null;
+  frontmatter: string | null;
+  body: string | null;
+  links: string | null;
+  visibility: string;
+  created_at: number;
+  updated_at: number;
+}
+
+function mapObjectRow(row: ObjectDbRow): KnowledgeObject {
   return {
     id: row.id,
     userId: row.user_id,
@@ -767,11 +842,13 @@ export function getObjects(userId: string, seeAll: boolean, type?: string): Know
   const where = [seeAll ? null : 'user_id = ?', type ? 'type = ?' : null].filter(Boolean);
   const params = [...(seeAll ? [] : [userId]), ...(type ? [type] : [])];
   const sql = `SELECT * FROM knowledge_objects ${where.length ? `WHERE ${where.join(' AND ')}` : ''} ORDER BY updated_at DESC`;
-  return (d.prepare(sql).all(...params) as any[]).map(mapObjectRow);
+  return (d.prepare(sql).all(...params) as ObjectDbRow[]).map(mapObjectRow);
 }
 
 export function getObject(id: string): KnowledgeObject | null {
-  const row = getDb().prepare('SELECT * FROM knowledge_objects WHERE id = ?').get(id) as any;
+  const row = getDb().prepare('SELECT * FROM knowledge_objects WHERE id = ?').get(id) as
+    | ObjectDbRow
+    | undefined;
   return row ? mapObjectRow(row) : null;
 }
 
@@ -825,9 +902,9 @@ export function deleteObject(id: string): void {
 
 /** Distinct types in use — the "recent types" suggestions in the object form. */
 export function objectTypes(): string[] {
-  return (getDb().prepare('SELECT DISTINCT type FROM knowledge_objects ORDER BY type').all() as any[]).map(
-    (r) => r.type,
-  );
+  return (
+    getDb().prepare('SELECT DISTINCT type FROM knowledge_objects ORDER BY type').all() as Array<{ type: string }>
+  ).map((r) => r.type);
 }
 
 // ── Mapped folders (fs_mappings) + owner-scoped object helpers ───────────────
@@ -1077,18 +1154,25 @@ export function getVisibleObjects(userId: string, seeAll: boolean): KnowledgeObj
           "SELECT * FROM knowledge_objects WHERE user_id = ? OR visibility = 'shared' ORDER BY updated_at DESC",
         )
         .all(userId);
-  return rows.map((r) => mapObjectRow(r));
+  return (rows as ObjectDbRow[]).map((r) => mapObjectRow(r));
 }
 
 // ── Baked layout (U1 — deterministic star positions) ─────────────────────────
 
 export function getLayoutVersion(): string | null {
-  const row = getDb().prepare('SELECT layout_version FROM taxonomy_layout LIMIT 1').get() as any;
+  const row = getDb().prepare('SELECT layout_version FROM taxonomy_layout LIMIT 1').get() as
+    | { layout_version: string }
+    | undefined;
   return row?.layout_version ?? null;
 }
 
 export function getLayout(): Map<string, { x: number; y: number; z: number }> {
-  const rows = getDb().prepare('SELECT node_id, x, y, z FROM taxonomy_layout').all() as any[];
+  const rows = getDb().prepare('SELECT node_id, x, y, z FROM taxonomy_layout').all() as Array<{
+    node_id: string;
+    x: number;
+    y: number;
+    z: number;
+  }>;
   return new Map(rows.map((r) => [r.node_id, { x: r.x, y: r.y, z: r.z }]));
 }
 
@@ -1199,9 +1283,9 @@ export function searchCorpusFts(query: string, kinds: EmbeddingKind[], limit: nu
 
 export function corpusStats(): { captures: number; curatedNotes: number; objects: number } {
   const d = getDb();
-  const captures = (d.prepare('SELECT COUNT(*) AS c FROM api_taxonomy_metadata').get() as any).c;
-  const curatedNotes = (d.prepare('SELECT COUNT(*) AS c FROM taxonomy_metadata').get() as any).c;
-  const objects = (d.prepare('SELECT COUNT(*) AS c FROM knowledge_objects').get() as any).c;
+  const captures = (d.prepare('SELECT COUNT(*) AS c FROM api_taxonomy_metadata').get() as { c: number }).c;
+  const curatedNotes = (d.prepare('SELECT COUNT(*) AS c FROM taxonomy_metadata').get() as { c: number }).c;
+  const objects = (d.prepare('SELECT COUNT(*) AS c FROM knowledge_objects').get() as { c: number }).c;
   return { captures, curatedNotes, objects };
 }
 
@@ -1221,21 +1305,27 @@ export interface NeighborHit {
 export function embeddingStats(): { total: number; byKind: Record<string, number>; model: string | null } {
   if (!vectorsOk) return { total: 0, byKind: {}, model: null };
   const d = getDb();
-  const rows = d.prepare('SELECT kind, COUNT(*) AS c FROM embeddings GROUP BY kind').all() as any[];
+  const rows = d.prepare('SELECT kind, COUNT(*) AS c FROM embeddings GROUP BY kind').all() as Array<{
+    kind: string;
+    c: number;
+  }>;
   const byKind: Record<string, number> = {};
   let total = 0;
   for (const r of rows) {
     byKind[r.kind] = r.c;
     total += r.c;
   }
-  const m = d.prepare('SELECT model FROM embeddings LIMIT 1').get() as any;
+  const m = d.prepare('SELECT model FROM embeddings LIMIT 1').get() as { model: string } | undefined;
   return { total, byKind, model: m?.model ?? null };
 }
 
 /** ref_id → content_hash for one kind — drives the pending/stale diff. */
 export function getEmbeddingHashes(kind: EmbeddingKind): Map<string, string> {
   if (!vectorsOk) return new Map();
-  const rows = getDb().prepare('SELECT ref_id, content_hash FROM embeddings WHERE kind = ?').all(kind) as any[];
+  const rows = getDb().prepare('SELECT ref_id, content_hash FROM embeddings WHERE kind = ?').all(kind) as Array<{
+    ref_id: string;
+    content_hash: string;
+  }>;
   return new Map(rows.map((r) => [r.ref_id, r.content_hash]));
 }
 
@@ -1247,7 +1337,7 @@ export function readTaxonomyVectors(): { id: string; vector: number[] }[] {
   if (!vectorsOk) return [];
   const rows = getDb()
     .prepare("SELECT ref_id, vector_extract(vector) AS v FROM embeddings WHERE kind = 'taxonomy'")
-    .all() as any[];
+    .all() as Array<{ ref_id: string; v: string }>;
   return rows.map((r) => ({ id: r.ref_id, vector: JSON.parse(r.v) }));
 }
 
@@ -1277,7 +1367,17 @@ export function upsertNodeFeatures(rows: NodeFeatureRow[], model: string): numbe
 /** node_id → derived-feature scalars, for the graph payload's semantic lens. */
 export function getNodeFeatures(): Map<string, Record<string, number>> {
   try {
-    const rows = getDb().prepare('SELECT * FROM node_features').all() as any[];
+    // Columns are nullable in the schema; the payload passes the values through
+    // untouched, so the row is typed to the declared map contract.
+    const rows = getDb().prepare('SELECT * FROM node_features').all() as Array<{
+      node_id: string;
+      abstractness: number;
+      scale: number;
+      formalness: number;
+      dynamism: number;
+      centrality: number;
+      cluster: number;
+    }>;
     return new Map(rows.map((r) => [r.node_id, {
       abstractness: r.abstractness, scale: r.scale, formalness: r.formalness,
       dynamism: r.dynamism, centrality: r.centrality, cluster: r.cluster }]));
@@ -1325,7 +1425,18 @@ export function upsertNodeMetadata(rows: NodeMetadataRow[], model: string, repla
 /** node_id → external identity + typing + scope, for the graph payload. */
 export function getNodeMetadata(): Map<string, Record<string, string | number>> {
   try {
-    const rows = getDb().prepare('SELECT * FROM node_metadata').all() as any[];
+    // Same passthrough contract as getNodeFeatures — nullable columns ride
+    // through to the payload untouched.
+    const rows = getDb().prepare('SELECT * FROM node_metadata').all() as Array<{
+      node_id: string;
+      qid: string;
+      keap_type: string;
+      schema_type: string;
+      wd_label: string;
+      confidence: string;
+      scope_rank: number;
+      scope_norm: number;
+    }>;
     return new Map(rows.map((r) => [r.node_id, {
       qid: r.qid, keapType: r.keap_type, schemaType: r.schema_type,
       wdLabel: r.wd_label, confidence: r.confidence,
@@ -1363,7 +1474,7 @@ export function upsertEmbeddings(
 export function pruneEmbeddings(kind: EmbeddingKind, liveIds: Set<string>): number {
   if (!vectorsOk) return 0;
   const d = getDb();
-  const stored = d.prepare('SELECT ref_id FROM embeddings WHERE kind = ?').all(kind) as any[];
+  const stored = d.prepare('SELECT ref_id FROM embeddings WHERE kind = ?').all(kind) as Array<{ ref_id: string }>;
   const del = d.prepare('DELETE FROM embeddings WHERE kind = ? AND ref_id = ?');
   let pruned = 0;
   const tx = d.transaction(() => {
@@ -1394,7 +1505,7 @@ export function vectorNeighbors(
   const d = getDb();
   const anchor = d
     .prepare('SELECT vector_extract(vector) AS v FROM embeddings WHERE kind = ? AND ref_id = ?')
-    .get(anchorKind, anchorRefId) as any;
+    .get(anchorKind, anchorRefId) as { v: string | null } | undefined;
   if (!anchor?.v) return null;
   return vectorNeighborsOf(anchor.v, mode, kinds, limit, { kind: anchorKind, refId: anchorRefId });
 }
@@ -1421,7 +1532,7 @@ export function vectorNeighborsOf(
          WHERE 1=1 ${kindFilter}
          ORDER BY distance ASC`,
       )
-      .all(vectorJson, vectorJson, Math.min(limit * 4 + 1, 256), ...kinds) as any[];
+      .all(vectorJson, vectorJson, Math.min(limit * 4 + 1, 256), ...kinds) as NeighborHit[];
     return rows
       .filter((r) => !(exclude && r.kind === exclude.kind && r.refId === exclude.refId))
       .slice(0, limit);
@@ -1435,7 +1546,7 @@ export function vectorNeighborsOf(
        ORDER BY distance DESC
        LIMIT ?`,
     )
-    .all(vectorJson, ...kinds, limit + 1) as any[];
+    .all(vectorJson, ...kinds, limit + 1) as NeighborHit[];
   return rows
     .filter((r) => !(exclude && r.kind === exclude.kind && r.refId === exclude.refId))
     .slice(0, limit);
@@ -1450,13 +1561,27 @@ export interface LintFindingRow {
   refKind?: string;
   refId?: string;
   message: string;
-  data?: any;
+  data?: Record<string, unknown>;
   firstSeen: number;
   lastSeen: number;
   resolvedAt: number | null;
 }
 
-function mapLintRow(row: any): LintFindingRow {
+/** Raw lint_findings row — snake_case DB columns before mapping. */
+interface LintDbRow {
+  id: string;
+  check_id: string;
+  severity: string;
+  ref_kind: string | null;
+  ref_id: string | null;
+  message: string;
+  data: string | null;
+  first_seen: number;
+  last_seen: number;
+  resolved_at: number | null;
+}
+
+function mapLintRow(row: LintDbRow): LintFindingRow {
   return {
     id: row.id,
     checkId: row.check_id,
@@ -1487,7 +1612,7 @@ export function syncLintFindings(
     refKind?: string;
     refId?: string;
     message: string;
-    data?: any;
+    data?: unknown;
   }>,
 ): { newIds: string[]; resolvedIds: string[] } {
   const d = getDb();
@@ -1496,7 +1621,7 @@ export function syncLintFindings(
   const tx = d.transaction(() => {
     const openRows = d
       .prepare('SELECT id FROM lint_findings WHERE resolved_at IS NULL')
-      .all() as any[];
+      .all() as Array<{ id: string }>;
     const open = new Set(openRows.map((r) => r.id));
     const seen = new Set<string>();
     const insert = d.prepare(
@@ -1514,7 +1639,9 @@ export function syncLintFindings(
     const wasKnown = d.prepare('SELECT resolved_at, severity, data FROM lint_findings WHERE id = ?');
     for (const f of findings) {
       if (seen.has(f.id)) continue; // a check may emit the same pair twice
-      const prior = wasKnown.get(f.id) as any;
+      const prior = wasKnown.get(f.id) as
+        | { resolved_at: number | null; severity: string; data: string | null }
+        | undefined;
       const priorData = prior?.data ? JSON.parse(prior.data) : null;
       const verdict = priorData?.verdict?.verdict;
       // A standing librarian/human verdict outlives the re-detection:
@@ -1525,8 +1652,9 @@ export function syncLintFindings(
       let severity = f.severity;
       let data = f.data;
       if (verdict === 'duplicate' || verdict === 'contradiction') {
-        severity = prior.severity; // escalation from applyLintVerdict wins
-        data = { ...(f.data ?? {}), verdict: priorData.verdict };
+        // A verdict only exists when a prior row carried it.
+        severity = prior!.severity; // escalation from applyLintVerdict wins
+        data = { ...((f.data ?? {}) as Record<string, unknown>), verdict: priorData.verdict };
       }
       if (!prior || prior.resolved_at !== null) newIds.push(f.id);
       insert.run(
@@ -1557,7 +1685,7 @@ export function getLintFindings(includeResolved = false, limit = 500): LintFindi
   const rows = includeResolved
     ? d.prepare(`SELECT * FROM lint_findings ORDER BY resolved_at IS NULL DESC, ${rank}, last_seen DESC LIMIT ?`).all(limit)
     : d.prepare(`SELECT * FROM lint_findings WHERE resolved_at IS NULL ORDER BY ${rank}, last_seen DESC LIMIT ?`).all(limit);
-  return (rows as any[]).map(mapLintRow);
+  return (rows as LintDbRow[]).map(mapLintRow);
 }
 
 /**
@@ -1585,12 +1713,18 @@ export function nearPairs(
        ORDER BY distance ASC
        LIMIT ?`,
     )
-    .all(...kinds, ...kinds, maxDistance, limit) as any[];
+    .all(...kinds, ...kinds, maxDistance, limit) as Array<{
+    aKind: string;
+    aRefId: string;
+    bKind: string;
+    bRefId: string;
+    distance: number;
+  }>;
 }
 
 export function countRows(table: 'taxonomy_fts' | 'taxonomy_layout'): number {
   try {
-    return (getDb().prepare(`SELECT COUNT(*) AS c FROM ${table}`).get() as any).c;
+    return (getDb().prepare(`SELECT COUNT(*) AS c FROM ${table}`).get() as { c: number }).c;
   } catch {
     return -1;
   }
@@ -1611,7 +1745,7 @@ export function applyLintVerdict(
   by: string,
 ): LintFindingRow | null {
   const d = getDb();
-  const row = d.prepare('SELECT * FROM lint_findings WHERE id = ?').get(findingId) as any;
+  const row = d.prepare('SELECT * FROM lint_findings WHERE id = ?').get(findingId) as LintDbRow | undefined;
   if (!row) return null;
   const data = row.data ? JSON.parse(row.data) : {};
   data.verdict = { verdict, note: note ?? null, by, at: Math.floor(Date.now() / 1000) };
@@ -1625,10 +1759,31 @@ export function applyLintVerdict(
       JSON.stringify(data), severity, findingId,
     );
   }
-  return mapLintRow(d.prepare('SELECT * FROM lint_findings WHERE id = ?').get(findingId));
+  return mapLintRow(d.prepare('SELECT * FROM lint_findings WHERE id = ?').get(findingId) as LintDbRow);
 }
 
 // ── Promotion proposals (server/promotions.ts) ────────────────────────────────
+
+/** Union-of-drafts payload of a promotion — the concrete shape depends on
+ *  `kind` (ObjectDraft | NodeDraft | DescDraft | BriefDraft, defined in
+ *  server/promotions.ts). Kept structural here so db.ts stays below
+ *  promotions.ts in the import graph. */
+export type PromotionDraft = {
+  id?: string;
+  type?: string;
+  title?: string;
+  description?: string;
+  body?: string;
+  resource?: string;
+  tags?: string[];
+  parentId?: string;
+  name?: string;
+  nodeId?: string;
+  descriptionEn?: string;
+  descriptionCs?: string;
+  briefEn?: string;
+  briefCs?: string;
+};
 
 export interface PromotionRow {
   id: string;
@@ -1636,7 +1791,7 @@ export interface PromotionRow {
   captureId: string;
   proposedBy: string;
   rationale?: string;
-  object: any;
+  object: PromotionDraft;
   status: 'proposed' | 'approved' | 'rejected';
   votes: Array<{ by: string; value: 1 | -1; at: number }>;
   decidedBy?: string;
@@ -1645,7 +1800,23 @@ export interface PromotionRow {
   createdAt: number;
 }
 
-function mapPromotionRow(row: any): PromotionRow {
+/** Raw promotions row — snake_case DB columns before mapping. */
+interface PromotionDbRow {
+  id: string;
+  kind: PromotionRow['kind'] | null;
+  capture_id: string;
+  proposed_by: string;
+  rationale: string | null;
+  object_json: string;
+  status: PromotionRow['status'];
+  votes: string | null;
+  decided_by: string | null;
+  decided_at: number | null;
+  object_id: string | null;
+  created_at: number;
+}
+
+function mapPromotionRow(row: PromotionDbRow): PromotionRow {
   return {
     id: row.id,
     kind: row.kind ?? 'object',
@@ -1667,7 +1838,7 @@ export function upsertPromotion(p: {
   captureId: string;
   proposedBy: string;
   rationale?: string;
-  object: any;
+  object: PromotionDraft;
   kind?: 'object' | 'node' | 'desc' | 'brief';
 }): void {
   getDb()
@@ -1683,7 +1854,9 @@ export function upsertPromotion(p: {
 }
 
 export function getPromotion(id: string): PromotionRow | null {
-  const row = getDb().prepare('SELECT * FROM promotions WHERE id = ?').get(id) as any;
+  const row = getDb().prepare('SELECT * FROM promotions WHERE id = ?').get(id) as
+    | PromotionDbRow
+    | undefined;
   return row ? mapPromotionRow(row) : null;
 }
 
@@ -1692,7 +1865,7 @@ export function listPromotions(status?: string, limit = 200): PromotionRow[] {
   const rows = status
     ? d.prepare('SELECT * FROM promotions WHERE status = ? ORDER BY created_at DESC LIMIT ?').all(status, limit)
     : d.prepare('SELECT * FROM promotions ORDER BY created_at DESC LIMIT ?').all(limit);
-  return (rows as any[]).map(mapPromotionRow);
+  return (rows as PromotionDbRow[]).map(mapPromotionRow);
 }
 
 /**
@@ -1705,7 +1878,7 @@ export function openPromotions(): PromotionRow[] {
   const rows = getDb()
     .prepare("SELECT * FROM promotions WHERE status = 'proposed' ORDER BY created_at DESC")
     .all();
-  return (rows as any[]).map(mapPromotionRow);
+  return (rows as PromotionDbRow[]).map(mapPromotionRow);
 }
 
 export function setPromotionVotes(id: string, votes: unknown[]): void {
@@ -1728,7 +1901,9 @@ export function setPromotionDecision(
 /** Provenance back-link on the source capture: metadata.promotedTo. */
 export function markCapturePromoted(captureId: string, objectId: string): void {
   const d = getDb();
-  const row = d.prepare('SELECT metadata FROM api_taxonomy_metadata WHERE id = ?').get(captureId) as any;
+  const row = d.prepare('SELECT metadata FROM api_taxonomy_metadata WHERE id = ?').get(captureId) as
+    | { metadata: string | null }
+    | undefined;
   if (!row) return;
   const meta = row.metadata ? JSON.parse(row.metadata) : {};
   meta.promotedTo = objectId;
@@ -1751,7 +1926,19 @@ export interface ExtNodeRow {
 }
 
 export function listExtNodes(): ExtNodeRow[] {
-  return (getDb().prepare('SELECT * FROM taxonomy_nodes_ext ORDER BY created_at, ordinal').all() as any[]).map(
+  return (
+    getDb().prepare('SELECT * FROM taxonomy_nodes_ext ORDER BY created_at, ordinal').all() as Array<{
+      id: string;
+      parent_id: string;
+      name: string;
+      description: string;
+      zone: string;
+      ordinal: number;
+      proposed_by: string;
+      approved_by: string;
+      created_at: number;
+    }>
+  ).map(
     (r) => ({
       id: r.id,
       parentId: r.parent_id,
@@ -1787,7 +1974,16 @@ export interface NodeDescriptionRow {
 }
 
 export function listNodeDescriptions(): NodeDescriptionRow[] {
-  return (getDb().prepare('SELECT * FROM node_descriptions').all() as any[]).map((r) => ({
+  return (
+    getDb().prepare('SELECT * FROM node_descriptions').all() as Array<{
+      node_id: string;
+      description_en: string;
+      description_cs: string | null;
+      proposed_by: string;
+      approved_by: string;
+      updated_at: number;
+    }>
+  ).map((r) => ({
     nodeId: r.node_id,
     descriptionEn: r.description_en,
     descriptionCs: r.description_cs ?? undefined,
@@ -1814,7 +2010,11 @@ export function upsertNodeDescription(row: Omit<NodeDescriptionRow, 'updatedAt'>
 
 /** How many ext children a parent already has — the next append ordinal. */
 export function extChildCount(parentId: string): number {
-  return (getDb().prepare('SELECT COUNT(*) AS c FROM taxonomy_nodes_ext WHERE parent_id = ?').get(parentId) as any).c;
+  return (
+    getDb().prepare('SELECT COUNT(*) AS c FROM taxonomy_nodes_ext WHERE parent_id = ?').get(parentId) as {
+      c: number;
+    }
+  ).c;
 }
 
 export interface ConceptRelation {
@@ -1840,7 +2040,9 @@ export function listConceptRelations(typedOnly = true): ConceptRelation[] {
   const sql = typedOnly
     ? `SELECT from_id, to_id, type, explored FROM concept_relations WHERE type != 'related-concept'`
     : `SELECT from_id, to_id, type, explored FROM concept_relations`;
-  return (getDb().prepare(sql).all() as any[]).map((r) => ({
+  return (
+    getDb().prepare(sql).all() as Array<{ from_id: string; to_id: string; type: string; explored: string | null }>
+  ).map((r) => ({
     from: r.from_id,
     to: r.to_id,
     type: r.type,
@@ -1862,7 +2064,7 @@ export function curatorVisitMap(): Map<string, CuratorVisit> {
       `SELECT node_id, run_id, content_hash, MAX(visited_at) AS visited_at
          FROM curator_visits GROUP BY node_id`,
     )
-    .all() as any[];
+    .all() as Array<{ node_id: string; run_id: string; content_hash: string | null; visited_at: number }>;
   const m = new Map<string, CuratorVisit>();
   for (const r of rows) m.set(r.node_id, { visitedAt: r.visited_at, contentHash: r.content_hash ?? null, runId: r.run_id });
   return m;

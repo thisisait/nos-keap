@@ -42,7 +42,7 @@ export interface LintFinding {
   refKind?: string;
   refId?: string;
   message: string;
-  data?: any;
+  data?: Record<string, unknown>;
 }
 
 export interface LintReport {

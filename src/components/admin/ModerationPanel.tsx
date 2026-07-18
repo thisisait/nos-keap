@@ -14,15 +14,29 @@ import { Badge } from '@/components/ui/badge';
 import { Gavel, Check, X } from 'lucide-react';
 import { apiFetch } from '@/services/api/client';
 
+// kind=object: {type,title,body,…}; kind=node: {parentId,name,description};
+// kind=desc: {nodeId,descriptionEn,descriptionCs}; kind=brief: {nodeId,briefEn,briefCs}
+interface PromotionObject {
+  type?: string;
+  title?: string;
+  body?: string;
+  description?: string;
+  parentId?: string;
+  name?: string;
+  nodeId?: string;
+  descriptionEn?: string;
+  descriptionCs?: string;
+  briefEn?: string;
+  briefCs?: string;
+}
+
 interface Promotion {
   id: string;
   kind: 'object' | 'node' | 'desc' | 'brief';
   captureId: string;
   proposedBy: string;
   rationale?: string;
-  // kind=object: {type,title,body,…}; kind=node: {parentId,name,description};
-  // kind=desc: {nodeId,descriptionEn,descriptionCs}; kind=brief: {nodeId,briefEn,briefCs}
-  object: any;
+  object: PromotionObject;
   status: string;
   votes: Array<{ by: string; value: number }>;
   decidedBy?: string;

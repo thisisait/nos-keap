@@ -17,7 +17,11 @@
  * objects orbiting their taxonomy star on a short leash.
  */
 import { useMemo, useRef, useEffect, useCallback } from 'react';
-import ForceGraph3D from 'react-force-graph-3d';
+import ForceGraph3D, {
+  type ForceGraphMethods,
+  type LinkObject,
+  type NodeObject,
+} from 'react-force-graph-3d';
 import SpriteText from 'three-spritetext';
 import { repoLangs, repoTexture, langOfPath, langColor } from './repoVisuals';
 import * as THREE from 'three';
@@ -34,7 +38,7 @@ const REDUCED_MOTION =
   window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
 
 /** Camera travel time — reduced motion means instant cuts, not slow pans. */
-export function warpMs(ms: number): number {
+function warpMs(ms: number): number {
   return REDUCED_MOTION ? 0 : ms;
 }
 
@@ -413,6 +417,17 @@ function buildFileCube(node: CanvasNode, withLabel: boolean): THREE.Object3D {
   return g;
 }
 
+/** A CanvasNode as the force engine sees it (position/velocity fields added). */
+type GraphNode = NodeObject<CanvasNode>;
+/** A CanvasLink as the force engine sees it (source/target become node refs). */
+type GraphLink = LinkObject<CanvasNode, CanvasLink>;
+/** The imperative graph handle. `enableNavigationControls` is a runtime
+ *  method the wrapper forwards but the typings omit — kept optional, the
+ *  call sites already feature-detect it. */
+type GraphRef = ForceGraphMethods<GraphNode, GraphLink> & {
+  enableNavigationControls?: (enable: boolean) => void;
+};
+
 /** FNV-ish 0..1 hash — deterministic per-node variety (rotation, tilt). */
 function hash01v(s: string): number {
   let h = 2166136261;
@@ -424,7 +439,7 @@ function hash01v(s: string): number {
 }
 
 export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width, height, mode, onShipUpdate, lens, coreView }: Props) {
-  const fgRef = useRef<any>(null);
+  const fgRef = useRef<GraphRef | undefined>(undefined);
   const didFitRef = useRef(false);
   const coreViewRef = useRef(coreView);
   const modelRef = useRef<ShipModelParts | null>(null);
@@ -472,7 +487,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       const ref = fgRef.current;
       if (!ref) return;
       try {
-        const cam = ref.camera();
+        const cam = ref.camera() as THREE.PerspectiveCamera;
         cam.far = 40000;
         cam.updateProjectionMatrix();
 
@@ -569,7 +584,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
         if (typeof ref.enableNavigationControls === 'function') {
           ref.enableNavigationControls(false);
         }
-        const controls = ref.controls();
+        const controls = ref.controls() as { enabled?: boolean };
         if (controls && typeof controls.enabled === 'boolean') {
           controls.enabled = false;
         }
@@ -608,7 +623,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
         if (typeof ref.enableNavigationControls === 'function') {
           ref.enableNavigationControls(true);
         }
-        const controls = ref.controls();
+        const controls = ref.controls() as { enabled?: boolean };
         if (controls && typeof controls.enabled === 'boolean') {
           controls.enabled = true;
         }
@@ -641,7 +656,9 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       try {
         const linkForce = ref.d3Force('link');
         if (linkForce) {
-          linkForce.distance((l: any) =>
+          // By the time the force runs, the engine has resolved id targets
+          // into node objects — type the callback to that runtime shape.
+          linkForce.distance((l: { semantic?: boolean; distance?: number; target?: GraphNode }) =>
             l.semantic ? 90 + (l.distance ?? 0.5) * 260 : l.target?.star ? 55 : 38,
           );
         }
@@ -652,7 +669,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
         if (charge) charge.strength(-55);
         ref.d3Force(
           'collide',
-          forceCollide((n: any) => Math.sqrt(nodeSize(n)) * 2.4 + 4),
+          forceCollide((n: CanvasNode) => Math.sqrt(nodeSize(n)) * 2.4 + 4),
         );
         ref.d3ReheatSimulation();
         // The baked universe is big (galaxy ring r≈1400) — frame it once so
@@ -675,7 +692,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     if (!focusId || mode === 'ship') return;
     const t = setTimeout(() => {
       const ref = fgRef.current;
-      const node = graphData.nodes.find((n: any) => n.id === focusId) as any;
+      const node = graphData.nodes.find((n) => n.id === focusId) as GraphNode | undefined;
       if (!ref || !node || node.x === undefined) return;
       const ctrl = (typeof ref.controls === 'function' ? ref.controls() : null) as {
         target?: { x: number; y: number; z: number };
@@ -704,12 +721,13 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
           dest = { x: node.x + vx * k, y: node.y + vy * k, z: nz + vz * k };
         }
       }
-      ref.cameraPosition(dest, node, warpMs(1100));
+      // The x-undefined guard above ensures the engine has placed the node.
+      ref.cameraPosition(dest, node as { x: number; y: number; z: number }, warpMs(1100));
     }, 400);
     return () => clearTimeout(t);
   }, [focusId, graphData, mode]);
 
-  const handleClick = useCallback((node: any) => onNodeClick(node.id), [onNodeClick]);
+  const handleClick = useCallback((node: GraphNode) => onNodeClick(node.id), [onNodeClick]);
 
   // Per-frame update in ship mode: physics, animation, camera, trail.
   const updateFrame = useCallback(
@@ -721,6 +739,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       tick(dt);
 
       const ship = shipRef.current;
+      const cam = ref.camera() as THREE.PerspectiveCamera;
       const group = model.group;
       const flame = model.flame;
       const trail = model.trail;
@@ -749,7 +768,6 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       trail.material.color.setHex(boosting ? 0xfacc15 : 0x67e8f9);
 
       // Third-person camera: smooth follow behind the ship.
-      const cam = ref.camera();
       _camOffset.set(0, 3.5, -14).applyQuaternion(ship.quaternion);
       _targetPos.copy(ship.position).add(_camOffset);
       cam.position.lerp(_targetPos, 1 - Math.exp(-2.5 * dt));
@@ -802,7 +820,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
   // Everything else keeps the hover tooltip only. Returning a falsy object
   // with nodeThreeObjectExtend keeps the default sphere; the sprite is
   // ADDED next to it, not a replacement.
-  const nodeThreeObject = useCallback((node: any) => {
+  const nodeThreeObject = useCallback((node: GraphNode) => {
     // Objects: a typed body REPLACES the default sphere (extend=false below).
     // In the core view, fs-file leaves become satellite CUBES (lang-coloured,
     // named while the field is small enough to stay legible).
@@ -860,7 +878,9 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       noRaycast(label);
       g.add(label);
     }
-    return g.children.length ? g : (false as any);
+    // Falsy return keeps the default sphere — a runtime contract the library
+    // typings don't model (they only allow Object3D), hence the double cast.
+    return g.children.length ? g : (false as unknown as THREE.Object3D);
   }, [coreView, fileLabels]);
 
   // Focus-halo orbits: semantic dust circles the focused node VERY slowly
@@ -935,14 +955,14 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       graphData={graphData}
       nodeId="id"
       nodeRelSize={2.4}
-      nodeLabel={(n: any) =>
+      nodeLabel={(n: GraphNode) =>
         n.star ? `☆ ${n.name}${n.distance ? ` · d=${n.distance.toFixed(2)}` : ''}` : n.name
       }
-      nodeVal={(n: any) => nodeSize(n, lens)}
-      nodeColor={(n: any) => nodeColor(n, focusId, lens)}
+      nodeVal={(n: GraphNode) => nodeSize(n, lens)}
+      nodeColor={(n: GraphNode) => nodeColor(n, focusId, lens)}
       nodeThreeObject={nodeThreeObject}
-      nodeThreeObjectExtend={(n: any) => !n.object && !n.repo}
-      linkColor={(l: any) =>
+      nodeThreeObjectExtend={(n: GraphNode) => !n.object && !n.repo}
+      linkColor={(l: GraphLink) =>
         l.relation
           ? REL_COLOR[l.relType] ?? 'rgba(148,163,184,0.5)'
           : l.mray
@@ -957,7 +977,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
                   ? 'rgba(251,191,36,0.55)'
                   : '#1e2126'
       }
-      linkWidth={(l: any) =>
+      linkWidth={(l: GraphLink) =>
         // PERF: any non-zero width promotes the link to a TubeGeometry MESH
         // (one draw call each); width 0 renders a GL line. Bulk links (tree
         // skeleton, fs edges, per-object rays — thousands at scale) MUST stay

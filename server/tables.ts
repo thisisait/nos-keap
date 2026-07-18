@@ -68,18 +68,35 @@ export interface TableStore {
 
 // ── Registry (driver-independent) ─────────────────────────────────────────────
 
-export function mapTable(row: any): Omit<TableInfo, 'capabilities'> {
+/** Raw data_tables row — snake_case DB columns before mapping. */
+export interface DataTableDbRow {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string | null;
+  driver: TableDriver;
+  schema_json: string;
+  visibility: TableInfo['visibility'];
+  row_count: number;
+  created_at: number;
+  updated_at: number;
+}
+
+/** Param stays `unknown` (not the row interface) because callers hand over
+ *  driver `.get()` results directly — the cast to the row shape lives here. */
+export function mapTable(row: unknown): Omit<TableInfo, 'capabilities'> {
+  const r = row as DataTableDbRow;
   return {
-    id: row.id,
-    title: row.title,
-    description: row.description ?? undefined,
-    driver: row.driver,
-    schema: JSON.parse(row.schema_json),
-    ownerId: row.user_id,
-    visibility: row.visibility,
-    rowCount: row.row_count,
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
+    id: r.id,
+    title: r.title,
+    description: r.description ?? undefined,
+    driver: r.driver,
+    schema: JSON.parse(r.schema_json),
+    ownerId: r.user_id,
+    visibility: r.visibility,
+    rowCount: r.row_count,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
   };
 }
 
@@ -94,7 +111,7 @@ export function listTables(actor: TableActor): TableInfo[] {
   const d = db.getDb();
   if (actor.isAdmin) {
     const rows = d.prepare('SELECT * FROM data_tables ORDER BY updated_at DESC').all();
-    return (rows as any[]).map((r) => withCapabilities(mapTable(r)));
+    return (rows as DataTableDbRow[]).map((r) => withCapabilities(mapTable(r)));
   }
   // Own tables OR any visibility scope the caller's tier is allowed to read
   // ('shared' is always in the list, so the IN() is never empty).
@@ -105,11 +122,13 @@ export function listTables(actor: TableActor): TableInfo[] {
       `SELECT * FROM data_tables WHERE user_id = ? OR visibility IN (${placeholders}) ORDER BY updated_at DESC`,
     )
     .all(actor.id, ...vis);
-  return (rows as any[]).map((r) => withCapabilities(mapTable(r)));
+  return (rows as DataTableDbRow[]).map((r) => withCapabilities(mapTable(r)));
 }
 
 export function getTable(id: string): TableInfo | null {
-  const row = db.getDb().prepare('SELECT * FROM data_tables WHERE id = ?').get(id) as any;
+  const row = db.getDb().prepare('SELECT * FROM data_tables WHERE id = ?').get(id) as
+    | DataTableDbRow
+    | undefined;
   return row ? withCapabilities(mapTable(row)) : null;
 }
 
@@ -234,7 +253,16 @@ export function filterClause(schema: TableSchema, filters: RowFilter[]): { sql: 
   return { sql: parts.length ? `AND ${parts.join(' AND ')}` : '', params };
 }
 
-function mapRow(r: any): TableRow {
+/** Raw table_rows row — snake_case DB columns before mapping. */
+interface TableRowDbRow {
+  row_id: string;
+  data: string;
+  created_at: number;
+  updated_at: number;
+  updated_by: string;
+}
+
+function mapRow(r: TableRowDbRow): TableRow {
   return {
     id: r.row_id,
     values: JSON.parse(r.data),
@@ -246,7 +274,7 @@ function mapRow(r: any): TableRow {
 
 export function refreshRowCount(tableId: string): number {
   const d = db.getDb();
-  const c = (d.prepare('SELECT COUNT(*) AS c FROM table_rows WHERE table_id = ?').get(tableId) as any).c;
+  const c = (d.prepare('SELECT COUNT(*) AS c FROM table_rows WHERE table_id = ?').get(tableId) as { c: number }).c;
   d.prepare("UPDATE data_tables SET row_count = ?, updated_at = strftime('%s','now') WHERE id = ?").run(
     c,
     tableId,
@@ -306,7 +334,7 @@ const libsqlStore: TableStore = {
     const rows = db
       .getDb()
       .prepare(`SELECT * FROM table_rows WHERE table_id = ? ${sql} ${order} LIMIT ? OFFSET ?`)
-      .all(id, ...params, q.limit + 1, offset) as any[];
+      .all(id, ...params, q.limit + 1, offset) as TableRowDbRow[];
     const page = rows.slice(0, q.limit).map(mapRow);
     return {
       rows: page,
@@ -322,7 +350,7 @@ const libsqlStore: TableStore = {
     const tx = d.transaction(() => {
       const existing = d
         .prepare('SELECT data FROM table_rows WHERE table_id = ? AND row_id = ?')
-        .get(id, rid) as any;
+        .get(id, rid) as { data: string } | undefined;
       // Upsert semantics: PATCH an existing row (merge keys), insert otherwise.
       // Validation runs on the MERGED result — a patch of one cell must not
       // trip over required columns it didn't touch.
@@ -344,7 +372,9 @@ const libsqlStore: TableStore = {
     tx();
     const rowCount = refreshRowCount(id);
     syncCard({ ...t, rowCount });
-    const saved = d.prepare('SELECT * FROM table_rows WHERE table_id = ? AND row_id = ?').get(id, rid);
+    const saved = d
+      .prepare('SELECT * FROM table_rows WHERE table_id = ? AND row_id = ?')
+      .get(id, rid) as TableRowDbRow;
     return mapRow(saved);
   },
 
@@ -364,13 +394,14 @@ const libsqlStore: TableStore = {
   },
 
   async rowHistory(id, rowId, limit) {
-    return db
-      .getDb()
-      .prepare(
-        'SELECT op, data, actor, at FROM table_row_history WHERE table_id = ? AND row_id = ? ORDER BY at DESC, id DESC LIMIT ?',
-      )
-      .all(id, rowId, limit)
-      .map((r: any) => ({ op: r.op, values: r.data ? JSON.parse(r.data) : null, actor: r.actor, at: r.at }));
+    return (
+      db
+        .getDb()
+        .prepare(
+          'SELECT op, data, actor, at FROM table_row_history WHERE table_id = ? AND row_id = ? ORDER BY at DESC, id DESC LIMIT ?',
+        )
+        .all(id, rowId, limit) as Array<{ op: string; data: string | null; actor: string; at: number }>
+    ).map((r) => ({ op: r.op, values: r.data ? JSON.parse(r.data) : null, actor: r.actor, at: r.at }));
   },
 
   async aggregate(id, q) {
@@ -402,7 +433,7 @@ const libsqlStore: TableStore = {
         `SELECT ${[...dims, ...measures].join(', ')}
          FROM table_rows WHERE table_id = ? ${sql} ${groupBy} LIMIT ?`,
       )
-      .all(id, ...params, q.limit) as any[];
+      .all(id, ...params, q.limit) as Array<Record<string, unknown>>;
     // Rename mN back to "<fn>_<column>" for readable payloads.
     return rows.map((r) => {
       const out: Record<string, unknown> = {};

@@ -70,13 +70,13 @@ export function generateTaxonomyOptions(): TaxonomyOption[] {
   const options: TaxonomyOption[] = [];
   let categoryIndex = 1;
 
-  Object.values(taxonomyData).forEach((category: any) => {
+  Object.values(taxonomyData).forEach((category) => {
     const categoryId = String(categoryIndex).padStart(2, '0');
     options.push({ value: categoryId, label: `${categoryId} - ${category.name}`, level: 0 });
 
     let subcategoryIndex = 1;
     if (category.subcategories) {
-      Object.values(category.subcategories).forEach((subcat: any) => {
+      Object.values(category.subcategories).forEach((subcat) => {
         const subcatId = `${categoryId}.${String(subcategoryIndex).padStart(2, '0')}`;
         options.push({ value: subcatId, label: `${subcatId} - ${subcat.name}`, level: 1 });
         subcategoryIndex++;

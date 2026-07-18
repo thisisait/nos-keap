@@ -84,34 +84,37 @@ function domainOf(url?: string): string | undefined {
 }
 
 /** Validate + normalize an envelope; throws Error with a 400-able message. */
-export function parseEnvelope(body: any): CaptureEnvelope {
+export function parseEnvelope(body: unknown): CaptureEnvelope {
   if (!body || typeof body !== 'object') throw new Error('body must be a JSON object');
-  const src = body.source;
+  // Structural view of the unvalidated wire body; every field below is still
+  // runtime-checked or coerced before it enters the returned envelope.
+  const b = body as Partial<CaptureEnvelope>;
+  const src = b.source;
   if (!src || !SOURCE_KINDS.includes(src.kind) || typeof src.name !== 'string' || !src.name.trim()) {
     throw new Error(`source {kind: ${SOURCE_KINDS.join('|')}, name} is required`);
   }
-  if (typeof body.title !== 'string' || !body.title.trim()) throw new Error('title is required');
-  if (body.location && (typeof body.location.lat !== 'number' || typeof body.location.lon !== 'number')) {
+  if (typeof b.title !== 'string' || !b.title.trim()) throw new Error('title is required');
+  if (b.location && (typeof b.location.lat !== 'number' || typeof b.location.lon !== 'number')) {
     throw new Error('location requires numeric lat + lon');
   }
-  if (body.media && typeof body.media.url !== 'string') {
+  if (b.media && typeof b.media.url !== 'string') {
     throw new Error('media requires url (media arrives by reference; binary upload is phase 2)');
   }
   return {
-    id: typeof body.id === 'string' && body.id.trim() ? body.id : crypto.randomUUID(),
+    id: typeof b.id === 'string' && b.id.trim() ? b.id : crypto.randomUUID(),
     source: { kind: src.kind, name: String(src.name).slice(0, 64) },
-    modality: body.modality,
-    title: String(body.title).slice(0, 300),
-    text: body.text ? String(body.text).slice(0, 8000) : undefined,
-    url: body.url ? String(body.url) : undefined,
-    domain: body.domain ? String(body.domain) : undefined,
-    location: body.location
-      ? { lat: body.location.lat, lon: body.location.lon, label: body.location.label ? String(body.location.label).slice(0, 200) : undefined }
+    modality: b.modality,
+    title: String(b.title).slice(0, 300),
+    text: b.text ? String(b.text).slice(0, 8000) : undefined,
+    url: b.url ? String(b.url) : undefined,
+    domain: b.domain ? String(b.domain) : undefined,
+    location: b.location
+      ? { lat: b.location.lat, lon: b.location.lon, label: b.location.label ? String(b.location.label).slice(0, 200) : undefined }
       : undefined,
-    media: body.media ? { url: String(body.media.url), mime: body.media.mime ? String(body.media.mime) : undefined } : undefined,
-    capturedAt: typeof body.capturedAt === 'number' ? body.capturedAt : undefined,
-    tags: Array.isArray(body.tags) ? body.tags.slice(0, 20).map((t: unknown) => String(t).slice(0, 50)) : undefined,
-    metadata: body.metadata && typeof body.metadata === 'object' ? body.metadata : undefined,
+    media: b.media ? { url: String(b.media.url), mime: b.media.mime ? String(b.media.mime) : undefined } : undefined,
+    capturedAt: typeof b.capturedAt === 'number' ? b.capturedAt : undefined,
+    tags: Array.isArray(b.tags) ? b.tags.slice(0, 20).map((t: unknown) => String(t).slice(0, 50)) : undefined,
+    metadata: b.metadata && typeof b.metadata === 'object' ? b.metadata : undefined,
   };
 }
 
