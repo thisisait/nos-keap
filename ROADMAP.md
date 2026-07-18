@@ -79,6 +79,16 @@ nOS-side counterparts flagged **[nOS]**).
   curated links survive syncs, prune refuses an empty mount, `agents/` scratch excluded.
   Boot + interval + `POST /agent/v1/fs/sync`. **Open**: nOS-side users/ bind-mount + env,
   binary text extraction (pdf/docx), rename = new id.
+- **S2″ — mapped folders** *(shipped 2026-07-18)*: admin-managed `fs_mappings` datapoints
+  over read-only `KEAP_FS_ROOTS` mounts — label, nested/standalone, schema template
+  `{type, frontmatter}`, tags, manual taxonomy anchors (root + links), per-mapping sync
+  status; mirrors owned by `fsmap:<id>` (`source:'fs-mapping'`, disjoint from the users
+  pass by construction), visibility default `shared`, cfg-hash edit propagation, prune
+  guards (capped/partial/empty walks never prune). Admin tab + FolderBrowser;
+  `/api/fs/*` + `/agent/v1/fs/*` surfaces. **Option C**: `KEAP_FS_SHARED_UIDS` makes
+  reserved users-tree uids (nOS self-model `nos-docs`) tenant-shared. **Open**: object→
+  object links as drawn edges, per-mapping `embed:false` policy, mapping default
+  visibility once multi-user.
 - **S3 — OKF bundle export/import** (zip of markdown+frontmatter; dedup by id+hash).
   Interop with Google tooling & openknowledge CLI; the future sharing unit (Phase S).
 - **S4 — RRF hybrid search**: FTS5(BM25) ⊕ vectors ⊕ one-hop taxonomy/link neighbors,
