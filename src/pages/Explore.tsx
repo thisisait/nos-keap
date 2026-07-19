@@ -231,6 +231,8 @@ export default function Explore() {
       dataType: o.type,
       object: true,
       form: o.form,
+      // First taxonomy anchor — the star this body orbits; B2b clusters by it.
+      anchor: o.anchors[0],
       glyph: o.glyph,
       // fs relPath — the core view renders file leaves as satellite cubes.
       path: o.path,

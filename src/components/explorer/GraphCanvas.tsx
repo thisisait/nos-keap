@@ -87,6 +87,17 @@ const ORBITAL_INSTANCE_CAP = 300;
 // instanced (all drawn), and the 'full' detail toggle disables hiding outright.
 const ORBITAL_LOD_MIN = 150;
 
+// B2b — cluster nebula impostors. Each anchor's orbiting bodies aggregate into a
+// soft nebula sprite (dominant hue, sized by the body cloud's extent). It
+// cross-fades by APPARENT size (extent ÷ camera distance): a cluster that's
+// small on screen (zoomed out / far) shows its nebula; as the camera closes and
+// the cluster fills more of the view, the nebula fades out and the individual
+// bodies take over. So a distant dense region reads as a shaped nebula instead
+// of a wall of overlapping bodies — the U2″ vision, with the Phase-C shader
+// nebula later replacing this radial sprite.
+const IMPOSTOR_FADE_MIN = 0.05; // ≤ this apparent size → nebula at full opacity
+const IMPOSTOR_FADE_MAX = 0.32; // ≥ this → nebula gone, bodies fully in charge
+
 export interface CanvasNode {
   id: string;
   name: string;
@@ -110,6 +121,9 @@ export interface CanvasNode {
   exts?: Array<[string, number]>;
   /** Celestial form (objects only) — planet | moon | asteroid | comet | station. */
   form?: CelestialForm;
+  /** Anchor taxonomy node id (objects) — the star this body orbits; the key the
+   *  B2b cluster impostors aggregate by. */
+  anchor?: string;
   glyph?: string;
   distance?: number;
   categoryHue: number;
@@ -625,6 +639,11 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
   // B2a — per-form InstancedMeshes for the observer orbital bodies (+ ring mesh),
   // each paired with its source node list so the lens recolour maps instance→node.
   const assetOverlayRef = useRef<Array<{ mesh: THREE.InstancedMesh; nodes: CanvasNode[] }> | null>(null);
+  // B2b — cluster nebula impostor sprites + their centroids/extent, cross-faded
+  // per frame by camera distance (the effect near the overlays owns the fade).
+  const impostorRef = useRef<Array<{
+    sprite: THREE.Sprite; cx: number; cy: number; cz: number; extent: number; count: number;
+  }> | null>(null);
 
   // Files core: fly INTO the ring center when the core switches on, back out
   // to the whole sky when it switches off. Ship mode owns its own camera.
@@ -1036,6 +1055,44 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     () => !forceDetail && !coreView && nodes.filter((n) => n.object).length > ORBITAL_INSTANCE_CAP,
     [nodes, coreView, forceDetail],
   );
+  // B2b — aggregate anchored bodies into clusters (one per anchor star): centroid
+  // (body-cloud mean), extent (bbox half-diagonal), count, and a circular-mean
+  // dominant hue. Observer view only, and never in 'full' detail (the owner
+  // asked to see everything raw then). One O(bodies) pass.
+  const clusters = useMemo(() => {
+    if (coreView || forceDetail) return [] as Array<{ cx: number; cy: number; cz: number; extent: number; count: number; hue: number }>;
+    type Agg = { n: number; sx: number; sy: number; sz: number; hx: number; hy: number;
+      minx: number; maxx: number; miny: number; maxy: number; minz: number; maxz: number };
+    const acc = new Map<string, Agg>();
+    for (const nd of nodes) {
+      if (!nd.object || nd.fx == null || nd.fy == null || nd.fz == null || !nd.anchor) continue;
+      let a = acc.get(nd.anchor);
+      if (!a) {
+        a = { n: 0, sx: 0, sy: 0, sz: 0, hx: 0, hy: 0,
+          minx: Infinity, maxx: -Infinity, miny: Infinity, maxy: -Infinity, minz: Infinity, maxz: -Infinity };
+        acc.set(nd.anchor, a);
+      }
+      a.n++;
+      a.sx += nd.fx; a.sy += nd.fy; a.sz += nd.fz;
+      const h = (nd.categoryHue * Math.PI) / 180;
+      a.hx += Math.cos(h); a.hy += Math.sin(h);
+      if (nd.fx < a.minx) a.minx = nd.fx; if (nd.fx > a.maxx) a.maxx = nd.fx;
+      if (nd.fy < a.miny) a.miny = nd.fy; if (nd.fy > a.maxy) a.maxy = nd.fy;
+      if (nd.fz < a.minz) a.minz = nd.fz; if (nd.fz > a.maxz) a.maxz = nd.fz;
+    }
+    const out: Array<{ cx: number; cy: number; cz: number; extent: number; count: number; hue: number }> = [];
+    for (const [, a] of acc) {
+      // Skip trivially small clusters — a lone body reads fine as itself.
+      if (a.n < 3) continue;
+      const extent = 0.5 * Math.hypot(a.maxx - a.minx, a.maxy - a.miny, a.maxz - a.minz) + 8;
+      out.push({
+        cx: a.sx / a.n, cy: a.sy / a.n, cz: a.sz / a.n,
+        extent, count: a.n,
+        hue: ((Math.atan2(a.hy, a.hx) * 180) / Math.PI + 360) % 360,
+      });
+    }
+    return out;
+  }, [nodes, coreView, forceDetail]);
 
   // Always-on labels: galaxy names (categories) so the observer never loses
   // orientation, and star names so semantic hits are readable at a glance.
@@ -1382,6 +1439,99 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       mat.dispose();
     };
   }, [graphData, mode]);
+
+  // PERF/B2b — cluster nebula impostor lifecycle. One additive nebula sprite per
+  // cluster, coloured by its dominant hue and scaled to its body cloud. Built
+  // when the cluster set changes; the cross-fade effect below drives per-frame
+  // opacity. Sprites live in the scene (outside the forceGraph subtree) and never
+  // raycast, so picking is untouched.
+  useEffect(() => {
+    if (!clusters.length) return;
+    const built = clusters.map((c) => {
+      const sprite = new THREE.Sprite(
+        new THREE.SpriteMaterial({
+          map: _nebulaTex,
+          color: new THREE.Color(`hsl(${c.hue.toFixed(0)}, 55%, 55%)`),
+          opacity: 0, // the cross-fade sets it every frame
+          transparent: true,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+        }),
+      );
+      sprite.position.set(c.cx, c.cy, c.cz);
+      sprite.scale.setScalar(c.extent * 2.6); // the glow reads bigger than the cloud
+      noRaycast(sprite);
+      return { sprite, cx: c.cx, cy: c.cy, cz: c.cz, extent: c.extent, count: c.count };
+    });
+    impostorRef.current = built;
+    let raf = 0;
+    let scene: THREE.Scene | null = null;
+    const attach = () => {
+      const ref = fgRef.current;
+      if (ref) {
+        try {
+          scene = ref.scene();
+          for (const b of built) scene.add(b.sprite);
+          return;
+        } catch {
+          // Renderer not ready — retry next frame.
+        }
+      }
+      raf = requestAnimationFrame(attach);
+    };
+    attach();
+    return () => {
+      cancelAnimationFrame(raf);
+      if (scene) for (const b of built) scene.remove(b.sprite);
+      for (const b of built) b.sprite.material.dispose(); // shared _nebulaTex kept
+      impostorRef.current = null;
+    };
+  }, [clusters]);
+
+  // PERF/B2b — cross-fade the nebula impostors by apparent size each frame. A
+  // cluster small on screen (far / zoomed out) shows its nebula at full opacity;
+  // as the camera closes and it fills the view, the nebula fades and the bodies
+  // take over. Denser clusters (more bodies) keep a stronger nebula. Cheap: one
+  // distance + opacity write per cluster, and an idle guard skips a still camera.
+  useEffect(() => {
+    if (coreView || mode === 'ship') return;
+    let raf = 0;
+    let lastX = Infinity;
+    let lastY = Infinity;
+    let lastZ = Infinity;
+    const step = () => {
+      const ref = fgRef.current;
+      const impostors = impostorRef.current;
+      if (ref && impostors) {
+        const cp = ref.camera().position;
+        const dmx = cp.x - lastX;
+        const dmy = cp.y - lastY;
+        const dmz = cp.z - lastZ;
+        if (dmx * dmx + dmy * dmy + dmz * dmz > 0.5) {
+          lastX = cp.x;
+          lastY = cp.y;
+          lastZ = cp.z;
+          for (const im of impostors) {
+            const dx = cp.x - im.cx;
+            const dy = cp.y - im.cy;
+            const dz = cp.z - im.cz;
+            const app = im.extent / (Math.sqrt(dx * dx + dy * dy + dz * dz) || 1);
+            const frac = Math.min(
+              1,
+              Math.max(0, (app - IMPOSTOR_FADE_MIN) / (IMPOSTOR_FADE_MAX - IMPOSTOR_FADE_MIN)),
+            );
+            const maxOp = 0.2 + Math.min(1, im.count / 40) * 0.38; // denser → stronger
+            const op = maxOp * (1 - frac);
+            (im.sprite.material as THREE.SpriteMaterial).opacity = op;
+            im.sprite.visible = op > 0.012;
+          }
+        }
+      }
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [clusters, coreView, mode]);
 
   // U2″ Phase B (B1) — orbital-object LOD. Toggles each anchored body's mesh
   // visibility by its apparent size (rendered radius ÷ camera distance) with
