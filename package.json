@@ -10,6 +10,7 @@
     "dev:api": "PORT=8081 tsx watch server/index.ts",
     "dev:ext": "wxt",
     "dev:ext:firefox": "wxt -b firefox",
+    "seed:fixture": "tsx scripts/gen-fixture.ts",
     "build": "vite build && npm run build:server && npm run build:ext",
     "build:ext": "wxt build",
     "build:ext:firefox": "wxt build -b firefox",
@@ -102,6 +103,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",
+    "@faker-js/faker": "^10.5.0",
     "@playwright/test": "^1.61.1",
     "@tailwindcss/typography": "^0.5.15",
     "@types/express": "^4.17.21",

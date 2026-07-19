@@ -31,6 +31,9 @@ dist-extension
 dist-server
 data
 
+# Synthetic stress/preview fixtures (scripts/gen-fixture.ts)
+.fixture
+
 # TypeScript incremental build info
 *.tsbuildinfo
 
