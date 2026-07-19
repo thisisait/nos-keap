@@ -38,3 +38,25 @@ against the same checkout at once.
 - `server/fs-sync.ts` users pass is behaviorally FROZEN.
 - Bulk links stay GL lines (width 0), DPR cap 1.5, half-res bloom, sim cooldown 6 s (see GraphCanvas PERF comments).
 - i18n en + cs for every UI string; e2e coverage for new behavior; honest gates (report failures, don't paper over them).
+
+## Track R3 — typed semantic relations (2026-07-19)
+
+Turns KEAP's untyped edges into a moderated, typed knowledge graph — the "brain
+for LLM" upgrade. Recall (nomic embeddings, cross-type kNN) surfaces candidate
+pairs; Sonnet types them into a controlled, moderated-grow vocabulary
+(ToE-style) HOST-SIDE in controlled batches; results are stored with provenance
+and human-moderated, then rendered as verb-labelled edges and exposed to LLMs.
+Two testable stages — run in order, releasing after each:
+
+| # | workflow | stage | notes |
+|---|----------|-------|-------|
+| R3.1 | `keap-relations-stage1` | pipeline + store | migration 006 (cross-type + provenance + status) · relation_types registry · vector-index recall · agent `GET /relations/candidates` + `POST /relations` · classifier STUBBED in e2e. Backend-only, agent-testable. |
+| R3.2 | `keap-relations-stage2` | moderate + render + brain | `/api/admin/relations*` moderation + vocab-grow · cross-type verb-labelled edge rendering · `GET /agent/v1/graph` (closes S2⁷). Run after R3.1 merges. |
+
+R3 invariants (beyond the shared ones above): SIMILARITY stays a view, only
+TYPED relations are stored; the LLM classification runs host-side (KEAP surfaces
+candidates + accepts typed results, never calls an LLM in-container); every
+derived row carries provenance (source/confidence/justification/model/status);
+the controlled vocab grows only through moderation; existing ToE relations
+migrate unchanged; visibility scopes both endpoints of every edge (render AND
+the brain endpoint).
