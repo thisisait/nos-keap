@@ -12,7 +12,7 @@
 import { useCallback, useMemo, useState, useRef, useLayoutEffect, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Rocket, Orbit, Search, Waypoints, Boxes } from 'lucide-react';
+import { ArrowLeft, Rocket, Orbit, Search, Waypoints, Boxes, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { apiFetch } from '@/services/api/client';
@@ -64,6 +64,11 @@ export default function Explore() {
   const [drawer, setDrawer] = useState<DrawerTarget | null>(null);
   const [cameraMode, setCameraMode] = useState<CameraMode>('observer');
   const [showRelations, setShowRelations] = useState(() => initialParams.get('rel') !== '0');
+  // Detail mode: 'full' forces every orbital body in full form (no instancing /
+  // apparent-size hiding) for small fields; 'auto' lets the perf LODs engage.
+  const [detail, setDetail] = useState<'auto' | 'full'>(() =>
+    initialParams.get('detail') === 'full' ? 'full' : 'auto',
+  );
   const [jumpQuery, setJumpQuery] = useState('');
   const [jumpMiss, setJumpMiss] = useState(false);
   const [shipHud, setShipHud] = useState({ speed: 0, boosting: false, thrust: 0 });
@@ -90,8 +95,9 @@ export default function Explore() {
     if (core.on) p.set('core', core.order);
     if (lens.axis) p.set('lens', lens.axis);
     if (!showRelations) p.set('rel', '0');
+    if (detail === 'full') p.set('detail', 'full');
     setSearchParams(p, { replace: true });
-  }, [focusId, core.on, core.order, lens.axis, showRelations, setSearchParams]);
+  }, [focusId, core.on, core.order, lens.axis, showRelations, detail, setSearchParams]);
 
   // Semantic hyperspace jump: hybrid search → plot course to the best hit's
   // star (objects/captures resolve to their anchor node). Focus does the
@@ -661,6 +667,16 @@ export default function Explore() {
             <Boxes className="h-3.5 w-3.5" />
             {t('explore.core.toggle')}
           </Button>
+          <Button
+            variant={detail === 'full' ? 'default' : 'outline'}
+            size="sm"
+            className="h-8 gap-1.5 text-xs"
+            onClick={() => setDetail((d) => (d === 'full' ? 'auto' : 'full'))}
+            title="Detail: Auto lets performance LODs engage at scale; Full shows every body in full form"
+          >
+            <Sparkles className="h-3.5 w-3.5" />
+            {detail === 'full' ? 'Full' : 'Auto'}
+          </Button>
         </div>
       </header>
 
@@ -682,6 +698,7 @@ export default function Explore() {
               onShipUpdate={setShipHud}
               lens={lens}
               coreView={core.on}
+              detail={detail}
             />
           )}
           {!isLoading && core.on && (

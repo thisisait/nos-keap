@@ -81,6 +81,11 @@ const ORBITAL_LOD_HIDE = 0.007; // ~hidden when it drops below this
 // InstancedMeshes (the effect further down). Below it the individual meshes stay
 // — few, cheap, and they keep the ring/tail dressing + the apparent-size LOD.
 const ORBITAL_INSTANCE_CAP = 300;
+// Below this the apparent-size hiding stays OFF — a small/typical field shows
+// every body in full form (the owner's ask). Hiding only declutters the medium
+// band (ORBITAL_LOD_MIN … ORBITAL_INSTANCE_CAP); above the cap bodies are
+// instanced (all drawn), and the 'full' detail toggle disables hiding outright.
+const ORBITAL_LOD_MIN = 150;
 
 export interface CanvasNode {
   id: string;
@@ -173,6 +178,11 @@ interface Props {
   lens?: LensState;
   /** Files core active — flying the camera in/out of the ring center. */
   coreView?: boolean;
+  /** Detail mode. 'auto' (default) lets the perf LODs engage at scale
+   *  (instancing above the cap, apparent-size hiding for medium fields); 'full'
+   *  forces every body in full form — no instancing, no hiding — for when the
+   *  field is small enough to just show everything. */
+  detail?: 'auto' | 'full';
 }
 
 const STAR_COLOR: Record<string, string> = {
@@ -569,7 +579,8 @@ function hash01v(s: string): number {
   return ((h >>> 0) % 100000) / 100000;
 }
 
-export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width, height, mode, onShipUpdate, lens, coreView }: Props) {
+export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width, height, mode, onShipUpdate, lens, coreView, detail = 'auto' }: Props) {
+  const forceDetail = detail === 'full';
   const fgRef = useRef<GraphRef | undefined>(undefined);
   const didFitRef = useRef(false);
   const coreViewRef = useRef(coreView);
@@ -996,8 +1007,8 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
   // individual meshes stay (rings/tails + apparent-size LOD). Core view is
   // handled by the cube overlay above, so this is observer-only.
   const instanceBodies = useMemo(
-    () => !coreView && nodes.filter((n) => n.object).length > ORBITAL_INSTANCE_CAP,
-    [nodes, coreView],
+    () => !forceDetail && !coreView && nodes.filter((n) => n.object).length > ORBITAL_INSTANCE_CAP,
+    [nodes, coreView, forceDetail],
   );
 
   // Always-on labels: galaxy names (categories) so the observer never loses
@@ -1353,11 +1364,13 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
   // toggling stub.visible would be a no-op — skip it; instancing makes drawing
   // them all cheap, and distance declutter of whole clusters is B2b's job.
   useEffect(() => {
-    if (coreView || mode === 'ship' || instanceBodies) return;
+    // 'full' detail forces every body visible; the instanced regime handles its
+    // own drawing; small/typical fields (≤ ORBITAL_LOD_MIN) show in full form.
+    if (coreView || mode === 'ship' || instanceBodies || forceDetail) return;
     const bodies = graphData.nodes.filter(
       (n: CanvasNode) => n.object && n.fx != null,
     ) as Array<CanvasNode & { fx: number; fy: number; fz: number; __threeObj?: THREE.Object3D }>;
-    if (!bodies.length) return;
+    if (bodies.length <= ORBITAL_LOD_MIN) return;
     // Rendered radius per body — object size is lens-independent (nodeSize only
     // scales non-objects by centrality), so precompute once for the effect.
     const radius = bodies.map(
@@ -1399,7 +1412,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     };
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
-  }, [graphData, coreView, mode, instanceBodies]);
+  }, [graphData, coreView, mode, instanceBodies, forceDetail]);
 
   // Memoised so the accessor identity only changes on a focus/lens change (an
   // inline arrow changes every render → a node digest every render). These
