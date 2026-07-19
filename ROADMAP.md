@@ -155,9 +155,19 @@ nOS-side counterparts flagged **[nOS]**).
   object into a 3D core at the (empty) galaxy-ring center; taxonomy stars never move,
   teal rays tether objects to their anchors. Reorder modes: **Folders** (default —
   folder constellations along `frontmatter.path`, synthetic `dir:` hubs), **Taxonomy**
-  (clusters at their galaxy's ring angle scaled inward), **Topics** (TBD — needs
-  object-vector clustering server-side; k-means over `kind='object'` embeddings +
-  stable cluster→slot assignment, see Track K features pipeline as the template).
+  (clusters at their galaxy's ring angle scaled inward), **Topics** *(shipped 2026-07-19)*:
+  warm-started spherical k-means over `kind='object'` embeddings, in-container TS off the
+  request path; sticky topic ids + centroid anchoring + assignment hysteresis + birth-frozen
+  ring angle → stable slots across syncs (unchanged data = byte-level no-op). c-TF-IDF labels
+  (shared-members-only so private tokens never reach a co-viewer), migration `005-topic-clusters`,
+  admin rename/lock panel, `~untopiced` centre fog for unembedded objects. Model-flip reset is
+  margin-gated (≥20% sustained lead) so a dual-model deployment never suffers un-caused slot loss.
+  *Verify follow-ups (accepted debt, tracked):* k grows only 1/run (bulk import converges slowly);
+  `topicsStale()` can churn under carry-forward assignments; empty births linger 3 runs; the
+  `~untopiced` bucket is exempt from ray-aggregation (thousands of centre rays during partial
+  embedding coverage); Topics button keeps its active highlight when topics vanish on a refresh
+  and silently falls back to fs; `meta.topics` ships corpus-global counts; per-request full
+  assignment-table load. None block release; revisit under scale + a topics-polish pass.
   *2026-07-18 renderer pass*: repo folders (`.git` detected in the fs walks, shipped as
   `fsDirs` aggregates) render as language-banded identicon spheres sized by subtree
   bytes (linguist-style ext→language mix, name-seeded texture); core-view file leaves
