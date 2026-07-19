@@ -76,6 +76,12 @@ const HUGE_FIELD = 5000; // objects
 const ORBITAL_LOD_SHOW = 0.01; // ~visible when radius/dist exceeds this
 const ORBITAL_LOD_HIDE = 0.007; // ~hidden when it drops below this
 
+// PERF/B2a — above this many observer-view bodies, the per-body Mesh draw calls
+// (buildAssetMesh) are the bound, so the bodies collapse into per-form
+// InstancedMeshes (the effect further down). Below it the individual meshes stay
+// — few, cheap, and they keep the ring/tail dressing + the apparent-size LOD.
+const ORBITAL_INSTANCE_CAP = 300;
+
 export interface CanvasNode {
   id: string;
   name: string;
@@ -505,6 +511,11 @@ function buildFileCube(node: CanvasNode, withLabel: boolean, lens?: LensState): 
 // lives outside the forceGraph subtree so RFG's own raycaster never sees it.
 const _cubeInstMat = new THREE.MeshBasicMaterial(); // white base; per-instance colour tints it
 const _stubMat = new THREE.MeshBasicMaterial(); // never rendered (the stub is visible=false)
+// B2a — shared instance materials for the observer-view orbital bodies. DoubleSide
+// so the (reused) planet-ring InstancedMesh renders both faces, same as the
+// non-instanced ring. Bodies are convex, so DoubleSide is a no-op for them.
+const _assetInstMat = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
+const _ringInstMat = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
 
 /** Core-view file leaf, instanced variant: an invisible pick stub matching the
  *  cube's bounds + rotation. The visible body is drawn by the overlay below. */
@@ -513,6 +524,18 @@ function fileCubeStub(node: CanvasNode): THREE.Object3D {
   mesh.scale.setScalar(2.6); // match buildFileCube — this IS the raycast target
   mesh.rotation.y = hash01v(node.id) * Math.PI;
   mesh.rotation.x = hash01v(`${node.id}:x`) * 0.5;
+  mesh.visible = false; // 0 draw calls; still raycastable (three tests layers, not visible)
+  return mesh;
+}
+
+/** B2a — observer-view orbital body, instanced variant: an invisible pick stub
+ *  matching the per-form body geometry/scale/rotation. The visible body (and
+ *  its ring) is drawn by the per-form InstancedMesh overlay below. */
+function assetStub(node: CanvasNode): THREE.Object3D {
+  const form = node.form ?? 'asteroid';
+  const mesh = new THREE.Mesh(_formGeo[form] ?? _formGeo.asteroid, _stubMat);
+  mesh.scale.setScalar((FORM_SIZE[form] ?? 1.4) * 2.4); // match buildAssetMesh
+  mesh.rotation.set(hash01v(`${node.id}:x`) * 0.5, hash01v(node.id) * Math.PI, 0);
   mesh.visible = false; // 0 draw calls; still raycastable (three tests layers, not visible)
   return mesh;
 }
@@ -562,6 +585,9 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
   // not in the instanced regime). The build effect owns its lifecycle; the lens
   // effect recolours it in place.
   const cubeOverlayRef = useRef<THREE.InstancedMesh | null>(null);
+  // B2a — per-form InstancedMeshes for the observer orbital bodies (+ ring mesh),
+  // each paired with its source node list so the lens recolour maps instance→node.
+  const assetOverlayRef = useRef<Array<{ mesh: THREE.InstancedMesh; nodes: CanvasNode[] }> | null>(null);
 
   // Files core: fly INTO the ring center when the core switches on, back out
   // to the whole sky when it switches off. Ship mode owns its own camera.
@@ -964,6 +990,15 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
   // bodies collapse into ONE InstancedMesh overlay (the effect further down),
   // and nodeThreeObject returns invisible pick stubs instead of drawn cubes.
   const instanceCubes = Boolean(coreView) && !fileLabels;
+  // B2a — the observer-view twin: above ORBITAL_INSTANCE_CAP anchored bodies the
+  // per-body asset meshes collapse into per-form InstancedMeshes (effect below),
+  // and nodeThreeObject returns invisible pick stubs. Below the cap the pretty
+  // individual meshes stay (rings/tails + apparent-size LOD). Core view is
+  // handled by the cube overlay above, so this is observer-only.
+  const instanceBodies = useMemo(
+    () => !coreView && nodes.filter((n) => n.object).length > ORBITAL_INSTANCE_CAP,
+    [nodes, coreView],
+  );
 
   // Always-on labels: galaxy names (categories) so the observer never loses
   // orientation, and star names so semantic hits are readable at a glance.
@@ -984,6 +1019,9 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
         if (instanceCubes) return fileCubeStub(node);
         return buildFileCube(node, fileLabels, lens);
       }
+      // Observer view, dense field: instanced regime — a pick stub; the per-form
+      // overlay draws the body (and ring). Below the cap, the full asset mesh.
+      if (instanceBodies) return assetStub(node);
       return buildAssetMesh(node, lens);
     }
     // Repo folder hubs: the language-banded identicon sphere REPLACES the
@@ -1047,7 +1085,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     // lens is deliberately NOT a dep (read via lensRef): a lens toggle must not
     // change this accessor's identity, or react-force-graph rebuilds EVERY mesh.
     // The recency recolour is applied in place to the existing bodies below.
-  }, [coreView, fileLabels, folderLabels, starLabels, anchorLabels, instanceCubes]);
+  }, [coreView, fileLabels, folderLabels, starLabels, anchorLabels, instanceCubes, instanceBodies]);
 
   // Lens recolour, IN PLACE (replaces the old fgRef.refresh(), which set
   // _flushObjects → cleared the node-object cache → rebuilt thousands of
@@ -1059,9 +1097,10 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
   useEffect(() => {
     for (const n of graphData.nodes) {
       if (!n.object) continue;
-      // Instanced core cubes are recoloured via the overlay's instanceColor
-      // (the effect below), not their invisible stub material — skip them here.
+      // Instanced bodies (core cubes OR observer orbital bodies) are recoloured
+      // via their overlay's instanceColor, not the invisible stub — skip here.
       if (instanceCubes && n.path) continue;
+      if (instanceBodies) continue;
       const obj = (n as CanvasNode & { __threeObj?: THREE.Object3D }).__threeObj;
       if (!obj) continue;
       // buildAssetMesh/buildFileCube return the body Mesh directly, or a Group
@@ -1071,7 +1110,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       const mat = Array.isArray(body.material) ? body.material[0] : body.material;
       (mat as THREE.MeshBasicMaterial).color?.set(objectBodyColor(n, Boolean(coreView), lens));
     }
-  }, [lens, coreView, graphData, instanceCubes]);
+  }, [lens, coreView, graphData, instanceCubes, instanceBodies]);
 
   // PERF/S4 — the instanced-cube overlay lifecycle. ONE InstancedMesh added to
   // the renderer SCENE (NOT the forceGraph subtree, so react-force-graph's
@@ -1142,6 +1181,100 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     const col = new THREE.Color();
     cubes.forEach((n, i) => mesh.setColorAt(i, col.set(objectBodyColor(n, true, lens))));
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+  }, [lens, graphData]);
+
+  // PERF/B2a — the observer-body overlay lifecycle, the S4 pattern extended to
+  // the FIVE celestial forms (each its own geometry → its own InstancedMesh) plus
+  // one ring InstancedMesh at the planet positions. Matrices come from the pinned
+  // fx/fy/fz (byte-identical to where RFG positions each stub), so visible body
+  // and pick target coincide. Rebuilt only when the node set / regime change;
+  // the comet tail (a Sprite) is dropped in this dense regime, like labels are.
+  useEffect(() => {
+    if (!instanceBodies) return;
+    const bodies = graphData.nodes.filter((n) => n.object && n.fx != null) as Array<
+      CanvasNode & { fx: number; fy: number; fz: number }
+    >;
+    if (!bodies.length) return;
+    const byForm = new Map<CelestialForm, Array<CanvasNode & { fx: number; fy: number; fz: number }>>();
+    for (const n of bodies) {
+      const f = (n.form ?? 'asteroid') as CelestialForm;
+      const arr = byForm.get(f);
+      if (arr) arr.push(n);
+      else byForm.set(f, [n]);
+    }
+    const groups: Array<{ mesh: THREE.InstancedMesh; nodes: CanvasNode[] }> = [];
+    const dummy = new THREE.Object3D();
+    const col = new THREE.Color();
+    for (const [form, list] of byForm) {
+      const size = (FORM_SIZE[form] ?? 1.4) * 2.4;
+      const body = new THREE.InstancedMesh(_formGeo[form] ?? _formGeo.asteroid, _assetInstMat, list.length);
+      body.frustumCulled = false; // spans the whole universe — no whole-batch cull
+      noRaycast(body); // picking stays on the per-node stubs
+      list.forEach((n, i) => {
+        dummy.position.set(n.fx, n.fy, n.fz);
+        dummy.rotation.set(hash01v(`${n.id}:x`) * 0.5, hash01v(n.id) * Math.PI, 0); // == assetStub
+        dummy.scale.setScalar(size);
+        dummy.updateMatrix();
+        body.setMatrixAt(i, dummy.matrix);
+        body.setColorAt(i, col.set(objectBodyColor(n, false, lensRef.current)));
+      });
+      body.instanceMatrix.needsUpdate = true;
+      if (body.instanceColor) body.instanceColor.needsUpdate = true;
+      groups.push({ mesh: body, nodes: list });
+      // Planet rings: a parallel InstancedMesh, same positions, fixed tilt.
+      if (form === 'planet') {
+        const ring = new THREE.InstancedMesh(_ringGeo, _ringInstMat, list.length);
+        ring.frustumCulled = false;
+        noRaycast(ring);
+        list.forEach((n, i) => {
+          dummy.position.set(n.fx, n.fy, n.fz);
+          dummy.rotation.set(Math.PI / 2.4, 0, 0); // == buildAssetMesh ring tilt
+          dummy.scale.setScalar(size);
+          dummy.updateMatrix();
+          ring.setMatrixAt(i, dummy.matrix);
+          ring.setColorAt(i, col.set(objectBodyColor(n, false, lensRef.current)));
+        });
+        ring.instanceMatrix.needsUpdate = true;
+        if (ring.instanceColor) ring.instanceColor.needsUpdate = true;
+        groups.push({ mesh: ring, nodes: list });
+      }
+    }
+    assetOverlayRef.current = groups;
+    let raf = 0;
+    let scene: THREE.Scene | null = null;
+    const attach = () => {
+      const ref = fgRef.current;
+      if (ref) {
+        try {
+          scene = ref.scene();
+          for (const g of groups) scene.add(g.mesh);
+          return;
+        } catch {
+          // Renderer not ready — retry next frame.
+        }
+      }
+      raf = requestAnimationFrame(attach);
+    };
+    attach();
+    return () => {
+      cancelAnimationFrame(raf);
+      if (scene) for (const g of groups) scene.remove(g.mesh);
+      for (const g of groups) g.mesh.dispose();
+      assetOverlayRef.current = null;
+    };
+  }, [graphData, instanceBodies]);
+
+  // PERF/B2a — recolour the instanced bodies (+ rings) in place on a lens toggle,
+  // the instanceColor twin of the cube-overlay recolour. The stored node lists
+  // preserve the build order, so instance i always maps to node i per group.
+  useEffect(() => {
+    const groups = assetOverlayRef.current;
+    if (!groups) return;
+    const col = new THREE.Color();
+    for (const { mesh, nodes } of groups) {
+      nodes.forEach((n, i) => mesh.setColorAt(i, col.set(objectBodyColor(n, false, lens))));
+      if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    }
   }, [lens, graphData]);
 
   // Focus-halo orbits: semantic dust circles the focused node VERY slowly
@@ -1215,9 +1348,12 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
   // view relocates objects to the ring centre as cubes). Hidden bodies also drop
   // out of the raycast (three skips invisible), which is exactly right: you
   // can't click what you can't see. Cheap: one distance + compare per body, and
-  // an idle guard skips the whole pass while the camera is still.
+  // an idle guard skips the whole pass while the camera is still. In the
+  // instanced regime the bodies have no drawn per-node object (only stubs), so
+  // toggling stub.visible would be a no-op — skip it; instancing makes drawing
+  // them all cheap, and distance declutter of whole clusters is B2b's job.
   useEffect(() => {
-    if (coreView || mode === 'ship') return;
+    if (coreView || mode === 'ship' || instanceBodies) return;
     const bodies = graphData.nodes.filter(
       (n: CanvasNode) => n.object && n.fx != null,
     ) as Array<CanvasNode & { fx: number; fy: number; fz: number; __threeObj?: THREE.Object3D }>;
@@ -1263,7 +1399,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     };
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
-  }, [graphData, coreView, mode]);
+  }, [graphData, coreView, mode, instanceBodies]);
 
   // Memoised so the accessor identity only changes on a focus/lens change (an
   // inline arrow changes every render → a node digest every render). These
