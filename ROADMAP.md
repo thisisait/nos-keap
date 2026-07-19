@@ -97,6 +97,15 @@ nOS-side counterparts flagged **[nOS]**).
   mounts re-armed on a 30 s probe, EMFILE/ENOSPC → interval-only degrade, `KEAP_FS_WATCH=0`
   kills it. Objects ship `mtime`; the explore Lens bar gains **Recent** — an age gradient
   (hot = this week → cold) over objects + folder hubs, recolor only (positions untouched).
+- **S2⁵ — agent DataTables surface** *(shipped 2026-07-19)*: `/agent/v1/tables` — the
+  agent-bearer twin of `/api/tables` for host callers that hold a token, not an Authentik
+  identity (the nOS face config-table seeder + BFF). Two contract shapes `/api/tables` does
+  not offer: the caller SLUG doubles as the table id (deterministic → probe-then-create is
+  idempotent) and rows are FLAT value objects both ways (the seeder keys idempotency off a
+  top-level `slug`). GET/POST tables, GET/POST rows; slug-validated, RW-scoped writes,
+  fixed `nos-agent` owner, visibility governs reads. *Known limits:* GET rows caps at 500
+  (config tables are small); a re-create never migrates an existing table's schema (create-
+  if-missing, matching the seeder's 404-guard).
 - **S3 — OKF bundle export/import** (zip of markdown+frontmatter; dedup by id+hash).
   Interop with Google tooling & openknowledge CLI; the future sharing unit (Phase S).
 - **S4 — RRF hybrid search**: FTS5(BM25) ⊕ vectors ⊕ one-hop taxonomy/link neighbors,

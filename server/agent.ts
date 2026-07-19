@@ -31,6 +31,8 @@ import { allNodes } from './taxonomy';
 import { normalizeAndSaveCapture, parseEnvelope } from './intake';
 import { syncAllFs, syncMapping, fsSyncStatus, USER_FILES_DIR } from './fs-sync';
 import { scheduleTopicRecluster, clusterTopics } from './topics';
+import { getTable, storeFor } from './tables';
+import { createTableRequestSchema } from '../shared/contracts/table';
 import { listRoots } from './fs-roots';
 import { TOKEN_RO, TOKEN_RW, tokenEquals } from './tokens';
 
@@ -297,6 +299,80 @@ export function registerAgentRoutes(app: Express) {
     if (req.query.wait === '1') return ok(res, await clusterTopics({ reset }));
     void clusterTopics({ reset }).catch((err) => console.warn('[topics] rebuild failed:', err));
     res.status(202).json({ success: true, data: { scheduled: true } });
+  });
+
+  // ── DataTables (server/tables.ts) — the agent-bearer config-table surface ──
+  // The nOS face seeder + BFF drive these: host callers hold a bearer token,
+  // not an Authentik identity, so the SSO-gated /api/tables 401s them. Two
+  // shape rules the seeder relies on and this surface (not /api/tables) honors:
+  //   1. the caller-chosen SLUG doubles as the table id (deterministic →
+  //      probe-then-create is idempotent; a re-seed finds the existing table);
+  //   2. rows are FLAT value objects both ways (POST body IS the values; GET
+  //      returns bare values), because the seeder keys idempotency off a
+  //      top-level `slug` column. /api/tables wraps rows as {id, values} — this
+  //      surface unwraps. Owner is a fixed system id; visibility governs reads.
+  const TABLE_SLUG = /^[a-z0-9][a-z0-9-]{0,62}$/;
+  const AGENT_TABLE_OWNER = 'nos-agent';
+
+  app.get('/agent/v1/tables/:slug', agentAuth('ro'), (req, res) => {
+    const t = getTable(req.params.slug);
+    if (!t) return fail(res, 404, 'unknown table');
+    ok(res, t);
+  });
+
+  app.post('/agent/v1/tables', agentAuth('rw'), async (req, res) => {
+    const b = (req.body ?? {}) as Record<string, unknown>;
+    const slug = String(b.slug ?? '');
+    if (!TABLE_SLUG.test(slug)) return fail(res, 400, 'slug must match ^[a-z0-9][a-z0-9-]{0,62}$');
+    // Idempotent create: the slug IS the id, so a re-seed returns the existing
+    // table (200) instead of colliding on the primary key.
+    const existing = getTable(slug);
+    if (existing) return ok(res, existing);
+    // Map the seeder's shape (slug + columns) onto CreateTableRequest (schema
+    // wraps columns); id is injected AFTER validation since the schema brands
+    // it uuid-only and the slug is deliberately human-readable.
+    const parsed = createTableRequestSchema.safeParse({
+      title: b.title,
+      description: b.description,
+      driver: b.driver,
+      schema: { columns: b.columns },
+      anchors: b.anchors,
+      visibility: b.visibility,
+    });
+    if (!parsed.success) return fail(res, 400, parsed.error.issues[0]?.message ?? 'invalid table');
+    try {
+      const t = await storeFor(parsed.data.driver).createTable(AGENT_TABLE_OWNER, { ...parsed.data, id: slug });
+      ok(res, t);
+    } catch (e) {
+      fail(res, 400, e instanceof Error ? e.message : 'create failed');
+    }
+  });
+
+  app.get('/agent/v1/tables/:slug/rows', agentAuth('ro'), async (req, res) => {
+    const t = getTable(req.params.slug);
+    if (!t) return fail(res, 404, 'unknown table');
+    try {
+      const { rows } = await storeFor(t.driver).listRows(t.id, { filter: [], limit: 500 });
+      // FLAT values — the seeder reads a top-level `slug` off each row.
+      ok(res, { rows: rows.map((r) => r.values) });
+    } catch (e) {
+      fail(res, 400, e instanceof Error ? e.message : 'query failed');
+    }
+  });
+
+  app.post('/agent/v1/tables/:slug/rows', agentAuth('rw'), async (req, res) => {
+    const t = getTable(req.params.slug);
+    if (!t) return fail(res, 404, 'unknown table');
+    const values = (req.body ?? {}) as Record<string, unknown>;
+    // A row's own `slug` (when present + safe) doubles as the row id, so a
+    // re-seed PATCHes the same row instead of inserting a duplicate.
+    const rowSlug = typeof values.slug === 'string' && TABLE_SLUG.test(values.slug) ? values.slug : undefined;
+    try {
+      const row = await storeFor(t.driver).upsertRow(t.id, rowSlug, values, `agent:${req.agentName}`);
+      ok(res, row.values);
+    } catch (e) {
+      fail(res, 400, e instanceof Error ? e.message : 'row upsert failed');
+    }
   });
 
   // ── Filesystem sync (server/fs-sync.ts) — the doctrine-tree mirror ─────────
