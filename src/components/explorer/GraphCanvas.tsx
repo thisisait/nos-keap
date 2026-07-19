@@ -54,6 +54,16 @@ function warpMs(ms: number): number {
 const NEAR_HOP_TARGET = 300;
 const NEAR_HOP_CAMERA = 750;
 
+// PERF/S2 label LOD budgets. Every SpriteText is one canvas + CanvasTexture, so
+// a deep folder tree or a dense star field must not allocate thousands of them.
+// Beyond these counts the labels fall back to hover-only (nodeLabel tooltip) —
+// the same budget the file-cube name plates (fileLabels) already enforce.
+const STAR_LABEL_CAP = 400; // level-2 star names
+const FOLDER_LABEL_CAP = 400; // files-core folder-hub names
+// Galaxy/constellation names are orientation anchors, kept always-on UNTIL the
+// object field itself is huge — past that even the top tier is too dense to read.
+const HUGE_FIELD = 5000; // objects
+
 export interface CanvasNode {
   id: string;
   name: string;
@@ -851,6 +861,23 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     [nodes, coreView],
   );
 
+  // Same LOD budget for the two other unbounded label sources: folder-hub names
+  // and level-2 star names. Both derive from `nodes`, so they only re-evaluate
+  // on a graphData change — exactly when the node meshes rebuild anyway.
+  const folderLabels = useMemo(
+    () => nodes.filter((n) => n.folder).length <= FOLDER_LABEL_CAP,
+    [nodes],
+  );
+  const starLabels = useMemo(
+    () => nodes.filter((n) => n.star).length <= STAR_LABEL_CAP,
+    [nodes],
+  );
+  // Galaxy/constellation anchors stay on unless the whole object field is huge.
+  const anchorLabels = useMemo(
+    () => nodes.filter((n) => n.object).length <= HUGE_FIELD,
+    [nodes],
+  );
+
   // Always-on labels: galaxy names (categories) so the observer never loses
   // orientation, and star names so semantic hits are readable at a glance.
   // Everything else keeps the hover tooltip only. Returning a falsy object
@@ -870,6 +897,8 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     // Files-core folders: the default sphere is the hub, a permanent label
     // names it — folder names ARE the orientation inside the core.
     if (node.folder) {
+      // Over budget: keep the default hub sphere, drop the name plate (hover only).
+      if (!folderLabels) return false as unknown as THREE.Object3D;
       const g = new THREE.Group();
       const sprite = new SpriteText(node.name);
       sprite.color = '#cfd8ec';
@@ -895,7 +924,10 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     if (node.level === 0) g.add(nebulaSprite(node.categoryHue)); // galaxy
     else if (node.level === 1) g.add(galaxyDisc(node.categoryHue)); // constellation
     else if (node.level === 2) g.add(starGlow(node.categoryHue)); // star
-    if (node.level <= 1 || node.star) {
+    // Two label tiers, each on its own budget: galaxy/constellation ANCHORS
+    // (level <= 1) stay on unless the field is huge; STAR names cull past the cap.
+    const isAnchor = node.level <= 1;
+    if ((isAnchor && anchorLabels) || (!isAnchor && node.star && starLabels)) {
       const sprite = new SpriteText(node.name);
       sprite.color = '#e9eefc';
       sprite.textHeight = node.level <= 1 ? 6 : 3.2;
@@ -919,7 +951,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     return g.children.length ? g : (false as unknown as THREE.Object3D);
     // lens is a dep: object bodies REPLACE the default sphere, so the recency
     // recolour must rebuild their meshes (the refresh() below re-runs this).
-  }, [coreView, fileLabels, lens]);
+  }, [coreView, fileLabels, folderLabels, starLabels, anchorLabels, lens]);
 
   // Focus-halo orbits: semantic dust circles the focused node VERY slowly
   // (a revolution takes ~2–3.5 min). Runs outside the d3 engine — the sim
