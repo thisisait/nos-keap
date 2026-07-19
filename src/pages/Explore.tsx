@@ -392,7 +392,18 @@ export default function Explore() {
       // Focus-halo center: the focused node's coordinates (baked taxonomy
       // star, or a core layout position for dir: hubs).
       const fc = nodeById.get(focusId);
-      const fp = fc && fc.x !== undefined ? [fc.x, fc.y!, fc.z!] : coreLayout?.positions.get(focusId);
+      // Focus centre. Resolving ALL node classes (not just taxonomy) is
+      // load-bearing: an object/table/folder focus is NOT in nodeById, so the
+      // old lookup returned undefined → the dust below went unpinned → the sim
+      // reheated over every node (see the orbit note). Objects/folders carry the
+      // pinned fx we just built; core hubs come from the layout map.
+      const builtFocus = nodes.find((n) => n.id === focusId);
+      const fp: [number, number, number] | undefined =
+        fc && fc.x !== undefined
+          ? [fc.x, fc.y!, fc.z!]
+          : builtFocus?.fx != null
+            ? [builtFocus.fx, builtFocus.fy!, builtFocus.fz!]
+            : coreLayout?.positions.get(focusId);
       let dustIdx = 0;
       for (const item of starItems) {
         if (item.kind === 'taxonomy' && item.nodeId && nodeById.has(item.nodeId)) {
@@ -410,9 +421,15 @@ export default function Explore() {
           const tilt = (hash01(`${id}:t`) - 0.5) * 1.1;
           const speed = (0.03 + hash01(`${id}:w`) * 0.03) * (hash01(`${id}:d`) < 0.5 ? 1 : -1);
           dustIdx++;
-          const orbit = fp
-            ? { cx: fp[0], cy: fp[1], cz: fp[2], r, phase, tilt, speed }
-            : undefined;
+          // ALWAYS pin the dust — never leave a node force-free. A single
+          // unpinned node flips hasUnpinnedNode, which reheats the d3 sim over
+          // EVERY node; d3's charge then rebuilds a Barnes-Hut octree across all
+          // 20k+ bodies each tick (pinned strengths are 0 but still in the tree)
+          // → a multi-second freeze on focus and ~0.1 FPS at scale. Fall back to
+          // the origin if the focus centre is somehow unknown — orbiting the
+          // origin beats freezing the whole app.
+          const c = fp ?? [0, 0, 0];
+          const orbit = { cx: c[0], cy: c[1], cz: c[2], r, phase, tilt, speed };
           nodes.push({
             id,
             name: item.name,
@@ -425,20 +442,12 @@ export default function Explore() {
             distance: item.distance,
             categoryHue: 45,
             orbit,
-            // Pinned at the orbit's t=0 point — NOTHING in the scene is
-            // force-free anymore, so nothing can ever fly away.
-            ...(orbit
-              ? {
-                  fx: orbit.cx + r * Math.cos(phase),
-                  fy: orbit.cy + r * Math.sin(phase) * Math.sin(tilt),
-                  fz: orbit.cz + r * Math.sin(phase) * Math.cos(tilt),
-                }
-              : {}),
+            // Pinned at the orbit's t=0 point; the GraphCanvas animator revolves
+            // it and draws its own tether, so nothing is ever force-free.
+            fx: orbit.cx + r * Math.cos(phase),
+            fy: orbit.cy + r * Math.sin(phase) * Math.sin(tilt),
+            fz: orbit.cz + r * Math.sin(phase) * Math.cos(tilt),
           });
-          // The tether to the focus is drawn by the orbit animator (a link
-          // into graphData would freeze at the spawn position once the sim
-          // cools down). Orbit-less fallbacks keep the engine link.
-          if (!orbit) links.push({ source: focusId, target: id, semantic: true, distance: item.distance });
         }
       }
     }
