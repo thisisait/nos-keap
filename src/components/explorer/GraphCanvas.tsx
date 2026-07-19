@@ -475,6 +475,31 @@ function buildFileCube(node: CanvasNode, withLabel: boolean, lens?: LensState): 
   return g;
 }
 
+// ── PERF/S4 — instanced core cubes ───────────────────────────────────────────
+// When the files-core field is large enough that per-cube name plates are
+// already culled (fileLabels off), the file leaves render as ONE InstancedMesh
+// drawn from a SCENE overlay instead of thousands of individual Mesh draw calls
+// — the measured draw-call-bound surface. Each object node still gets its own
+// invisible-but-raycastable stub (fileCubeStub) as its nodeThreeObject, so
+// react-force-graph positions it and per-node picking is unchanged; the overlay
+// only mirrors those pinned positions for rendering. three r0.185 raycasts
+// objects regardless of `visible` (Raycaster tests layers, not visibility), so
+// an invisible stub stays clickable at the cube's exact bounds, and the overlay
+// lives outside the forceGraph subtree so RFG's own raycaster never sees it.
+const _cubeInstMat = new THREE.MeshBasicMaterial(); // white base; per-instance colour tints it
+const _stubMat = new THREE.MeshBasicMaterial(); // never rendered (the stub is visible=false)
+
+/** Core-view file leaf, instanced variant: an invisible pick stub matching the
+ *  cube's bounds + rotation. The visible body is drawn by the overlay below. */
+function fileCubeStub(node: CanvasNode): THREE.Object3D {
+  const mesh = new THREE.Mesh(_cubeGeo, _stubMat);
+  mesh.scale.setScalar(2.6); // match buildFileCube — this IS the raycast target
+  mesh.rotation.y = hash01v(node.id) * Math.PI;
+  mesh.rotation.x = hash01v(`${node.id}:x`) * 0.5;
+  mesh.visible = false; // 0 draw calls; still raycastable (three tests layers, not visible)
+  return mesh;
+}
+
 /** A CanvasNode as the force engine sees it (position/velocity fields added). */
 type GraphNode = NodeObject<CanvasNode>;
 /** A CanvasLink as the force engine sees it (source/target become node refs). */
@@ -516,6 +541,10 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
   // full mesh rebuild). The toggle's recolour is applied in place below.
   const lensRef = useRef(lens);
   lensRef.current = lens;
+  // PERF/S4: the live scene-overlay InstancedMesh of core file cubes (null when
+  // not in the instanced regime). The build effect owns its lifecycle; the lens
+  // effect recolours it in place.
+  const cubeOverlayRef = useRef<THREE.InstancedMesh | null>(null);
 
   // Files core: fly INTO the ring center when the core switches on, back out
   // to the whole sky when it switches off. Ship mode owns its own camera.
@@ -912,6 +941,12 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     () => nodes.filter((n) => n.object).length <= HUGE_FIELD,
     [nodes],
   );
+  // PERF/S4: instance the file cubes in exactly the regime that is slow — core
+  // view with a field too large for name plates (fileLabels off). Below the cap
+  // the per-cube meshes stay (few, cheap, and they carry labels); above it the
+  // bodies collapse into ONE InstancedMesh overlay (the effect further down),
+  // and nodeThreeObject returns invisible pick stubs instead of drawn cubes.
+  const instanceCubes = Boolean(coreView) && !fileLabels;
 
   // Always-on labels: galaxy names (categories) so the observer never loses
   // orientation, and star names so semantic hits are readable at a glance.
@@ -927,7 +962,11 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       // and force a full mesh rebuild — the body is painted with the live lens
       // here and recoloured in place by the effect below on subsequent toggles.
       const lens = lensRef.current;
-      if (coreView && node.path) return buildFileCube(node, fileLabels, lens);
+      if (coreView && node.path) {
+        // Instanced regime: an invisible pick stub; the overlay draws the body.
+        if (instanceCubes) return fileCubeStub(node);
+        return buildFileCube(node, fileLabels, lens);
+      }
       return buildAssetMesh(node, lens);
     }
     // Repo folder hubs: the language-banded identicon sphere REPLACES the
@@ -991,7 +1030,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     // lens is deliberately NOT a dep (read via lensRef): a lens toggle must not
     // change this accessor's identity, or react-force-graph rebuilds EVERY mesh.
     // The recency recolour is applied in place to the existing bodies below.
-  }, [coreView, fileLabels, folderLabels, starLabels, anchorLabels]);
+  }, [coreView, fileLabels, folderLabels, starLabels, anchorLabels, instanceCubes]);
 
   // Lens recolour, IN PLACE (replaces the old fgRef.refresh(), which set
   // _flushObjects → cleared the node-object cache → rebuilt thousands of
@@ -1003,6 +1042,9 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
   useEffect(() => {
     for (const n of graphData.nodes) {
       if (!n.object) continue;
+      // Instanced core cubes are recoloured via the overlay's instanceColor
+      // (the effect below), not their invisible stub material — skip them here.
+      if (instanceCubes && n.path) continue;
       const obj = (n as CanvasNode & { __threeObj?: THREE.Object3D }).__threeObj;
       if (!obj) continue;
       // buildAssetMesh/buildFileCube return the body Mesh directly, or a Group
@@ -1012,7 +1054,78 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       const mat = Array.isArray(body.material) ? body.material[0] : body.material;
       (mat as THREE.MeshBasicMaterial).color?.set(objectBodyColor(n, Boolean(coreView), lens));
     }
-  }, [lens, coreView, graphData]);
+  }, [lens, coreView, graphData, instanceCubes]);
+
+  // PERF/S4 — the instanced-cube overlay lifecycle. ONE InstancedMesh added to
+  // the renderer SCENE (NOT the forceGraph subtree, so react-force-graph's
+  // raycaster — objects([forceGraph]) — never traverses it and picking is left
+  // entirely to the per-node stubs). Instance matrices come straight from the
+  // pinned fx/fy/fz, which is exactly where RFG positions each node's stub, so
+  // the visible body and its pick target coincide and spatial memory is
+  // byte-identical. Rebuilt only when the node set or the instanced-regime flag
+  // change (graphData is memoised), never per frame — the cubes are static.
+  // Caveat: because the matrices are baked once from the pinned coords, actively
+  // dragging one of these cubes (enableNodeDrag) moves its invisible stub — and
+  // so its click/hover target — but not the drawn body until the next rebuild.
+  // Node drag is not a required interaction and dragging a spatial-memory-pinned
+  // node contradicts the layout contract anyway, so the overlay stays static.
+  useEffect(() => {
+    if (!instanceCubes) return;
+    const cubes = graphData.nodes.filter((n) => n.object && n.path && n.fx != null);
+    if (!cubes.length) return;
+    const mesh = new THREE.InstancedMesh(_cubeGeo, _cubeInstMat, cubes.length);
+    mesh.frustumCulled = false; // one draw call spanning the whole core — don't risk a bad whole-batch cull
+    noRaycast(mesh); // belt-and-suspenders; it is not under forceGraph anyway
+    const dummy = new THREE.Object3D();
+    const col = new THREE.Color();
+    cubes.forEach((n, i) => {
+      dummy.position.set(n.fx!, n.fy!, n.fz!);
+      dummy.rotation.set(hash01v(`${n.id}:x`) * 0.5, hash01v(n.id) * Math.PI, 0); // == buildFileCube
+      dummy.scale.setScalar(2.6);
+      dummy.updateMatrix();
+      mesh.setMatrixAt(i, dummy.matrix);
+      mesh.setColorAt(i, col.set(objectBodyColor(n, true, lensRef.current)));
+    });
+    mesh.instanceMatrix.needsUpdate = true;
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+    cubeOverlayRef.current = mesh;
+    // Attach once the renderer scene exists (mirrors the dust / dressing guards).
+    let raf = 0;
+    let scene: THREE.Scene | null = null;
+    const attach = () => {
+      const ref = fgRef.current;
+      if (ref) {
+        try {
+          scene = ref.scene();
+          scene.add(mesh);
+          return;
+        } catch {
+          // Renderer not ready — retry next frame.
+        }
+      }
+      raf = requestAnimationFrame(attach);
+    };
+    attach();
+    return () => {
+      cancelAnimationFrame(raf);
+      scene?.remove(mesh);
+      mesh.dispose(); // frees the instance buffers; shared geo/material are untouched
+      cubeOverlayRef.current = null;
+    };
+  }, [graphData, instanceCubes]);
+
+  // PERF/S4 — recolour the instanced cubes IN PLACE on a lens toggle (recency
+  // gradient), the instanceColor twin of the in-place body recolour above. Same
+  // filter/order as the build effect, so instance i always maps to node i. No
+  // position or geometry is touched — pure instanceColor writes.
+  useEffect(() => {
+    const mesh = cubeOverlayRef.current;
+    if (!mesh) return;
+    const cubes = graphData.nodes.filter((n) => n.object && n.path && n.fx != null);
+    const col = new THREE.Color();
+    cubes.forEach((n, i) => mesh.setColorAt(i, col.set(objectBodyColor(n, true, lens))));
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+  }, [lens, graphData]);
 
   // Focus-halo orbits: semantic dust circles the focused node VERY slowly
   // (a revolution takes ~2–3.5 min). Runs outside the d3 engine — the sim
