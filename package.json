@@ -11,6 +11,7 @@
     "dev:ext": "wxt",
     "dev:ext:firefox": "wxt -b firefox",
     "seed:fixture": "tsx scripts/gen-fixture.ts",
+    "test": "vitest run",
     "build": "vite build && npm run build:server && npm run build:ext",
     "build:ext": "wxt build",
     "build:ext:firefox": "wxt build -b firefox",

@@ -7,8 +7,9 @@
  * passed the SSO gate) — exact set per nOS
  * roles/pazny.traefik/templates/dynamic/middlewares.yml.j2:
  *
- *   X-Authentik-Uid        stable per-user key (PREFERRED identity key)
- *   X-Authentik-Username   e.g. "alice"
+ *   X-Authentik-Uid        Authentik's raw key — RANDOM, regenerates on blank;
+ *                          a defensive fallback only, never the row key
+ *   X-Authentik-Username   e.g. "alice" — canonicalUid(username) IS the row key
  *   X-Authentik-Email      e.g. "alice@dev.local"
  *   X-Authentik-Name       display name
  *   X-Authentik-Groups     comma-separated RBAC groups (nos-admins, ...)
@@ -27,9 +28,10 @@
  *     (local `npm run dev` / tests).
  */
 import type { Request, Response, NextFunction } from 'express';
+import { canonicalUid } from './uid';
 
 export interface KeapUser {
-  id: string; // stable per-user key (X-Authentik-Uid) scoping all user rows
+  id: string; // canonical per-user key (canonicalUid of username) scoping all user rows
   username: string;
   email: string | null;
   name: string | null;
@@ -75,11 +77,16 @@ export function identityMiddleware(req: Request, res: Response, next: NextFuncti
     .split(',')
     .map((g) => g.trim())
     .filter(Boolean);
+  const email = header(req, 'x-authentik-email');
   req.user = {
-    // Uid is the stable Authentik key; username is a fallback for older outposts.
-    id: header(req, 'x-authentik-uid') ?? username,
+    // Canonical slug of the username — the SAME key the fs-mirror derives from
+    // the `<uid>/` folder name (server/uid.ts). Authentik's X-Authentik-Uid is
+    // random and regenerates on a tenant blank, so it must NOT key rows: a
+    // user's mirrored files (owned by their username-folder) would never match
+    // their row scope. email local-part / uid are defensive fallbacks only.
+    id: canonicalUid(username, email, header(req, 'x-authentik-uid')),
     username,
-    email: header(req, 'x-authentik-email'),
+    email,
     name: header(req, 'x-authentik-name'),
     groups,
     isAdmin: groups.some((g) => ADMIN_GROUPS.has(g)),

@@ -51,6 +51,7 @@ import * as db from './db';
 import { listRoots, resolveInRoot } from './fs-roots';
 import { extractRefs, type ObjectRef } from './objects';
 import { markCorpusDirty } from './search';
+import { canonicalUid } from './uid';
 
 export const USER_FILES_DIR = process.env.KEAP_USER_FILES_DIR ?? '';
 const INTERVAL_S = Number(process.env.KEAP_FS_SYNC_INTERVAL_S ?? 300);
@@ -67,10 +68,13 @@ const SYNC_DIRS = new Set(
  *  these uids get visibility 'shared' — /api/graph's getVisibleObjects then
  *  lists them for everyone. Default unset: every users-pass mirror stays
  *  private and the pass is byte-identical to v1.7.0. */
+// Canonicalised so a reserved shared uid matches the same key the users pass
+// stamps on its mirror objects (both run through canonicalUid). 'nos-docs' is
+// already canonical → no-op; a non-canonical config value still lines up.
 const SHARED_UIDS = new Set(
   (process.env.KEAP_FS_SHARED_UIDS ?? '')
     .split(',')
-    .map((s) => s.trim())
+    .map((s) => canonicalUid(s.trim()))
     .filter(Boolean),
 );
 
@@ -350,11 +354,19 @@ export function syncUserFiles(): FsSyncResult {
 
   const found: UserFoundFile[] = [];
   const dirSink = new Map<string, Map<string, DirAgg>>();
-  for (const uid of readdirSync(USER_FILES_DIR)) {
-    if (uid.startsWith('.')) continue;
-    const userDir = path.join(USER_FILES_DIR, uid);
+  for (const rawDir of readdirSync(USER_FILES_DIR)) {
+    if (rawDir.startsWith('.')) continue;
+    const userDir = path.join(USER_FILES_DIR, rawDir); // FS path uses the RAW name
     const st = lstatSync(userDir, { throwIfNoEntry: false });
     if (!st?.isDirectory()) continue;
+    // OWNER key is the canonical slug of the folder name — the SAME transform
+    // the identity middleware applies to X-Authentik-Username, so a user's
+    // mirrored files and their DB rows share one owner. Bone already writes
+    // canonical slug folders, so this is a no-op for live trees; it just makes
+    // the match KEAP-enforced rather than Bone-dependent. Skip folders that
+    // canonicalise to empty (e.g. '...').
+    const uid = canonicalUid(rawDir);
+    if (!uid) continue;
     result.users.push(uid);
     const uidSink = new Map<string, DirAgg>();
     dirSink.set(uid, uidSink);

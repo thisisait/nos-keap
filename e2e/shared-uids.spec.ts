@@ -59,6 +59,29 @@ test.describe('shared uids (Option C)', () => {
     expect(aliceFull.visibility).toBe('private');
   });
 
+  test('canonical username keying — a diacritic username sees its own slug-folder private files', async ({
+    request,
+  }) => {
+    // The bug this fixes: KEAP keyed rows on the RANDOM X-Authentik-Uid while
+    // the mirror owns files by the (slugified) folder name, so a user's own
+    // files never matched their scope. Now both run through canonicalUid: a
+    // username 'Álice' folds to 'alice' == the folder owner, EVEN THOUGH the
+    // uid header is a random string that must NOT become the key.
+    const ALICE = {
+      'X-Authentik-Username': 'Álice',
+      'X-Authentik-Uid': 'RANDOMHASH_deadbeef', // regenerates on blank — must be ignored
+      'X-Authentik-Groups': 'nos-users',
+    };
+    const graph = (await (
+      await request.get('/api/graph', { headers: ALICE })
+    ).json()) as { data: { objects: Array<{ owner?: string }> } };
+    // Her own private diary.md (owner 'alice') shows because the row key is now
+    // canonicalUid('Álice') === 'alice', not the random uid.
+    expect(graph.data.objects.some((o) => o.owner === 'alice')).toBe(true);
+    // The random uid never became the key (it owns nothing).
+    expect(graph.data.objects.some((o) => o.owner === 'RANDOMHASH_deadbeef')).toBe(false);
+  });
+
   test("non-admin sees the shared uid's mirrors, never another user's private ones", async ({
     request,
   }) => {

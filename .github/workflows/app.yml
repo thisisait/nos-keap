@@ -27,6 +27,8 @@ jobs:
       # Lint gates since the 2026-07-19 burndown: 0 errors, warnings frozen at
       # the post-burndown count — new warnings fail the build too.
       - run: npx eslint . --max-warnings 31
+      # Unit tests (vitest, server/**) — the canonical-uid contract lives here.
+      - run: npm test
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e
