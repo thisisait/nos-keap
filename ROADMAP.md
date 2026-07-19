@@ -105,7 +105,20 @@ nOS-side counterparts flagged **[nOS]**).
   top-level `slug`). GET/POST tables, GET/POST rows; slug-validated, RW-scoped writes,
   fixed `nos-agent` owner, visibility governs reads. *Known limits:* GET rows caps at 500
   (config tables are small); a re-create never migrates an existing table's schema (create-
-  if-missing, matching the seeder's 404-guard).
+  if-missing, matching the seeder's 404-guard). *2026-07-19 face-integration (v1.14.1):* added
+  `GET /agent/v1/tables` list-all (agent-bearer, admin scope — the face Tables sidebar
+  enumerates through it; per-user RBAC is the face's job); widened the slug charset to the
+  face contract `^[a-z0-9][a-z0-9._-]{0,127}$` with a `..` guard (no RustFS key traversal);
+  replaced X-Frame-Options SAMEORIGIN with a granular CSP `frame-ancestors 'self'
+  https://face.<tenant>` so the face **Explore** app can iframe `/explore` (same Authentik
+  session, cross-subdomain) — never `*`.
+- **S2⁶ — table graph-render metadata** *(next, companion app)*: a DataTable can already
+  anchor into the universe (a `taxonomyRef` column anchors each ROW; `objectRef`/`vector`
+  columns exist), but there is no TABLE-LEVEL contract for how its rows render as graph
+  nodes/edges — node-kind, edge definitions, colour/icon per kind. Add an optional
+  `graph` metadata block to the create-table schema (shared with face via `/agent/v1/tables`)
+  so a companion-created table paints itself in `/explore` and face gets it for free by
+  iframing the view. Design first (how rows → nodes/edges; colour/icon convention).
 - **S3 — OKF bundle export/import** (zip of markdown+frontmatter; dedup by id+hash).
   Interop with Google tooling & openknowledge CLI; the future sharing unit (Phase S).
 - **S4 — RRF hybrid search**: FTS5(BM25) ⊕ vectors ⊕ one-hop taxonomy/link neighbors,

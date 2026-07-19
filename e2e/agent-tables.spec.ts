@@ -38,6 +38,41 @@ test.describe('agent tables surface', () => {
     expect(r.status()).toBe(404);
   });
 
+  test('list-all takes the agent bearer (nOS face sidebar enumeration)', async ({ request }) => {
+    // Regression: list-all used to fall through to the forward-auth branch and
+    // 401 even with a valid token. It must honor agentAuth('ro') like /:slug.
+    const noTok = await request.get('/agent/v1/tables');
+    expect(noTok.status()).toBe(401);
+    const ok = await request.get('/agent/v1/tables', { headers: RO });
+    expect(ok.status()).toBe(200);
+    expect(Array.isArray((await ok.json()).data)).toBe(true);
+  });
+
+  test('framing: X-Frame-Options is gone, CSP frame-ancestors allows the face origin', async ({ request }) => {
+    const r = await request.get('/api/health');
+    expect(r.headers()['x-frame-options']).toBeUndefined();
+    const csp = r.headers()['content-security-policy'] ?? '';
+    expect(csp).toContain('frame-ancestors');
+    expect(csp).toContain("'self'");
+    expect(csp).toContain('https://face.e2e.test'); // KEAP_TENANT_DOMAIN in e2e
+    expect(csp).not.toContain('*');
+  });
+
+  test('slug charset: dots/underscores accepted, ".." rejected', async ({ request }) => {
+    const good = await request.post('/agent/v1/tables', {
+      headers: RW,
+      data: { ...DEF, slug: 'face.config_v2' },
+    });
+    expect(good.ok()).toBeTruthy();
+    expect((await good.json()).data.id).toBe('face.config_v2');
+    await request.delete('/api/tables/face.config_v2'); // cleanup (admin fallback)
+    const traversal = await request.post('/agent/v1/tables', {
+      headers: RW,
+      data: { ...DEF, slug: 'a..b' },
+    });
+    expect(traversal.status()).toBe(400);
+  });
+
   test('auth: RW required to create, RO rejected', async ({ request }) => {
     const noTok = await request.post('/agent/v1/tables', { data: DEF });
     expect(noTok.status()).toBe(401); // missing bearer token

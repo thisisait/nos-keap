@@ -31,7 +31,7 @@ import { allNodes } from './taxonomy';
 import { normalizeAndSaveCapture, parseEnvelope } from './intake';
 import { syncAllFs, syncMapping, fsSyncStatus, USER_FILES_DIR } from './fs-sync';
 import { scheduleTopicRecluster, clusterTopics } from './topics';
-import { getTable, storeFor } from './tables';
+import { getTable, listTables, storeFor } from './tables';
 import { createTableRequestSchema } from '../shared/contracts/table';
 import { listRoots } from './fs-roots';
 import { TOKEN_RO, TOKEN_RW, tokenEquals } from './tokens';
@@ -311,8 +311,20 @@ export function registerAgentRoutes(app: Express) {
   //      returns bare values), because the seeder keys idempotency off a
   //      top-level `slug` column. /api/tables wraps rows as {id, values} — this
   //      surface unwraps. Owner is a fixed system id; visibility governs reads.
-  const TABLE_SLUG = /^[a-z0-9][a-z0-9-]{0,62}$/;
+  // Slug charset per the nOS face contract (dots/underscores, up to 128 chars).
+  // The leading [a-z0-9] forbids a '.'/'-' start, so the slug can never BE '..'
+  // or '/', and the explicit '..' guard below blocks a dot-run anywhere — so a
+  // slug used as a table id can never traverse the RustFS key path.
+  const TABLE_SLUG = /^[a-z0-9][a-z0-9._-]{0,127}$/;
   const AGENT_TABLE_OWNER = 'nos-agent';
+  const validSlug = (s: string) => TABLE_SLUG.test(s) && !s.includes('..');
+
+  // List every table for the agent surface (nOS face Tables sidebar enumeration).
+  // Agent-bearer, RO scope: KEAP trusts the agent token; per-user RBAC is the
+  // face's job. Admin actor = all tables regardless of owner/visibility.
+  app.get('/agent/v1/tables', agentAuth('ro'), (_req, res) => {
+    ok(res, listTables({ id: AGENT_TABLE_OWNER, isAdmin: true, groups: [] }));
+  });
 
   app.get('/agent/v1/tables/:slug', agentAuth('ro'), (req, res) => {
     const t = getTable(req.params.slug);
@@ -323,7 +335,7 @@ export function registerAgentRoutes(app: Express) {
   app.post('/agent/v1/tables', agentAuth('rw'), async (req, res) => {
     const b = (req.body ?? {}) as Record<string, unknown>;
     const slug = String(b.slug ?? '');
-    if (!TABLE_SLUG.test(slug)) return fail(res, 400, 'slug must match ^[a-z0-9][a-z0-9-]{0,62}$');
+    if (!validSlug(slug)) return fail(res, 400, 'slug must match ^[a-z0-9][a-z0-9._-]{0,127}$ (no "..")');
     // Idempotent create: the slug IS the id, so a re-seed returns the existing
     // table (200) instead of colliding on the primary key.
     const existing = getTable(slug);
@@ -366,7 +378,7 @@ export function registerAgentRoutes(app: Express) {
     const values = (req.body ?? {}) as Record<string, unknown>;
     // A row's own `slug` (when present + safe) doubles as the row id, so a
     // re-seed PATCHes the same row instead of inserting a duplicate.
-    const rowSlug = typeof values.slug === 'string' && TABLE_SLUG.test(values.slug) ? values.slug : undefined;
+    const rowSlug = typeof values.slug === 'string' && validSlug(values.slug) ? values.slug : undefined;
     try {
       const row = await storeFor(t.driver).upsertRow(t.id, rowSlug, values, `agent:${req.agentName}`);
       ok(res, row.values);

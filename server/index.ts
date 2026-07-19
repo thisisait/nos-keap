@@ -48,7 +48,17 @@ async function main() {
 
   const app = express();
   // Relaxed CSP because the SPA is self-hosted behind Traefik+Authentik.
-  app.use(helmet({ contentSecurityPolicy: false }));
+  // frameguard OFF: X-Frame-Options is coarse (SAMEORIGIN blocks the nOS face
+  // shell from iframing /explore). We replace it with a GRANULAR CSP
+  // frame-ancestors that allows ONLY same-origin + the face subdomain of this
+  // tenant (never '*'). Unset KEAP_TENANT_DOMAIN ⇒ self-only, unchanged.
+  const TENANT_DOMAIN = process.env.KEAP_TENANT_DOMAIN ?? '';
+  const FRAME_ANCESTORS = TENANT_DOMAIN ? `'self' https://face.${TENANT_DOMAIN}` : `'self'`;
+  app.use(helmet({ contentSecurityPolicy: false, frameguard: false }));
+  app.use((_req, res, next) => {
+    res.setHeader('Content-Security-Policy', `frame-ancestors ${FRAME_ANCESTORS}`);
+    next();
+  });
   app.use(express.json({ limit: '2mb' }));
   // OKF bundle import arrives as a raw zip body (S3).
   app.use('/api/objects/import.okf', express.raw({ type: ['application/zip', 'application/octet-stream'], limit: '100mb' }));
