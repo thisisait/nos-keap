@@ -63,11 +63,30 @@ const USERS_KEY = 'users';
 
 const watchers = new Map<string, { path: string; watcher: FSWatcher }>();
 const pending = new Map<string, NodeJS.Timeout>();
+/** Roots whose watcher hit a PER-ROOT error (an unreadable subtree, e.g. a
+ *  chmod-000 dir under a mapped root): skipped, NOT re-armed every probe tick
+ *  (that would be an EACCES log storm). Cleared when the dir vanishes, so a
+ *  fixed/re-mounted root re-arms. The fs-sync interval still covers it. */
+const deadRoots = new Set<string>();
 let lastEvent: { at: string; root: string } | null = null;
 let active = false; // started and not degraded
 let degraded = false;
 let capWarned = false;
 let probeTimer: NodeJS.Timeout | null = null;
+
+/** Whether a watcher error kills the WHOLE module or just skips one root. A
+ *  per-root permission/scandir failure (EACCES/EPERM — one unreadable subtree)
+ *  must NOT take fs-watch down: users-tree + sibling roots keep their watchers.
+ *  Only a platform-missing feature or fd/inotify exhaustion is truly fatal. */
+function isFatalWatchError(e: unknown): boolean {
+  const code = (e as NodeJS.ErrnoException)?.code;
+  return (
+    code === 'ERR_FEATURE_UNAVAILABLE_ON_PLATFORM' ||
+    code === 'EMFILE' ||
+    code === 'ENFILE' ||
+    code === 'ENOSPC'
+  );
+}
 
 /** Everything watchable: the users tree plus every registered root (the
  *  exists probe happens at arm time — a missing dir is simply not armed). */
@@ -145,7 +164,7 @@ function onEvent(key: string): void {
  *  that landed before the watcher existed emit no events, so arming schedules
  *  one debounced pass (boot arming skips this — startFsSync just scanned). */
 function arm(key: string, dir: string, syncOnArm: boolean): void {
-  if (degraded || watchers.has(key)) return;
+  if (degraded || watchers.has(key) || deadRoots.has(key)) return;
   if (!existsSync(dir)) return; // never watch a non-existent root
   if (watchers.size >= MAX_WATCHERS) {
     if (!capWarned) {
@@ -158,16 +177,36 @@ function arm(key: string, dir: string, syncOnArm: boolean): void {
   try {
     w = watch(dir, { recursive: true }, () => onEvent(key));
   } catch (e) {
-    // The dir vanished between the exists probe and watch() — a mount race,
-    // not a platform failure: the re-probe re-arms when it returns. Anything
-    // else (ERR_FEATURE_UNAVAILABLE_ON_PLATFORM, EMFILE, ENOSPC) degrades.
+    // ENOENT = the dir vanished between the exists probe and watch() (a mount
+    // race — the re-probe re-arms when it returns). A per-root EACCES/EPERM
+    // (an unreadable subtree) skips just this root. Only a truly fatal error
+    // (platform-missing / fd exhaustion) degrades the whole module.
     if ((e as NodeJS.ErrnoException)?.code === 'ENOENT') return;
+    if (!isFatalWatchError(e)) {
+      deadRoots.add(key);
+      console.warn(`[fs-watch] root '${key}' unwatchable (${(e as NodeJS.ErrnoException)?.code}) — interval covers it`);
+      return;
+    }
     degrade(e);
     return;
   }
-  // Runtime failures (EMFILE/ENOSPC under fd pressure) surface here — one
-  // warning, interval-only, no crash loop and no per-event retry storm.
-  w.on('error', (e) => degrade(e));
+  // Runtime errors: fd exhaustion degrades the module; a per-root permission
+  // error (recursive watch hit an unreadable subtree) drops ONLY this root —
+  // users-tree + sibling roots keep watching.
+  w.on('error', (e) => {
+    if (isFatalWatchError(e)) {
+      degrade(e);
+      return;
+    }
+    try {
+      w.close();
+    } catch {
+      /* already dead */
+    }
+    watchers.delete(key);
+    deadRoots.add(key);
+    console.warn(`[fs-watch] root '${key}' watcher errored (${(e as NodeJS.ErrnoException)?.code}) — skipped, interval covers it`);
+  });
   watchers.set(key, { path: dir, watcher: w });
   if (syncOnArm) {
     lastEvent = { at: new Date().toISOString(), root: key };
@@ -175,7 +214,9 @@ function arm(key: string, dir: string, syncOnArm: boolean): void {
   }
 }
 
-/** Re-probe tick: disarm watchers whose dir vanished, arm late mounts. */
+/** Re-probe tick: disarm watchers whose dir vanished, arm late mounts. A
+ *  vanished dir also clears its dead-root mark, so a fixed/re-mounted root
+ *  gets a fresh arm attempt when it returns. */
 function probe(): void {
   if (degraded) return;
   for (const [key, w] of watchers) {
@@ -186,6 +227,9 @@ function probe(): void {
       /* already dead */
     }
     watchers.delete(key);
+  }
+  for (const key of deadRoots) {
+    if (!existsSync(targets().find((t) => t.key === key)?.path ?? '')) deadRoots.delete(key);
   }
   for (const t of targets()) {
     if (!watchers.has(t.key)) arm(t.key, t.path, true);
