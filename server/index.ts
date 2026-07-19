@@ -19,6 +19,7 @@ import { registerApiRoutes } from './routes';
 import { registerAgentRoutes } from './agent';
 import { registerFsMappingRoutes } from './fs-mappings';
 import { registerGraphRoutes } from './graph';
+import { registerTopicRoutes } from './topics-routes';
 import { registerIngestRoutes } from './intake';
 import { registerExtensionRoutes } from './extension/routes';
 import { identityMiddleware } from './identity';
@@ -78,6 +79,7 @@ async function main() {
   // 404 fallback, so anything mounted after it is unreachable.
   registerGraphRoutes(app); // /api/graph* + /api/search/semantic
   registerFsMappingRoutes(app); // /api/fs/* — admin mapped-folders CRUD + roots/browse
+  registerTopicRoutes(app); // /api/admin/topics* — admin Topics-mode control plane
   registerApiRoutes(app);
 
   // SPA static + history-fallback (replaces the Apache RewriteRule from the

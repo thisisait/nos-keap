@@ -179,6 +179,10 @@ export function registerGraphRoutes(app: Express) {
     // already readable by anyone via direct GET; the graph now lists what was
     // always readable. 'shared' means graph-listed tenant-wide.
     const visibleRows = db.getVisibleObjects(req.user.id, req.user.isAdmin);
+    // Persisted topic-mode assignment (object_id → topic_id). Scoping stays
+    // free — the join is keyed per visible-object id, so a topic surfaces only
+    // through members the viewer can already see (decision #13).
+    const topicByObject = db.getTopicAssignments();
     const objects = visibleRows.map((o) => {
         // A card typed 'file' whose resource is `kiwix:…` is really an
         // encyclopedia — the resolved content type wins over the raw type.
@@ -202,6 +206,9 @@ export function registerGraphRoutes(app: Express) {
           // Mapped-folder provenance (fs_mappings id) — the files core groups
           // these under their mapping's hub instead of the owner's tree.
           mapping: typeof o.frontmatter?.mapping === 'string' ? o.frontmatter.mapping : undefined,
+          // Topics-mode cluster (id present in `topics[]` below) — undefined for
+          // unembedded / minority-model objects, which fall into ~untopiced.
+          topic: topicByObject.get(o.id),
         };
       });
     // Object→object refs ([[object:<id>]] wiki links) as drawn edges. Bare ids
@@ -258,6 +265,22 @@ export function registerGraphRoutes(app: Express) {
     // for non-admins, everything for admins, mapping namespaces by the
     // VISIBLE mapping set above.
     const fsDirs = getFsDirStats(req.user.id, req.user.isAdmin, new Set(fsMappings.map((m) => m.id)));
+    // Topic hubs (decision #13): per-viewer filter + counts. A topic ships only
+    // when the viewer can see ≥1 of its members, and `count` is that VISIBLE
+    // member count (from the already-scoped objects above) — a topic whose
+    // members are all hidden does not exist in this payload (no existence leak).
+    const visTopicCount = new Map<string, number>();
+    for (const o of objects) if (o.topic) visTopicCount.set(o.topic, (visTopicCount.get(o.topic) ?? 0) + 1);
+    const topics = db
+      .listTopicClusters()
+      .filter((t) => visTopicCount.has(t.id))
+      .map((t) => ({
+        id: t.id,
+        label: t.label,
+        theta: t.theta,
+        count: visTopicCount.get(t.id)!,
+        terms: t.terms.slice(0, 5),
+      }));
     ok(res, {
       nodes,
       links,
@@ -266,11 +289,13 @@ export function registerGraphRoutes(app: Express) {
       relations,
       fsMappings,
       fsDirs,
+      topics,
       meta: {
         vectors: db.vectorSearchAvailable(),
         embeddings: db.embeddingStats(),
         liveEmbed: liveEmbedAvailable(),
         layoutVersion: db.getLayoutVersion(),
+        topics: db.topicStats(),
       },
     });
   });

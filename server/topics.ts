@@ -408,6 +408,17 @@ function computeBirthTheta(
   return 2 * Math.PI * hash01(`topic:${topicId}`);
 }
 
+/** Admin re-anchor (decision #9): the one sanctioned θ change outside a full
+ *  reset. Recomputes θ from the CURRENT majority root galaxy among the topic's
+ *  members and persists it. false when the id is unknown. */
+export function reanchorTopic(id: string): boolean {
+  const memberIds: string[] = [];
+  for (const [oid, tid] of db.getTopicAssignments()) if (tid === id) memberIds.push(oid);
+  const objectsById = new Map(db.getObjects('', true).map((o) => [o.id, o]));
+  const theta = computeBirthTheta(memberIds, id, objectsById);
+  return db.setTopicTheta(id, theta);
+}
+
 // ── Debounce + boot (decisions #3, #4) ────────────────────────────────────────
 let timer: ReturnType<typeof setTimeout> | null = null;
 let firstScheduledAt = 0;

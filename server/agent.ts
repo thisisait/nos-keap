@@ -30,7 +30,7 @@ import { propose, proposeNode, proposeDescription, proposeBrief, moderationPolic
 import { allNodes } from './taxonomy';
 import { normalizeAndSaveCapture, parseEnvelope } from './intake';
 import { syncAllFs, syncMapping, fsSyncStatus, USER_FILES_DIR } from './fs-sync';
-import { scheduleTopicRecluster } from './topics';
+import { scheduleTopicRecluster, clusterTopics } from './topics';
 import { listRoots } from './fs-roots';
 import { TOKEN_RO, TOKEN_RW, tokenEquals } from './tokens';
 
@@ -282,6 +282,21 @@ export function registerAgentRoutes(app: Express) {
     // a bulk embed burst into ~one run per minute (server/topics.ts).
     if (rows.some((r) => r.kind === 'object')) scheduleTopicRecluster();
     ok(res, { upserted, submittedBy: `agent:${req.agentName}` });
+  });
+
+  // ── Topics mode (server/topics.ts) — the semantic-cluster control plane ────
+  // Status carries the mode summary + last run; rebuild mirrors the admin twin
+  // and /agent/v1/fs/sync's default-202 / ?wait=1 semantics (the e2e hook).
+  app.get('/agent/v1/topics', agentAuth('ro'), (_req, res) => {
+    ok(res, { stats: db.topicStats(), lastRun: db.lastTopicRun() });
+  });
+
+  app.post('/agent/v1/topics/rebuild', agentAuth('rw'), async (req, res) => {
+    if (!db.vectorSearchAvailable()) return fail(res, 503, 'vector layer unavailable');
+    const reset = Boolean(req.body?.reset);
+    if (req.query.wait === '1') return ok(res, await clusterTopics({ reset }));
+    void clusterTopics({ reset }).catch((err) => console.warn('[topics] rebuild failed:', err));
+    res.status(202).json({ success: true, data: { scheduled: true } });
   });
 
   // ── Filesystem sync (server/fs-sync.ts) — the doctrine-tree mirror ─────────
@@ -1045,6 +1060,35 @@ const OPENAPI_SPEC = {
                         vector: { type: 'array', items: { type: 'number' } },
                       },
                     },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/agent/v1/topics': {
+      get: {
+        summary: 'Topics-mode status: cluster count, assigned objects, last-run summary (semantic clustering)',
+      },
+    },
+    '/agent/v1/topics/rebuild': {
+      post: {
+        summary:
+          'Recluster topics now (write scope): default 202 scheduled; ?wait=1 awaits the run and returns its result; {"reset":true} breaks identities and re-seeds. 503 without the vector layer.',
+        parameters: [
+          { name: 'wait', in: 'query', schema: { type: 'string', enum: ['1'] }, description: 'Await the serialized run and return the TopicRunResult' },
+        ],
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                properties: {
+                  reset: {
+                    type: 'boolean',
+                    description: 'Discard existing topic identities and re-seed from scratch (the one sanctioned identity break)',
                   },
                 },
               },

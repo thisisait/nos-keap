@@ -55,6 +55,8 @@ export interface GraphObject {
   /** Mapped-folder provenance (fs_mappings id) — groups the object under its
    *  mapping's hub instead of the owner's tree. */
   mapping?: string;
+  /** Topics-mode cluster id (present in `topics[]`) — undefined = ~untopiced. */
+  topic?: string;
 }
 
 /** One admin-managed mapped folder (fs_mappings) — hub label + placement. */
@@ -84,6 +86,16 @@ export interface GraphMapping {
   count: number;
 }
 
+/** One semantic topic hub (topic_clusters) — viewer-filtered, per-viewer count.
+ *  `theta` is the birth-frozen ring angle; `terms` are top c-TF-IDF chips. */
+export interface GraphTopic {
+  id: string;
+  label: string;
+  theta: number;
+  count: number;
+  terms?: string[];
+}
+
 /** One object→object ref edge ([[object:<id>]] wiki link) — bare object ids. */
 export interface GraphObjectLink {
   source: string;
@@ -110,11 +122,15 @@ export interface GraphPayload {
   /** Mapped-folder hubs — labels + placement for the files core (admin-managed). */
   fsMappings?: GraphMapping[];
   fsDirs?: GraphDirStat[];
+  /** Semantic topic hubs — viewer-filtered; empty/absent until objects embed. */
+  topics?: GraphTopic[];
   meta: {
     vectors: boolean;
     embeddings: { total: number; byKind: Record<string, number>; model: string | null };
     liveEmbed: boolean;
     layoutVersion: string | null;
+    /** Topics-mode summary — additive+optional; absent on old servers. */
+    topics?: { available: boolean; k: number; assigned: number; lastRunAt: number | null };
   };
 }
 

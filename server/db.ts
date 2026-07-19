@@ -1760,6 +1760,36 @@ export function topicStats(): { available: boolean; k: number; assigned: number;
   }
 }
 
+/** Most recent topic_runs row (params_json parsed) — the agent status endpoint's
+ *  "last run summary". null before the first run or without the tables. */
+export function lastTopicRun(): {
+  ranAt: number;
+  model: string;
+  k: number;
+  n: number;
+  moved: number;
+  params: unknown;
+} | null {
+  try {
+    const r = getDb()
+      .prepare('SELECT ran_at, model, k, n, moved, params_json FROM topic_runs ORDER BY ran_at DESC, id DESC LIMIT 1')
+      .get() as
+      | { ran_at: number; model: string; k: number; n: number; moved: number; params_json: string }
+      | undefined;
+    if (!r) return null;
+    return {
+      ranAt: r.ran_at,
+      model: r.model,
+      k: r.k,
+      n: r.n,
+      moved: r.moved,
+      params: r.params_json ? JSON.parse(r.params_json) : null,
+    };
+  } catch {
+    return null;
+  }
+}
+
 // ── Lint findings (server/lint.ts) ────────────────────────────────────────────
 
 export interface LintFindingRow {
