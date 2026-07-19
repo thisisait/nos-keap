@@ -17,6 +17,7 @@
  *      empty state is real state.
  */
 import Database from 'libsql';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { runMigrations } from './migrations';
@@ -2353,6 +2354,307 @@ export function listConceptRelations(typedOnly = true): ConceptRelation[] {
     type: r.type,
     explored: r.explored ?? null,
   }));
+}
+
+// ── Typed cross-type relations (Track R3 stage 1) ───────────────────────────
+// A GENERALIZED store beside concept_relations (which stays the ToE ingest
+// target, shape-frozen). `relations` carries node↔object edges with provenance
+// + a moderation status; the ToE set is mirrored in as source='toe',
+// status='confirmed' (syncToeRelations, a boot step). Derived edges land
+// status='proposed' from the host-side classifier via /agent/v1/relations and
+// stay hidden until stage-2 moderation confirms them. See server/migrations.ts
+// (006-typed-relations) and server/relations.ts (candidate recall).
+
+export type RelationKind = 'node' | 'object';
+export type RelationSource = 'toe' | 'derived' | 'manual';
+export type RelationStatus = 'proposed' | 'confirmed' | 'rejected';
+
+export interface RelationRow {
+  id: string;
+  fromRef: string;
+  fromKind: RelationKind;
+  toRef: string;
+  toKind: RelationKind;
+  type: string;
+  confidence: number | null;
+  justification: string | null;
+  source: RelationSource;
+  status: RelationStatus;
+  model: string | null;
+  createdAt: number | null;
+}
+
+export interface RelationTypeRow {
+  type: string;
+  label: string;
+  color: string | null;
+  description: string | null;
+  status: 'seed' | 'proposed' | 'confirmed';
+}
+
+interface RelationDbRow {
+  id: string;
+  from_ref: string;
+  from_kind: string;
+  to_ref: string;
+  to_kind: string;
+  type: string;
+  confidence: number | null;
+  justification: string | null;
+  source: string;
+  status: string;
+  model: string | null;
+  created_at: number | null;
+}
+
+function mapRelationRow(r: RelationDbRow): RelationRow {
+  return {
+    id: r.id,
+    fromRef: r.from_ref,
+    fromKind: r.from_kind as RelationKind,
+    toRef: r.to_ref,
+    toKind: r.to_kind as RelationKind,
+    type: r.type,
+    confidence: r.confidence,
+    justification: r.justification,
+    source: r.source as RelationSource,
+    status: r.status as RelationStatus,
+    model: r.model,
+    createdAt: r.created_at,
+  };
+}
+
+/** Stable id for a relation row — a hash of its idempotency key so the same
+ *  edge always resolves to the same PK regardless of who writes it. */
+function relationId(fromRef: string, toRef: string, type: string): string {
+  return `r-${crypto.createHash('sha1').update(`${fromRef} ${toRef} ${type}`).digest('hex').slice(0, 16)}`;
+}
+
+/** ToE `explored` rating → a confidence scalar for the generalized store. */
+function exploredToConfidence(explored: string | null): number | null {
+  switch (explored) {
+    case 'well':
+      return 1.0;
+    case 'partially':
+      return 0.6;
+    case 'barely':
+      return 0.3;
+    default:
+      return null;
+  }
+}
+
+// The base controlled vocabulary (status='seed'), seeded idempotently at boot.
+// color reuses the ToE edge palette hues (GraphCanvas REL_COLOR) where a verb
+// overlaps in spirit; the rest get distinct hues for stage-2 rendering.
+const RELATION_TYPE_SEED: Array<{ type: string; label: string; color: string; description: string }> = [
+  { type: 'depends-on', label: 'depends on', color: '#22d3ee', description: 'The source requires the target to hold or exist.' },
+  { type: 'prerequisite-for', label: 'prerequisite for', color: '#38bdf8', description: 'The source must be understood before the target.' },
+  { type: 'supports', label: 'supports', color: '#34d399', description: 'The source is evidence for the target.' },
+  { type: 'refutes', label: 'refutes', color: '#f87171', description: 'The source is evidence against the target.' },
+  { type: 'contradicts', label: 'contradicts', color: '#ef4444', description: 'The two are in direct conflict.' },
+  { type: 'generalizes', label: 'generalizes', color: '#a78bfa', description: 'The source is a broader case of the target.' },
+  { type: 'specializes', label: 'specializes', color: '#c084fc', description: 'The source is a narrower case of the target.' },
+  { type: 'exemplifies', label: 'exemplifies', color: '#fbbf24', description: 'The source is an instance or example of the target.' },
+  { type: 'defines', label: 'defines', color: '#fcd34d', description: 'The source gives the definition of the target.' },
+  { type: 'supersedes', label: 'supersedes', color: '#fb923c', description: 'The source replaces or obsoletes the target.' },
+  { type: 'causes', label: 'causes', color: '#f472b6', description: 'The source brings about the target.' },
+  { type: 'derived-from', label: 'derived from', color: '#e879f9', description: 'The source is derived from the target.' },
+  { type: 'analogous-to', label: 'analogous to', color: '#5eead4', description: 'The two share an analogous structure.' },
+  { type: 'duality', label: 'duality', color: '#f472b6', description: 'The two are dual formulations of one another.' },
+  { type: 'related-concept', label: 'related', color: 'rgba(120,130,150,0.30)', description: 'A generic semantic relation.' },
+];
+
+/** Idempotently seed the base controlled vocabulary. Existing rows (including
+ *  any an admin or agent already grew) are left untouched. Boot step. */
+export function seedRelationTypes(): void {
+  const d = getDb();
+  const stmt = d.prepare(
+    `INSERT OR IGNORE INTO relation_types (type, label, color, description, status, created_at)
+     VALUES (?, ?, ?, ?, 'seed', strftime('%s','now'))`,
+  );
+  const tx = d.transaction(() => {
+    for (const t of RELATION_TYPE_SEED) stmt.run(t.type, t.label, t.color, t.description);
+  });
+  tx();
+}
+
+export function listRelationTypes(): RelationTypeRow[] {
+  return (
+    getDb()
+      .prepare('SELECT type, label, color, description, status FROM relation_types ORDER BY type')
+      .all() as Array<{ type: string; label: string; color: string | null; description: string | null; status: string }>
+  ).map((r) => ({ ...r, status: r.status as RelationTypeRow['status'] }));
+}
+
+export function getRelationType(type: string): RelationTypeRow | null {
+  const r = getDb()
+    .prepare('SELECT type, label, color, description, status FROM relation_types WHERE type = ?')
+    .get(type) as
+    | { type: string; label: string; color: string | null; description: string | null; status: string }
+    | undefined;
+  return r ? { ...r, status: r.status as RelationTypeRow['status'] } : null;
+}
+
+/** Grow the vocabulary under moderation: an unknown proposed type lands as
+ *  status='proposed' (stage-2 admin confirms/retires). Idempotent — a second
+ *  proposal of the same type is a no-op. Returns true iff a new row was added. */
+export function insertProposedRelationType(type: string, proposedBy: string): boolean {
+  const res = getDb()
+    .prepare(
+      `INSERT OR IGNORE INTO relation_types (type, label, color, description, status, created_at)
+       VALUES (?, ?, NULL, ?, 'proposed', strftime('%s','now'))`,
+    )
+    .run(type, type, `Proposed by ${proposedBy}.`);
+  return res.changes > 0;
+}
+
+/** Mirror the ToE concept_relations set into the generalized store as
+ *  node↔node, source='toe', status='confirmed'. A LIVE mirror (delete + rebuild
+ *  the source='toe' partition), so a re-ingest that rewrites concept_relations
+ *  is reflected on the next boot; derived rows (source!='toe') are untouched.
+ *  Boot step, runs after migrations. */
+export function syncToeRelations(): void {
+  const d = getDb();
+  const rows = d
+    .prepare('SELECT from_id, to_id, type, explored FROM concept_relations')
+    .all() as Array<{ from_id: string; to_id: string; type: string; explored: string | null }>;
+  const now = Math.floor(Date.now() / 1000);
+  const ins = d.prepare(
+    `INSERT INTO relations (id, from_ref, to_ref, from_kind, to_kind, type, confidence, justification, source, status, model, created_at)
+     VALUES (?, ?, ?, 'node', 'node', ?, ?, NULL, 'toe', 'confirmed', NULL, ?)
+     ON CONFLICT(from_ref, to_ref, type) DO UPDATE SET
+       from_kind = 'node', to_kind = 'node',
+       confidence = excluded.confidence, source = 'toe', status = 'confirmed'`,
+  );
+  const tx = d.transaction(() => {
+    d.prepare("DELETE FROM relations WHERE source = 'toe'").run();
+    for (const r of rows) {
+      ins.run(relationId(r.from_id, r.to_id, r.type), r.from_id, r.to_id, r.type, exploredToConfidence(r.explored), now);
+    }
+  });
+  tx();
+}
+
+/** Upsert one derived typed relation (host-side classifier output). Lands
+ *  status='proposed', source='derived' — the moderation gate. Idempotent on
+ *  (from_ref,to_ref,type): a re-propose refreshes confidence/justification/model
+ *  and re-arms the proposed status, never a duplicate row. */
+export function insertDerivedRelation(r: {
+  fromRef: string;
+  fromKind: RelationKind;
+  toRef: string;
+  toKind: RelationKind;
+  type: string;
+  confidence: number;
+  justification: string;
+  model: string | null;
+}): void {
+  const now = Math.floor(Date.now() / 1000);
+  getDb()
+    .prepare(
+      `INSERT INTO relations (id, from_ref, to_ref, from_kind, to_kind, type, confidence, justification, source, status, model, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'derived', 'proposed', ?, ?)
+       ON CONFLICT(from_ref, to_ref, type) DO UPDATE SET
+         from_kind = excluded.from_kind, to_kind = excluded.to_kind,
+         confidence = excluded.confidence, justification = excluded.justification,
+         model = excluded.model, source = 'derived', status = 'proposed'`,
+    )
+    .run(
+      relationId(r.fromRef, r.toRef, r.type),
+      r.fromRef,
+      r.toRef,
+      r.fromKind,
+      r.toKind,
+      r.type,
+      r.confidence,
+      r.justification,
+      r.model,
+      now,
+    );
+}
+
+/** Full relation rows for the agent + moderation readers, optionally filtered
+ *  by status and/or source. Ordered newest-first for the moderation queue. */
+export function listRelations(filter?: { status?: RelationStatus; source?: RelationSource }): RelationRow[] {
+  const clauses: string[] = [];
+  const args: string[] = [];
+  if (filter?.status) {
+    clauses.push('status = ?');
+    args.push(filter.status);
+  }
+  if (filter?.source) {
+    clauses.push('source = ?');
+    args.push(filter.source);
+  }
+  const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
+  return (
+    getDb()
+      .prepare(
+        `SELECT id, from_ref, from_kind, to_ref, to_kind, type, confidence, justification, source, status, model, created_at
+         FROM relations ${where} ORDER BY created_at DESC, id`,
+      )
+      .all(...args) as RelationDbRow[]
+  ).map(mapRelationRow);
+}
+
+/** True iff a relation already exists between two refs in EITHER direction (any
+ *  type). Used to skip already-stored pairs during candidate recall. */
+export function relationPairExists(aRef: string, bRef: string): boolean {
+  return Boolean(
+    getDb()
+      .prepare(
+        `SELECT 1 FROM relations
+         WHERE (from_ref = ? AND to_ref = ?) OR (from_ref = ? AND to_ref = ?) LIMIT 1`,
+      )
+      .get(aRef, bRef, bRef, aRef),
+  );
+}
+
+/**
+ * Cross-kind near-neighbour sweep for typed-relation candidate generation
+ * (server/relations.ts). Same O(n²) SQL shape as nearPairs, but: restricted to
+ * CROSS-kind pairs (a.kind<>b.kind), already-stored pairs excluded in-SQL
+ * (NOT EXISTS over relations, either direction), and optionally INCREMENTAL —
+ * `sinceTs` keeps only pairs where at least one endpoint's vector changed after
+ * that watermark. rowid ordering dedupes the symmetric pair. Bounded by `limit`.
+ */
+export function nearCrossKindPairs(
+  kinds: EmbeddingKind[],
+  maxDistance: number,
+  limit: number,
+  sinceTs?: number,
+): Array<{ aKind: string; aRefId: string; bKind: string; bRefId: string; distance: number }> {
+  if (!vectorsOk || kinds.length === 0) return [];
+  const kindList = kinds.map(() => '?').join(',');
+  const sinceClause = sinceTs != null ? 'AND (a.updated_at > ? OR b.updated_at > ?)' : '';
+  const sinceArgs = sinceTs != null ? [sinceTs, sinceTs] : [];
+  return getDb()
+    .prepare(
+      `SELECT a.kind AS aKind, a.ref_id AS aRefId,
+              b.kind AS bKind, b.ref_id AS bRefId,
+              vector_distance_cos(a.vector, b.vector) AS distance
+       FROM embeddings a
+       JOIN embeddings b ON a.rowid < b.rowid
+       WHERE a.kind IN (${kindList}) AND b.kind IN (${kindList})
+         AND a.kind <> b.kind
+         AND vector_distance_cos(a.vector, b.vector) < ?
+         ${sinceClause}
+         AND NOT EXISTS (
+           SELECT 1 FROM relations r
+           WHERE (r.from_ref = a.ref_id AND r.to_ref = b.ref_id)
+              OR (r.from_ref = b.ref_id AND r.to_ref = a.ref_id)
+         )
+       ORDER BY distance ASC
+       LIMIT ?`,
+    )
+    .all(...kinds, ...kinds, maxDistance, ...sinceArgs, limit) as Array<{
+    aKind: string;
+    aRefId: string;
+    bKind: string;
+    bRefId: string;
+    distance: number;
+  }>;
 }
 
 // ── Curator work-log (docs/plans/keap-curator-agent.md §9) ──────────────────

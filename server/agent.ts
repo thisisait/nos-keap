@@ -35,6 +35,7 @@ import { getTable, listTables, storeFor } from './tables';
 import { createTableRequestSchema } from '../shared/contracts/table';
 import { listRoots } from './fs-roots';
 import { TOKEN_RO, TOKEN_RW, tokenEquals } from './tokens';
+import { candidatePairs, anchoredCandidates, DEFAULT_MAX_DISTANCE, type CandidatePair } from './relations';
 
 const ok = (res: Response, data?: unknown) => res.json({ success: true, data });
 const fail = (res: Response, status: number, error: string) =>
@@ -299,6 +300,160 @@ export function registerAgentRoutes(app: Express) {
     if (req.query.wait === '1') return ok(res, await clusterTopics({ reset }));
     void clusterTopics({ reset }).catch((err) => console.warn('[topics] rebuild failed:', err));
     res.status(202).json({ success: true, data: { scheduled: true } });
+  });
+
+  // ── Typed cross-type relations (Track R3 stage 1) ──────────────────────────
+  // The host-side Sonnet classifier drives these: GET pre-recalled candidate
+  // pairs + the controlled vocabulary → type them → POST the typed batch, which
+  // lands as PROPOSED relations with provenance (moderation is stage 2). KEAP
+  // never calls an LLM; it only surfaces geometry + accepts typed results.
+  const isRelKind = (k: unknown): k is db.RelationKind => k === 'node' || k === 'object';
+
+  /** Resolve a relation endpoint to its label + text, or null if it doesn't
+   *  exist (a node was retired / an object deleted since the vector was written). */
+  function relationEndpoint(kind: db.RelationKind, id: string): { label: string; text: string } | null {
+    if (kind === 'node') {
+      const n = getNode(id);
+      if (!n) return null;
+      return { label: n.name, text: `${n.name}. ${n.description ?? ''}`.trim() };
+    }
+    const o = db.getObject(id);
+    if (!o) return null;
+    return { label: o.title, text: `${o.title}. ${o.description ?? o.body ?? ''}`.trim() };
+  }
+
+  // Candidate pairs for the classifier. Anchored mode (anchorKind+anchorId) or a
+  // corpus sweep (neither). Both endpoints must resolve, else the pair is
+  // dropped — the storage layer is visibility-agnostic; the graph (stage 2)
+  // enforces per-viewer both-endpoint visibility at ship time.
+  app.get('/agent/v1/relations/candidates', agentAuth('ro'), (req, res) => {
+    if (!db.vectorSearchAvailable()) return fail(res, 503, 'vector layer unavailable');
+    const limit = Math.min(Number(req.query.limit) || 20, MAX_LIMIT);
+    const maxDistance = Number(req.query.maxDistance) || DEFAULT_MAX_DISTANCE;
+    const anchorId = req.query.anchorId ? String(req.query.anchorId) : null;
+    const anchorKind = req.query.anchorKind ? String(req.query.anchorKind) : null;
+
+    let raw: CandidatePair[];
+    if (anchorId || anchorKind) {
+      if (!isRelKind(anchorKind)) return fail(res, 400, "anchorKind must be 'node' or 'object'");
+      if (!anchorId) return fail(res, 400, 'anchorId required with anchorKind');
+      if (!relationEndpoint(anchorKind, anchorId)) return fail(res, 404, 'unknown anchor');
+      raw = anchoredCandidates(anchorKind, anchorId, { maxDistance, limit });
+    } else {
+      raw = candidatePairs({ maxDistance, limit });
+    }
+
+    const pairs: Array<Record<string, unknown>> = [];
+    for (const p of raw) {
+      const from = relationEndpoint(p.fromKind, p.fromRef);
+      const to = relationEndpoint(p.toKind, p.toRef);
+      if (!from || !to) continue; // both endpoints must resolve
+      pairs.push({
+        from_ref: p.fromRef,
+        from_kind: p.fromKind,
+        to_ref: p.toRef,
+        to_kind: p.toKind,
+        fromLabel: from.label,
+        toLabel: to.label,
+        fromText: trim(from.text),
+        toText: trim(to.text),
+        similarity: p.similarity,
+      });
+    }
+    // Controlled vocabulary offered to the classifier: the active registry
+    // (seed + admin-confirmed). Proposed/rejected verbs are not suggested.
+    const vocab = db
+      .listRelationTypes()
+      .filter((t) => t.status === 'seed' || t.status === 'confirmed')
+      .map((t) => ({ type: t.type, label: t.label, description: t.description ?? undefined }));
+    ok(res, { model: db.embeddingStats().model, pairs, vocab });
+  });
+
+  // Read stored relations (the moderation + agent reader). Filter by status
+  // and/or source; newest first. Bounded — this is a host-side moderation feed,
+  // not an AgentKit tool response, but still capped to stay sane.
+  app.get('/agent/v1/relations', agentAuth('ro'), (req, res) => {
+    const status = req.query.status ? String(req.query.status) : undefined;
+    const source = req.query.source ? String(req.query.source) : undefined;
+    const limit = Math.min(Number(req.query.limit) || 200, 200);
+    const rows = db
+      .listRelations({
+        status: status as db.RelationStatus | undefined,
+        source: source as db.RelationSource | undefined,
+      })
+      .slice(0, limit);
+    ok(res, { relations: rows, types: db.listRelationTypes() });
+  });
+
+  // Write a Sonnet-typed batch. Each edge lands source='derived',
+  // status='proposed' with provenance (model, confidence, justification,
+  // created_at). An unknown type grows the vocabulary as a PROPOSED
+  // relation_type (moderated growth) and the edge stores against it, still
+  // proposed. Idempotent on (from_ref,to_ref,type). Validate-all-then-write, so
+  // a single bad item writes nothing.
+  app.post('/agent/v1/relations', agentAuth('rw'), (req, res) => {
+    const body = (req.body ?? {}) as { model?: unknown; relations?: unknown };
+    const items = Array.isArray(body.relations) ? body.relations : null;
+    if (!items || !items.length) return fail(res, 400, 'non-empty relations[] required');
+    const model =
+      String(body.model ?? req.headers['x-keap-model'] ?? process.env.KEAP_RELATION_MODEL ?? 'unknown').slice(0, 120);
+    const agentLabel = `agent:${req.agentName}`;
+
+    interface Valid {
+      fromRef: string;
+      fromKind: db.RelationKind;
+      toRef: string;
+      toKind: db.RelationKind;
+      type: string;
+      confidence: number;
+      justification: string;
+      unknownType: boolean;
+    }
+    const valid: Valid[] = [];
+    for (let i = 0; i < items.length; i++) {
+      const it = (items[i] ?? {}) as Record<string, unknown>;
+      const fromKind = it.from_kind;
+      const toKind = it.to_kind;
+      if (!isRelKind(fromKind) || !isRelKind(toKind)) return fail(res, 400, `invalid from_kind/to_kind at index ${i}`);
+      const fromRef = typeof it.from_ref === 'string' ? it.from_ref : '';
+      const toRef = typeof it.to_ref === 'string' ? it.to_ref : '';
+      if (!relationEndpoint(fromKind, fromRef)) return fail(res, 400, `from endpoint does not resolve at index ${i}`);
+      if (!relationEndpoint(toKind, toRef)) return fail(res, 400, `to endpoint does not resolve at index ${i}`);
+      const type = typeof it.type === 'string' ? it.type.trim() : '';
+      if (!type) return fail(res, 400, `type required at index ${i}`);
+      const confidence = Number(it.confidence);
+      if (!Number.isFinite(confidence) || confidence < 0 || confidence > 1) {
+        return fail(res, 400, `confidence must be a number in [0,1] at index ${i}`);
+      }
+      const justification = typeof it.justification === 'string' ? it.justification.trim() : '';
+      if (!justification) return fail(res, 400, `justification required at index ${i}`);
+      valid.push({
+        fromRef,
+        fromKind,
+        toRef,
+        toKind,
+        type,
+        confidence,
+        justification,
+        unknownType: !db.getRelationType(type),
+      });
+    }
+
+    const proposedTypes = new Set<string>();
+    for (const v of valid) {
+      if (v.unknownType && db.insertProposedRelationType(v.type, agentLabel)) proposedTypes.add(v.type);
+      db.insertDerivedRelation({
+        fromRef: v.fromRef,
+        fromKind: v.fromKind,
+        toRef: v.toRef,
+        toKind: v.toKind,
+        type: v.type,
+        confidence: v.confidence,
+        justification: v.justification,
+        model,
+      });
+    }
+    ok(res, { upserted: valid.length, proposedTypes: [...proposedTypes], submittedBy: agentLabel });
   });
 
   // ── DataTables (server/tables.ts) — the agent-bearer config-table surface ──
@@ -972,6 +1127,62 @@ const OPENAPI_SPEC = {
                     },
                   },
                   rationale: { type: 'string', maxLength: 1000 },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/agent/v1/relations/candidates': {
+      get: {
+        summary:
+          'Track R3: cross-kind candidate pairs from the vector index for the host-side classifier, plus the controlled relation vocabulary. Anchored mode (anchorKind+anchorId) or a corpus sweep (neither). Already-stored pairs are skipped; both endpoints must resolve.',
+        parameters: [
+          { name: 'anchorKind', in: 'query', schema: { type: 'string', enum: ['node', 'object'] } },
+          { name: 'anchorId', in: 'query', schema: { type: 'string' } },
+          { name: 'maxDistance', in: 'query', schema: { type: 'number', default: 0.35 }, description: 'Cosine-distance ceiling; similarity = 1 − distance' },
+          { name: 'limit', in: 'query', schema: { type: 'integer', maximum: 50, default: 20 } },
+        ],
+      },
+    },
+    '/agent/v1/relations': {
+      get: {
+        summary:
+          'Track R3: read stored relations for moderation. Filter by status (proposed|confirmed|rejected) and/or source (toe|derived|manual); newest first. Also returns the relation_types registry.',
+        parameters: [
+          { name: 'status', in: 'query', schema: { type: 'string', enum: ['proposed', 'confirmed', 'rejected'] } },
+          { name: 'source', in: 'query', schema: { type: 'string', enum: ['toe', 'derived', 'manual'] } },
+          { name: 'limit', in: 'query', schema: { type: 'integer', maximum: 200, default: 200 } },
+        ],
+      },
+      post: {
+        summary:
+          'Track R3: write a classifier-typed relation batch (write scope). Each edge lands source="derived", status="proposed" with provenance (model, confidence, justification). An unknown type grows the vocabulary as a proposed relation_type. Idempotent on (from_ref,to_ref,type).',
+        requestBody: {
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['relations'],
+                properties: {
+                  model: { type: 'string' },
+                  relations: {
+                    type: 'array',
+                    items: {
+                      type: 'object',
+                      required: ['from_ref', 'from_kind', 'to_ref', 'to_kind', 'type', 'confidence', 'justification'],
+                      properties: {
+                        from_ref: { type: 'string' },
+                        from_kind: { type: 'string', enum: ['node', 'object'] },
+                        to_ref: { type: 'string' },
+                        to_kind: { type: 'string', enum: ['node', 'object'] },
+                        type: { type: 'string' },
+                        confidence: { type: 'number', minimum: 0, maximum: 1 },
+                        justification: { type: 'string' },
+                      },
+                    },
+                  },
                 },
               },
             },

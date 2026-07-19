@@ -308,6 +308,32 @@ nOS-side counterparts flagged **[nOS]**).
   service content and refreshes cards' content_hash/description so edited
   documents re-embed and re-index automatically **[nOS]**.
 
+### Track R3 — Typed relations (OKF derived cross-type edges)
+
+The knowledge graph beyond the parent-child skeleton: SIMILARITY stays a rendered
+view (never a stored edge), only TYPED relations are stored — first-class rows
+with provenance + a moderation status. The classifier is HOST-SIDE (Sonnet,
+mirroring embed-sync): KEAP surfaces candidate pairs + the controlled vocabulary,
+and accepts typed results over an agent bearer endpoint; KEAP never calls an LLM
+in-container.
+
+- **R3 stage 1 — pipeline + store** *(shipped 2026-07-20)*: migration
+  `006-typed-relations` adds the generalized `relations` store (node↔object refs,
+  `from_kind`/`to_kind`, `source` toe|derived|manual, `status` proposed|confirmed|
+  rejected, confidence/justification/model/created_at provenance) beside the
+  shape-frozen `concept_relations` (still the ToE ingest target). ToE rows are
+  mirrored in as confirmed node↔node at boot (`db.syncToeRelations`, a live
+  mirror — a re-ingest is reflected next start). A growable `relation_types`
+  registry (~15 seeded controlled verbs; unknown proposed types land `proposed`).
+  Cross-kind candidate recall over the vector index (`server/relations.ts`:
+  corpus sweep + anchored, deduped, already-stored pairs skipped, incremental).
+  Agent surface: `GET /agent/v1/relations/candidates` (pairs + vocab for the
+  classifier), `POST /agent/v1/relations` (typed batch → proposed with
+  provenance, idempotent, moderated vocab growth), `GET /agent/v1/relations`
+  (moderation reader). Derived edges stay OUT of the `/api/graph` Vazby overlay
+  until moderated — ToE rendering is byte-identical. Stage 2 builds moderation +
+  cross-type verb rendering + the `/agent/v1/graph` brain endpoint on top.
+
 ### Track C — Capture overlay (extension + native app)
 
 > Owner direction: overlay = browser extension, likely later a native app.

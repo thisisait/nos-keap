@@ -45,6 +45,12 @@ async function main() {
   for (const row of dbmod.listNodeDescriptions()) applyDescriptionOverride(row);
   rebuildTaxonomyFts(allNodes());
   ensureLayout(); // U1: bake star positions iff the root index changed
+  // Track R3: seed the controlled relation vocabulary (idempotent) and mirror
+  // the ToE concept_relations set into the generalized `relations` store as
+  // confirmed node↔node edges — a live mirror, so a re-ingest is reflected here
+  // on the next boot. Derived edges (source='derived') are untouched.
+  dbmod.seedRelationTypes();
+  dbmod.syncToeRelations();
 
   const app = express();
   // Relaxed CSP because the SPA is self-hosted behind Traefik+Authentik.

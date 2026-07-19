@@ -227,6 +227,50 @@ const MIGRATIONS: Migration[] = [
       );
     `,
   },
+  {
+    // Track R3 stage 1 — the typed cross-type relation store. `concept_relations`
+    // (server/db.ts SCHEMA + knowledge/ingest.mjs) STAYS the ToE ingest target,
+    // shape-frozen, so ingest's ON CONFLICT(from_id,to_id,type) and per-domain
+    // prefix resets keep working untouched. This migration adds a GENERALIZED
+    // store beside it: `relations` carries node↔object edges with provenance +
+    // a moderation status, and `relation_types` is the growable controlled
+    // vocabulary. The ToE set is MIRRORED into `relations` at boot
+    // (db.syncToeRelations) as source='toe', status='confirmed' — a live mirror,
+    // not a one-time copy, so a re-ingest (which rewrites concept_relations) is
+    // reflected on the next start. Derived edges (source='derived') live ONLY
+    // here, so ingest.mjs's reset never touches them. Pure DDL only — the seed
+    // (relation_types) and the mirror (relations) are idempotent boot steps.
+    id: '006-typed-relations',
+    sql: `
+      CREATE TABLE IF NOT EXISTS relations (
+        id            TEXT PRIMARY KEY,             -- deterministic: hash(from_ref|to_ref|type)
+        from_ref      TEXT NOT NULL,                -- taxonomy node id | knowledge_objects.id
+        to_ref        TEXT NOT NULL,
+        from_kind     TEXT NOT NULL DEFAULT 'node', -- 'node' | 'object'
+        to_kind       TEXT NOT NULL DEFAULT 'node',
+        type          TEXT NOT NULL,                -- relation_types.type
+        confidence    REAL,                         -- 0..1 (ToE: mapped from the explored rating)
+        justification TEXT,                         -- moderation rationale (derived) — the Sonnet reason
+        source        TEXT NOT NULL DEFAULT 'derived', -- 'toe' | 'derived' | 'manual'
+        status        TEXT NOT NULL DEFAULT 'proposed', -- 'proposed' | 'confirmed' | 'rejected'
+        model         TEXT,                         -- classifier model that typed a derived edge
+        created_at    INTEGER,
+        UNIQUE (from_ref, to_ref, type)             -- idempotency key for upserts + dedupe
+      );
+      CREATE INDEX IF NOT EXISTS relations_status_idx ON relations(status);
+      CREATE INDEX IF NOT EXISTS relations_from_idx   ON relations(from_ref, from_kind);
+      CREATE INDEX IF NOT EXISTS relations_to_idx     ON relations(to_ref, to_kind);
+
+      CREATE TABLE IF NOT EXISTS relation_types (
+        type        TEXT PRIMARY KEY,
+        label       TEXT NOT NULL,                  -- verb shown on the edge (stage-2 render)
+        color       TEXT,                           -- edge hue (stage-2 render)
+        description TEXT,
+        status      TEXT NOT NULL DEFAULT 'seed',   -- 'seed' | 'proposed' | 'confirmed'
+        created_at  INTEGER
+      );
+    `,
+  },
 ];
 
 export function runMigrations(db: Database.Database): void {
