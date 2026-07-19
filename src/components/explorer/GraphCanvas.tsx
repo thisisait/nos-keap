@@ -245,7 +245,11 @@ function objectBodyColor(node: CanvasNode, coreView: boolean, lens?: LensState):
     const lang = langOfPath(node.path);
     return bodyColor(node, lang ? langColor(lang) : `hsl(${node.categoryHue}, 70%, 60%)`, lens);
   }
-  return bodyColor(node, `hsl(${node.categoryHue}, 70%, 60%)`, lens);
+  // Softer saturation than the old neon 70/60, plus a deterministic per-body
+  // lightness jitter — a dense field then reads with depth and variety instead
+  // of a flat wall of identically-saturated blobs.
+  const j = hash01v(`${node.id}:l`);
+  return bodyColor(node, `hsl(${node.categoryHue}, 54%, ${52 + j * 14}%)`, lens);
 }
 
 function nodeColor(n: CanvasNode, focusId: string | null, lens?: LensState): string {
@@ -406,10 +410,31 @@ function starGlow(hue: number): THREE.Sprite {
   return noRaycast(s) as THREE.Sprite;
 }
 
+// Per-BODY variety so a dense field doesn't read as a wall of identical shapes.
+// Deterministic (hash of the id) → stable across renders and byte-identical
+// between the individual mesh, the pick stub, and the instanced overlay.
+
+/** Rendered radius, with a per-body size jitter on top of the form base. */
+function bodyScale(node: CanvasNode): number {
+  const form = node.form ?? 'asteroid';
+  return (FORM_SIZE[form] ?? 1.4) * 2.4 * (0.62 + hash01v(`${node.id}:s`) * 0.9);
+}
+
+/** Ring geometry for a planet, or null. Only ~60% of planets get one, and each
+ *  varies in tilt + size — otherwise every planet is the same Saturn. */
+function ringSpec(node: CanvasNode): { tiltX: number; tiltZ: number; scale: number } | null {
+  if (hash01v(`${node.id}:ring`) < 0.4) return null;
+  return {
+    tiltX: Math.PI / 2.4 + (hash01v(`${node.id}:rtx`) - 0.5) * 1.5,
+    tiltZ: (hash01v(`${node.id}:rtz`) - 0.5) * 0.7,
+    scale: 0.82 + hash01v(`${node.id}:rs`) * 0.6,
+  };
+}
+
 /** One typed orbital body: a per-form mesh (new Mesh off shared geometry). */
 function buildAssetMesh(node: CanvasNode, lens?: LensState): THREE.Object3D {
   const form = node.form ?? 'asteroid';
-  const size = (FORM_SIZE[form] ?? 1.4) * 2.4;
+  const size = bodyScale(node);
   const mat = new THREE.MeshBasicMaterial({
     color: new THREE.Color(objectBodyColor(node, false, lens)),
     // DoubleSide so the planet ring (a flat RingGeometry) stays visible from
@@ -420,13 +445,14 @@ function buildAssetMesh(node: CanvasNode, lens?: LensState): THREE.Object3D {
   });
   const mesh = new THREE.Mesh(_formGeo[form] ?? _formGeo.asteroid, mat);
   mesh.scale.setScalar(size);
-  if (form === 'planet') {
-    const ring = new THREE.Mesh(_ringGeo, mat);
-    ring.rotation.x = Math.PI / 2.4;
-    ring.scale.setScalar(size);
-    noRaycast(ring);
+  const ring = form === 'planet' ? ringSpec(node) : null;
+  if (ring) {
+    const r = new THREE.Mesh(_ringGeo, mat);
+    r.rotation.set(ring.tiltX, 0, ring.tiltZ);
+    r.scale.setScalar(size * ring.scale);
+    noRaycast(r);
     const g = new THREE.Group();
-    g.add(mesh, ring);
+    g.add(mesh, r);
     return g;
   }
   if (form === 'comet') {
@@ -544,7 +570,7 @@ function fileCubeStub(node: CanvasNode): THREE.Object3D {
 function assetStub(node: CanvasNode): THREE.Object3D {
   const form = node.form ?? 'asteroid';
   const mesh = new THREE.Mesh(_formGeo[form] ?? _formGeo.asteroid, _stubMat);
-  mesh.scale.setScalar((FORM_SIZE[form] ?? 1.4) * 2.4); // match buildAssetMesh
+  mesh.scale.setScalar(bodyScale(node)); // match buildAssetMesh (varied size)
   mesh.rotation.set(hash01v(`${node.id}:x`) * 0.5, hash01v(node.id) * Math.PI, 0);
   mesh.visible = false; // 0 draw calls; still raycastable (three tests layers, not visible)
   return mesh;
@@ -1217,14 +1243,13 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     const dummy = new THREE.Object3D();
     const col = new THREE.Color();
     for (const [form, list] of byForm) {
-      const size = (FORM_SIZE[form] ?? 1.4) * 2.4;
       const body = new THREE.InstancedMesh(_formGeo[form] ?? _formGeo.asteroid, _assetInstMat, list.length);
       body.frustumCulled = false; // spans the whole universe — no whole-batch cull
       noRaycast(body); // picking stays on the per-node stubs
       list.forEach((n, i) => {
         dummy.position.set(n.fx, n.fy, n.fz);
         dummy.rotation.set(hash01v(`${n.id}:x`) * 0.5, hash01v(n.id) * Math.PI, 0); // == assetStub
-        dummy.scale.setScalar(size);
+        dummy.scale.setScalar(bodyScale(n)); // per-instance varied size (== buildAssetMesh)
         dummy.updateMatrix();
         body.setMatrixAt(i, dummy.matrix);
         body.setColorAt(i, col.set(objectBodyColor(n, false, lensRef.current)));
@@ -1232,22 +1257,28 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       body.instanceMatrix.needsUpdate = true;
       if (body.instanceColor) body.instanceColor.needsUpdate = true;
       groups.push({ mesh: body, nodes: list });
-      // Planet rings: a parallel InstancedMesh, same positions, fixed tilt.
+      // Planet rings: a parallel InstancedMesh over ONLY the planets that get a
+      // ring (~60%), each with its own tilt + size — matches buildAssetMesh, so
+      // the field reads as varied Saturns, not one repeated shape.
       if (form === 'planet') {
-        const ring = new THREE.InstancedMesh(_ringGeo, _ringInstMat, list.length);
-        ring.frustumCulled = false;
-        noRaycast(ring);
-        list.forEach((n, i) => {
-          dummy.position.set(n.fx, n.fy, n.fz);
-          dummy.rotation.set(Math.PI / 2.4, 0, 0); // == buildAssetMesh ring tilt
-          dummy.scale.setScalar(size);
-          dummy.updateMatrix();
-          ring.setMatrixAt(i, dummy.matrix);
-          ring.setColorAt(i, col.set(objectBodyColor(n, false, lensRef.current)));
-        });
-        ring.instanceMatrix.needsUpdate = true;
-        if (ring.instanceColor) ring.instanceColor.needsUpdate = true;
-        groups.push({ mesh: ring, nodes: list });
+        const ringNodes = list.filter((n) => ringSpec(n));
+        if (ringNodes.length) {
+          const ring = new THREE.InstancedMesh(_ringGeo, _ringInstMat, ringNodes.length);
+          ring.frustumCulled = false;
+          noRaycast(ring);
+          ringNodes.forEach((n, i) => {
+            const rs = ringSpec(n)!;
+            dummy.position.set(n.fx, n.fy, n.fz);
+            dummy.rotation.set(rs.tiltX, 0, rs.tiltZ);
+            dummy.scale.setScalar(bodyScale(n) * rs.scale);
+            dummy.updateMatrix();
+            ring.setMatrixAt(i, dummy.matrix);
+            ring.setColorAt(i, col.set(objectBodyColor(n, false, lensRef.current)));
+          });
+          ring.instanceMatrix.needsUpdate = true;
+          if (ring.instanceColor) ring.instanceColor.needsUpdate = true;
+          groups.push({ mesh: ring, nodes: ringNodes });
+        }
       }
     }
     assetOverlayRef.current = groups;
