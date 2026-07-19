@@ -181,7 +181,12 @@ nOS-side counterparts flagged **[nOS]**).
   the users-tree + `~untopiced` buckets, distance/count label LOD (stars + hub labels, not
   just the ≤400 cube cap), freeze the force sim for pinned nodes — measured before/after on
   an ~8k stress fixture. **Phase B** = the impostor LOD swap (server aggregates + camera-
-  driven scale switch). **Phase C** = shader nebulae + segmentation. Builds on U1's bake and
+  driven scale switch) — ALSO folds in the **orbital-object revision**: anchored objects
+  (planet/moon bodies) render today but are too small + too tightly orbited to read in the
+  overview, so they only "come alive" after a click-warp; Phase B gives them bigger bodies +
+  wider, better-spaced orbits AND lets the camera LOD decide how many materialize at each
+  distance (overview = a few largest + density hint, close = the full "solar system"), so
+  making them visible never floods the ring. **Phase C** = shader nebulae + segmentation. Builds on U1's bake and
   U2's instancing; supersedes the one-shot "scale pass" as the real scale architecture.
 - **U2′ — files core** *(shipped 2026-07-16)*: explore toggle relocating every knowledge
   object into a 3D core at the (empty) galaxy-ring center; taxonomy stars never move,
