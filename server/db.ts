@@ -2513,6 +2513,10 @@ export function insertProposedRelationType(type: string, proposedBy: string): bo
  *  node↔node, source='toe', status='confirmed'. A LIVE mirror (delete + rebuild
  *  the source='toe' partition), so a re-ingest that rewrites concept_relations
  *  is reflected on the next boot; derived rows (source!='toe') are untouched.
+ *  When a concept_relation collides with a pre-existing derived row on the same
+ *  (from_ref,to_ref,type), that row is claimed by ToE: it flips to source='toe',
+ *  status='confirmed' AND its classifier provenance (justification, model) is
+ *  reset to NULL — a ToE-partition row carries no derived provenance.
  *  Boot step, runs after migrations. */
 export function syncToeRelations(): void {
   const d = getDb();
@@ -2525,7 +2529,8 @@ export function syncToeRelations(): void {
      VALUES (?, ?, ?, 'node', 'node', ?, ?, NULL, 'toe', 'confirmed', NULL, ?)
      ON CONFLICT(from_ref, to_ref, type) DO UPDATE SET
        from_kind = 'node', to_kind = 'node',
-       confidence = excluded.confidence, source = 'toe', status = 'confirmed'`,
+       confidence = excluded.confidence, source = 'toe', status = 'confirmed',
+       justification = NULL, model = NULL`,
   );
   const tx = d.transaction(() => {
     d.prepare("DELETE FROM relations WHERE source = 'toe'").run();
@@ -2645,7 +2650,7 @@ export function nearCrossKindPairs(
            WHERE (r.from_ref = a.ref_id AND r.to_ref = b.ref_id)
               OR (r.from_ref = b.ref_id AND r.to_ref = a.ref_id)
          )
-       ORDER BY distance ASC
+       ORDER BY distance ASC, aKind, aRefId, bKind, bRefId
        LIMIT ?`,
     )
     .all(...kinds, ...kinds, maxDistance, ...sinceArgs, limit) as Array<{

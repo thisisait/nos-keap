@@ -332,6 +332,15 @@ export function registerAgentRoutes(app: Express) {
     const maxDistance = Number(req.query.maxDistance) || DEFAULT_MAX_DISTANCE;
     const anchorId = req.query.anchorId ? String(req.query.anchorId) : null;
     const anchorKind = req.query.anchorKind ? String(req.query.anchorKind) : null;
+    // Incremental watermark (corpus sweep only): only pairs whose endpoints
+    // changed after `sinceTs` are re-considered. A caller that passes the prior
+    // sweep's timestamp gets bounded compute AND stops re-emitting pairs the
+    // classifier already saw-and-declined (their vectors are unchanged) — the
+    // whole point of nearCrossKindPairs' sinceTs, which was previously unreachable
+    // from this surface. Ignored in anchored mode (already ANN-bounded).
+    const sinceRaw = req.query.sinceTs;
+    const sinceTs =
+      sinceRaw != null && Number.isFinite(Number(sinceRaw)) ? Number(sinceRaw) : undefined;
 
     let raw: CandidatePair[];
     if (anchorId || anchorKind) {
@@ -340,7 +349,7 @@ export function registerAgentRoutes(app: Express) {
       if (!relationEndpoint(anchorKind, anchorId)) return fail(res, 404, 'unknown anchor');
       raw = anchoredCandidates(anchorKind, anchorId, { maxDistance, limit });
     } else {
-      raw = candidatePairs({ maxDistance, limit });
+      raw = candidatePairs({ maxDistance, limit, sinceTs });
     }
 
     const pairs: Array<Record<string, unknown>> = [];
@@ -415,6 +424,11 @@ export function registerAgentRoutes(app: Express) {
       const fromKind = it.from_kind;
       const toKind = it.to_kind;
       if (!isRelKind(fromKind) || !isRelKind(toKind)) return fail(res, 400, `invalid from_kind/to_kind at index ${i}`);
+      // Cross-type store only: this pipeline derives node↔object edges. Same-kind
+      // edges (node↔node / object↔object) belong to ToE (mirrored server-side) or
+      // to object-ref links — never to the derived cross-type store. Reject them
+      // so candidate recall's cross-kind guard can't be bypassed by a raw POST.
+      if (fromKind === toKind) return fail(res, 400, `from_kind and to_kind must differ (cross-type only) at index ${i}`);
       const fromRef = typeof it.from_ref === 'string' ? it.from_ref : '';
       const toRef = typeof it.to_ref === 'string' ? it.to_ref : '';
       if (!relationEndpoint(fromKind, fromRef)) return fail(res, 400, `from endpoint does not resolve at index ${i}`);

@@ -128,16 +128,43 @@ test.describe('typed relations pipeline (R3 stage 1)', () => {
     expect(types).not.toContain('illustrates');
   });
 
-  test('candidates anchored: neighbours of the node across kinds', async ({ request }) => {
+  test('candidates sweep honours sinceTs (incremental watermark, live on the surface)', async ({
+    request,
+  }) => {
+    // A future watermark: no vector changed after it, so the corpus sweep must
+    // re-consider nothing — proving sinceTs is wired through (previously the
+    // endpoint ignored it and every call was a full corpus scan).
+    const future = Math.floor(Date.now() / 1000) + 3600;
+    const r = await request.get(
+      `/agent/v1/relations/candidates?maxDistance=0.35&limit=50&sinceTs=${future}`,
+      { headers: RO },
+    );
+    expect(r.ok()).toBeTruthy();
+    const pairs = (await r.json()).data.pairs as Array<{ from_ref: string; to_ref: string }>;
+    const touchesFixture = pairs.some((p) =>
+      [p.from_ref, p.to_ref].some((x) => [OBJ1, OBJ2, NODE].includes(x)),
+    );
+    expect(touchesFixture, 'nothing changed after the watermark → fixture pairs excluded').toBe(false);
+  });
+
+  test('candidates anchored: cross-kind neighbours of the node only', async ({ request }) => {
     const r = await request.get(
       `/agent/v1/relations/candidates?anchorKind=node&anchorId=${encodeURIComponent(NODE)}&limit=50`,
       { headers: RO },
     );
     expect(r.ok()).toBeTruthy();
-    const pairs = (await r.json()).data.pairs as Array<{ from_ref: string; to_ref: string }>;
+    const pairs = (await r.json()).data.pairs as Array<{
+      from_ref: string;
+      from_kind: string;
+      to_ref: string;
+      to_kind: string;
+    }>;
     const refs = new Set(pairs.flatMap((p) => [p.from_ref, p.to_ref]));
     expect(refs.has(OBJ1)).toBe(true);
     expect(refs.has(OBJ2)).toBe(true);
+    // Cross-type only: the anchored path must not surface same-kind neighbours
+    // (regression guard — it previously returned node↔node / object↔object too).
+    for (const p of pairs) expect(p.from_kind, JSON.stringify(p)).not.toBe(p.to_kind);
   });
 
   test('POST typed batch: known + unknown type land proposed with provenance', async ({ request }) => {
@@ -261,6 +288,7 @@ test.describe('typed relations pipeline (R3 stage 1)', () => {
     const base = { from_ref: OBJ1, from_kind: 'object', to_ref: NODE, to_kind: 'node', type: 'supports', confidence: 0.5, justification: 'ok' };
     const bad = [
       { ...base, from_kind: 'capture' }, // unsupported kind
+      { ...base, from_kind: 'node', to_kind: 'node', to_ref: NODE, from_ref: NODE }, // same-kind (cross-type store only)
       { ...base, confidence: 1.5 }, // out of [0,1]
       { ...base, to_ref: 'no-such-node' }, // endpoint does not resolve
       { ...base, justification: '   ' }, // empty after trim

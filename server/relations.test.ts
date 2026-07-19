@@ -67,6 +67,36 @@ describe('ToE mirror (syncToeRelations)', () => {
     expect(derived).toHaveLength(1);
     expect(derived[0].status).toBe('proposed');
   });
+
+  it('claims a colliding derived edge as ToE and NULLs its classifier provenance', () => {
+    // A derived+proposed edge that shares (from_ref,to_ref,type) with a ToE
+    // concept_relation. On the next mirror the row must be claimed by ToE:
+    // confirmed, ToE confidence, and — critically — no leftover classifier
+    // justification/model (a ToE-partition row carries NULL provenance).
+    db.insertConceptRelation({ from: '07.07', to: '08.08', type: 'duality', explored: 'well' });
+    db.insertDerivedRelation({
+      fromRef: '07.07',
+      fromKind: 'node',
+      toRef: '08.08',
+      toKind: 'node',
+      type: 'duality',
+      confidence: 0.42,
+      justification: 'DERIVED-justification-from-sonnet',
+      model: 'claude-sonnet-derived',
+    });
+    db.syncToeRelations();
+
+    const row = db
+      .listRelations({ source: 'toe' })
+      .find((r) => r.fromRef === '07.07' && r.toRef === '08.08' && r.type === 'duality')!;
+    expect(row).toBeTruthy();
+    expect(row.status).toBe('confirmed');
+    expect(row.confidence).toBe(1.0); // ToE 'well' rating, not the classifier's 0.42
+    expect(row.justification).toBeNull(); // classifier rationale wiped
+    expect(row.model).toBeNull(); // classifier model wiped
+    // And it is no longer part of the derived partition.
+    expect(db.listRelations({ source: 'derived' }).some((r) => r.fromRef === '07.07')).toBe(false);
+  });
 });
 
 describe('derived-edge upsert + vocabulary growth', () => {
