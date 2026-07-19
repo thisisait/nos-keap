@@ -91,6 +91,12 @@ nOS-side counterparts flagged **[nOS]**).
 - **S2‴ — object→object link edges** *(shipped 2026-07-18)*: `[[object:<id>]]` refs ship
   as `/api/graph` `objectLinks` (both-endpoints-visible, deduped, capped) and draw as
   violet GL lines in Explore; object drawers list linked cards both directions.
+- **S2⁗ — fs-watch + Recent lens** *(shipped 2026-07-19)*: `server/fs-watch.ts` arms one
+  recursive `fs.watch` per users tree + mapped root, debounced 2 s into the EXISTING sync
+  entrypoints (mirror semantics frozen — the watcher only changes WHEN, never WHAT); late
+  mounts re-armed on a 30 s probe, EMFILE/ENOSPC → interval-only degrade, `KEAP_FS_WATCH=0`
+  kills it. Objects ship `mtime`; the explore Lens bar gains **Recent** — an age gradient
+  (hot = this week → cold) over objects + folder hubs, recolor only (positions untouched).
 - **S3 — OKF bundle export/import** (zip of markdown+frontmatter; dedup by id+hash).
   Interop with Google tooling & openknowledge CLI; the future sharing unit (Phase S).
 - **S4 — RRF hybrid search**: FTS5(BM25) ⊕ vectors ⊕ one-hop taxonomy/link neighbors,
