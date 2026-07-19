@@ -9,8 +9,8 @@
  * (related / most-unrelated), source kinds, and dataType facets. One toggle
  * lifts the same graph into full 3D.
  */
-import { useCallback, useMemo, useState, useRef, useLayoutEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useCallback, useMemo, useState, useRef, useLayoutEffect, useEffect } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Rocket, Orbit, Search, Waypoints, Boxes } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -51,20 +51,47 @@ export default function Explore() {
   const { t, i18n } = useTranslation();
   const { data: graph, isLoading } = useGraph();
 
-  const [focusId, setFocusId] = useState<string | null>(null);
+  // Addressable view: focus / core order / lens / relations round-trip through
+  // the URL query so any explore state is a shareable link. Read ONCE at mount
+  // (below, in the state initializers); a single effect writes state → URL.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialParams = useRef(searchParams).current;
+
+  const [focusId, setFocusId] = useState<string | null>(() => initialParams.get('focus') || null);
   const [mode, setMode] = useState<NeighborMode>('related');
   const [kinds, setKinds] = useState<string[]>(['taxonomy', 'capture', 'note', 'object']);
   const [typeFilter, setTypeFilter] = useState<Set<string>>(new Set());
   const [drawer, setDrawer] = useState<DrawerTarget | null>(null);
   const [cameraMode, setCameraMode] = useState<CameraMode>('observer');
-  const [showRelations, setShowRelations] = useState(true);
+  const [showRelations, setShowRelations] = useState(() => initialParams.get('rel') !== '0');
   const [jumpQuery, setJumpQuery] = useState('');
   const [jumpMiss, setJumpMiss] = useState(false);
   const [shipHud, setShipHud] = useState({ speed: 0, boosting: false, thrust: 0 });
-  const [lens, setLens] = useState<LensState>({});
+  const [lens, setLens] = useState<LensState>(() => {
+    const axis = initialParams.get('lens');
+    return axis ? { axis } : {};
+  });
   // Files core: objects leave their orbital slots and form a 3D core at the
   // ring center, reordered by filesystem / taxonomy / (later) topic.
-  const [core, setCore] = useState<{ on: boolean; order: CoreOrder }>({ on: false, order: 'fs' });
+  const [core, setCore] = useState<{ on: boolean; order: CoreOrder }>(() => {
+    const c = initialParams.get('core');
+    const orders: CoreOrder[] = ['fs', 'taxonomy', 'topic'];
+    return c && orders.includes(c as CoreOrder)
+      ? { on: true, order: c as CoreOrder }
+      : { on: false, order: 'fs' };
+  });
+
+  // State → URL (replace, so a focus change doesn't spam the back stack). This
+  // is the ONLY writer; the initializers above are the only reader, so there's
+  // no read/write loop. An empty value drops the param → clean shareable URLs.
+  useEffect(() => {
+    const p = new URLSearchParams();
+    if (focusId) p.set('focus', focusId);
+    if (core.on) p.set('core', core.order);
+    if (lens.axis) p.set('lens', lens.axis);
+    if (!showRelations) p.set('rel', '0');
+    setSearchParams(p, { replace: true });
+  }, [focusId, core.on, core.order, lens.axis, showRelations, setSearchParams]);
 
   // Semantic hyperspace jump: hybrid search → plot course to the best hit's
   // star (objects/captures resolve to their anchor node). Focus does the
@@ -490,7 +517,11 @@ export default function Explore() {
           kind: 'object',
           dataType: o.type,
           isStar: true,
-          nodeId: o.anchors[0],
+          // Focus targets the OBJECT itself (its cube in the core, its orbital
+          // body otherwise) — NOT its taxonomy anchor. Anchoring focus to
+          // anchors[0] flew the camera out of the core to the anchor star's
+          // ring position (e.g. "Computer Science") on a cube's Focus click.
+          nodeId: id,
         });
       }
       return;

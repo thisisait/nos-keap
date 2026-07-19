@@ -211,6 +211,15 @@ nOS-side counterparts flagged **[nOS]**).
   are lang-coloured satellite cubes (names capped to ≤400-file fields); folder/repo
   hub panel shows path, contents, language bar + size. Camera: near-hop guard + a
   view-relative warp approach (no mirror flip past an orbited node).
+  *2026-07-19 UX*: **addressable view** — focus / core order / lens / relations round-trip
+  through the URL query (`?focus=…&core=…&lens=…&rel=0`), so any explore state is a shareable
+  link (read once at mount, one effect writes state→URL with `replace`; empty values drop the
+  param). Groundwork for U5 shared-universe deep links. Also fixed: an object's "Focus in
+  graph" targeted its taxonomy anchor (flew the camera out of the core to e.g. "Computer
+  Science") — now it focuses the object itself (its cube / orbital body).
+  *UI-as-API note*: KEAP's own explore chrome stays minimal — the product surface is the **nOS
+  face** web-OS shell (later in the nOS roadmap), so palette/navigation features land as an
+  API for face to drive, not as KEAP-side command-palette UI.
 - **U3 — the ship**: first-person camera with inertial flight (pointer/WASD/gamepad),
   smooth warp between galaxies, HUD compass to search hits ("semantic hyperspace jump":
   search → course plotted to the star). Ship position, visited-star log and **spatial
