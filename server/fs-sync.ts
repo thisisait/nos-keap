@@ -102,6 +102,23 @@ export interface FsSyncResult {
   tookMs: number;
 }
 
+// ── fs-watch status registration ────────────────────────────────────────────
+// server/fs-watch.ts imports THIS module's sync entrypoints, so fsSyncStatus
+// cannot import back without a cycle: the watcher registers a status provider
+// at boot instead. Purely additive — every existing status key is untouched,
+// and without registration the block reads as a disabled watcher.
+
+export interface FsWatchStatusBlock {
+  enabled: boolean;
+  degraded: boolean;
+  watchedRoots: Array<{ key: string; path: string }>;
+  lastEvent: { at: string; root: string } | null;
+}
+let fsWatchStatusFn: (() => FsWatchStatusBlock) | null = null;
+export function registerFsWatchStatus(fn: () => FsWatchStatusBlock): void {
+  fsWatchStatusFn = fn;
+}
+
 let lastRun: { at: string; result: FsSyncResult } | null = null;
 export const fsSyncStatus = () => ({
   dir: USER_FILES_DIR || null,
@@ -113,6 +130,7 @@ export const fsSyncStatus = () => ({
   roots: listRoots(),
   mappings: mappingStatusBlock(),
   sharedUids: [...SHARED_UIDS],
+  watch: fsWatchStatusFn?.() ?? { enabled: false, degraded: false, watchedRoots: [], lastEvent: null },
 });
 
 /** Per-mapping status summary. Hard caps (50 items, 60-char labels) keep the

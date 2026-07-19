@@ -29,6 +29,7 @@ import { allNodes, registerExtNode, applyDescriptionOverride } from './taxonomy'
 import { ensureLayout } from './layout';
 import { startFsSync } from './fs-sync';
 import { startTopicSync } from './topics';
+import { startFsWatch } from './fs-watch';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT ?? 8080);
@@ -98,6 +99,10 @@ async function main() {
     // AFTER listen so a large first scan never stalls the nOS health probe.
     // Inert without KEAP_USER_FILES_DIR — see server/fs-sync.ts.
     startFsSync();
+    // Event-driven trigger layer over the same passes (debounced fs.watch;
+    // KEAP_FS_WATCH=0 disables) — AFTER startFsSync so boot-time arming can
+    // skip the initial pass the scan just did. See server/fs-watch.ts.
+    startFsWatch();
     // Topics mode (§1.2): schedules a delayed recluster iff the persisted map
     // is stale. Scheduled from INSIDE the listen callback (health-probe-safe
     // slot) and only debounces — never clusters synchronously here.
