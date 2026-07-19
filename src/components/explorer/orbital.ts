@@ -10,22 +10,32 @@
 
 export type CelestialForm = 'planet' | 'moon' | 'asteroid' | 'comet' | 'station';
 
-/** Rendered radius (node "val") per form — moons small, comets slim, planets big. */
+/**
+ * Rendered radius (node "val") per form — moons small, comets slim, planets big.
+ * U2″ Phase B (B1): bumped ~1.7× over the original 1.2–2.6 so anchored bodies
+ * read from the constellation OVERVIEW, not only after a click-warp. The
+ * apparent-size LOD in GraphCanvas then culls them by distance, so bigger
+ * bodies never flood the wide view — they just become visible sooner.
+ */
 export const FORM_SIZE: Record<CelestialForm, number> = {
-  moon: 1.2,
-  asteroid: 1.4,
-  station: 1.8,
-  planet: 2.6,
-  comet: 1.6,
+  moon: 2.0,
+  asteroid: 2.4,
+  station: 3.0,
+  planet: 4.4,
+  comet: 2.7,
 };
 
-/** Orbital clearance per form — how far the body sits from the star surface. */
+/**
+ * Orbital clearance per form — how far the body sits from the star surface.
+ * B1: widened ~1.6× so the (now larger) bodies clear the star glow and each
+ * other, giving each star a legible little "solar system" instead of a clump.
+ */
 export const FORM_RADIUS: Record<CelestialForm, number> = {
-  moon: 12,
-  station: 20,
-  asteroid: 22,
-  planet: 30,
-  comet: 44,
+  moon: 20,
+  station: 32,
+  asteroid: 36,
+  planet: 48,
+  comet: 68,
 };
 
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
@@ -54,7 +64,13 @@ export function orbitalPosition(
   starSize: number,
 ): [number, number, number] {
   const clearance = Math.sqrt(Math.max(starSize, 1)) * 2.4;
-  const R = clearance + (FORM_RADIUS[form] ?? FORM_RADIUS.asteroid);
+  // B1 spacing: a busy star spreads its bodies over a BIGGER shell (crowd),
+  // and each body gets a mild radial offset (jitter) so same-form bodies sit at
+  // different depths instead of one thin, overlap-prone shell. Deterministic —
+  // same (id, form, i, n) → same point, so re-renders stay byte-stable.
+  const crowd = 1 + Math.min(0.8, n / 30);
+  const jitter = 1 + (hash01(id + ':r') - 0.5) * 0.3;
+  const R = (clearance + (FORM_RADIUS[form] ?? FORM_RADIUS.asteroid)) * crowd * jitter;
   const y = n <= 1 ? 0 : 1 - (2 * (i + 0.5)) / n;
   const rr = Math.sqrt(Math.max(0, 1 - y * y));
   const phi = i * GOLDEN_ANGLE + hash01(id) * 0.5;

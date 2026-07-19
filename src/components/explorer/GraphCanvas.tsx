@@ -64,6 +64,18 @@ const FOLDER_LABEL_CAP = 400; // files-core folder-hub names
 // object field itself is huge — past that even the top tier is too dense to read.
 const HUGE_FIELD = 5000; // objects
 
+// U2″ Phase B (B1) — orbital-object LOD by APPARENT size. A body shows once its
+// angular size (rendered radius ÷ camera distance) rises past SHOW and hides
+// once it falls below HIDE; the SHOW>HIDE gap is hysteresis, so a body sitting
+// exactly at the boundary can't flicker on/off frame to frame. Bigger bodies
+// (planets) clear SHOW from farther, so the constellation overview reveals a
+// few largest per star; small moons only cross it as the camera closes in — the
+// "solar system" materialises on approach WITHOUT a click, and dense stars
+// never flood the wide view. Tunables: raise SHOW to reveal later (sparser
+// overview), lower it to reveal sooner. rendered radius = √(nodeVal)·nodeRelSize.
+const ORBITAL_LOD_SHOW = 0.01; // ~visible when radius/dist exceeds this
+const ORBITAL_LOD_HIDE = 0.007; // ~hidden when it drops below this
+
 export interface CanvasNode {
   id: string;
   name: string;
@@ -1190,6 +1202,63 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       mat.dispose();
     };
   }, [graphData, mode]);
+
+  // U2″ Phase B (B1) — orbital-object LOD. Toggles each anchored body's mesh
+  // visibility by its apparent size (rendered radius ÷ camera distance) with
+  // hysteresis, so the "solar system" reveals on approach and dense stars never
+  // flood the overview. Observer view only — bodies exist solely there (the core
+  // view relocates objects to the ring centre as cubes). Hidden bodies also drop
+  // out of the raycast (three skips invisible), which is exactly right: you
+  // can't click what you can't see. Cheap: one distance + compare per body, and
+  // an idle guard skips the whole pass while the camera is still.
+  useEffect(() => {
+    if (coreView || mode === 'ship') return;
+    const bodies = graphData.nodes.filter(
+      (n: CanvasNode) => n.object && n.fx != null,
+    ) as Array<CanvasNode & { fx: number; fy: number; fz: number; __threeObj?: THREE.Object3D }>;
+    if (!bodies.length) return;
+    // Rendered radius per body — object size is lens-independent (nodeSize only
+    // scales non-objects by centrality), so precompute once for the effect.
+    const radius = bodies.map(
+      (n) => Math.sqrt(Math.max(nodeSize(n, lensRef.current), 0.01)) * 2.4,
+    );
+    let raf = 0;
+    let lastX = Infinity;
+    let lastY = Infinity;
+    let lastZ = Infinity;
+    const step = () => {
+      const ref = fgRef.current;
+      if (ref) {
+        const cp = ref.camera().position;
+        // Idle guard: re-evaluate only once the camera has actually moved
+        // (sub-unit drift can't change any body's LOD band).
+        const dmx = cp.x - lastX;
+        const dmy = cp.y - lastY;
+        const dmz = cp.z - lastZ;
+        if (dmx * dmx + dmy * dmy + dmz * dmz > 0.5) {
+          lastX = cp.x;
+          lastY = cp.y;
+          lastZ = cp.z;
+          for (let i = 0; i < bodies.length; i++) {
+            const obj = bodies[i].__threeObj;
+            if (!obj) continue;
+            const dx = cp.x - bodies[i].fx;
+            const dy = cp.y - bodies[i].fy;
+            const dz = cp.z - bodies[i].fz;
+            const app = radius[i] / (Math.sqrt(dx * dx + dy * dy + dz * dz) || 1);
+            if (obj.visible) {
+              if (app < ORBITAL_LOD_HIDE) obj.visible = false;
+            } else if (app > ORBITAL_LOD_SHOW) {
+              obj.visible = true;
+            }
+          }
+        }
+      }
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [graphData, coreView, mode]);
 
   // Memoised so the accessor identity only changes on a focus/lens change (an
   // inline arrow changes every render → a node digest every render). These

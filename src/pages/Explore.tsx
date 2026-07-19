@@ -349,7 +349,10 @@ export default function Explore() {
             group.length,
             o.form,
             o.id,
-            5,
+            // Clearance proxy for the star's rendered size — galaxies/constellations
+            // (level ≤ 1) are far bigger bodies than a level-2 star, so their
+            // orbiters must clear a wider glow. B1: 10 for stars (was a flat 5).
+            (star.level ?? 2) <= 1 ? 26 : 10,
           );
           nodes.push(objectNode(o, (star.level ?? 0) + 1, p));
         });
