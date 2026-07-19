@@ -845,6 +845,54 @@ export function getObjects(userId: string, seeAll: boolean, type?: string): Know
   return (d.prepare(sql).all(...params) as ObjectDbRow[]).map(mapObjectRow);
 }
 
+/** A knowledge_objects row trimmed to exactly what the topic pipeline reads:
+ *  the label fields, owner + visibility (for per-viewer label scoping), links
+ *  (for θ anchoring) and the body capped at 1 KB. */
+export interface TopicObjectRow {
+  id: string;
+  userId: string;
+  visibility: string;
+  title: string;
+  description?: string;
+  tags?: string[];
+  links?: unknown[];
+  body?: string;
+}
+
+/** Every object trimmed for a clustering run (server/topics.ts). Selects only
+ *  the columns the pipeline uses and truncates body to 1 KB in SQL — c-TF-IDF
+ *  reads only the first 1 000 chars — so a 10k-object run never materializes
+ *  every full body in memory (decision #2 memory budget). */
+export function getObjectsForTopics(): TopicObjectRow[] {
+  return (
+    getDb()
+      .prepare(
+        `SELECT id, user_id, visibility, title, description, tags, links,
+                substr(body, 1, 1000) AS body
+         FROM knowledge_objects`,
+      )
+      .all() as Array<{
+      id: string;
+      user_id: string;
+      visibility: string;
+      title: string;
+      description: string | null;
+      tags: string | null;
+      links: string | null;
+      body: string | null;
+    }>
+  ).map((r) => ({
+    id: r.id,
+    userId: r.user_id,
+    visibility: r.visibility,
+    title: r.title,
+    description: r.description ?? undefined,
+    tags: r.tags ? (JSON.parse(r.tags) as string[]) : undefined,
+    links: r.links ? (JSON.parse(r.links) as unknown[]) : undefined,
+    body: r.body ?? undefined,
+  }));
+}
+
 export function getObject(id: string): KnowledgeObject | null {
   const row = getDb().prepare('SELECT * FROM knowledge_objects WHERE id = ?').get(id) as
     | ObjectDbRow
@@ -1558,18 +1606,37 @@ export function vectorNeighborsOf(
 // so persisted topics/assignments read + render even when vectorsOk=false —
 // only the clustering pass itself needs the vector layer. See topic-mode-spec.
 
-/** Dominant object-vector model (decision #5): most rows win, then most
- *  recently updated, then lexicographic. Object-kind-scoped — never the
- *  arbitrary LIMIT 1 row of embeddingStats(). null when no object vectors. */
+/** Dominant object-vector model (decision #5): most rows win, ties break
+ *  lexicographically. Object-kind-scoped — never the arbitrary LIMIT 1 row of
+ *  embeddingStats(). null when no object vectors.
+ *
+ *  NB: the MAX(updated_at) tie-break was REMOVED (topic-mode slot-stability
+ *  hardening). It handed dominance to whichever model was touched last, so at
+ *  count-parity — the norm when a parallel nOS sidekick embeds under a second
+ *  model — the dominant model flipped on essentially every embed POST, and each
+ *  flip triggered a wholesale topic reset (un-caused slot loss). Count + a
+ *  stable lexicographic tie leaves the choice unchanged near parity; the reset
+ *  decision itself is additionally margin-gated in server/topics.ts. */
 export function dominantObjectModel(): string | null {
   if (!vectorsOk) return null;
   const row = getDb()
     .prepare(
       `SELECT model FROM embeddings WHERE kind = 'object'
-       GROUP BY model ORDER BY COUNT(*) DESC, MAX(updated_at) DESC, model ASC LIMIT 1`,
+       GROUP BY model ORDER BY COUNT(*) DESC, model ASC LIMIT 1`,
     )
     .get() as { model: string } | undefined;
   return row?.model ?? null;
+}
+
+/** Object-vector row count per model. The topic-mode model-hysteresis guard
+ *  (server/topics.ts) needs both the incumbent's and the candidate's counts to
+ *  decide whether a dominant-model flip has a sustained margin worth a reset. */
+export function objectVectorModelCounts(): Map<string, number> {
+  if (!vectorsOk) return new Map();
+  const rows = getDb()
+    .prepare("SELECT model, COUNT(*) AS c FROM embeddings WHERE kind = 'object' GROUP BY model")
+    .all() as Array<{ model: string; c: number }>;
+  return new Map(rows.map((r) => [r.model, r.c]));
 }
 
 /** Object vectors of one model as raw JSON strings — NOT parsed in the SQL

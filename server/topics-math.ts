@@ -220,10 +220,21 @@ function prepTitle(title: string): string {
  * terms present in >60 % of clusters; collisions dedupe by appending the next
  * distinctive term to the later cluster (ordered by id). Fully deterministic:
  * every ranking tie breaks lexicographically.
+ *
+ * Cooperative: tokenizing every cluster's docs is the heaviest sync span in a
+ * run, so an optional `onTile` yield is awaited after each cluster's docs are
+ * tokenized and after each cluster is ranked. Yields never affect output — the
+ * result stays bit-identical for identical input (spatial-memory contract).
+ *
+ * An empty label (a cluster with no labelable docs — e.g. a mixed-owner cluster
+ * that carries no shared content, see server/topics.ts) is returned as '' with
+ * no terms: the cid is NEVER used as a fallback label, since a raw topic id is
+ * not a name the viewer should see.
  */
-export function cTfIdfLabels(
+export async function cTfIdfLabels(
   docsByCluster: Map<string, LabelDoc[]>,
-): Map<string, { label: string; terms: string[] }> {
+  onTile?: () => Promise<void>,
+): Promise<Map<string, { label: string; terms: string[] }>> {
   const clusterIds = [...docsByCluster.keys()].sort();
   const numClusters = clusterIds.length;
   const out = new Map<string, { label: string; terms: string[] }>();
@@ -248,6 +259,7 @@ export function cTfIdfLabels(
       corpusFreq.set(term, (corpusFreq.get(term) ?? 0) + w);
       totalTf += w;
     }
+    if (onTile) await onTile();
   }
   const A = totalTf / numClusters; // mean total tf per cluster
   const dfCap = 0.6 * numClusters;
@@ -267,6 +279,7 @@ export function cTfIdfLabels(
     }
     scored.sort((a, b) => (b.score - a.score) || (a.term < b.term ? -1 : a.term > b.term ? 1 : 0));
     rankedByCluster.set(cid, scored.slice(0, 8).map((s) => s.term));
+    if (onTile) await onTile();
   }
 
   // Build labels (≤28 chars, up to 3 terms) with collision dedupe by id order.
@@ -280,7 +293,10 @@ export function cTfIdfLabels(
         label = buildLabel(ranked, take);
       }
     }
-    if (used.has(label) || !label) label = label || cid; // last-resort uniqueness
+    // An empty label stays empty (no members / no labelable docs — e.g. a
+    // mixed-owner cluster with no shared content): never fall back to the raw
+    // cid, which would surface an internal id in the UI. Non-empty labels keep
+    // their prior collision behavior.
     used.add(label);
     out.set(cid, { label, terms: ranked });
   }
