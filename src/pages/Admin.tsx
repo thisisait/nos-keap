@@ -20,6 +20,7 @@ import type { ApiTaxonomyMetadata } from '@/types/database';
 import { LintPanel } from '@/components/admin/LintPanel';
 import { ModerationPanel } from '@/components/admin/ModerationPanel';
 import { FsMappingsPanel } from '@/components/admin/FsMappingsPanel';
+import { TopicsPanel } from '@/components/admin/TopicsPanel';
 
 const TILE_TYPES = ['recent-pages', 'recent-cities', 'custom-todo', 'progress-stats', 'explore-map'] as const;
 
@@ -232,10 +233,15 @@ export default function Admin() {
             <TabsTrigger value="lint" className="flex-1">{t('admin.tabs.lint')}</TabsTrigger>
             <TabsTrigger value="moderation" className="flex-1">{t('admin.tabs.moderation')}</TabsTrigger>
             <TabsTrigger value="fs" className="flex-1">{t('admin.tabs.fsMappings')}</TabsTrigger>
+            <TabsTrigger value="topics" className="flex-1">{t('admin.tabs.topics')}</TabsTrigger>
           </TabsList>
 
           <TabsContent value="fs" className="space-y-6">
             <FsMappingsPanel />
+          </TabsContent>
+
+          <TabsContent value="topics" className="space-y-6">
+            <TopicsPanel />
           </TabsContent>
 
           <TabsContent value="moderation" className="space-y-6">

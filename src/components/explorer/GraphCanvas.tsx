@@ -178,7 +178,7 @@ function nodeColor(n: CanvasNode, focusId: string | null, lens?: LensState): str
     const s = nodeFeature(n, lens.axis);
     if (s !== undefined) return lensColor(s, n.id === focusId);
   }
-  if (n.folder) return 'hsl(215 22% 64% / 0.9)'; // core folder hub — neutral slate
+  if (n.folder) return `hsl(${n.categoryHue} 22% 64% / 0.9)`; // core folder hub — slate (215); topic hubs violet (265)
   if (n.object) return `hsl(${n.categoryHue} 72% 60%)`; // hue = data-type identity
   if (n.star) return STAR_COLOR[n.kind] ?? STAR_COLOR[n.dataType ?? ''] ?? '#fbbf24';
   if (n.level === 0) return `hsl(${n.categoryHue} 55% 55% / 0.22)`; // faint nebula core

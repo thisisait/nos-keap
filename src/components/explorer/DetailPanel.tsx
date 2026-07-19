@@ -59,6 +59,8 @@ export interface DrawerTarget {
   repo?: boolean;
   bytes?: number;
   langs?: RepoLang[];
+  /** Topic hubs only: the cluster's top c-TF-IDF term chips. */
+  terms?: string[];
 }
 
 interface Props {
@@ -309,6 +311,19 @@ export default function DetailPanel({ target, nodeById, objects, objectLinks, on
             target.kind !== 'folder' && (
               <p className="text-xs italic text-muted-foreground/70">{t('explore.detail.noDescription')}</p>
             )
+          )}
+
+          {target.terms && target.terms.length > 0 && (
+            <div>
+              <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                {t('explore.detail.topicTerms')}
+              </p>
+              <div className="flex flex-wrap gap-1">
+                {target.terms.map((term) => (
+                  <Badge key={term} variant="secondary" className="text-[10px]">{term}</Badge>
+                ))}
+              </div>
+            </div>
           )}
 
           {target.repo && target.langs && target.langs.length > 0 && (

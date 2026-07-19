@@ -83,10 +83,18 @@ test.describe('files core', () => {
     await expect(page.getByRole('button', { name: 'Folders' })).toHaveCount(0);
 
     await coreButton.click();
-    // Reorder bar appears: Folders (default, active), Taxonomy, Topics (TBD).
+    // Reorder bar appears: Folders (default, active), Taxonomy, Topics
+    // (disabled — no object vectors seeded here, so no clusters ship).
     const folders = page.getByRole('button', { name: 'Folders' });
     await expect(folders).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Topics' })).toBeDisabled();
+    const topicsBtn = page.getByRole('button', { name: 'Topics' });
+    await expect(topicsBtn).toBeDisabled();
+    // Disabled-state tooltip is the truthful "waiting for embeddings" key,
+    // not the old "coming soon" copy (topicUnavailable, decision #17).
+    await expect(topicsBtn).toHaveAttribute(
+      'title',
+      'No topic clusters yet — waiting for object embeddings (keap-embed-sync)',
+    );
     await page.waitForTimeout(2500); // camera flight into the ring center
     await page.screenshot({ path: 'e2e/screenshots/core-fs.png' });
 

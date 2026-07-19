@@ -105,6 +105,21 @@ export default function Explore() {
     [graph],
   );
 
+  // Topic order is available only once the server ships clusters; when it is
+  // not, the Topics button is disabled AND the effective order falls back to
+  // fs — topics can vanish on a payload refresh, and a silent wrong order
+  // (topic → fs render) is exactly the hazard the branch guards against.
+  const topicsReady = (graph?.topics?.length ?? 0) > 0;
+  const effectiveOrder: CoreOrder = core.order === 'topic' && !topicsReady ? 'fs' : core.order;
+  // Coverage caption (topic order): how many visible objects landed in a
+  // cluster this viewer can see — the rest hold the ~untopiced center fog.
+  const topicCoverage = useMemo(() => {
+    const objs = graph?.objects ?? [];
+    const known = new Set((graph?.topics ?? []).map((tp) => tp.id));
+    const assigned = objs.reduce((n, o) => n + (o.topic && known.has(o.topic) ? 1 : 0), 0);
+    return { assigned, total: objs.length };
+  }, [graph]);
+
   // Focus can land on a synthetic core node (`dir:…`) — the camera warps
   // there, but the semantic-neighbourhood query is taxonomy-only.
   const taxonomyFocus = focusId && nodeById.has(focusId) ? focusId : null;
@@ -197,8 +212,9 @@ export default function Explore() {
         const g = nodeById.get(rootOf(nodeId));
         return g && g.x !== undefined ? { id: g.id, x: g.x, y: g.y!, z: g.z! } : null;
       };
-      const layout = computeCore(graph.objects ?? [], core.order, {
+      const layout = computeCore(graph.objects ?? [], effectiveOrder, {
         unfiledLabel: t('explore.core.unfiled'),
+        topics: graph.topics ?? [],
         galaxyOf: (o) => {
           // Mapped objects without body-extracted anchors cluster under their
           // mapping's taxonomy root instead of ~unanchored (taxonomy order).
@@ -220,16 +236,18 @@ export default function Explore() {
         const ds = dirStatByPath.get(f.path);
         nodes.push({
           id: f.id,
-          // Only the CENTRAL core root is "Root" — standalone mapping hubs are
-          // depth 0 too, but carry their mapping label.
-          name: f.depth === 0 && !f.mapping ? t('explore.core.root') : f.name,
+          // Only the CENTRAL core root is "Root" — standalone mapping hubs and
+          // topic hubs are depth 0 too, but carry their own label (without the
+          // `!f.topic` guard every topic hub would be renamed "Files").
+          name: f.depth === 0 && !f.mapping && !f.topic ? t('explore.core.root') : f.name,
           kind: 'folder',
           level: 98,
           childCount: f.count,
           hasNote: false,
           folder: true,
           ...(ds?.repo ? { repo: true, bytes: ds.bytes, exts: ds.exts } : {}),
-          categoryHue: 215,
+          // Topic hubs render violet (semantic space); folder hubs stay blue.
+          categoryHue: f.topic ? 265 : 215,
           fx: p[0],
           fy: p[1],
           fz: p[2],
@@ -362,7 +380,7 @@ export default function Explore() {
       }
     }
     return { canvasNodes: nodes, canvasLinks: links, coreLayout };
-  }, [graph, focusId, starItems, hueByCategory, nodeById, showRelations, core, t, dirStatByPath, mappingById, rootOf]);
+  }, [graph, focusId, starItems, hueByCategory, nodeById, showRelations, core, effectiveOrder, t, dirStatByPath, mappingById, rootOf]);
 
   const availableTypes = useMemo(
     () => [...new Set((neighbors.data?.items ?? []).map((i) => i.dataType).filter(Boolean))] as string[],
@@ -370,6 +388,31 @@ export default function Explore() {
   );
 
   const openTarget = (id: string) => {
+    if (id.startsWith('topic:')) {
+      // Topic hub: warp the camera AND open a panel with the cluster label,
+      // its members (the hub→obj spokes), and the c-TF-IDF term chips.
+      const topic = (graph?.topics ?? []).find((x) => `topic:${x.id}` === id);
+      if (topic) {
+        const children = (coreLayout?.fsLinks ?? [])
+          .filter((l) => l.source === id)
+          .map((l) => {
+            const o = (graph?.objects ?? []).find((x) => `obj:${x.id}` === l.target);
+            return o ? { id: l.target, name: o.title, dataType: o.type } : null;
+          })
+          .filter((c): c is NonNullable<typeof c> => c !== null);
+        setDrawer({
+          id,
+          name: topic.label,
+          kind: 'folder',
+          isStar: false,
+          children,
+          terms: topic.terms,
+        });
+      }
+      setFocusId(null);
+      requestAnimationFrame(() => setFocusId(id));
+      return;
+    }
     if (id.startsWith('dir:')) {
       // Core folder hub: warp the camera AND open a light folder panel —
       // name, mapping popisek, direct contents. Without it a click on the
@@ -571,12 +614,12 @@ export default function Explore() {
               {(['fs', 'taxonomy', 'topic'] as const).map((o) => (
                 <button
                   key={o}
-                  disabled={o === 'topic'}
-                  title={o === 'topic' ? t('explore.core.topicSoon') : undefined}
+                  disabled={o === 'topic' && !topicsReady}
+                  title={o === 'topic' && !topicsReady ? t('explore.core.topicUnavailable') : undefined}
                   className={`rounded px-1.5 py-0.5 ${
                     core.order === o
                       ? 'bg-teal-400 text-slate-900'
-                      : o === 'topic'
+                      : o === 'topic' && !topicsReady
                         ? 'cursor-not-allowed opacity-40'
                         : 'hover:bg-slate-700/60'
                   }`}
@@ -585,6 +628,14 @@ export default function Explore() {
                   {t(`explore.core.order.${o}`)}
                 </button>
               ))}
+              {effectiveOrder === 'topic' && topicCoverage.assigned < topicCoverage.total && (
+                <span className="ml-1 opacity-60">
+                  {t('explore.core.topicCoverage', {
+                    assigned: topicCoverage.assigned,
+                    total: topicCoverage.total,
+                  })}
+                </span>
+              )}
             </div>
           )}
           {!isLoading && (

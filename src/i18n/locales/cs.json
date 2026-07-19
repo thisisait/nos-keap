@@ -62,7 +62,8 @@
       "taxonomy": "Taxonomie",
       "lint": "Lint",
       "moderation": "Moderace",
-      "fsMappings": "Mapované složky"
+      "fsMappings": "Mapované složky",
+      "topics": "Témata"
     },
     "objects": {
       "title": "Znalostní objekty",
@@ -234,6 +235,35 @@
       "deleted": "Mapování smazáno ({{count}} objektů odstraněno).",
       "syncDone": "Synchronizováno — {{scanned}} prohledáno, {{upserted}} aktualizováno, {{removed}} odstraněno.",
       "overlapError": "Překrývá se s existujícím mapováním: {{detail}}"
+    },
+    "topics": {
+      "title": "Sémantická témata",
+      "subtitle": "Shluky v prostoru vektorů nad znalostními objekty — identity zmrazené při vzniku, popisky přejmenovatelné administrátorem.",
+      "unavailable": "Vektorová vrstva není dostupná (běžné SQLite) — uložená témata se stále zobrazují zmrazená, ale přestavby jsou vypnuté.",
+      "empty": "Zatím žádné tematické shluky — čeká se na vektory objektů (keap-embed-sync) a poté na přestavbu.",
+      "rebuild": "Přestavět",
+      "reset": "Resetovat",
+      "resetTitle": "Resetovat všechna témata?",
+      "resetBody": "Zahodí identity všech shluků a znovu je vytvoří od nuly. Pozice hubů a popisky se změní — jde o schválené přerušení identity, nikoli o inkrementální běh.",
+      "reanchor": "Znovu ukotvit",
+      "reanchorDone": "Znovu ukotveno — hub se přesunul k aktuální většinové galaxii.",
+      "rename": "Přejmenovat",
+      "unlock": "Odemknout",
+      "save": "Uložit",
+      "cancel": "Zrušit",
+      "locked": "přejmenováno",
+      "autoLabel": "auto: {{label}}",
+      "members": "{{count}} členů",
+      "terms": "Pojmy",
+      "stats": "{{k}} shluků · {{assigned}} objektů seskupeno",
+      "lastRun": "Poslední běh {{ago}}",
+      "neverRun": "Zatím neběželo",
+      "rebuildScheduled": "Přestavba naplánována — shluky se brzy obnoví.",
+      "rebuildDone": "Přestavěno — k={{k}}, {{n}} objektů, {{moved}} přesunuto.",
+      "resetDone": "Resetováno — všechny shluky znovu vytvořeny.",
+      "renamed": "Popisek uložen.",
+      "unlocked": "Popisek odemčen — automatický popisek obnoven.",
+      "renameFailed": "Popisek se nepodařilo aktualizovat."
     }
   },
   "settings": {
@@ -400,14 +430,17 @@
       "folderContents": "Obsah ({{count}})",
       "folderEmpty": "Zatím žádné synchronizované soubory — mapované složky a uživatelský strom se sem doplní, jakmile fs-sync poběží.",
       "repoBadge": "Repo",
-      "repoLangs": "Jazyky"
+      "repoLangs": "Jazyky",
+      "topicTerms": "Klíčové pojmy"
     },
     "core": {
       "toggle": "Jádro",
       "tooltip": "Přesunout soubory do středu prstence jako 3D jádro",
       "root": "Soubory",
       "unfiled": "karty",
-      "topicSoon": "Tematické shlukování mimo taxonomii — již brzy",
+      "untopiced": "nezařazené",
+      "topicUnavailable": "Zatím žádné tematické shluky — čeká se na vektory objektů (keap-embed-sync)",
+      "topicCoverage": "{{assigned}}/{{total}} seskupeno",
       "order": {
         "fs": "Složky",
         "taxonomy": "Taxonomie",

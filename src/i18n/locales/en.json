@@ -62,7 +62,8 @@
       "taxonomy": "Taxonomy",
       "lint": "Lint",
       "moderation": "Moderation",
-      "fsMappings": "Mapped folders"
+      "fsMappings": "Mapped folders",
+      "topics": "Topics"
     },
     "objects": {
       "title": "Knowledge objects",
@@ -234,6 +235,35 @@
       "deleted": "Mapping deleted ({{count}} objects removed).",
       "syncDone": "Synced — {{scanned}} scanned, {{upserted}} updated, {{removed}} removed.",
       "overlapError": "Overlaps an existing mapping: {{detail}}"
+    },
+    "topics": {
+      "title": "Semantic topics",
+      "subtitle": "Embedding-space clusters over knowledge objects — birth-frozen identities, admin-renamable labels.",
+      "unavailable": "The vector layer is unavailable (stock SQLite) — persisted topics still render frozen, but rebuilds are disabled.",
+      "empty": "No topic clusters yet — waiting for object embeddings (keap-embed-sync), then a rebuild.",
+      "rebuild": "Rebuild",
+      "reset": "Reset",
+      "resetTitle": "Reset all topics?",
+      "resetBody": "Discards every cluster identity and re-seeds from scratch. Hub positions and labels will change — this is a sanctioned identity break, not an incremental run.",
+      "reanchor": "Re-anchor",
+      "reanchorDone": "Re-anchored — the hub moved to its current majority galaxy.",
+      "rename": "Rename",
+      "unlock": "Unlock",
+      "save": "Save",
+      "cancel": "Cancel",
+      "locked": "renamed",
+      "autoLabel": "auto: {{label}}",
+      "members": "{{count}} members",
+      "terms": "Terms",
+      "stats": "{{k}} clusters · {{assigned}} objects clustered",
+      "lastRun": "Last run {{ago}}",
+      "neverRun": "Never run",
+      "rebuildScheduled": "Rebuild scheduled — clusters refresh shortly.",
+      "rebuildDone": "Rebuilt — k={{k}}, {{n}} objects, {{moved}} moved.",
+      "resetDone": "Reset — every cluster re-seeded.",
+      "renamed": "Label saved.",
+      "unlocked": "Label unlocked — the auto-label is restored.",
+      "renameFailed": "Could not update the label."
     }
   },
   "settings": {
@@ -400,14 +430,17 @@
       "folderContents": "Contents ({{count}})",
       "folderEmpty": "No synced files here yet — mapped folders and the user tree fill this in as fs-sync runs.",
       "repoBadge": "Repo",
-      "repoLangs": "Languages"
+      "repoLangs": "Languages",
+      "topicTerms": "Key terms"
     },
     "core": {
       "toggle": "Core",
       "tooltip": "Move files into the ring center as a 3D core",
       "root": "Files",
       "unfiled": "cards",
-      "topicSoon": "Topic clustering outside the taxonomy — coming soon",
+      "untopiced": "unsorted",
+      "topicUnavailable": "No topic clusters yet — waiting for object embeddings (keap-embed-sync)",
+      "topicCoverage": "{{assigned}}/{{total}} clustered",
       "order": {
         "fs": "Folders",
         "taxonomy": "Taxonomy",
