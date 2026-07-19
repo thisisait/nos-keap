@@ -396,6 +396,11 @@ function buildAssetMesh(node: CanvasNode, lens?: LensState): THREE.Object3D {
   const size = (FORM_SIZE[form] ?? 1.4) * 2.4;
   const mat = new THREE.MeshBasicMaterial({
     color: new THREE.Color(objectBodyColor(node, false, lens)),
+    // DoubleSide so the planet ring (a flat RingGeometry) stays visible from
+    // BOTH hemispheres — with the default FrontSide it back-face-culls and the
+    // ring vanishes whenever the camera orbits behind its plane. The body
+    // meshes are convex/opaque, so rendering their back faces is a visual no-op.
+    side: THREE.DoubleSide,
   });
   const mesh = new THREE.Mesh(_formGeo[form] ?? _formGeo.asteroid, mat);
   mesh.scale.setScalar(size);
