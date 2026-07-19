@@ -220,6 +220,7 @@ export default function Explore() {
       };
       const layout = computeCore(graph.objects ?? [], effectiveOrder, {
         unfiledLabel: t('explore.core.unfiled'),
+        untopicedLabel: t('explore.core.untopiced'),
         topics: graph.topics ?? [],
         galaxyOf: (o) => {
           // Mapped objects without body-extracted anchors cluster under their

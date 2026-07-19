@@ -381,6 +381,7 @@ function topicHubPositions(
 function topicLayout(
   objects: GraphObject[],
   topics: Array<{ id: string; label: string; theta: number }>,
+  untopicedLabel: string,
 ): TreeOut {
   const positions = new Map<string, [number, number, number]>();
   const folders: CoreFolder[] = [];
@@ -407,6 +408,18 @@ function topicLayout(
     positions.set(`obj:${o.id}`, [d[0] * fogR, d[1] * fogR, d[2] * fogR]);
   });
 
+  // Fog aggregation hub — grown ONLY past the ray-collapse threshold, so below
+  // it the classic hubless fog stays byte-identical. It is a pure ray SOURCE at
+  // the fog center (no fsLinks, no fog object moves): computeCore fans its rays
+  // hub→distinct-anchor, mirroring the mapping/topic-hub collapse. The sentinel
+  // `topic` id keeps Explore's violet-hue + label path (never resolved as a real
+  // cluster; the empty node id `topic:` is what the aggregate rays source from).
+  const anchoredFog = fog.reduce((n, o) => n + (o.anchors.length > 0 ? 1 : 0), 0);
+  if (anchoredFog > AGGREGATE_RAYS_AT) {
+    positions.set('topic:', [0, 0, 0]);
+    folders.push({ id: 'topic:', name: untopicedLabel, path: '~topic/~untopiced', depth: 0, count: fog.length, topic: '~untopiced' });
+  }
+
   // Hub + member spheres — only non-empty topics grow a hub node.
   const hubPos = topicHubPositions(topics);
   for (const t of topics) {
@@ -432,6 +445,8 @@ export function computeCore(
   order: CoreOrder,
   opts: {
     unfiledLabel: string;
+    /** Label stamped on the ~untopiced fog hub (topic order, past threshold). */
+    untopicedLabel: string;
     galaxyOf: (o: GraphObject) => { id: string; x: number; y: number; z: number } | null;
     /** Mapped-folder hubs (fs_mappings) — [] keeps the classic core intact. */
     mappings: CoreMapping[];
@@ -455,10 +470,11 @@ export function computeCore(
   if (order === 'topic') {
     // Inserted BEFORE the fs fall-through: `order='topic'` must never render
     // the filesystem tree. Rays follow the taxonomy anchors (per-object, or
-    // hub-aggregated past AGGREGATE_RAYS_AT — decision #11); untopiced objects
-    // ('' bucket) always keep per-object rays.
+    // hub-aggregated past AGGREGATE_RAYS_AT — decision #11). The '' bucket
+    // aggregates too once its fog grows a hub (topicLayout, same threshold);
+    // below it the fog stays hubless with per-object rays.
     const topics = opts.topics ?? [];
-    const base = topicLayout(objects, topics);
+    const base = topicLayout(objects, topics, opts.untopicedLabel);
     const topicIds = new Set(topics.map((t) => t.id));
     const hubIds = new Set(base.folders.filter((f) => f.topic).map((f) => f.id));
     const byTopic = new Map<string, GraphObject[]>();
@@ -472,7 +488,7 @@ export function computeCore(
     for (const [tid, members] of byTopic) {
       const anchored = members.filter((o) => o.anchors.length > 0);
       const hubId = `topic:${tid}`;
-      if (tid && anchored.length > AGGREGATE_RAYS_AT && hubIds.has(hubId)) {
+      if (anchored.length > AGGREGATE_RAYS_AT && hubIds.has(hubId)) {
         const targets = new Set<string>();
         for (const o of anchored) for (const a of o.anchors) targets.add(a);
         for (const a of targets) rays.push({ source: hubId, target: a });
@@ -533,12 +549,20 @@ export function computeCore(
 
   // The rays are the point of the core: every object stays tethered to ALL
   // its taxonomy anchors, so the semantic ties remain visible across space.
-  // Users-tree/manual objects keep today's behavior exactly; a mapping whose
-  // anchored objects exceed AGGREGATE_RAYS_AT collapses them into one hub →
-  // anchor ray per distinct anchor (bounded, deterministic).
+  // The users tree collapses into its root hub (`dir:`, the core center) once
+  // its anchored objects exceed AGGREGATE_RAYS_AT — one hub→anchor ray per
+  // distinct anchor, exactly like a mapping; below the threshold it keeps
+  // today's per-object rays byte-identically. Mapping buckets follow suit.
   const rays: Array<{ source: string; target: string }> = [];
-  for (const o of usersObjects) {
-    for (const a of new Set(o.anchors)) rays.push({ source: `obj:${o.id}`, target: a });
+  const anchoredUsers = usersObjects.filter((o) => o.anchors.length > 0);
+  if (anchoredUsers.length > AGGREGATE_RAYS_AT && out.positions.has('dir:')) {
+    const targets = new Set<string>();
+    for (const o of anchoredUsers) for (const a of o.anchors) targets.add(a);
+    for (const a of targets) rays.push({ source: 'dir:', target: a });
+  } else {
+    for (const o of usersObjects) {
+      for (const a of new Set(o.anchors)) rays.push({ source: `obj:${o.id}`, target: a });
+    }
   }
   for (const m of opts.mappings) {
     const anchored = (objsByMapping.get(m.id) ?? []).filter((o) => o.anchors.length > 0);
