@@ -433,6 +433,12 @@
       "repoLangs": "Languages",
       "topicTerms": "Key terms"
     },
+    "lens": {
+      "recent": "Recent",
+      "recentTitle": "Recency — recolor files and folders by last change (positions never move)",
+      "recentHot": "this week",
+      "recentCold": "old"
+    },
     "core": {
       "toggle": "Core",
       "tooltip": "Move files into the ring center as a 3D core",

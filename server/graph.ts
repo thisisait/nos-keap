@@ -209,6 +209,10 @@ export function registerGraphRoutes(app: Express) {
           // Topics-mode cluster (id present in `topics[]` below) — undefined for
           // unembedded / minority-model objects, which fall into ~untopiced.
           topic: topicByObject.get(o.id),
+          // Recency (unix seconds) for the client's "Recent" lens: fs mirrors
+          // carry the file's real mtime (fs-sync frontmatter), hand-made cards
+          // fall back to their row's updatedAt. Additive — recolor only.
+          mtime: typeof o.frontmatter?.mtime === 'number' ? o.frontmatter.mtime : o.updatedAt,
         };
       });
     // Object→object refs ([[object:<id>]] wiki links) as drawn edges. Bare ids

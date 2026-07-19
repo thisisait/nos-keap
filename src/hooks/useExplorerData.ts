@@ -57,6 +57,9 @@ export interface GraphObject {
   mapping?: string;
   /** Topics-mode cluster id (present in `topics[]`) — undefined = ~untopiced. */
   topic?: string;
+  /** Recency (unix seconds) — file mtime for fs mirrors, updatedAt for cards.
+   *  Drives the "Recent" lens age gradient (recolor only). */
+  mtime?: number;
 }
 
 /** One admin-managed mapped folder (fs_mappings) — hub label + placement. */

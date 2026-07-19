@@ -84,6 +84,9 @@ export interface CanvasNode {
   scope?: number;
   /** Focus-halo orbit (semantic dust): slow revolution around the focus. */
   orbit?: { cx: number; cy: number; cz: number; r: number; phase: number; tilt: number; speed: number };
+  /** Recency (unix seconds): objects = file mtime / card updatedAt; folder
+   *  hubs = newest descendant. The "Recent" lens age gradient reads this. */
+  mtime?: number;
   /** Embedding-derived semantic-lens features (colour/size channels). */
   features?: Record<string, number>;
   /** Linked-data enrichment (Wikidata QID + entity typing + QRank scope). */
@@ -171,10 +174,39 @@ function nodeFeature(n: CanvasNode, key: string): number | undefined {
   return typeof v === 'number' ? v : undefined;
 }
 
+// ── Recency lens ─────────────────────────────────────────────────────────────
+// axis === RECENT_AXIS recolours knowledge objects (file mtime / card
+// updatedAt) and folder hubs (newest descendant) on an age gradient — hot
+// amber for this week cooling to steel blue at a year+. Taxonomy stars keep
+// their structural hue. RECOLOR ONLY — zero position changes (spatial memory).
+export const RECENT_AXIS = 'recent';
+const WEEK_S = 7 * 86400;
+const YEAR_S = 365 * 86400;
+function ageColor(mtime: number, focus = false): string {
+  const age = Math.max(0, Date.now() / 1000 - mtime);
+  // t: 0 = touched this week (hot) → 1 = a year+ old (cold). Log-scaled so
+  // weeks/months spread across the gradient instead of bunching at cold.
+  const t = age <= WEEK_S ? 0 : Math.min(1, Math.log(age / WEEK_S) / Math.log(YEAR_S / WEEK_S));
+  const hue = 18 + t * 200; // hot amber-orange → cold steel blue
+  const sat = 85 - t * 35;
+  return `hsl(${hue} ${sat}% ${focus ? 78 : 60}%)`;
+}
+/** Object-mesh body colour — the recency lens overrides the identity hue. */
+function bodyColor(node: CanvasNode, fallback: string, lens?: LensState): string {
+  if (lens?.axis === RECENT_AXIS && node.mtime !== undefined) return ageColor(node.mtime);
+  return fallback;
+}
+
 function nodeColor(n: CanvasNode, focusId: string | null, lens?: LensState): string {
-  // Semantic lens: taxonomy stars are recoloured by their axis projection; the
-  // structural hue (below) is the default when the lens is off / feature absent.
-  if (lens?.axis && !n.object && !n.star) {
+  if (lens?.axis === RECENT_AXIS) {
+    // Recency lens: only objects + plain folder hubs shift to the age
+    // gradient (repo spheres keep their language texture); everything else
+    // falls through to its structural colour untouched.
+    if ((n.object || n.folder) && !n.repo && n.mtime !== undefined)
+      return ageColor(n.mtime, n.id === focusId);
+  } else if (lens?.axis && !n.object && !n.star) {
+    // Semantic lens: taxonomy stars are recoloured by their axis projection; the
+    // structural hue (below) is the default when the lens is off / feature absent.
     const s = nodeFeature(n, lens.axis);
     if (s !== undefined) return lensColor(s, n.id === focusId);
   }
@@ -324,10 +356,12 @@ function starGlow(hue: number): THREE.Sprite {
 }
 
 /** One typed orbital body: a per-form mesh (new Mesh off shared geometry). */
-function buildAssetMesh(node: CanvasNode): THREE.Object3D {
+function buildAssetMesh(node: CanvasNode, lens?: LensState): THREE.Object3D {
   const form = node.form ?? 'asteroid';
   const size = (FORM_SIZE[form] ?? 1.4) * 2.4;
-  const mat = new THREE.MeshBasicMaterial({ color: new THREE.Color(`hsl(${node.categoryHue}, 70%, 60%)`) });
+  const mat = new THREE.MeshBasicMaterial({
+    color: new THREE.Color(bodyColor(node, `hsl(${node.categoryHue}, 70%, 60%)`, lens)),
+  });
   const mesh = new THREE.Mesh(_formGeo[form] ?? _formGeo.asteroid, mat);
   mesh.scale.setScalar(size);
   if (form === 'planet') {
@@ -398,9 +432,9 @@ function buildRepoMesh(node: CanvasNode): THREE.Object3D {
 }
 
 /** Core-view file leaf: a small satellite cube, lang-coloured, optional name. */
-function buildFileCube(node: CanvasNode, withLabel: boolean): THREE.Object3D {
+function buildFileCube(node: CanvasNode, withLabel: boolean, lens?: LensState): THREE.Object3D {
   const lang = node.path ? langOfPath(node.path) : undefined;
-  const color = lang ? langColor(lang) : `hsl(${node.categoryHue}, 70%, 60%)`;
+  const color = bodyColor(node, lang ? langColor(lang) : `hsl(${node.categoryHue}, 70%, 60%)`, lens);
   const mesh = new THREE.Mesh(_cubeGeo, new THREE.MeshBasicMaterial({ color: new THREE.Color(color) }));
   mesh.scale.setScalar(2.6);
   mesh.rotation.y = hash01v(node.id) * Math.PI; // deterministic variety
@@ -827,8 +861,8 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     // In the core view, fs-file leaves become satellite CUBES (lang-coloured,
     // named while the field is small enough to stay legible).
     if (node.object) {
-      if (coreView && node.path) return buildFileCube(node, fileLabels);
-      return buildAssetMesh(node);
+      if (coreView && node.path) return buildFileCube(node, fileLabels, lens);
+      return buildAssetMesh(node, lens);
     }
     // Repo folder hubs: the language-banded identicon sphere REPLACES the
     // default hub sphere (extend=false below).
@@ -883,7 +917,9 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     // Falsy return keeps the default sphere — a runtime contract the library
     // typings don't model (they only allow Object3D), hence the double cast.
     return g.children.length ? g : (false as unknown as THREE.Object3D);
-  }, [coreView, fileLabels]);
+    // lens is a dep: object bodies REPLACE the default sphere, so the recency
+    // recolour must rebuild their meshes (the refresh() below re-runs this).
+  }, [coreView, fileLabels, lens]);
 
   // Focus-halo orbits: semantic dust circles the focused node VERY slowly
   // (a revolution takes ~2–3.5 min). Runs outside the d3 engine — the sim

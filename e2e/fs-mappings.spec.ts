@@ -25,6 +25,7 @@ interface GraphData {
       path?: string;
       owner?: string;
       mapping?: string;
+      mtime?: number;
     }>;
     fsMappings: Array<{
       id: string;
@@ -145,6 +146,10 @@ test.describe('mapped folders', () => {
       expect(o.mapping).toBe(mapId);
       expect(o.type).toBe('document'); // schema.type override, even for .csv
       expect(o.owner).toBe(`fsmap:${mapId}`);
+      // Recency lens payload (S2): fs objects ship the file's mtime — a real
+      // recent timestamp (the fixtures were written moments ago).
+      expect(typeof o.mtime).toBe('number');
+      expect(o.mtime!).toBeGreaterThan(Date.now() / 1000 - 24 * 3600);
     }
     const intro = mirrored.find((o) => o.title === 'intro.md')!;
     // Path is MAPPING-relative (repointing keeps ids), the body ref anchors it,

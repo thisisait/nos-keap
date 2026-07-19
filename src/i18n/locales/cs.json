@@ -433,6 +433,12 @@
       "repoLangs": "Jazyky",
       "topicTerms": "Klíčové pojmy"
     },
+    "lens": {
+      "recent": "Nedávné",
+      "recentTitle": "Aktuálnost — obarvit soubory a složky podle poslední změny (pozice se nemění)",
+      "recentHot": "tento týden",
+      "recentCold": "staré"
+    },
     "core": {
       "toggle": "Jádro",
       "tooltip": "Přesunout soubory do středu prstence jako 3D jádro",

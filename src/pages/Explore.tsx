@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { apiFetch } from '@/services/api/client';
 import GraphCanvas, {
+  RECENT_AXIS,
   type CanvasNode,
   type CanvasLink,
   type CameraMode,
@@ -24,6 +25,9 @@ import GraphCanvas, {
 } from '@/components/explorer/GraphCanvas';
 
 // Semantic-lens axes the user can colour the map by (must match node_features).
+// The "Recent" lens (RECENT_AXIS) is a special case OUTSIDE this list: it
+// reads mtime, not node_features, recolours objects/folder hubs instead of
+// taxonomy stars, and carries its own i18n label + gradient legend.
 const LENS_AXES = [
   { key: 'abstractness', label: 'Abstract ↔ Concrete' },
   { key: 'scale', label: 'Macro ↔ Micro' },
@@ -197,6 +201,8 @@ export default function Explore() {
       glyph: o.glyph,
       // fs relPath — the core view renders file leaves as satellite cubes.
       path: o.path,
+      // Recency (file mtime / card updatedAt) — the "Recent" lens gradient.
+      mtime: o.mtime,
       // Body colour encodes its DATA TYPE (asset hue), not the constellation.
       categoryHue: o.hue,
       fx: p[0],
@@ -229,6 +235,31 @@ export default function Explore() {
         const p = layout.positions.get(`obj:${o.id}`);
         if (p) nodes.push(objectNode(o, 99, p));
       }
+      // Folder-hub recency = newest descendant mtime, walked over the layout's
+      // own fs edges (dir→dir, dir→obj). Feeds ONLY the "Recent" lens
+      // recolour — placement stays byte-identical with the lens off or on.
+      const mtimeByObj = new Map<string, number>();
+      for (const o of graph.objects ?? []) {
+        if (o.mtime !== undefined) mtimeByObj.set(`obj:${o.id}`, o.mtime);
+      }
+      const childrenByDir = new Map<string, string[]>();
+      for (const l of layout.fsLinks) {
+        const a = childrenByDir.get(l.source) ?? [];
+        a.push(l.target);
+        childrenByDir.set(l.source, a);
+      }
+      const newestMemo = new Map<string, number | undefined>();
+      const newestOf = (id: string): number | undefined => {
+        if (newestMemo.has(id)) return newestMemo.get(id);
+        newestMemo.set(id, undefined); // guard (fs trees are acyclic; cheap)
+        let best: number | undefined;
+        for (const c of childrenByDir.get(id) ?? []) {
+          const m = c.startsWith('obj:') ? mtimeByObj.get(c) : newestOf(c);
+          if (m !== undefined && (best === undefined || m > best)) best = m;
+        }
+        newestMemo.set(id, best);
+        return best;
+      };
       for (const f of layout.folders) {
         const p = layout.positions.get(f.id);
         if (!p) continue;
@@ -245,6 +276,7 @@ export default function Explore() {
           childCount: f.count,
           hasNote: false,
           folder: true,
+          mtime: newestOf(f.id),
           ...(ds?.repo ? { repo: true, bytes: ds.bytes, exts: ds.exts } : {}),
           // Topic hubs render violet (semantic space); folder hubs stay blue.
           categoryHue: f.topic ? 265 : 215,
@@ -657,6 +689,23 @@ export default function Explore() {
                   {a.label.split(' ')[0]}
                 </button>
               ))}
+              <button
+                title={t('explore.lens.recentTitle')}
+                className={`rounded px-1.5 py-0.5 ${lens.axis === RECENT_AXIS ? 'bg-orange-400 text-slate-900' : 'hover:bg-slate-700/60'}`}
+                onClick={() => setLens((l) => ({ ...l, axis: RECENT_AXIS }))}
+              >
+                {t('explore.lens.recent')}
+              </button>
+              {lens.axis === RECENT_AXIS && (
+                <span className="ml-1 flex items-center gap-1" data-testid="recent-legend">
+                  <span className="opacity-60">{t('explore.lens.recentHot')}</span>
+                  <span
+                    className="h-2 w-14 rounded-full"
+                    style={{ background: 'linear-gradient(to right, hsl(18 85% 60%), hsl(218 50% 60%))' }}
+                  />
+                  <span className="opacity-60">{t('explore.lens.recentCold')}</span>
+                </span>
+              )}
               <label className="ml-1 flex items-center gap-1">
                 <input
                   type="checkbox"
