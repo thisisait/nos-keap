@@ -182,6 +182,51 @@ const MIGRATIONS: Migration[] = [
       CREATE INDEX IF NOT EXISTS knowledge_objects_user_idx ON knowledge_objects(user_id);
     `,
   },
+  {
+    // Topics mode: server-side spherical k-means over stored kind='object'
+    // vectors with sticky identities. Centroids are plain JSON text on
+    // purpose (decision #16) — this migration runs before/independently of the
+    // libSQL vector layer (db.ts VECTOR_SCHEMA try/catch), so persisted topics
+    // stay readable and render frozen even when vectorsOk=false. The clustering
+    // pipeline lives in server/topics.ts + server/topics-math.ts; readers/
+    // writers in server/db.ts. A topic id, once minted, never changes meaning,
+    // position, or membership without a measured cause (warm-start identity,
+    // assignment hysteresis, birth-frozen θ).
+    id: '005-topic-clusters',
+    sql: `
+      CREATE TABLE IF NOT EXISTS topic_clusters (
+        id            TEXT PRIMARY KEY,             -- 't-'+8 hex, server-minted, IMMUTABLE (keys client geometry)
+        label         TEXT NOT NULL,
+        label_auto    TEXT NOT NULL,
+        label_locked  INTEGER NOT NULL DEFAULT 0,   -- 1 = admin-renamed; auto never overwrites
+        terms_json    TEXT NOT NULL DEFAULT '[]',   -- JSON string[] top-8 c-TF-IDF terms (panel chips)
+        churn_accum   REAL NOT NULL DEFAULT 0,      -- cumulative membership churn since last label promotion
+        centroid_json TEXT NOT NULL,                -- JSON number[768], unit-normalized (warm-start seed)
+        theta         REAL NOT NULL,                -- ring angle, frozen at birth; changes ONLY via admin reanchor/reset
+        model         TEXT NOT NULL,                -- embedding model of the vector space
+        member_count  INTEGER NOT NULL DEFAULT 0,   -- corpus-global (server bookkeeping; payload counts are per-viewer)
+        empty_runs    INTEGER NOT NULL DEFAULT 0,
+        created_at    INTEGER DEFAULT (strftime('%s','now')),
+        updated_at    INTEGER DEFAULT (strftime('%s','now'))
+      );
+      CREATE TABLE IF NOT EXISTS topic_assignments (
+        object_id  TEXT PRIMARY KEY,                -- knowledge_objects.id == embeddings.ref_id (kind='object')
+        topic_id   TEXT NOT NULL,
+        distance   REAL NOT NULL,                   -- cosine distance at assignment time
+        updated_at INTEGER DEFAULT (strftime('%s','now'))
+      );
+      CREATE INDEX IF NOT EXISTS topic_assignments_topic_idx ON topic_assignments(topic_id);
+      CREATE TABLE IF NOT EXISTS topic_runs (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        ran_at      INTEGER DEFAULT (strftime('%s','now')),
+        model       TEXT NOT NULL,
+        k           INTEGER NOT NULL,
+        n           INTEGER NOT NULL,
+        moved       INTEGER NOT NULL,
+        params_json TEXT NOT NULL                   -- {tau, kTarget, reset?, born, retired, ms}
+      );
+    `,
+  },
 ];
 
 export function runMigrations(db: Database.Database): void {

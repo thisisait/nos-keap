@@ -1552,6 +1552,214 @@ export function vectorNeighborsOf(
     .slice(0, limit);
 }
 
+// ── Topic clusters (server/topics.ts) ─────────────────────────────────────────
+// Server-side spherical k-means over kind='object' vectors with sticky
+// identities. Migration 005 tables are plain SQL (not part of VECTOR_SCHEMA),
+// so persisted topics/assignments read + render even when vectorsOk=false —
+// only the clustering pass itself needs the vector layer. See topic-mode-spec.
+
+/** Dominant object-vector model (decision #5): most rows win, then most
+ *  recently updated, then lexicographic. Object-kind-scoped — never the
+ *  arbitrary LIMIT 1 row of embeddingStats(). null when no object vectors. */
+export function dominantObjectModel(): string | null {
+  if (!vectorsOk) return null;
+  const row = getDb()
+    .prepare(
+      `SELECT model FROM embeddings WHERE kind = 'object'
+       GROUP BY model ORDER BY COUNT(*) DESC, MAX(updated_at) DESC, model ASC LIMIT 1`,
+    )
+    .get() as { model: string } | undefined;
+  return row?.model ?? null;
+}
+
+/** Object vectors of one model as raw JSON strings — NOT parsed in the SQL
+ *  layer (decision #2: the caller tile-parses directly into a Float32Array,
+ *  never a transient number[][]). */
+export function readObjectVectorsRaw(model: string): { id: string; v: string }[] {
+  if (!vectorsOk) return [];
+  return getDb()
+    .prepare("SELECT ref_id AS id, vector_extract(vector) AS v FROM embeddings WHERE kind = 'object' AND model = ?")
+    .all(model) as Array<{ id: string; v: string }>;
+}
+
+/** Count + latest updated_at of object vectors for one model — the stale check
+ *  (topicsStale) compares these against the last run's n + ran_at. */
+export function objectVectorStats(model: string): { count: number; maxUpdated: number } {
+  if (!vectorsOk) return { count: 0, maxUpdated: 0 };
+  const row = getDb()
+    .prepare(
+      "SELECT COUNT(*) AS c, COALESCE(MAX(updated_at), 0) AS u FROM embeddings WHERE kind = 'object' AND model = ?",
+    )
+    .get(model) as { c: number; u: number };
+  return { count: row.c, maxUpdated: row.u };
+}
+
+export interface TopicClusterRow {
+  id: string;
+  label: string;
+  labelAuto: string;
+  labelLocked: boolean;
+  terms: string[];
+  churnAccum: number;
+  centroid: number[];
+  theta: number;
+  memberCount: number;
+  emptyRuns: number;
+  model: string;
+  updatedAt: number;
+}
+
+interface TopicClusterDbRow {
+  id: string;
+  label: string;
+  label_auto: string;
+  label_locked: number;
+  terms_json: string;
+  churn_accum: number;
+  centroid_json: string;
+  theta: number;
+  model: string;
+  member_count: number;
+  empty_runs: number;
+  updated_at: number;
+}
+
+function mapTopicClusterRow(r: TopicClusterDbRow): TopicClusterRow {
+  return {
+    id: r.id,
+    label: r.label,
+    labelAuto: r.label_auto,
+    labelLocked: r.label_locked === 1,
+    terms: r.terms_json ? (JSON.parse(r.terms_json) as string[]) : [],
+    churnAccum: r.churn_accum,
+    centroid: r.centroid_json ? (JSON.parse(r.centroid_json) as number[]) : [],
+    theta: r.theta,
+    memberCount: r.member_count,
+    emptyRuns: r.empty_runs,
+    model: r.model,
+    updatedAt: r.updated_at,
+  };
+}
+
+/** All persisted topic clusters (with centroids — the warm-start seeds). The
+ *  payload layer strips centroid_json before shipping; the pipeline needs it. */
+export function listTopicClusters(): TopicClusterRow[] {
+  try {
+    return (getDb().prepare('SELECT * FROM topic_clusters ORDER BY id').all() as TopicClusterDbRow[]).map(
+      mapTopicClusterRow,
+    );
+  } catch {
+    return [];
+  }
+}
+
+/** object_id → topic_id for every persisted assignment. */
+export function getTopicAssignments(): Map<string, string> {
+  try {
+    const rows = getDb().prepare('SELECT object_id, topic_id FROM topic_assignments').all() as Array<{
+      object_id: string;
+      topic_id: string;
+    }>;
+    return new Map(rows.map((r) => [r.object_id, r.topic_id]));
+  } catch {
+    return new Map();
+  }
+}
+
+/** Persist a whole clustering run in ONE transaction — readers never see a
+ *  half-written map (decision #9 §1.2.9). Replaces the cluster + assignment
+ *  tables wholesale from the pass's final state; `retired` ids are dropped.
+ *  created_at survives for surviving ids (ON CONFLICT keeps the birth stamp). */
+export function applyTopicRun(r: {
+  clusters: TopicClusterRow[];
+  retired: string[];
+  assignments: Array<{ objectId: string; topicId: string; distance: number }>;
+  run: { model: string; k: number; n: number; moved: number; paramsJson: string };
+}): void {
+  const d = getDb();
+  const upC = d.prepare(
+    `INSERT INTO topic_clusters
+       (id, label, label_auto, label_locked, terms_json, churn_accum, centroid_json,
+        theta, model, member_count, empty_runs, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, strftime('%s','now'))
+     ON CONFLICT(id) DO UPDATE SET
+       label = excluded.label, label_auto = excluded.label_auto,
+       label_locked = excluded.label_locked, terms_json = excluded.terms_json,
+       churn_accum = excluded.churn_accum, centroid_json = excluded.centroid_json,
+       theta = excluded.theta, model = excluded.model,
+       member_count = excluded.member_count, empty_runs = excluded.empty_runs,
+       updated_at = excluded.updated_at`,
+  );
+  const delC = d.prepare('DELETE FROM topic_clusters WHERE id = ?');
+  const delA = d.prepare('DELETE FROM topic_assignments');
+  const insA = d.prepare(
+    `INSERT INTO topic_assignments (object_id, topic_id, distance, updated_at)
+     VALUES (?, ?, ?, strftime('%s','now'))`,
+  );
+  const insRun = d.prepare(
+    'INSERT INTO topic_runs (model, k, n, moved, params_json) VALUES (?, ?, ?, ?, ?)',
+  );
+  const tx = d.transaction(() => {
+    for (const id of r.retired) delC.run(id);
+    for (const c of r.clusters) {
+      upC.run(
+        c.id, c.label, c.labelAuto, c.labelLocked ? 1 : 0, JSON.stringify(c.terms),
+        c.churnAccum, JSON.stringify(c.centroid), c.theta, c.model, c.memberCount, c.emptyRuns,
+      );
+    }
+    delA.run();
+    for (const a of r.assignments) insA.run(a.objectId, a.topicId, a.distance);
+    insRun.run(r.run.model, r.run.k, r.run.n, r.run.moved, r.run.paramsJson);
+  });
+  tx();
+}
+
+/** Admin rename (decision #8): a label sets label_locked=1 (auto never
+ *  overwrites); null unlocks and restores label_auto. false when id unknown. */
+export function renameTopic(id: string, label: string | null): boolean {
+  const d = getDb();
+  if (label === null) {
+    return (
+      d
+        .prepare(
+          `UPDATE topic_clusters SET label = label_auto, label_locked = 0,
+             updated_at = strftime('%s','now') WHERE id = ?`,
+        )
+        .run(id).changes > 0
+    );
+  }
+  return (
+    d
+      .prepare(
+        `UPDATE topic_clusters SET label = ?, label_locked = 1,
+           updated_at = strftime('%s','now') WHERE id = ?`,
+      )
+      .run(label, id).changes > 0
+  );
+}
+
+/** Admin re-anchor only (decision #9) — the one sanctioned θ change outside a
+ *  full reset. false when id unknown. */
+export function setTopicTheta(id: string, theta: number): boolean {
+  return (
+    getDb()
+      .prepare("UPDATE topic_clusters SET theta = ?, updated_at = strftime('%s','now') WHERE id = ?")
+      .run(theta, id).changes > 0
+  );
+}
+
+/** Topic-mode summary for the payload meta + agent/admin status endpoints. */
+export function topicStats(): { available: boolean; k: number; assigned: number; lastRunAt: number | null } {
+  try {
+    const k = (getDb().prepare('SELECT COUNT(*) AS c FROM topic_clusters').get() as { c: number }).c;
+    const assigned = (getDb().prepare('SELECT COUNT(*) AS c FROM topic_assignments').get() as { c: number }).c;
+    const last = getDb().prepare('SELECT MAX(ran_at) AS t FROM topic_runs').get() as { t: number | null };
+    return { available: vectorsOk, k, assigned, lastRunAt: last?.t ?? null };
+  } catch {
+    return { available: false, k: 0, assigned: 0, lastRunAt: null };
+  }
+}
+
 // ── Lint findings (server/lint.ts) ────────────────────────────────────────────
 
 export interface LintFindingRow {

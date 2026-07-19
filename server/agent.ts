@@ -30,6 +30,7 @@ import { propose, proposeNode, proposeDescription, proposeBrief, moderationPolic
 import { allNodes } from './taxonomy';
 import { normalizeAndSaveCapture, parseEnvelope } from './intake';
 import { syncAllFs, syncMapping, fsSyncStatus, USER_FILES_DIR } from './fs-sync';
+import { scheduleTopicRecluster } from './topics';
 import { listRoots } from './fs-roots';
 import { TOKEN_RO, TOKEN_RW, tokenEquals } from './tokens';
 
@@ -276,6 +277,10 @@ export function registerAgentRoutes(app: Express) {
       rows.push({ kind: it.kind, refId: it.refId, contentHash: it.contentHash, vector: it.vector });
     }
     const upserted = db.upsertEmbeddings(String(model), EMBED_DIM, rows);
+    // Topics-mode trigger (§1.3): an object-vector write reshapes the semantic
+    // corpus, so debounce a recluster. Trailing 15 s / max-wait 60 s coalesces
+    // a bulk embed burst into ~one run per minute (server/topics.ts).
+    if (rows.some((r) => r.kind === 'object')) scheduleTopicRecluster();
     ok(res, { upserted, submittedBy: `agent:${req.agentName}` });
   });
 

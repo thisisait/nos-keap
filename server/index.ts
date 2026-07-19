@@ -27,6 +27,7 @@ import * as dbmod from './db';
 import { allNodes, registerExtNode, applyDescriptionOverride } from './taxonomy';
 import { ensureLayout } from './layout';
 import { startFsSync } from './fs-sync';
+import { startTopicSync } from './topics';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = Number(process.env.PORT ?? 8080);
@@ -95,6 +96,10 @@ async function main() {
     // AFTER listen so a large first scan never stalls the nOS health probe.
     // Inert without KEAP_USER_FILES_DIR — see server/fs-sync.ts.
     startFsSync();
+    // Topics mode (§1.2): schedules a delayed recluster iff the persisted map
+    // is stale. Scheduled from INSIDE the listen callback (health-probe-safe
+    // slot) and only debounces — never clusters synchronously here.
+    startTopicSync();
   });
 }
 
