@@ -166,6 +166,23 @@ nOS-side counterparts flagged **[nOS]**).
 - **U2 — nebulae & dust**: objects/captures rendered as instanced particle clouds around
   their anchor stars (density = knowledge mass); LOD so 100k+ points stay smooth
   (instanced meshes, impostors; three.js now, WebGPU when it pays).
+- **U2″ — hierarchical cosmological LOD** (owner vision 2026-07-19, path to millions of
+  nodes): the universe is a hierarchy of scales. Server precomputes aggregate
+  representations per cluster at layout-bake time (centroid, extent, density/structure,
+  dominant colours) — deterministic, shipped in `/api/graph` like baked positions. The
+  camera drives an LOD swap: a DISTANT cluster never materializes its thousands of leaves —
+  it renders as a **shader nebula impostor** (procedural density/colour, segmentable into
+  N pieces so shapes are richer and each segment carries a data subset — "more information
+  on the glass") plus a few active T0 constellations + T1–T3 stars, clickable only at the
+  aggregate. As the camera zooms in (fewer nodes in field-of-view) it swaps down scale by
+  scale until, up close, it's fully active as today. Distance thresholds use hysteresis so
+  edges don't flicker. **Phase A** *(next)* = the prerequisite so the CLOSE view survives
+  density: InstancedMesh for cubes/stars (per-instance colour), extend ray-aggregation to
+  the users-tree + `~untopiced` buckets, distance/count label LOD (stars + hub labels, not
+  just the ≤400 cube cap), freeze the force sim for pinned nodes — measured before/after on
+  an ~8k stress fixture. **Phase B** = the impostor LOD swap (server aggregates + camera-
+  driven scale switch). **Phase C** = shader nebulae + segmentation. Builds on U1's bake and
+  U2's instancing; supersedes the one-shot "scale pass" as the real scale architecture.
 - **U2′ — files core** *(shipped 2026-07-16)*: explore toggle relocating every knowledge
   object into a 3D core at the (empty) galaxy-ring center; taxonomy stars never move,
   teal rays tether objects to their anchors. Reorder modes: **Folders** (default —
