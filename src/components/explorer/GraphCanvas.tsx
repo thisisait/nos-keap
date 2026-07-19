@@ -89,14 +89,17 @@ const ORBITAL_LOD_MIN = 150;
 
 // B2b — cluster nebula impostors. Each anchor's orbiting bodies aggregate into a
 // soft nebula sprite (dominant hue, sized by the body cloud's extent). It
-// cross-fades by APPARENT size (extent ÷ camera distance): a cluster that's
-// small on screen (zoomed out / far) shows its nebula; as the camera closes and
-// the cluster fills more of the view, the nebula fades out and the individual
-// bodies take over. So a distant dense region reads as a shaped nebula instead
-// of a wall of overlapping bodies — the U2″ vision, with the Phase-C shader
-// nebula later replacing this radial sprite.
-const IMPOSTOR_FADE_MIN = 0.05; // ≤ this apparent size → nebula at full opacity
-const IMPOSTOR_FADE_MAX = 0.32; // ≥ this → nebula gone, bodies fully in charge
+// cross-fades on whether the individual BODIES are resolvable — a representative
+// body's apparent size (rendered radius ÷ camera distance): while the bodies are
+// sub-pixel (zoomed out / far) the nebula is full; as the camera closes and the
+// bodies grow legible (star-inspection range) the nebula fades and the bodies
+// take over. Body-relative (not cluster-extent) so it self-calibrates to the
+// layout scale instead of needing hand-tuned absolute distances. So a distant
+// dense region reads as a shaped nebula instead of a wall of overlapping bodies
+// — the U2″ vision, with the Phase-C shader nebula later replacing this sprite.
+const IMPOSTOR_BODY_R = 4; // representative rendered body radius (√FORM_SIZE·2.4)
+const IMPOSTOR_FULL_APP = 0.0025; // body apparent size ≤ this → nebula full opacity
+const IMPOSTOR_GONE_APP = 0.008; // ≥ this → bodies legible, nebula gone
 
 export interface CanvasNode {
   id: string;
@@ -1515,12 +1518,14 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
             const dx = cp.x - im.cx;
             const dy = cp.y - im.cy;
             const dz = cp.z - im.cz;
-            const app = im.extent / (Math.sqrt(dx * dx + dy * dy + dz * dz) || 1);
+            // Apparent size of a representative body — the nebula fades in as this
+            // shrinks (bodies become sub-pixel far away) and out as it grows.
+            const app = IMPOSTOR_BODY_R / (Math.sqrt(dx * dx + dy * dy + dz * dz) || 1);
             const frac = Math.min(
               1,
-              Math.max(0, (app - IMPOSTOR_FADE_MIN) / (IMPOSTOR_FADE_MAX - IMPOSTOR_FADE_MIN)),
+              Math.max(0, (app - IMPOSTOR_FULL_APP) / (IMPOSTOR_GONE_APP - IMPOSTOR_FULL_APP)),
             );
-            const maxOp = 0.2 + Math.min(1, im.count / 40) * 0.38; // denser → stronger
+            const maxOp = 0.16 + Math.min(1, im.count / 40) * 0.32; // denser → stronger
             const op = maxOp * (1 - frac);
             (im.sprite.material as THREE.SpriteMaterial).opacity = op;
             im.sprite.visible = op > 0.012;
