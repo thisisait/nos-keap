@@ -207,6 +207,19 @@ function bodyColor(node: CanvasNode, fallback: string, lens?: LensState): string
   return fallback;
 }
 
+/** The body colour a knowledge object / file cube renders with, given the view
+ *  + lens. Shared by the mesh builders (initial paint) and the in-place lens
+ *  recolour (GraphCanvas) so the two can NEVER drift — file cubes carry the
+ *  language colour, everything else the data-type hue; the recency lens
+ *  overrides both. */
+function objectBodyColor(node: CanvasNode, coreView: boolean, lens?: LensState): string {
+  if (coreView && node.path) {
+    const lang = langOfPath(node.path);
+    return bodyColor(node, lang ? langColor(lang) : `hsl(${node.categoryHue}, 70%, 60%)`, lens);
+  }
+  return bodyColor(node, `hsl(${node.categoryHue}, 70%, 60%)`, lens);
+}
+
 function nodeColor(n: CanvasNode, focusId: string | null, lens?: LensState): string {
   if (lens?.axis === RECENT_AXIS) {
     // Recency lens: only objects + plain folder hubs shift to the age
@@ -370,7 +383,7 @@ function buildAssetMesh(node: CanvasNode, lens?: LensState): THREE.Object3D {
   const form = node.form ?? 'asteroid';
   const size = (FORM_SIZE[form] ?? 1.4) * 2.4;
   const mat = new THREE.MeshBasicMaterial({
-    color: new THREE.Color(bodyColor(node, `hsl(${node.categoryHue}, 70%, 60%)`, lens)),
+    color: new THREE.Color(objectBodyColor(node, false, lens)),
   });
   const mesh = new THREE.Mesh(_formGeo[form] ?? _formGeo.asteroid, mat);
   mesh.scale.setScalar(size);
@@ -443,8 +456,7 @@ function buildRepoMesh(node: CanvasNode): THREE.Object3D {
 
 /** Core-view file leaf: a small satellite cube, lang-coloured, optional name. */
 function buildFileCube(node: CanvasNode, withLabel: boolean, lens?: LensState): THREE.Object3D {
-  const lang = node.path ? langOfPath(node.path) : undefined;
-  const color = bodyColor(node, lang ? langColor(lang) : `hsl(${node.categoryHue}, 70%, 60%)`, lens);
+  const color = objectBodyColor(node, true, lens);
   const mesh = new THREE.Mesh(_cubeGeo, new THREE.MeshBasicMaterial({ color: new THREE.Color(color) }));
   mesh.scale.setScalar(2.6);
   mesh.rotation.y = hash01v(node.id) * Math.PI; // deterministic variety
@@ -467,6 +479,14 @@ function buildFileCube(node: CanvasNode, withLabel: boolean, lens?: LensState): 
 type GraphNode = NodeObject<CanvasNode>;
 /** A CanvasLink as the force engine sees it (source/target become node refs). */
 type GraphLink = LinkObject<CanvasNode, CanvasLink>;
+
+/** Objects + repos REPLACE the default sphere (their body IS the custom mesh);
+ *  every other class extends it (halo/label added beside the sphere body).
+ *  Module-level = a STABLE identity: an inline arrow here changes every render,
+ *  and react-force-graph clears its whole node-object cache (rebuilding every
+ *  mesh) whenever this accessor's identity changes — S3 must not pay that on a
+ *  lens toggle. */
+const extendsDefaultSphere = (n: GraphNode) => !n.object && !n.repo;
 /** The imperative graph handle. `enableNavigationControls` is a runtime
  *  method the wrapper forwards but the typings omit — kept optional, the
  *  call sites already feature-detect it. */
@@ -490,13 +510,12 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
   const coreViewRef = useRef(coreView);
   const modelRef = useRef<ShipModelParts | null>(null);
   const lastTimeRef = useRef<number | null>(null);
-
-  // react-force-graph caches node styling; when the semantic lens changes, force
-  // it to re-read nodeColor/nodeVal so the recolour/resize applies live (without
-  // this the accessors only re-run on a graphData change). Camera is untouched.
-  useEffect(() => {
-    fgRef.current?.refresh?.();
-  }, [lens?.axis, lens?.sizeByCentrality]);
+  // Live lens, read by nodeThreeObject WITHOUT being one of its deps: keeping
+  // it out of the useCallback deps holds the accessor's identity stable across
+  // a lens toggle, so react-force-graph never clears its node-object cache (a
+  // full mesh rebuild). The toggle's recolour is applied in place below.
+  const lensRef = useRef(lens);
+  lensRef.current = lens;
 
   // Files core: fly INTO the ring center when the core switches on, back out
   // to the whole sky when it switches off. Ship mode owns its own camera.
@@ -691,6 +710,16 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     };
   }, [nodes, links]);
 
+  // S3 force-sim freeze: taxonomy stars, objects, folder/repo hubs AND the
+  // focus-halo dust all arrive fx/fy/fz-pinned (spatial-memory contract), so
+  // the d3 sim has NOTHING to solve unless an orbit-less fallback dust node is
+  // unpinned. When none is, the engine is frozen outright (cooldownTicks 0) —
+  // positions still init from fx, so nothing moves.
+  const hasUnpinnedNode = useMemo(
+    () => graphData.nodes.some((n) => n.fx == null),
+    [graphData],
+  );
+
   // Semantic links pull stars to rest at a radius proportional to vector
   // distance; tree links keep the constellation tight; nebula dust sits on a
   // short leash. Deferred + guarded: right after mount the simulation is not
@@ -711,13 +740,19 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
         // Breathing room: stronger repulsion + a collide force so sibling
         // clusters don't sit on top of each other (radius tracks the node's
         // rendered size: r = sqrt(val) * nodeRelSize, plus padding).
+        // S3: a pinned node (fx set) never moves and shouldn't push either —
+        // gate both forces to 0 for pinned nodes so only the unpinned fallback
+        // dust participates. Pinned charge/collide was pure wasted iteration.
         const charge = ref.d3Force('charge');
-        if (charge) charge.strength(-55);
+        if (charge) charge.strength((n: CanvasNode) => (n.fx != null ? 0 : -55));
         ref.d3Force(
           'collide',
-          forceCollide((n: CanvasNode) => Math.sqrt(nodeSize(n)) * 2.4 + 4),
+          forceCollide((n: CanvasNode) => (n.fx != null ? 0 : Math.sqrt(nodeSize(n)) * 2.4 + 4)),
         );
-        ref.d3ReheatSimulation();
+        // Only reheat when there's actually an unpinned node to solve for;
+        // otherwise the engine is frozen (cooldownTicks 0) and a reheat would
+        // just spin one no-op cycle.
+        if (hasUnpinnedNode) ref.d3ReheatSimulation();
         // The baked universe is big (galaxy ring r≈1400) — frame it once so
         // the observer starts seeing the whole sky, not one galaxy's flank.
         if (!didFitRef.current) {
@@ -729,7 +764,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       }
     }, 300);
     return () => clearTimeout(t);
-  }, [graphData]);
+  }, [graphData, hasUnpinnedNode]);
 
   // Warp to the focused node once the engine placed it — the "semantic
   // hyperspace jump" (search or click sets focus, the camera travels).
@@ -888,6 +923,10 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     // In the core view, fs-file leaves become satellite CUBES (lang-coloured,
     // named while the field is small enough to stay legible).
     if (node.object) {
+      // lensRef (not lens) so a toggle doesn't change this accessor's identity
+      // and force a full mesh rebuild — the body is painted with the live lens
+      // here and recoloured in place by the effect below on subsequent toggles.
+      const lens = lensRef.current;
       if (coreView && node.path) return buildFileCube(node, fileLabels, lens);
       return buildAssetMesh(node, lens);
     }
@@ -949,9 +988,31 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     // Falsy return keeps the default sphere — a runtime contract the library
     // typings don't model (they only allow Object3D), hence the double cast.
     return g.children.length ? g : (false as unknown as THREE.Object3D);
-    // lens is a dep: object bodies REPLACE the default sphere, so the recency
-    // recolour must rebuild their meshes (the refresh() below re-runs this).
-  }, [coreView, fileLabels, folderLabels, starLabels, anchorLabels, lens]);
+    // lens is deliberately NOT a dep (read via lensRef): a lens toggle must not
+    // change this accessor's identity, or react-force-graph rebuilds EVERY mesh.
+    // The recency recolour is applied in place to the existing bodies below.
+  }, [coreView, fileLabels, folderLabels, starLabels, anchorLabels]);
+
+  // Lens recolour, IN PLACE (replaces the old fgRef.refresh(), which set
+  // _flushObjects → cleared the node-object cache → rebuilt thousands of
+  // meshes + canvas textures on every toggle). Object/file BODIES replace the
+  // default sphere, so the nodeColor accessor can't reach them; recolour their
+  // existing material here. Default spheres (taxonomy/folder hubs) recolour
+  // via the nodeColor accessor, which re-reads on this same render. No
+  // position, geometry, or object is touched — pure material.color writes.
+  useEffect(() => {
+    for (const n of graphData.nodes) {
+      if (!n.object) continue;
+      const obj = (n as CanvasNode & { __threeObj?: THREE.Object3D }).__threeObj;
+      if (!obj) continue;
+      // buildAssetMesh/buildFileCube return the body Mesh directly, or a Group
+      // whose first child is the body (planet ring / comet tail / file label).
+      const body = obj instanceof THREE.Mesh ? obj : obj.children[0];
+      if (!(body instanceof THREE.Mesh)) continue;
+      const mat = Array.isArray(body.material) ? body.material[0] : body.material;
+      (mat as THREE.MeshBasicMaterial).color?.set(objectBodyColor(n, Boolean(coreView), lens));
+    }
+  }, [lens, coreView, graphData]);
 
   // Focus-halo orbits: semantic dust circles the focused node VERY slowly
   // (a revolution takes ~2–3.5 min). Runs outside the d3 engine — the sim
@@ -1017,6 +1078,13 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     };
   }, [graphData, mode]);
 
+  // Memoised so the accessor identity only changes on a focus/lens change (an
+  // inline arrow changes every render → a node digest every render). These
+  // drive the DEFAULT-sphere recolour/resize; on a lens toggle their new
+  // identity makes react-force-graph re-read them (cache NOT cleared, no
+  // rebuild). Custom object bodies are recoloured by the in-place effect above.
+  const nodeColorFn = useCallback((n: GraphNode) => nodeColor(n, focusId, lens), [focusId, lens]);
+  const nodeValFn = useCallback((n: GraphNode) => nodeSize(n, lens), [lens]);
 
   return (
     <ForceGraph3D
@@ -1028,10 +1096,10 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       nodeLabel={(n: GraphNode) =>
         n.star ? `☆ ${n.name}${n.distance ? ` · d=${n.distance.toFixed(2)}` : ''}` : n.name
       }
-      nodeVal={(n: GraphNode) => nodeSize(n, lens)}
-      nodeColor={(n: GraphNode) => nodeColor(n, focusId, lens)}
+      nodeVal={nodeValFn}
+      nodeColor={nodeColorFn}
       nodeThreeObject={nodeThreeObject}
-      nodeThreeObjectExtend={(n: GraphNode) => !n.object && !n.repo}
+      nodeThreeObjectExtend={extendsDefaultSphere}
       linkColor={(l: GraphLink) =>
         l.relation
           ? REL_COLOR[l.relType] ?? 'rgba(148,163,184,0.5)'
@@ -1078,6 +1146,11 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       // rate while it runs, and EVERY graphData change reheats it. Settle
       // faster and stop sooner — pinned stars don't need the sim at all, only
       // the semantic dust does.
+      // S3: when NOTHING is unpinned (the usual case — all stars/objects/dust
+      // are fx-pinned), freeze the engine outright (0 ticks). Positions still
+      // initialise from fx, so this moves nothing; it just skips the 6s of
+      // no-op ticking. cooldownTime stays 6000 to bound the unpinned case.
+      cooldownTicks={hasUnpinnedNode ? Infinity : 0}
       cooldownTime={6000}
       d3AlphaDecay={0.04}
       showNavInfo={false}
