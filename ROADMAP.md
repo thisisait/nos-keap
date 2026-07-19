@@ -113,12 +113,21 @@ nOS-side counterparts flagged **[nOS]**).
   https://face.<tenant>` so the face **Explore** app can iframe `/explore` (same Authentik
   session, cross-subdomain) — never `*`.
 - **S2⁶ — table graph-render metadata** *(next, companion app)*: a DataTable can already
-  anchor into the universe (a `taxonomyRef` column anchors each ROW; `objectRef`/`vector`
-  columns exist), but there is no TABLE-LEVEL contract for how its rows render as graph
-  nodes/edges — node-kind, edge definitions, colour/icon per kind. Add an optional
-  `graph` metadata block to the create-table schema (shared with face via `/agent/v1/tables`)
-  so a companion-created table paints itself in `/explore` and face gets it for free by
-  iframing the view. Design first (how rows → nodes/edges; colour/icon convention).
+  anchor into the universe — `create-table {anchors:[nodeId,…]}` → `syncCard` writes a
+  `table-<slug>` card (type `table`, `[[nodeId]]` refs → node links) that orbits the anchor
+  star; a `taxonomyRef` column anchors each ROW; `objectRef`/`vector` columns exist. Missing:
+  a TABLE-LEVEL contract for how rows render as graph nodes/edges — node-kind, edge
+  definitions, colour/icon per kind. Add an optional `graph` metadata block to the create
+  schema (shared with face via `/agent/v1/tables`). Design first. **Known gap to fix here:**
+  the graph ships non-admins only `visibility='shared'` (+ own) objects, so a `tier-users`
+  table card renders in `/explore` for admins ONLY — either companion sends `visibility:
+  'shared'` for explore-visible tables, or `getVisibleObjects` learns the tier ladder (the
+  latter is a spec-decision-#8 change).
+- **S2⁷ — native agent graph endpoint** *(future, optional)*: `GET /agent/v1/graph` →
+  nodes+edges JSON over the bearer, so the nOS face Explore app can render the universe
+  NATIVELY instead of iframing `/explore` (sidesteps framing entirely, gives face full render
+  control). Not a blocker — the v1.14.1 CSP iframe path works today. Larger: exposes the graph
+  model on the agent surface (visibility-scoped, no forward-auth) + a stable node/edge schema.
 - **S3 — OKF bundle export/import** (zip of markdown+frontmatter; dedup by id+hash).
   Interop with Google tooling & openknowledge CLI; the future sharing unit (Phase S).
 - **S4 — RRF hybrid search**: FTS5(BM25) ⊕ vectors ⊕ one-hop taxonomy/link neighbors,
