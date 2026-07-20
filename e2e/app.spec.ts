@@ -45,3 +45,19 @@ test('health reports the built-from version, matching package.json', async ({ re
   ).json()) as { data: { version: string } };
   expect(agent.data.version, 'both surfaces agree').toBe(pkg.version);
 });
+
+/**
+ * The CSP header is assembled from env, so it is asserted THROUGH the response
+ * rather than through the helper — the helper being right is not the claim; the
+ * header being right is. (The version field taught this the hard way: a helper
+ * that worked fine took the health endpoint down once bundled.)
+ */
+test('frame-ancestors is a source list, always including self', async ({ request }) => {
+  const res = await request.get('/api/health');
+  const csp = res.headers()['content-security-policy'] ?? '';
+  expect(csp).toContain('frame-ancestors');
+  expect(csp).toContain("'self'");
+  // No stray directives and no header split — the whole value is one directive.
+  expect(csp.split(';').filter(Boolean)).toHaveLength(1);
+  expect(csp).not.toContain('\n');
+});

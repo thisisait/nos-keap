@@ -30,6 +30,7 @@ import { allNodes, registerExtNode, applyDescriptionOverride } from './taxonomy'
 import { ensureLayout } from './layout';
 import { startFsSync } from './fs-sync';
 import { buildVersion } from './build-version';
+import { embedOrigins } from './embed-origins';
 import { startTopicSync } from './topics';
 import { startFsWatch } from './fs-watch';
 
@@ -61,14 +62,18 @@ async function main() {
   // frame-ancestors that allows ONLY same-origin + the face host of this
   // tenant (never '*'). Unset KEAP_TENANT_DOMAIN ⇒ self-only, unchanged.
   //
-  // The face host is a CONFIG value, not a constant: nOS moved the shell from
-  // face.<tld> to os.<tld> (2026-07-20), and hardcoding the subdomain meant
-  // that move silently broke /explore embedding until KEAP shipped a new tag.
-  // KEAP_FACE_HOST takes a bare host (no scheme); it falls back to the
-  // historical `face.` prefix so an older nOS pin keeps working unchanged.
+  // KEAP_EMBED_ORIGINS is a comma-separated list of ORIGINS (scheme explicit),
+  // 1:1 with what frame-ancestors actually accepts. The previous shape took a
+  // single bare host and prefixed https:// — which silently decided two things
+  // nobody chose: that only one portal may embed KEAP, and that embedding over
+  // http is impossible, so a standalone instance could not be developed against
+  // locally. It was also named after a foreign product's UI, which is how a
+  // neighbour's vocabulary becomes your interface.
+  //
+  // KEAP_FACE_HOST stays as a DEPRECATED fallback for one version so an older
+  // pin keeps working, and so does the historical `face.<tenant>` derivation.
   const TENANT_DOMAIN = process.env.KEAP_TENANT_DOMAIN ?? '';
-  const FACE_HOST = process.env.KEAP_FACE_HOST || (TENANT_DOMAIN ? `face.${TENANT_DOMAIN}` : '');
-  const FRAME_ANCESTORS = FACE_HOST ? `'self' https://${FACE_HOST}` : `'self'`;
+  const FRAME_ANCESTORS = ["'self'", ...embedOrigins(TENANT_DOMAIN)].join(' ');
   app.use(helmet({ contentSecurityPolicy: false, frameguard: false }));
   app.use((_req, res, next) => {
     res.setHeader('Content-Security-Policy', `frame-ancestors ${FRAME_ANCESTORS}`);
