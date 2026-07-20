@@ -1,9 +1,9 @@
 {
   "name": "keap",
   "private": true,
-  "version": "1.20.0",
+  "version": "1.21.0",
   "type": "module",
-  "description": "Knowledge Explorer and Preserver \u2014 curated knowledge taxonomy with content links into nOS services, for humans and nOS agents.",
+  "description": "Knowledge Explorer and Preserver — curated knowledge taxonomy with content links into nOS services, for humans and nOS agents.",
   "scripts": {
     "dev": "concurrently -n web,api -c blue,green \"vite\" \"npm run dev:api\"",
     "dev:web": "vite",
