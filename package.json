@@ -30,6 +30,9 @@
     "knowledge:roundtrip": "node knowledge/roundtrip.mjs",
     "knowledge:dry-run": "node knowledge/ingest.mjs --dry-run --canonical knowledge/canonical",
     "knowledge:xrefs": "node knowledge/lift-xrefs.mjs",
+    "relations:fetch": "node scripts/relations-typing.mjs fetch",
+    "relations:post": "node scripts/relations-typing.mjs post",
+    "relations:list": "node scripts/relations-typing.mjs list",
     "preview": "vite preview",
     "test:e2e": "playwright test"
   },

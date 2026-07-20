@@ -52,6 +52,34 @@ Two testable stages — run in order, releasing after each:
 |---|----------|-------|-------|
 | R3.1 | `keap-relations-stage1` | pipeline + store | migration 006 (cross-type + provenance + status) · relation_types registry · vector-index recall · agent `GET /relations/candidates` + `POST /relations` · classifier STUBBED in e2e. Backend-only, agent-testable. |
 | R3.2 | `keap-relations-stage2` | moderate + render + brain | `/api/admin/relations*` moderation + vocab-grow · cross-type verb-labelled edge rendering · `GET /agent/v1/graph` (closes S2⁷). Run after R3.1 merges. |
+| R3.fill | `keap-relations-typing` | populate | host-side Sonnet typing of candidate pairs → PROPOSED relations. Run AFTER v1.16.0 is deployed + healthy. Nothing auto-confirmed. |
+
+### R3 fill — populating the typed graph (post-deploy)
+
+Stages 1–2 ship the *pipeline*; the graph starts empty of derived edges. Filling
+it is the host-side classification step (mirrors how the taxonomy was seeded in
+controlled batches). Two ways to run it, both against the LIVE container:
+
+- **Tool** `scripts/relations-typing.mjs` (npm `relations:fetch` / `relations:post`
+  / `relations:list`) — deterministic I/O over the agent surface. Source the
+  bearer tokens from the container first (never store them):
+  ```
+  export KEAP_AGENT_TOKEN_RO=$(docker exec iiab-keap-1 printenv KEAP_AGENT_TOKEN_RO)
+  export KEAP_AGENT_TOKEN_RW=$(docker exec iiab-keap-1 printenv KEAP_AGENT_TOKEN_RW)
+  node scripts/relations-typing.mjs fetch --limit 40 --out batch.json   # → candidates + vocab
+  # …a Claude session types batch.json → typed.json (verb per pair, or omit)…
+  node scripts/relations-typing.mjs post typed.json                     # → PROPOSED rows
+  ```
+- **Workflow** `keap-relations-typing` — automates the loop: fetch → fan-out
+  conservative typing subagents (vs the controlled vocab, skip when nothing fits)
+  → merge/dedup → POST. `Workflow({ scriptPath: '.claude/workflows/keap-relations-typing.js', args: { limit: 60 } })`
+  (add `anchorId`+`anchorKind` for a targeted sweep). Defaults to `http://127.0.0.1:8091`.
+
+Everything lands `status='proposed'` — moderate in **Admin → Relations** before it
+renders (default `/api/graph` shows confirmed only; `?relations=all` previews
+high-confidence proposed). Grown verbs land proposed too; approve them in the same
+panel (assigns a render colour). Re-runs are idempotent (dedup on
+from_ref,to_ref,type) and a rejected edge stays rejected (sticky moderation).
 
 R3 invariants (beyond the shared ones above): SIMILARITY stays a view, only
 TYPED relations are stored; the LLM classification runs host-side (KEAP surfaces
