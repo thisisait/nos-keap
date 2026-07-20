@@ -75,6 +75,19 @@ export function registerRelationRoutes(app: Express) {
     if (status !== 'confirmed' && status !== 'rejected') {
       return fail(res, 400, "status must be 'confirmed' or 'rejected'");
     }
+    const rel = db.getRelation(req.params.id);
+    if (!rel) return fail(res, 404, 'unknown relation');
+    // Vocab gate: an edge may only be CONFIRMED once its verb is part of the live
+    // vocabulary (seed|confirmed). Confirming an edge whose type is still a
+    // PROPOSED (unmoderated) verb would smuggle that uncurated verb into the
+    // /api/graph overlay + the brain substrate, bypassing the relation-TYPE gate
+    // ("moderated growth"). Confirm the type first (POST /relation-types/:type).
+    if (status === 'confirmed') {
+      const rt = db.getRelationType(rel.type);
+      if (!rt || (rt.status !== 'seed' && rt.status !== 'confirmed')) {
+        return fail(res, 409, `relation type '${rel.type}' is not approved — confirm the vocabulary first`);
+      }
+    }
     if (!db.setRelationStatus(req.params.id, status)) return fail(res, 404, 'unknown relation');
     ok(res, { id: req.params.id, status });
   });

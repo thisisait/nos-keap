@@ -2543,8 +2543,12 @@ export function syncToeRelations(): void {
 
 /** Upsert one derived typed relation (host-side classifier output). Lands
  *  status='proposed', source='derived' — the moderation gate. Idempotent on
- *  (from_ref,to_ref,type): a re-propose refreshes confidence/justification/model
- *  and re-arms the proposed status, never a duplicate row. */
+ *  (from_ref,to_ref,type): a re-propose refreshes confidence/justification/model,
+ *  never a duplicate row. A prior ADMIN VERDICT is sticky: once an admin set the
+ *  row terminal ('confirmed'|'rejected'), a re-POST keeps that status — the
+ *  classifier can refresh provenance but MUST NOT resurrect a rejected edge back
+ *  to 'proposed' (spatial-memory / moderation invariant). Only a still-'proposed'
+ *  row is re-armed as 'proposed'. */
 export function insertDerivedRelation(r: {
   fromRef: string;
   fromKind: RelationKind;
@@ -2563,7 +2567,9 @@ export function insertDerivedRelation(r: {
        ON CONFLICT(from_ref, to_ref, type) DO UPDATE SET
          from_kind = excluded.from_kind, to_kind = excluded.to_kind,
          confidence = excluded.confidence, justification = excluded.justification,
-         model = excluded.model, source = 'derived', status = 'proposed'`,
+         model = excluded.model, source = 'derived',
+         status = CASE WHEN relations.status IN ('confirmed', 'rejected')
+                       THEN relations.status ELSE 'proposed' END`,
     )
     .run(
       relationId(r.fromRef, r.toRef, r.type),
@@ -2601,6 +2607,18 @@ export function listRelations(filter?: { status?: RelationStatus; source?: Relat
       )
       .all(...args) as RelationDbRow[]
   ).map(mapRelationRow);
+}
+
+/** One relation row by id (moderation gate reads it to check the verb's vocab
+ *  status before confirming). Null when the id no longer resolves. */
+export function getRelation(id: string): RelationRow | null {
+  const r = getDb()
+    .prepare(
+      `SELECT id, from_ref, from_kind, to_ref, to_kind, type, confidence, justification, source, status, model, created_at
+       FROM relations WHERE id = ?`,
+    )
+    .get(id) as RelationDbRow | undefined;
+  return r ? mapRelationRow(r) : null;
 }
 
 /** Stage-2 moderation: flip one relation's status (proposed→confirmed/rejected).

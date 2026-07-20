@@ -308,6 +308,10 @@ export function registerAgentRoutes(app: Express) {
   // lands as PROPOSED relations with provenance (moderation is stage 2). KEAP
   // never calls an LLM; it only surfaces geometry + accepts typed results.
   const isRelKind = (k: unknown): k is db.RelationKind => k === 'node' || k === 'object';
+  // A relation verb must match the seed vocabulary shape (see RELATION_TYPE_SEED):
+  // a lowercase kebab slug, starts with a letter, ≤64 chars. Gates palette growth
+  // from raw agent strings.
+  const RELATION_TYPE_RE = /^[a-z][a-z0-9-]{0,63}$/;
 
   /** Resolve a relation endpoint to its label + text, or null if it doesn't
    *  exist (a node was retired / an object deleted since the vector was written). */
@@ -435,6 +439,14 @@ export function registerAgentRoutes(app: Express) {
       if (!relationEndpoint(toKind, toRef)) return fail(res, 400, `to endpoint does not resolve at index ${i}`);
       const type = typeof it.type === 'string' ? it.type.trim() : '';
       if (!type) return fail(res, 400, `type required at index ${i}`);
+      // Vocab hygiene: a raw agent string may GROW the live palette (an unknown
+      // type lands as a proposed relation_type below), so it must match the seed
+      // verb convention — a lowercase kebab slug, ≤64 chars. Without this an RW
+      // agent could plant an arbitrarily long / punctuation-laden verb string
+      // that surfaces the moment an admin confirms the edge.
+      if (!RELATION_TYPE_RE.test(type)) {
+        return fail(res, 400, `type must be a lowercase kebab slug (≤64 chars) at index ${i}`);
+      }
       const confidence = Number(it.confidence);
       if (!Number.isFinite(confidence) || confidence < 0 || confidence > 1) {
         return fail(res, 400, `confidence must be a number in [0,1] at index ${i}`);
@@ -491,11 +503,20 @@ export function registerAgentRoutes(app: Express) {
         description: trim(o.description ?? o.body ?? undefined),
       });
     }
+    // The edge vocabulary — active verbs only (seed|confirmed), same filter the
+    // classifier vocab uses. Proposed/rejected verbs are not part of the substrate.
+    const types = db
+      .listRelationTypes()
+      .filter((t) => t.status === 'seed' || t.status === 'confirmed');
+    const activeTypes = new Set(types.map((t) => t.type));
     const edges = db
       .listRelations({ status: 'confirmed' })
       .filter(
         (r) => relationEndpoint(r.fromKind, r.fromRef) && relationEndpoint(r.toKind, r.toRef),
       )
+      // Vocab gate: never emit an edge whose verb is absent from the declared
+      // `types` vocabulary — the substrate stays internally consistent.
+      .filter((r) => activeTypes.has(r.type))
       .map((r) => ({
         from: r.fromKind === 'object' ? `object:${r.fromRef}` : r.fromRef,
         to: r.toKind === 'object' ? `object:${r.toRef}` : r.toRef,
@@ -507,11 +528,6 @@ export function registerAgentRoutes(app: Express) {
         source: r.source,
         model: r.model,
       }));
-    // The edge vocabulary — active verbs only (seed|confirmed), same filter the
-    // classifier vocab uses. Proposed/rejected verbs are not part of the substrate.
-    const types = db
-      .listRelationTypes()
-      .filter((t) => t.status === 'seed' || t.status === 'confirmed');
     ok(res, {
       nodes,
       edges,

@@ -283,7 +283,14 @@ export function registerGraphRoutes(app: Express) {
           .filter((r) => r.source !== 'toe' && (r.confidence ?? 0) >= 0.75),
       );
     }
+    // Vocab gate (defense in depth beside the confirm-time gate): only edges
+    // whose verb is LIVE vocabulary (seed|confirmed) render — a stray edge on a
+    // still-proposed verb never leaks its uncurated string into the overlay.
     const crossRelations = crossRows
+      .filter((r) => {
+        const st = relTypeMeta.get(r.type)?.status;
+        return st === 'seed' || st === 'confirmed';
+      })
       .filter((r) => crossVisible(r.fromRef, r.fromKind) && crossVisible(r.toRef, r.toKind))
       .map((r) => {
         const meta = relTypeMeta.get(r.type);

@@ -527,4 +527,105 @@ test.describe('relations moderation + rendering + brain endpoint (R3 stage 2)', 
     const asBob = await crossRelations(request, BOB);
     expect(asBob.some((e) => e.from === PRIV)).toBe(false);
   });
+
+  // Finding 1 — a rejected verdict is STICKY: a re-POST of the exact triple by
+  // the RW classifier must not resurrect the edge back to 'proposed'.
+  test('reject is durable: re-POSTing a rejected triple does not resurrect it', async ({
+    request,
+  }) => {
+    // A fresh seed-verb edge on a distinct (from,to,type) triple.
+    const post = await request.post('/agent/v1/relations', {
+      headers: { ...RW, 'x-keap-agent': 'e2e-classifier' },
+      data: {
+        relations: [
+          { from_ref: OBJ2, from_kind: 'object', to_ref: NODE, to_kind: 'node', type: 'refutes', confidence: 0.9, justification: 'to be rejected then re-posted.' },
+        ],
+      },
+    });
+    expect(post.ok()).toBeTruthy();
+    const row = (await proposedRelations(request)).find((x) => x.type === 'refutes' && x.fromRef === OBJ2)!;
+    expect(row).toBeTruthy();
+    const rej = await request.post(`/api/admin/relations/${encodeURIComponent(row.id)}`, {
+      data: { status: 'rejected' },
+    });
+    expect(rej.ok()).toBeTruthy();
+
+    // Re-POST the EXACT same triple (classifier re-run) with a higher confidence.
+    const repost = await request.post('/agent/v1/relations', {
+      headers: { ...RW, 'x-keap-agent': 'e2e-classifier' },
+      data: {
+        relations: [
+          { from_ref: OBJ2, from_kind: 'object', to_ref: NODE, to_kind: 'node', type: 'refutes', confidence: 0.99, justification: 're-run.' },
+        ],
+      },
+    });
+    expect(repost.ok()).toBeTruthy();
+
+    // The verdict is still 'rejected' — NOT reset to 'proposed'…
+    const rejected = await request.get('/api/admin/relations?status=rejected');
+    const still = ((await rejected.json()).data.relations as AdminRel[]).find(
+      (x) => x.type === 'refutes' && x.fromRef === OBJ2,
+    );
+    expect(still, 'rejected row survives the re-POST').toBeTruthy();
+    const proposedAgain = (await proposedRelations(request)).some(
+      (x) => x.type === 'refutes' && x.fromRef === OBJ2,
+    );
+    expect(proposedAgain, 'not resurrected to proposed').toBe(false);
+    // …and it never renders, even in the ?relations=all overlay.
+    const all = await request.get('/api/graph?relations=all');
+    const cross = ((await all.json()).data.crossRelations ?? []) as CrossRel[];
+    expect(cross.some((e) => e.from === OBJ2 && e.type === 'refutes')).toBe(false);
+  });
+
+  // Finding 2 — vocab gate: an edge on a still-PROPOSED verb cannot be confirmed
+  // (that would smuggle the uncurated verb into the overlay). Confirm the TYPE
+  // first, then the edge.
+  test('vocab gate: confirming an edge on an unapproved verb is blocked', async ({ request }) => {
+    const post = await request.post('/agent/v1/relations', {
+      headers: { ...RW, 'x-keap-agent': 'e2e-classifier' },
+      data: {
+        relations: [
+          { from_ref: OBJ1, from_kind: 'object', to_ref: NODE, to_kind: 'node', type: 'motivates', confidence: 0.88, justification: 'unknown verb grows the palette.' },
+        ],
+      },
+    });
+    expect(post.ok()).toBeTruthy();
+    expect((await post.json()).data.proposedTypes).toEqual(['motivates']);
+    const edge = (await proposedRelations(request)).find((x) => x.type === 'motivates' && x.fromRef === OBJ1)!;
+
+    // Confirming the EDGE while 'motivates' is still a proposed verb → 409.
+    const blocked = await request.post(`/api/admin/relations/${encodeURIComponent(edge.id)}`, {
+      data: { status: 'confirmed' },
+    });
+    expect(blocked.status()).toBe(409);
+    expect((await crossRelations(request)).some((e) => e.type === 'motivates')).toBe(false);
+
+    // Approve the TYPE, then the same confirm succeeds and the edge renders.
+    const approve = await request.post('/api/admin/relation-types/motivates', {
+      data: { status: 'confirmed' },
+    });
+    expect(approve.ok()).toBeTruthy();
+    const okConfirm = await request.post(`/api/admin/relations/${encodeURIComponent(edge.id)}`, {
+      data: { status: 'confirmed' },
+    });
+    expect(okConfirm.ok()).toBeTruthy();
+    expect((await crossRelations(request)).some((e) => e.from === OBJ1 && e.type === 'motivates')).toBe(true);
+  });
+
+  // Finding 2b — a raw agent verb must be a bounded lowercase kebab slug; a
+  // whitespace/uppercase or over-long string is rejected before it can grow the
+  // palette (validate-all-then-write → the whole batch writes nothing).
+  test('vocab hygiene: a malformed relation type is rejected', async ({ request }) => {
+    for (const bad of ['Bad Type!', 'a'.repeat(65)]) {
+      const r = await request.post('/agent/v1/relations', {
+        headers: { ...RW, 'x-keap-agent': 'e2e-classifier' },
+        data: {
+          relations: [
+            { from_ref: OBJ1, from_kind: 'object', to_ref: NODE, to_kind: 'node', type: bad, confidence: 0.5, justification: 'malformed verb.' },
+          ],
+        },
+      });
+      expect(r.status()).toBe(400);
+    }
+  });
 });

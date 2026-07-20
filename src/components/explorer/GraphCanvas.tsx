@@ -61,6 +61,11 @@ const NEAR_HOP_CAMERA = 750;
 const STAR_LABEL_CAP = 400; // level-2 star names
 const FOLDER_LABEL_CAP = 400; // files-core folder-hub names
 const REL_LABEL_CAP = 300; // Track R3 typed-relation verb labels (Vazby midpoints)
+// PERF doctrine: only a SPARSE typed-relation overlay may afford tubes (a mesh +
+// draw call each); past this the Vazby render as width-0 GL lines like every
+// other bulk edge. Keeps the "only sparse overlays afford tubes" invariant true
+// even under ?relations=all (unmoderated proposed edges) or a large corpus.
+const REL_TUBE_CAP = 300;
 // Galaxy/constellation names are orientation anchors, kept always-on UNTIL the
 // object field itself is huge — past that even the top tier is too dense to read.
 const HUGE_FIELD = 5000; // objects
@@ -1073,6 +1078,10 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
   // midpoint verb plates; a dense one falls back to hover-only (no thousands of
   // SpriteText canvases). Counts only the typed cross-type layer.
   const relLabels = useMemo(() => links.filter((l) => l.vazba).length <= REL_LABEL_CAP, [links]);
+  // PERF: promote typed edges to confidence-width TUBES only while the overlay is
+  // sparse; a dense one keeps them as width-0 GL lines (still coloured, still
+  // hover-labelled) so tube count stays bounded regardless of corpus size.
+  const relTubes = useMemo(() => links.filter((l) => l.vazba).length <= REL_TUBE_CAP, [links]);
   // PERF/S4: instance the file cubes in exactly the regime that is slow — core
   // view with a field too large for name plates (fileLabels off). Below the cap
   // the per-cube meshes stay (few, cheap, and they carry labels); above it the
@@ -1647,6 +1656,16 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
         : (false as unknown as THREE.Object3D),
     [relLabels],
   );
+  // EXTEND (not replace) the default line/tube for a typed edge that carries a
+  // verb plate — same predicate as the sprite accessor. With extend the library
+  // wraps [default line/tube, sprite] in a group, so the registry-hue/confidence
+  // tube (linkColor + linkWidth) still draws AND gets default endpoint
+  // positioning; without it the sprite REPLACES the edge and no connector shows.
+  // For every other link the predicate is false → unchanged single-object path.
+  const linkExtendFn = useCallback(
+    (l: GraphLink): boolean => Boolean(l.vazba && relLabels && l.relVerb),
+    [relLabels],
+  );
   // `link` is typed `object` (not GraphLink) to satisfy the library's standalone
   // LinkPositionUpdateFn generic, which binds its own {} defaults rather than the
   // component's CanvasLink — a narrower param would fail the assignment.
@@ -1657,12 +1676,18 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       link: object,
     ): boolean => {
       const l = link as GraphLink;
-      if (!l.vazba) return false; // no plate → default line positioning
+      // Only position the SPRITE, and only in the extended (labeled) regime — the
+      // predicate MUST match linkExtendFn/linkThreeObjectFn. `obj` is then the
+      // group's custom child (the verb plate); the default tube is positioned by
+      // the library because the group is extended. Returning false anywhere else
+      // (unlabeled Vazby, bulk lines) lets the default straight-line/tube
+      // positioning run — returning true there would strand the tube unpositioned.
+      if (!(l.vazba && relLabels && l.relVerb)) return false;
       const { start, end } = coords;
       obj.position.set((start.x + end.x) / 2, (start.y + end.y) / 2, (start.z + end.z) / 2);
       return true;
     },
-    [],
+    [relLabels],
   );
 
   return (
@@ -1680,8 +1705,12 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       nodeThreeObject={nodeThreeObject}
       nodeThreeObjectExtend={extendsDefaultSphere}
       linkThreeObject={linkThreeObjectFn}
-      linkThreeObjectExtend={false}
+      linkThreeObjectExtend={linkExtendFn}
       linkPositionUpdate={linkPositionUpdateFn}
+      // Typed cross-type edges carry their verb on hover — the fallback when a
+      // dense Vazby overlay (>REL_LABEL_CAP) drops the always-on midpoint plates,
+      // so the verb is never fully invisible. Bulk/other links have no link label.
+      linkLabel={(l: GraphLink) => (l.vazba && l.relVerb ? l.relVerb : '')}
       linkColor={(l: GraphLink) =>
         l.vazba
           ? l.relColor ?? 'rgba(148,163,184,0.6)' // typed cross-type: registry hue
@@ -1707,7 +1736,9 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
         // skeleton, fs edges, per-object rays — thousands at scale) MUST stay
         // lines; only the sparse overlays may afford tubes.
         l.vazba
-          ? 0.6 + (l.confidence ?? 0.5) * 1.4 // typed cross-type: width by confidence (0.6–2.0)
+          ? relTubes
+            ? 0.6 + (l.confidence ?? 0.5) * 1.4 // sparse typed overlay: width by confidence (0.6–2.0)
+            : 0 // dense overlay → GL line (PERF doctrine: tubes stay sparse)
           : l.relation
           ? l.explored === 'barely'
             ? 1.8 // research frontier — brightest/thickest
