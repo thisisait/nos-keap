@@ -414,12 +414,16 @@ export function registerApiRoutes(app: Express) {
   });
   app.get('/api/objects/types', (_req, res) => ok(res, db.objectTypes()));
   app.get('/api/objects/:id', (req, res) => {
-    const o = db.getObject(req.params.id);
-    if (!o) return fail(res, 404, 'unknown object');
-    if (o.userId !== req.user.id && !req.user.isAdmin && o.visibility === 'private') {
+    // Row-level read gate via the ONE source of truth (server/rbac.ts tier
+    // ladder), identical to /api/graph's getVisibleObjects and search's
+    // canReadObject. A flat `visibility !== 'private'` check here would treat
+    // every tier-scoped card (tier-managers/users/guests) as world-readable and
+    // leak it below its entitled tier. Not-found and not-readable both 404 —
+    // never leak an object's existence to a caller who cannot read it.
+    if (!db.canReadObject(req.params.id, req.user.id, req.user.isAdmin, req.user.groups)) {
       return fail(res, 404, 'unknown object');
     }
-    ok(res, o);
+    ok(res, db.getObject(req.params.id));
   });
   app.post('/api/objects', (req, res) => {
     const b = req.body ?? {};

@@ -124,6 +124,29 @@ test.describe('S2⁶ table graph metadata + visibility ladder', () => {
     expect(hasCard(await graphObjects(request), 's26-private')).toBe(true); // admin
   });
 
+  test('direct GET /api/objects/:id is tier-gated by the SAME ladder (no parallel leak)', async ({ request }) => {
+    // The card knowledge_object id mirrors the graph object id: table-<slug>.
+    // Before the fix, the direct-read endpoint gated only on visibility==='private'
+    // and served every non-private card world-wide — a tier-guests caller could
+    // fetch a tier-users card by id. It must now match canReadObject exactly.
+    const get = (id: string, headers?: Record<string, string>) =>
+      request.get(`/api/objects/${id}`, headers ? { headers } : undefined);
+
+    // tier-users card: entitled to nos-users and admin, denied to nos-guests.
+    expect((await get('table-s26-tier-users', USER)).status()).toBe(200);
+    expect((await get('table-s26-tier-users', GUEST)).status()).toBe(404); // the leak, now closed
+    expect((await get('table-s26-tier-users')).status()).toBe(200); // admin seeAll
+
+    // shared card: every tier reads it (strict superset preserved).
+    expect((await get('table-s26-shared', USER)).status()).toBe(200);
+    expect((await get('table-s26-shared', GUEST)).status()).toBe(200);
+
+    // private card: owner+admin only — invisible to both tiers.
+    expect((await get('table-s26-private', USER)).status()).toBe(404);
+    expect((await get('table-s26-private', GUEST)).status()).toBe(404);
+    expect((await get('table-s26-private')).status()).toBe(200); // admin
+  });
+
   test('card override: graph.card renders the overridden form/hue/glyph', async ({ request }) => {
     const c = card(await graphObjects(request, USER), 's26-tier-users');
     expect(c).toBeDefined();

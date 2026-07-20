@@ -173,12 +173,15 @@ export function registerGraphRoutes(app: Express) {
     // anchors ([[node-id]] refs in the card body). ALL objects ship — the
     // orbital view renders only anchored ones (free-floating dust would break
     // spatial memory), but the files-core view needs the unanchored rest too.
-    // Graph-scope visibility (getVisibleObjects): own + shared, so shared
-    // mapped-folder mirrors appear in every user's Explore — /api/objects
-    // lists stay owner-scoped. DELIBERATE (spec decision #8): the predicate is
-    // visibility='shared', not owner-prefix — a manually shared card was
-    // already readable by anyone via direct GET; the graph now lists what was
-    // always readable. 'shared' means graph-listed tenant-wide.
+    // Graph-scope visibility (getVisibleObjects): own + everything the caller's
+    // tier ladder entitles (readableVisibilitiesFor → 'shared' for every tier,
+    // plus tier-managers/tier-users/tier-guests per the caller's Authentik
+    // groups). So shared mapped-folder mirrors AND tier-scoped cards appear in
+    // the Explore of every entitled user — /api/objects lists stay owner-scoped.
+    // DELIBERATE (spec decision #8): the predicate is the rbac.ts ladder, the
+    // SAME single source of truth that gates the direct GET /api/objects/:id
+    // read (canReadObject). The graph lists exactly what that per-object gate
+    // would grant — never anything looser.
     const visibleRows = db.getVisibleObjects(req.user.id, req.user.isAdmin, req.user.groups);
     // Persisted topic-mode assignment (object_id → topic_id). Scoping stays
     // free — the join is keyed per visible-object id, so a topic surfaces only
