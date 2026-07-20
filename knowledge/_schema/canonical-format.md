@@ -8,7 +8,7 @@ One file per L1 domain. `lint.mjs` enforces this contract; `roundtrip.mjs` prove
   "domain": "01.01",                 // the L1 id this file owns
   "nodes": [
     {
-      "id": "01.01.03.01.01",        // dot-numbered, 2-digit segments; level = dot count
+      "id": "01.01.03.01.01",        // numeric (seed spine) OR slug (`nos.infra.postgresql`)
       "level": 4,
       "kind": "ext",                 // "ext" = grown node | "seed-override" = K1 desc on a seed node
       "parentId": "01.01.03.01",     // ext only: strict prefix of id
@@ -28,7 +28,12 @@ One file per L1 domain. `lint.mjs` enforces this contract; `roundtrip.mjs` prove
 ```
 
 ## Rules (lint gates)
-- `id` matches `^\d{2}(\.\d{2})*$`; `level` == dot count.
+- `id` matches **either** form (`lint.mjs` `ID_RE`); `level` == dot count in both:
+  - **numeric** `^\d{2}(\.\d{2})*$` — the seed spine (`01`…`12` and below).
+  - **slug** `^[a-z][a-z0-9-]*(\.[a-z][a-z0-9-]*)*$` — user subtrees, e.g. `nos`,
+    `nos.infra`, `nos.infra.postgresql`. A slug id names the *thing*, so inserting
+    a sibling renumbers nothing. This replaced the reserved numeric-root scheme
+    (`90`–`99`), which encoded position and is cancelled — do not write it.
 - `kind` ∈ {`ext`, `seed-override`}. `ext` nodes carry `parentId` (= id minus last
   segment), `name`, `zone`, integer `ordinal`. `seed-override` carries only the
   description layer (id/en/cs/brief) — it edits a seed node's text, not its structure.
