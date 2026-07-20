@@ -316,3 +316,46 @@ that sounds authoritative will win candidates against a right one that sounds
 vague. If the READMEs are being reconciled anyway, describe is worth running
 *after* that, not before, and never on the 38 systems whose only source is a
 one-line manifest.
+
+---
+
+# ⚠ Superseded above: the id scheme is SLUGS, not `90`–`99`
+
+Everything before this line that says `90`, `90.NN`, `90.NN.MM` or "reserved
+range" is **historical**. It is left in place because the reasoning that produced
+it is worth reading, but it does not describe the system.
+
+**Current scheme:**
+
+```
+nos                      user root — any bare lowercase slug
+nos.infra                stack
+nos.infra.postgresql     system
+nos.iiab.nextcloud.credential
+```
+
+The seed spine keeps its dotted 2-digit ids and is untouched. Both shapes are
+valid node refs; `server/objects.ts` accepts either.
+
+Why it changed: a numeric segment encodes **position**, so inserting a sibling
+renumbers the ones after it and every card anchored to them resolves to a
+different node while still looking valid. Three separate mechanisms had grown to
+contain that — an id ledger on the nOS side, a drift detector here, a two-run
+fixture gate — and none of us had asked why the property existed. A slug encodes
+identity, so the class is deleted rather than guarded. The 99-child ceiling that
+had been shaping credential placement went with it.
+
+## Tag hazard: **never pin `v1.19.0`**
+
+`v1.19.0` is a real, immutable, released tag that implements the abandoned
+`90`–`99` scheme (`USER_ROOT_MIN` is present in it and absent from everything
+after). Pinning it would make `registerExtNode` accept only two-digit roots and
+reject `nos` — returning null, so no root is created, so every card under it is
+invisible. Silently, as usual.
+
+The tag is not being retracted: immutable tags are the whole point of the pin
+rule, and rewriting one to mean something else is worse than leaving a documented
+trap. **Pin `v1.20.0` or later for anything self-model related.**
+
+This matters because pins have already been quoted from memory once in this
+contract, in both directions.
