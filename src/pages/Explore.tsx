@@ -516,7 +516,7 @@ export default function Explore() {
       }
     }
     return { canvasNodes: nodes, canvasLinks: links, coreLayout };
-  }, [graph, focusId, starItems, hueByCategory, nodeById, showOntology, core, effectiveOrder, t, dirStatByPath, mappingById, rootOf]);
+  }, [graph, focusId, starItems, hueByCategory, nodeById, showOntology, showOlinks, core, effectiveOrder, t, dirStatByPath, mappingById, rootOf]);
 
   const availableTypes = useMemo(
     () => [...new Set((neighbors.data?.items ?? []).map((i) => i.dataType).filter(Boolean))] as string[],
@@ -836,7 +836,18 @@ export default function Explore() {
       </header>
 
       <div className="flex min-h-0 flex-1">
-        <div ref={canvasRef} className="relative min-w-0 flex-1">
+        {/* Link counts are exposed for e2e: the scene itself is WebGL, so without
+            a seam a layer toggle can only be asserted through the URL — which is
+            exactly how a stale useMemo dependency once shipped, changing the URL
+            while the geometry never recomputed. */}
+        <div
+          ref={canvasRef}
+          className="relative min-w-0 flex-1"
+          data-testid="explore-canvas"
+          data-link-count={canvasLinks.length}
+          data-olink-count={canvasLinks.filter((l) => l.olink).length}
+          data-vazba-count={canvasLinks.filter((l) => l.vazba).length}
+        >
           {isLoading ? (
             <div className="flex h-full items-center justify-center text-sm text-muted-foreground">
               {t('common.loading')}

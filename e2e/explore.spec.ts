@@ -90,10 +90,24 @@ test.describe('universe explorer', () => {
  * because a layer it never owned kept drawing.
  */
 test.describe('explore edge-layer toggles', () => {
+  const OA = 'explore-olink-a';
+  const OB = 'explore-olink-b';
+
+  test('seed: two anchored cards, one referencing the other', async ({ request }) => {
+    // Anchored so the core draws them, and cross-referenced so an objectLink
+    // exists — without real edges the toggle assertions below are vacuous.
+    const mk = (id: string, body: string) =>
+      request.post('/api/objects', { data: { id, type: 'note', title: id, body } });
+    expect((await mk(OB, 'anchored to [[01.01]] physics.')).ok()).toBeTruthy();
+    expect((await mk(OA, `anchored to [[01.01]] physics, see [[object:${OB}]].`)).ok()).toBeTruthy();
+  });
+
   test('ontology and links are separate toggles, each round-tripping through the URL', async ({
     page,
   }) => {
-    await page.goto('/explore');
+    // core=fs so the cards are actually in the scene; without it no object edge
+    // is drawn at all and every count below reads zero for the wrong reason.
+    await page.goto('/explore?core=fs');
     const ontology = page.getByTestId('explore-ontology-toggle');
     const olinks = page.getByTestId('explore-olinks-toggle');
     await expect(ontology).toBeVisible();
@@ -103,21 +117,43 @@ test.describe('explore edge-layer toggles', () => {
     expect(page.url()).not.toContain('rel=0');
     expect(page.url()).not.toContain('olinks=0');
 
+    // Assert the SCENE, not just the URL. A stale useMemo dependency once let the
+    // param flip while the geometry never recomputed, and a URL-only assertion
+    // passed straight through it.
+    const canvas = page.getByTestId('explore-canvas');
+    const olinkCount = async () => Number(await canvas.getAttribute('data-olink-count'));
+    // NB: no typed-relation assertion here. This spec runs before any confirmed
+    // relation exists, so data-vazba-count is 0 either way and asserting on it
+    // would only look like coverage. The ontology layer is covered where the
+    // relations fixture lives.
+
+    // Guard the guard: if the fixture stopped producing edges these assertions
+    // would pass by being empty, which is how the first version of this test
+    // sailed past a stale useMemo dependency.
+    await expect.poll(olinkCount, { message: 'fixture must produce object links' }).toBeGreaterThan(0);
+
     // Turning ontology off must NOT silence the links layer.
+    const olinksBefore = await olinkCount();
     await ontology.click();
     await expect.poll(() => new URL(page.url()).searchParams.get('rel')).toBe('0');
     expect(new URL(page.url()).searchParams.get('olinks')).toBeNull();
+    expect(await olinkCount(), 'links layer untouched').toBe(olinksBefore);
 
-    // ...and the links layer is independently switchable.
+    // ...and the links layer is independently switchable — in the scene.
     await olinks.click();
     await expect.poll(() => new URL(page.url()).searchParams.get('olinks')).toBe('0');
     expect(new URL(page.url()).searchParams.get('rel')).toBe('0');
+    await expect.poll(olinkCount, { message: 'link edges gone' }).toBe(0);
 
     // Both restore.
     await ontology.click();
     await olinks.click();
     await expect.poll(() => new URL(page.url()).searchParams.get('rel')).toBeNull();
     expect(new URL(page.url()).searchParams.get('olinks')).toBeNull();
+  });
+
+  test('cleanup: olink fixture removed', async ({ request }) => {
+    for (const id of [OA, OB]) expect((await request.delete(`/api/objects/${id}`)).ok()).toBeTruthy();
   });
 
   test('a deep link with olinks=0 starts with the links layer off', async ({ page }) => {
