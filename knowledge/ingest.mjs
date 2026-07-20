@@ -96,23 +96,36 @@ function applyDomain(key, doc) {
   );
   const ndC = hasDot ? `node_id = ${self} OR node_id LIKE ${sub}` : `node_id = ${self}`;
   const frC = hasDot ? `from_id = ${self} OR from_id LIKE ${sub}` : `from_id = ${self}`;
-  db.exec(`DELETE FROM taxonomy_nodes_ext WHERE ${idC}`);
-  db.exec(`DELETE FROM node_descriptions  WHERE ${ndC}`);
-  db.exec(`DELETE FROM taxonomy_metadata  WHERE ${idC}`);
-  db.exec(`DELETE FROM concept_relations  WHERE ${frC}`);
+  let nRel = 0;
   // insert nodes parent-first (id-sorted → a parent id is a prefix of its children)
   const nodes = [...doc.nodes].sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
-  for (const n of nodes) {
-    // descriptions are the SoT — store VERBATIM (TEXT columns, no length cap);
-    // clipping/normalising here would break the dump↔ingest round-trip identity.
-    const en = n.en ?? '';
-    const cs = n.cs ?? null;
-    if (n.kind === 'ext') {
-      insNode.run(n.id, n.parentId, n.name, en, n.zone || 'votable', n.ordinal ?? 0, tick());
+  // A domain is rewritten as WIPE-then-INSERT. Those were four bare db.exec calls
+  // with the inserts loose after them, so a failure anywhere between left the
+  // domain DELETED: the tree is rebuilt from this table at boot, so every node in
+  // it would vanish and every card anchored to one would go invisible — a torn
+  // ingest is not a window that closes, it is a hole that persists until the next
+  // successful run. One transaction makes the rewrite all-or-nothing.
+  const applyTxn = db.transaction(() => {
+    db.exec(`DELETE FROM taxonomy_nodes_ext WHERE ${idC}`);
+    db.exec(`DELETE FROM node_descriptions  WHERE ${ndC}`);
+    db.exec(`DELETE FROM taxonomy_metadata  WHERE ${idC}`);
+    db.exec(`DELETE FROM concept_relations  WHERE ${frC}`);
+    for (const n of nodes) {
+      // descriptions are the SoT — store VERBATIM (TEXT columns, no length cap);
+      // clipping/normalising here would break the dump↔ingest round-trip identity.
+      const en = n.en ?? '';
+      const cs = n.cs ?? null;
+      if (n.kind === 'ext') {
+        insNode.run(n.id, n.parentId, n.name, en, n.zone || 'votable', n.ordinal ?? 0, tick());
+      }
+      insDesc.run(n.id, en, cs);
+      if (n.brief) insMeta.run(n.id, JSON.stringify({ brief: n.brief, briefMeta: { source: 'knowledge', domain: key } }));
     }
-    insDesc.run(n.id, en, cs);
-    if (n.brief) insMeta.run(n.id, JSON.stringify({ brief: n.brief, briefMeta: { source: 'knowledge', domain: key } }));
-  }
+    for (const r of doc.relations || []) {
+      insRel.run(r.from, r.to, r.type, r.explored ?? null, r.source || 'knowledge');
+      nRel++;
+    }
+  });
   // An id that kept its slot but changed its name is either a deliberate rename
   // (rare, usually one) or a renumbering (many at once). Reporting the count and
   // a sample lets the caller tell them apart; a gate can fail on a threshold.
@@ -122,11 +135,7 @@ function applyDomain(key, doc) {
     const was = priorNames.get(n.id);
     if (was !== undefined && was !== n.name) renamed.push({ id: n.id, was, now: n.name });
   }
-  let nRel = 0;
-  const txn = db.transaction(() => {
-    for (const r of doc.relations || []) { insRel.run(r.from, r.to, r.type, r.explored ?? null, r.source || 'knowledge'); nRel++; }
-  });
-  txn();
+  applyTxn();
   return { nNodes: nodes.length, nRel, renamed };
 }
 
