@@ -485,10 +485,35 @@ export function syncUserFiles(): FsSyncResult {
     result.pruneRefused = true;
     console.warn(`[fs-sync] 0 files under ${USER_FILES_DIR} but ${existing.size} mirrored objects exist — refusing to prune`);
   } else {
-    for (const [id] of existing) {
+    // PER-UID zero-scan guard. The prune set spans every uid, but the guard
+    // above asks only whether the WHOLE pass found nothing — so a uid whose
+    // tree is empty this pass has its mirrors deleted as long as some other uid
+    // contributed a file. That is not hypothetical: a bind-mounted shared tree
+    // (the nOS self-model under KEAP_FS_SHARED_UIDS) exists before its content
+    // does, and a sync landing in that gap would reap the entire corpus and its
+    // embeddings while the global guard stayed silent. Today the live estate is
+    // protected only by the accident that nearly every file belongs to that one
+    // uid; one file in any other tree removes that protection.
+    const foundByUid = new Set(found.map((f) => f.uid));
+    const heldBack = new Map<string, number>();
+    for (const [id, o] of existing) {
+      const uid = o.userId;
+      if (uid && !foundByUid.has(uid)) {
+        heldBack.set(uid, (heldBack.get(uid) ?? 0) + 1);
+        continue;
+      }
       db.deleteObject(id);
       result.removed++;
       changed = true;
+    }
+    if (heldBack.size) {
+      result.pruneRefused = true;
+      for (const [uid, n] of heldBack) {
+        console.warn(
+          `[fs-sync] uid '${uid}' contributed 0 files this pass but has ${n} mirrored object(s) — ` +
+            `refusing to prune them (empty or not-yet-populated tree, not a mass delete)`,
+        );
+      }
     }
   }
   if (changed) markCorpusDirty();

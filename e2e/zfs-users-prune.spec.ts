@@ -84,6 +84,38 @@ test.describe('users-pass prune guards', () => {
     expect(clean.danglingAnchors ?? 0).toBe(0);
   });
 
+  test('an emptied uid tree does not lose its mirrors while another uid has files', async ({
+    request,
+  }) => {
+    // The exact shape a bind-mounted shared tree takes during bring-up: the
+    // mountpoint exists, its content does not yet. The GLOBAL zero-scan guard
+    // cannot see it — some other uid contributed files, so found.length > 0 —
+    // and without a per-uid guard every mirror under the empty tree is deleted
+    // along with its embeddings.
+    // Its own uid, so the earlier fixture in this serial spec cannot keep the
+    // tree non-empty and mask the very condition under test.
+    const SHARED = path.join(ROOT, 'sharedtree', 'documents');
+    const OTHER = path.join(ROOT, 'otheruser', 'documents');
+    mkdirSync(SHARED, { recursive: true });
+    mkdirSync(OTHER, { recursive: true });
+    writeFileSync(path.join(OTHER, 'keeps-the-pass-non-empty.md'), 'unrelated user\n');
+    writeFileSync(path.join(SHARED, 'shared-a.md'), 'shared tree content\n');
+    writeFileSync(path.join(SHARED, 'shared-b.md'), 'shared tree content\n');
+    let r = await sync(request);
+    expect(r.upserted).toBeGreaterThanOrEqual(3);
+
+    // Empty ONLY the shared tree, leaving the mountpoint itself in place.
+    rmSync(path.join(SHARED, 'shared-a.md'));
+    rmSync(path.join(SHARED, 'shared-b.md'));
+    r = await sync(request);
+    expect(r.pruneRefused, 'an emptied uid tree must not be pruned').toBe(true);
+    expect(r.removed, 'its mirrors survive').toBe(0);
+
+    rmSync(path.join(ROOT, 'otheruser'), { recursive: true, force: true });
+    rmSync(path.join(ROOT, 'sharedtree'), { recursive: true, force: true });
+    await sync(request);
+  });
+
   test('cleanup', async ({ request }) => {
     rmSync(path.join(ROOT, UID), { recursive: true, force: true });
     await sync(request);
