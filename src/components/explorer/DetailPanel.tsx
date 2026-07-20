@@ -255,7 +255,7 @@ export default function DetailPanel({ target, nodeById, objects, objectLinks, on
   const zone = node?.zone;
 
   return (
-    <div className="absolute bottom-3 left-3 top-3 z-10 flex w-[330px] flex-col rounded-lg border border-white/10 bg-background/85 shadow-xl backdrop-blur">
+    <div className="absolute bottom-3 left-3 top-3 z-20 flex w-[min(330px,calc(100vw-1.5rem))] flex-col rounded-lg border border-white/10 bg-background/85 shadow-xl backdrop-blur">
       <div className="flex items-start gap-2 border-b border-white/10 p-3">
         <div className="min-w-0 flex-1">
           {node && crumb.length > 0 && (

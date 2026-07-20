@@ -50,7 +50,7 @@ export default function SidePanel({
     : items;
 
   return (
-    <div className="flex h-full w-72 flex-col gap-4 border-l bg-background/80 p-4 backdrop-blur">
+    <div className="flex h-full w-full flex-col gap-4 bg-background/80 p-4 backdrop-blur">
       <div>
         <h2 className="text-sm font-semibold">{t('explore.panel.title')}</h2>
         <p className="mt-1 text-xs text-muted-foreground">

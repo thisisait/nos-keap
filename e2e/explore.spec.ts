@@ -37,6 +37,34 @@ test.describe('universe explorer', () => {
     expect(pos(one)).toEqual(pos(two));
   });
 
+  test('mobile: neighbours panel is a drawer, ship mode hidden, canvas full-width', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 667 }); // phone portrait
+    await page.goto('/explore');
+    await expect(page.locator('canvas').first()).toBeVisible({ timeout: 15_000 });
+
+    // Ship camera (pointer-lock + WASD) is desktop-only → its toggle is absent.
+    await expect(page.getByTestId('explore-camera-toggle')).toHaveCount(0);
+
+    // The neighbours panel is a drawer: its toggle is present and the panel
+    // content is NOT mounted until opened (no always-on w-72 rail stealing the
+    // canvas). Radix mounts SheetContent (role=dialog) only while open.
+    const toggle = page.getByTestId('explore-panel-toggle');
+    await expect(toggle).toBeVisible();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+
+    await toggle.click();
+    await expect(page.getByRole('dialog')).toBeVisible(); // drawer opened
+  });
+
+  test('desktop: neighbours panel is the always-on right rail (no drawer toggle)', async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto('/explore');
+    await expect(page.locator('canvas').first()).toBeVisible({ timeout: 15_000 });
+    // The mobile drawer toggle must not exist; the ship toggle must.
+    await expect(page.getByTestId('explore-panel-toggle')).toHaveCount(0);
+    await expect(page.getByTestId('explore-camera-toggle')).toBeVisible();
+  });
+
   test('api surface: health, fallback identity, drivers', async ({ request }) => {
     const health = await (await request.get('/api/health')).json();
     expect(health.data.status).toBe('OK');

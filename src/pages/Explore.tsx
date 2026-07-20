@@ -12,9 +12,11 @@
 import { useCallback, useMemo, useState, useRef, useLayoutEffect, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Rocket, Orbit, Search, Waypoints, Boxes, Sparkles } from 'lucide-react';
+import { ArrowLeft, Rocket, Orbit, Search, Waypoints, Boxes, Sparkles, PanelRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { apiFetch } from '@/services/api/client';
 import GraphCanvas, {
   RECENT_AXIS,
@@ -63,6 +65,8 @@ export default function Explore() {
   const [typeFilter, setTypeFilter] = useState<Set<string>>(new Set());
   const [drawer, setDrawer] = useState<DrawerTarget | null>(null);
   const [cameraMode, setCameraMode] = useState<CameraMode>('observer');
+  const isMobile = useIsMobile();
+  const [panelOpen, setPanelOpen] = useState(false);
   const [showRelations, setShowRelations] = useState(() => initialParams.get('rel') !== '0');
   // Detail mode: 'full' forces every orbital body in full form (no instancing /
   // apparent-size hiding) for small fields; 'auto' lets the perf LODs engage.
@@ -98,6 +102,13 @@ export default function Explore() {
     if (detail === 'full') p.set('detail', 'full');
     setSearchParams(p, { replace: true });
   }, [focusId, core.on, core.order, lens.axis, showRelations, detail, setSearchParams]);
+
+  // Ship camera is desktop-only (pointer-lock + WASD/keyboard); on a touch
+  // device fall back to observer/orbit so a mobile user can never get stranded
+  // in a fly mode they can't drive.
+  useEffect(() => {
+    if (isMobile && cameraMode === 'ship') setCameraMode('observer');
+  }, [isMobile, cameraMode]);
 
   // Semantic hyperspace jump: hybrid search → plot course to the best hit's
   // star (objects/captures resolve to their anchor node). Focus does the
@@ -643,17 +654,44 @@ export default function Explore() {
     return () => ro.disconnect();
   }, []);
 
+  // The neighbours panel content — hoisted so it can render either as the
+  // desktop right rail or inside a mobile Sheet drawer (never both).
+  const sidePanelEl = (
+    <SidePanel
+      focusName={focusId ? nodeById.get(focusId)?.name ?? null : null}
+      mode={mode}
+      onModeChange={setMode}
+      kinds={kinds}
+      onKindsChange={setKinds}
+      typeFilter={typeFilter}
+      onTypeToggle={(dt) =>
+        setTypeFilter((prev) => {
+          const next = new Set(prev);
+          if (next.has(dt)) next.delete(dt);
+          else next.add(dt);
+          return next;
+        })
+      }
+      availableTypes={availableTypes}
+      items={neighbors.data?.items ?? []}
+      loading={neighbors.isFetching}
+      semantic={neighbors.data?.semantic ?? false}
+      vectorsReady={graph?.meta.vectors ?? false}
+      onItemClick={onPanelItem}
+    />
+  );
+
   return (
     <div className="flex h-screen flex-col bg-[hsl(222,45%,7%)] text-foreground dark">
-      <header className="flex items-center gap-3 border-b border-white/10 px-4 py-2">
-        <Button asChild variant="ghost" size="sm">
+      <header className="flex flex-wrap items-center gap-2 border-b border-white/10 px-3 py-2 sm:gap-3 sm:px-4">
+        <Button asChild variant="ghost" size="sm" className="shrink-0">
           <Link to="/">
-            <ArrowLeft className="mr-1 h-4 w-4" />
-            {t('common.back')}
+            <ArrowLeft className="h-4 w-4 sm:mr-1" />
+            <span className="hidden sm:inline">{t('common.back')}</span>
           </Link>
         </Button>
-        <h1 className="text-sm font-semibold">{t('explore.title')}</h1>
-        <span className="text-xs text-muted-foreground">
+        <h1 className="shrink-0 text-sm font-semibold">{t('explore.title')}</h1>
+        <span className="hidden text-xs text-muted-foreground sm:inline">
           {graph
             ? t('explore.stats', {
                 nodes: graph.nodes.length,
@@ -661,8 +699,8 @@ export default function Explore() {
               })
             : '…'}
         </span>
-        <div className="ml-auto flex items-center gap-2">
-          <div className="relative">
+        <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto">
+          <div className="relative min-w-0 flex-1 sm:flex-none">
             <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
             <Input
               value={jumpQuery}
@@ -672,49 +710,64 @@ export default function Explore() {
               }}
               onKeyDown={(e) => e.key === 'Enter' && hyperspaceJump()}
               placeholder={t('explore.jump.placeholder')}
-              className={`h-8 w-56 pl-7 text-xs ${jumpMiss ? 'border-destructive' : ''}`}
+              className={`h-8 w-full pl-7 text-xs sm:w-56 ${jumpMiss ? 'border-destructive' : ''}`}
               aria-label={t('explore.jump.placeholder')}
             />
           </div>
-          <Button
-            variant={cameraMode === 'ship' ? 'default' : 'outline'}
-            size="sm"
-            className="h-8 gap-1.5 text-xs"
-            onClick={() => setCameraMode((m) => (m === 'ship' ? 'observer' : 'ship'))}
-          >
-            {cameraMode === 'ship' ? <Orbit className="h-3.5 w-3.5" /> : <Rocket className="h-3.5 w-3.5" />}
-            {t(cameraMode === 'ship' ? 'explore.camera.observer' : 'explore.camera.ship')}
-          </Button>
+          {!isMobile && (
+            <Button
+              variant={cameraMode === 'ship' ? 'default' : 'outline'}
+              size="sm"
+              className="h-8 shrink-0 gap-1.5 text-xs"
+              data-testid="explore-camera-toggle"
+              onClick={() => setCameraMode((m) => (m === 'ship' ? 'observer' : 'ship'))}
+            >
+              {cameraMode === 'ship' ? <Orbit className="h-3.5 w-3.5" /> : <Rocket className="h-3.5 w-3.5" />}
+              {t(cameraMode === 'ship' ? 'explore.camera.observer' : 'explore.camera.ship')}
+            </Button>
+          )}
           <Button
             variant={showRelations ? 'default' : 'outline'}
             size="sm"
-            className="h-8 gap-1.5 text-xs"
+            className="h-8 shrink-0 gap-1.5 text-xs"
             onClick={() => setShowRelations((v) => !v)}
             title="Toggle typed concept-relation edges (research web)"
           >
             <Waypoints className="h-3.5 w-3.5" />
-            Vazby
+            <span className="hidden sm:inline">Vazby</span>
           </Button>
           <Button
             variant={core.on ? 'default' : 'outline'}
             size="sm"
-            className="h-8 gap-1.5 text-xs"
+            className="h-8 shrink-0 gap-1.5 text-xs"
             onClick={() => setCore((c) => ({ ...c, on: !c.on }))}
             title={t('explore.core.tooltip')}
           >
             <Boxes className="h-3.5 w-3.5" />
-            {t('explore.core.toggle')}
+            <span className="hidden sm:inline">{t('explore.core.toggle')}</span>
           </Button>
           <Button
             variant={detail === 'full' ? 'default' : 'outline'}
             size="sm"
-            className="h-8 gap-1.5 text-xs"
+            className="h-8 shrink-0 gap-1.5 text-xs"
             onClick={() => setDetail((d) => (d === 'full' ? 'auto' : 'full'))}
             title="Detail: Auto lets performance LODs engage at scale; Full shows every body in full form"
           >
             <Sparkles className="h-3.5 w-3.5" />
-            {detail === 'full' ? 'Full' : 'Auto'}
+            <span className="hidden sm:inline">{detail === 'full' ? 'Full' : 'Auto'}</span>
           </Button>
+          {isMobile && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8 shrink-0 gap-1.5 text-xs"
+              data-testid="explore-panel-toggle"
+              onClick={() => setPanelOpen(true)}
+              aria-label={t('explore.panel.title')}
+            >
+              <PanelRight className="h-3.5 w-3.5" />
+            </Button>
+          )}
         </div>
       </header>
 
@@ -740,7 +793,7 @@ export default function Explore() {
             />
           )}
           {!isLoading && core.on && (
-            <div className="absolute bottom-14 left-3 z-10 flex items-center gap-1.5 rounded-lg border border-slate-500/25 bg-slate-950/85 px-2 py-1.5 text-xs text-slate-300">
+            <div className="absolute bottom-14 left-3 z-10 flex max-w-[calc(100vw-1.5rem)] flex-wrap items-center gap-1.5 rounded-lg border border-slate-500/25 bg-slate-950/85 px-2 py-1.5 text-xs text-slate-300">
               <span className="opacity-60">{t('explore.core.toggle')}</span>
               {(['fs', 'taxonomy', 'topic'] as const).map((o) => (
                 <button
@@ -770,7 +823,7 @@ export default function Explore() {
             </div>
           )}
           {!isLoading && (
-            <div className="absolute bottom-3 left-3 z-10 flex items-center gap-1.5 rounded-lg border border-slate-500/25 bg-slate-950/85 px-2 py-1.5 text-xs text-slate-300">
+            <div className="absolute bottom-3 left-3 z-10 flex max-w-[calc(100vw-1.5rem)] flex-wrap items-center gap-1.5 rounded-lg border border-slate-500/25 bg-slate-950/85 px-2 py-1.5 text-xs text-slate-300">
               <span className="opacity-60">Lens</span>
               <button
                 className={`rounded px-1.5 py-0.5 ${!lens.axis ? 'bg-slate-200 text-slate-900' : 'hover:bg-slate-700/60'}`}
@@ -854,28 +907,16 @@ export default function Explore() {
             </>
           )}
         </div>
-        <SidePanel
-          focusName={focusId ? nodeById.get(focusId)?.name ?? null : null}
-          mode={mode}
-          onModeChange={setMode}
-          kinds={kinds}
-          onKindsChange={setKinds}
-          typeFilter={typeFilter}
-          onTypeToggle={(dt) =>
-            setTypeFilter((prev) => {
-              const next = new Set(prev);
-              if (next.has(dt)) next.delete(dt);
-              else next.add(dt);
-              return next;
-            })
-          }
-          availableTypes={availableTypes}
-          items={neighbors.data?.items ?? []}
-          loading={neighbors.isFetching}
-          semantic={neighbors.data?.semantic ?? false}
-          vectorsReady={graph?.meta.vectors ?? false}
-          onItemClick={onPanelItem}
-        />
+        {isMobile ? (
+          <Sheet open={panelOpen} onOpenChange={setPanelOpen}>
+            <SheetContent side="right" className="w-[85vw] max-w-sm overflow-y-auto p-0">
+              <SheetTitle className="sr-only">{t('explore.panel.title')}</SheetTitle>
+              {sidePanelEl}
+            </SheetContent>
+          </Sheet>
+        ) : (
+          <aside className="w-72 shrink-0 border-l">{sidePanelEl}</aside>
+        )}
       </div>
 
     </div>
