@@ -128,6 +128,81 @@ async function doFetch() {
   console.error(`RELTYPE_RESULT ${JSON.stringify({ cmd: 'fetch', count: batch.count })}`);
 }
 
+// ── sweep ──────────────────────────────────────────────────────────────────
+/**
+ * Anchored corpus sweep: walk EVERY card and take its own cross-kind neighbours,
+ * instead of the global top-N.
+ *
+ * The corpus sweep ranks all pairs together and returns the best N. In a corpus
+ * whose similarities sit in a narrow band (measured live: 0.62–0.68 across the
+ * whole pool) that ranking is nearly meaningless, and the cut is brutal: only 21
+ * of 74 cards ever appeared in the window, so 53 cards could never be typed no
+ * matter how many batches ran. Worse, declined pairs are not recorded anywhere,
+ * so consecutive sweeps re-offer them — two batches apart, 46 of 50 candidates
+ * were repeats.
+ *
+ * Anchoring per card removes both problems: coverage is complete by construction,
+ * and each card's neighbourhood is bounded so the batch cannot be monopolised.
+ * Pairs are deduped across anchors (a↔b surfaces from both ends).
+ */
+async function doSweep() {
+  needToken(TOKEN_RO, 'KEAP_AGENT_TOKEN_RO');
+  const perAnchor = Number(opt('perAnchor', '8'));
+  const maxDistance = opt('maxDistance');
+  const pageSize = 50; // MAX_LIMIT on the agent surface
+
+  // Page the whole card list — `total` is the unpaged count, so this terminates.
+  const ids = [];
+  for (let offset = 0; ; offset += pageSize) {
+    const page = await call('GET', `/agent/v1/objects?limit=${pageSize}&offset=${offset}`, {
+      token: TOKEN_RO,
+    });
+    const rows = page.results ?? [];
+    for (const o of rows) ids.push(o.id);
+    if (!rows.length || ids.length >= (page.total ?? 0)) break;
+  }
+  console.error(`· sweeping ${ids.length} cards (perAnchor=${perAnchor})`);
+
+  const byKey = new Map();
+  let vocab = [];
+  let model = null;
+  let reached = 0;
+  for (const id of ids) {
+    const q = new URLSearchParams({ anchorKind: 'object', anchorId: id, limit: String(perAnchor) });
+    if (maxDistance) q.set('maxDistance', String(Number(maxDistance)));
+    let data;
+    try {
+      data = await call('GET', `/agent/v1/relations/candidates?${q}`, { token: TOKEN_RO });
+    } catch {
+      continue; // a card with no vector yet is not a sweep failure
+    }
+    if (!vocab.length) vocab = data.vocab ?? [];
+    model = model ?? data.model ?? null;
+    const pairs = data.pairs ?? [];
+    if (pairs.length) reached += 1;
+    // Dedupe unordered: the same pair can surface from either endpoint.
+    for (const p of pairs) {
+      const k = [p.from_ref, p.to_ref].sort().join('|');
+      const prev = byKey.get(k);
+      if (!prev || (p.similarity ?? 0) > (prev.similarity ?? 0)) byKey.set(k, p);
+    }
+  }
+
+  const pairs = [...byKey.values()].sort((a, b) => (b.similarity ?? 0) - (a.similarity ?? 0));
+  const batch = { model, count: pairs.length, vocab, pairs };
+  const out = opt('out');
+  if (out) {
+    writeFileSync(out, JSON.stringify(batch, null, 2));
+    console.error(`✓ ${batch.count} deduped pairs from ${reached}/${ids.length} cards → ${out}`);
+  } else {
+    process.stdout.write(JSON.stringify(batch, null, 2) + '\n');
+    console.error(`✓ ${batch.count} deduped pairs from ${reached}/${ids.length} cards`);
+  }
+  console.error(
+    `RELTYPE_RESULT ${JSON.stringify({ cmd: 'sweep', count: batch.count, cards: ids.length, reached })}`,
+  );
+}
+
 // ── post ───────────────────────────────────────────────────────────────────
 /** Validate locally BEFORE sending — the server is validate-all-then-write, so
  *  one bad row rejects the whole batch. Fail fast with a precise index. */
@@ -197,10 +272,11 @@ async function doList() {
   process.stdout.write(JSON.stringify(data, null, 2) + '\n');
 }
 
-const commands = { fetch: doFetch, post: doPost, list: doList };
+const commands = { fetch: doFetch, sweep: doSweep, post: doPost, list: doList };
 if (!commands[cmd]) {
-  console.error('usage: node scripts/relations-typing.mjs <fetch|post|list> [opts]');
+  console.error('usage: node scripts/relations-typing.mjs <fetch|sweep|post|list> [opts]');
   console.error('  fetch [--limit N] [--maxDistance D] [--anchorId ID --anchorKind K] [--sinceTs T] [--out FILE]');
+  console.error('  sweep [--perAnchor N] [--maxDistance D] [--out FILE]   anchored over EVERY card (complete coverage)');
   console.error('  post  <typed.json> [--dry-run]');
   console.error('  list  [--status proposed] [--source derived] [--limit N]');
   process.exit(cmd ? 1 : 0);

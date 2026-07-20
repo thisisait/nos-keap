@@ -154,3 +154,53 @@ test.describe('agent tables surface', () => {
     expect(gone.status()).toBe(404);
   });
 });
+
+/**
+ * Card-corpus paging. MAX_LIMIT caps a page at 50, so before `offset` existed a
+ * corpus larger than that was simply unreachable through this surface — the R3
+ * anchored sweep could see the first 50 cards and no more, silently mistaking
+ * "one page" for "the corpus".
+ */
+test.describe('agent objects paging', () => {
+  const IDS = Array.from({ length: 6 }, (_, i) => `pageprobe-${String(i + 1).padStart(2, '0')}`);
+
+  test('seed: six probe cards', async ({ request }) => {
+    for (const id of IDS) {
+      const r = await request.post('/api/objects', {
+        data: { id, type: 'pageprobe', title: id, body: `paging probe ${id}` },
+      });
+      expect(r.ok()).toBeTruthy();
+    }
+  });
+
+  test('offset walks the whole set without repeats or gaps', async ({ request }) => {
+    const page = async (offset: number, limit: number) => {
+      const r = await request.get(`/agent/v1/objects?type=pageprobe&limit=${limit}&offset=${offset}`, {
+        headers: RO,
+      });
+      expect(r.ok()).toBeTruthy();
+      return (await r.json()).data as { total: number; results: Array<{ id: string }> };
+    };
+
+    // total is the UNPAGED count — that is what makes "page until offset >= total"
+    // terminate correctly.
+    const first = await page(0, 4);
+    expect(first.total).toBe(IDS.length);
+    expect(first.results).toHaveLength(4);
+
+    const second = await page(4, 4);
+    expect(second.total).toBe(IDS.length);
+    expect(second.results).toHaveLength(2); // tail is short, not wrapped
+
+    const walked = [...first.results, ...second.results].map((o) => o.id);
+    expect(new Set(walked).size, 'no card served twice').toBe(IDS.length);
+    expect(walked.sort()).toEqual([...IDS].sort()); // no card skipped
+
+    // Past the end is empty, not an error and not a wrap to page one.
+    expect((await page(99, 4)).results).toHaveLength(0);
+  });
+
+  test('cleanup: probe cards removed', async ({ request }) => {
+    for (const id of IDS) expect((await request.delete(`/api/objects/${id}`)).ok()).toBeTruthy();
+  });
+});

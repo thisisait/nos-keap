@@ -731,6 +731,11 @@ export function registerAgentRoutes(app: Express) {
     const type = req.query.type ? String(req.query.type) : undefined;
     const q = req.query.q ? String(req.query.q).toLowerCase() : undefined;
     const limit = Math.min(Number(req.query.limit) || 20, MAX_LIMIT);
+    // MAX_LIMIT caps a page at 50, so without an offset a corpus larger than that
+    // is simply unreachable through this surface — an agent that needs to walk
+    // every card (the R3 anchored sweep) could see the first 50 and no more.
+    // `total` is the unpaged count, so a caller pages until offset >= total.
+    const offset = Math.max(Number(req.query.offset) || 0, 0);
     let items = db.getObjects('', true, type);
     if (q) {
       items = items.filter(
@@ -742,7 +747,7 @@ export function registerAgentRoutes(app: Express) {
     }
     ok(res, {
       total: items.length,
-      results: items.slice(0, limit).map((o) => ({
+      results: items.slice(offset, offset + limit).map((o) => ({
         id: o.id,
         type: o.type,
         title: o.title,
@@ -1542,6 +1547,7 @@ const OPENAPI_SPEC = {
           { name: 'type', in: 'query', schema: { type: 'string' }, description: 'Filter by object type, e.g. "query", "recipe"' },
           { name: 'q', in: 'query', schema: { type: 'string' }, description: 'Substring filter over title/description/body' },
           { name: 'limit', in: 'query', schema: { type: 'integer', maximum: 50, default: 20 } },
+          { name: 'offset', in: 'query', schema: { type: 'integer', default: 0 }, description: 'Page start; page until offset >= total (total is the unpaged count)' },
         ],
       },
       post: {
