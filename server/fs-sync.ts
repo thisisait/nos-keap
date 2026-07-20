@@ -352,6 +352,46 @@ function bodyOf(f: FoundFile): string | undefined {
   }
 }
 
+/** Honored frontmatter keys and their validators. Everything else is preserved
+ *  verbatim under `frontmatter.fm` but never interpreted. */
+const FM_TYPE_RE = /^[a-z][a-z0-9-]{0,31}$/;
+
+/**
+ * Minimal leading-YAML-block reader for fs-synced cards: `--- key: value … ---`
+ * with FLAT SCALAR values only — no nesting, no lists, no quoting rules. That is
+ * deliberate: this is a card contract, not a YAML implementation, and the two
+ * keys it honors decide things that were previously impossible to express
+ * through fs-sync at all — `type` (a skill card typed by its extension landed as
+ * 'page', which made the skill facet and the type's visual form unreachable for
+ * the entire router corpus) and `title` (basename-only titling is what produced
+ * nine cards named `_stack.md`).
+ *
+ * Unknown keys ride along untouched in `fm`; a malformed block is treated as
+ * body text, never an error — a producer typo must not eat the card.
+ */
+export function parseCardFrontmatter(raw: string | undefined): {
+  type?: string;
+  title?: string;
+  fm?: Record<string, string>;
+  body: string | undefined;
+} {
+  if (!raw || !raw.startsWith('---\n')) return { body: raw };
+  const end = raw.indexOf('\n---', 4);
+  if (end < 0) return { body: raw };
+  const block = raw.slice(4, end);
+  const rest = raw.slice(end + 4).replace(/^\n/, '');
+  const fm: Record<string, string> = {};
+  for (const line of block.split('\n')) {
+    const m = /^([A-Za-z][A-Za-z0-9_-]*):\s*(.*)$/.exec(line.trim());
+    if (!m) continue;
+    fm[m[1]] = m[2].trim();
+  }
+  if (!Object.keys(fm).length) return { body: raw };
+  const type = fm.type && FM_TYPE_RE.test(fm.type) ? fm.type : undefined;
+  const title = fm.title?.trim() ? fm.title.trim().slice(0, 200) : undefined;
+  return { type, title, fm, body: rest };
+}
+
 /**
  * One full mirror pass: walk every <uid>/ under USER_FILES_DIR, upsert
  * changed files, prune fs-sourced objects whose file is gone.
@@ -429,7 +469,8 @@ export function syncUserFiles(): FsSyncResult {
       continue;
     }
     const dir = path.dirname(f.relPath);
-    const body = bodyOf(f);
+    const card = parseCardFrontmatter(bodyOf(f));
+    const body = card.body;
     // The file owns title/body/frontmatter; curated LINKS survive — union the
     // previous links (human/curator anchors) with refs found in the body, so a
     // markdown file's own [[node-id]] refs anchor it, and curation is never
@@ -447,12 +488,15 @@ export function syncUserFiles(): FsSyncResult {
     if (unresolved) danglingAnchors += unresolved;
     db.saveObject(f.uid, {
       id,
-      type: typeOf(f.relPath),
-      title: path.basename(f.relPath),
+      type: card.type ?? typeOf(f.relPath),
+      title: card.title ?? path.basename(f.relPath),
       // The folder path is embeddable context ("documents/finance/2026").
       description: dir === '.' ? undefined : dir,
       tags: [f.relPath.split('/')[0]],
-      frontmatter: { source: 'fs', path: f.relPath, size: f.size, mtime: f.mtime },
+      frontmatter: {
+        source: 'fs', path: f.relPath, size: f.size, mtime: f.mtime,
+        ...(card.fm ? { fm: card.fm } : {}),
+      },
       body,
       links: [...links.values()],
       visibility,
@@ -615,7 +659,8 @@ export function syncMapping(m: db.FsMappingRow): FsMappingSyncResult {
     const writeBatch = db.getDb().transaction((batch: typeof toWrite) => {
       for (const { f, id, prev } of batch) {
         const dir = path.dirname(f.relPath);
-        const body = bodyOf(f);
+        const card = parseCardFrontmatter(bodyOf(f));
+        const body = card.body;
         // Same union rule as the users pass: curated links survive resyncs.
         // The mapping's taxonomy anchors are NOT injected here — they live on
         // the mapping row and render as hub-level rays, never N×5000 orbits.
@@ -625,8 +670,11 @@ export function syncMapping(m: db.FsMappingRow): FsMappingSyncResult {
         }
         db.saveObject(owner, {
           id,
-          type: m.schema.type ?? typeOf(f.relPath),
-          title: path.basename(f.relPath),
+          // Precedence: the mapping's declared type wins (an admin scoping a
+          // folder to one type is a policy), then the file's own claim, then
+          // the extension fallback. Title: the file's claim, then basename.
+          type: m.schema.type ?? card.type ?? typeOf(f.relPath),
+          title: card.title ?? path.basename(f.relPath),
           description: dir === '.' ? undefined : dir,
           tags: m.tags, // exactly the mapping's tags — no top-segment tag
           // Reserved keys win via spread order (validation also strips them
@@ -635,6 +683,7 @@ export function syncMapping(m: db.FsMappingRow): FsMappingSyncResult {
             ...template,
             source: 'fs-mapping', mapping: m.id, root: m.rootKey,
             path: f.relPath, size: f.size, mtime: f.mtime, cfg,
+            ...(card.fm ? { fm: card.fm } : {}),
           },
           body,
           links: [...links.values()],

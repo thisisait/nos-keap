@@ -1,0 +1,36 @@
+{
+ "domain": "nos.infra",
+ "nodes": [
+  {
+   "id": "nos.infra",
+   "level": 1,
+   "kind": "ext",
+   "parentId": "nos",
+   "name": "infra",
+   "zone": "free",
+   "ordinal": 0,
+   "en": "The infra compose stack: shared platform services every other stack leans on \u2014 reverse proxy, identity, and the relational and key-value stores."
+  },
+  {
+   "id": "nos.infra.postgresql",
+   "level": 2,
+   "kind": "ext",
+   "parentId": "nos.infra",
+   "name": "postgresql",
+   "zone": "free",
+   "ordinal": 0,
+   "en": "PostgreSQL 16, the estate's shared OLTP store. The relational home for services that need transactions and SQL \u2014 distinct from the key-value cache beside it."
+  },
+  {
+   "id": "nos.infra.redis",
+   "level": 2,
+   "kind": "ext",
+   "parentId": "nos.infra",
+   "name": "redis",
+   "zone": "free",
+   "ordinal": 1,
+   "en": "Redis, the shared key-value cache and ephemeral queue backend. Holds hot state, sessions and work queues; nothing durable lives here."
+  }
+ ],
+ "relations": []
+}

@@ -1,0 +1,36 @@
+{
+ "domain": "nos.iiab",
+ "nodes": [
+  {
+   "id": "nos.iiab",
+   "level": 1,
+   "kind": "ext",
+   "parentId": "nos",
+   "name": "iiab",
+   "zone": "free",
+   "ordinal": 1,
+   "en": "The iiab content stack: user-facing knowledge and file services served behind the tenant domain \u2014 the part of the estate a person actually browses."
+  },
+  {
+   "id": "nos.iiab.nextcloud",
+   "level": 2,
+   "kind": "ext",
+   "parentId": "nos.iiab",
+   "name": "nextcloud",
+   "zone": "free",
+   "ordinal": 0,
+   "en": "Nextcloud, the tenant file cloud: WebDAV storage plus OCS sharing APIs. The canonical place for user documents on the estate."
+  },
+  {
+   "id": "nos.iiab.nextcloud.credential",
+   "level": 3,
+   "kind": "ext",
+   "parentId": "nos.iiab.nextcloud",
+   "name": "nextcloud-credential",
+   "zone": "free",
+   "ordinal": 0,
+   "en": "The Nextcloud app password issued to agents. Grants WebDAV and OCS access as the bot user; skills that touch tenant files require it."
+  }
+ ],
+ "relations": []
+}

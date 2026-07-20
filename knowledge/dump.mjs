@@ -99,7 +99,13 @@ if (INSPECT) {
     if (emitted.has(id)) return; emitted.add(id);
     const ext = extById.get(id); const d = descById.get(id); const meta = metaById.get(id);
     const rec = { id, level: level(id) };
-    if (ext) { rec.parentId = ext.parent_id; rec.name = ext.name; rec.zone = ext.zone; rec.ordinal = ext.ordinal; rec.kind = 'ext'; }
+    if (ext) {
+      // '' is the stored sentinel for a ROOT (parent_id is NOT NULL). The
+      // canonical form for a root OMITS parentId, so emitting '' here would
+      // break ingest∘dump identity against a source file that leaves it out.
+      if (ext.parent_id) rec.parentId = ext.parent_id;
+      rec.name = ext.name; rec.zone = ext.zone; rec.ordinal = ext.ordinal; rec.kind = 'ext';
+    }
     else { rec.kind = 'seed-override'; }
     rec.en = d ? d.description_en : (ext ? ext.description : '');
     if (d && d.description_cs) rec.cs = d.description_cs;

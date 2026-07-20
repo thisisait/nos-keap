@@ -26,7 +26,7 @@ import { registerExtensionRoutes } from './extension/routes';
 import { identityMiddleware } from './identity';
 import { initDb, rebuildTaxonomyFts } from './db';
 import * as dbmod from './db';
-import { allNodes, registerExtNode, applyDescriptionOverride } from './taxonomy';
+import { allNodes, registerExtNodes, applyDescriptionOverride } from './taxonomy';
 import { ensureLayout } from './layout';
 import { startFsSync } from './fs-sync';
 import { buildVersion } from './build-version';
@@ -42,7 +42,7 @@ async function main() {
   await initDb();
   // Track T: merge approved grown nodes into the tree BEFORE the FTS
   // rebuild + layout ensure, so search and the universe see them.
-  for (const ext of dbmod.listExtNodes()) registerExtNode(ext);
+  registerExtNodes(dbmod.listExtNodes()); // fixpoint — see taxonomy.ts: order is created_at, not ancestry
   // K1: curated description overrides layer onto the tree next, so the FTS
   // rebuild (and the embeddings pending diff) read the curated text.
   for (const row of dbmod.listNodeDescriptions()) applyDescriptionOverride(row);

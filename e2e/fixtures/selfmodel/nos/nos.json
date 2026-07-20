@@ -1,0 +1,15 @@
+{
+ "domain": "nos",
+ "nodes": [
+  {
+   "id": "nos",
+   "level": 0,
+   "kind": "ext",
+   "name": "nOS",
+   "zone": "free",
+   "ordinal": 0,
+   "en": "The nOS platform's model of its own architecture: compose stacks, the services inside them, and the callable skills each service exposes. Install-invariant \u2014 a node here means nOS can run it, not that this estate has it enabled."
+  }
+ ],
+ "relations": []
+}

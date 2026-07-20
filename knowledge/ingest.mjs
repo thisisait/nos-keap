@@ -116,7 +116,9 @@ function applyDomain(key, doc) {
       const en = n.en ?? '';
       const cs = n.cs ?? null;
       if (n.kind === 'ext') {
-        insNode.run(n.id, n.parentId, n.name, en, n.zone || 'votable', n.ordinal ?? 0, tick());
+        // A root has no parent; the column is NOT NULL, so '' is the sentinel
+        // (the same one registerExtNode reads as "this is a root").
+        insNode.run(n.id, n.parentId ?? '', n.name, en, n.zone || 'votable', n.ordinal ?? 0, tick());
       }
       insDesc.run(n.id, en, cs);
       if (n.brief) insMeta.run(n.id, JSON.stringify({ brief: n.brief, briefMeta: { source: 'knowledge', domain: key } }));

@@ -39,6 +39,8 @@ export type AssetType =
   | 'media' | 'video' | 'audio' | 'image'
   // interactive services
   | 'ai' | 'maps'
+  // callable actions (the skill router's unit — one card per action)
+  | 'skill'
   // feeds / captures
   | 'rss' | 'capture'
   | 'generic';
@@ -73,6 +75,7 @@ export const ASSET_FORM: Record<AssetType, AssetDescriptor> = {
   image: { form: 'moon', glyph: 'image', hue: 290 },
   file: { form: 'moon', glyph: 'file', hue: 200 },
 
+  skill: { form: 'station', glyph: 'skill', hue: 95 },
   dataTable: { form: 'asteroid', glyph: 'table', hue: 180 },
   audio: { form: 'asteroid', glyph: 'wave', hue: 130 },
   capture: { form: 'asteroid', glyph: 'capture', hue: 45 },

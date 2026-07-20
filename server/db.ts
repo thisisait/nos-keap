@@ -2477,6 +2477,11 @@ function exploredToConfidence(explored: string | null): number | null {
 // overlaps in spirit; the rest get distinct hues for stage-2 rendering.
 const RELATION_TYPE_SEED: Array<{ type: string; label: string; color: string; description: string }> = [
   { type: 'depends-on', label: 'depends on', color: '#22d3ee', description: 'The source requires the target to hold or exist.' },
+  // The skill router's precondition verb: (skill card) —requires→ (credential
+  // node). Written by the MECHANICAL Requires:-line producer, never the LLM
+  // classifier — distinct from depends-on, which the classifier uses for
+  // conceptual dependency between knowledge items.
+  { type: 'requires', label: 'requires', color: '#f59e0b', description: 'The source cannot run or apply without the target.' },
   { type: 'prerequisite-for', label: 'prerequisite for', color: '#38bdf8', description: 'The source must be understood before the target.' },
   { type: 'supports', label: 'supports', color: '#34d399', description: 'The source is evidence for the target.' },
   { type: 'refutes', label: 'refutes', color: '#f87171', description: 'The source is evidence against the target.' },

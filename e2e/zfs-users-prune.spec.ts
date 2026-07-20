@@ -74,7 +74,10 @@ test.describe('users-pass prune guards', () => {
     // A SLUG anchor, which also proves classifyRef accepts the user-subtree id
     // shape — an unrecognised ref is dropped silently, so if the regex were
     // wrong this would report zero and look like success.
-    writeFileSync(path.join(SAFE, 'early.md'), 'anchored ahead of its node [[nos.infra.postgresql]]\n');
+    // nos.ghost.* never exists — nos.infra.* DOES now (the selfmodel fixture is
+    // ingested before boot), which is exactly why a "dangling" fixture must not
+    // borrow a real-looking id from a tree someone may later make real.
+    writeFileSync(path.join(SAFE, 'early.md'), 'anchored ahead of its node [[nos.ghost.futurenode]]\n');
     const r = await sync(request);
     expect(r.danglingAnchors ?? 0, 'the sync must report the unresolvable anchor').toBeGreaterThan(0);
 

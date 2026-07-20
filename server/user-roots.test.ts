@@ -119,3 +119,42 @@ describe('appendExtNodeToLayout — root placement', () => {
     expect(Math.hypot(p!.x - root.x, p!.y - root.y)).toBeLessThan(600);
   });
 });
+
+describe('registerExtNodes — boot-order fixpoint', () => {
+  it('registers a subtree that arrives children-first', () => {
+    // The order listExtNodes actually produces for a slug tree: ingest applies
+    // canonical files in directory order, and 'lab.infra.json' sorts before
+    // 'lab.json', so every child gets an EARLIER created_at than its root.
+    const rows = [
+      { id: 'boot.stack.svc', parentId: 'boot.stack', name: 'svc', description: 'A service.', zone: 'free' },
+      { id: 'boot.stack', parentId: 'boot', name: 'stack', description: 'A stack.', zone: 'free' },
+      { id: 'boot', parentId: '', name: 'Boot', description: 'A root.', zone: 'free' },
+    ];
+    const r = tax.registerExtNodes(rows);
+    expect(r.registered).toBe(3);
+    expect(r.dropped).toEqual([]);
+    expect(tax.getNode('boot.stack.svc')!.parentId).toBe('boot.stack');
+  });
+
+  it('needs no lucky iteration direction: parent-between-children order', () => {
+    // [stack, svc, root] defeats a single pass in EITHER direction — forward
+    // stalls on stack (no root yet), backward stalls on svc (no stack yet when
+    // walking right-to-left). Only a true fixpoint places all three.
+    const rows = [
+      { id: 'ord.stack', parentId: 'ord', name: 'stack', description: 'A stack.', zone: 'free' },
+      { id: 'ord.stack.svc', parentId: 'ord.stack', name: 'svc', description: 'A service.', zone: 'free' },
+      { id: 'ord', parentId: '', name: 'Ord', description: 'A root.', zone: 'free' },
+    ];
+    const r = tax.registerExtNodes(rows);
+    expect(r.registered).toBe(3);
+    expect(r.dropped).toEqual([]);
+  });
+
+  it('reports what it could not place instead of dropping silently', () => {
+    const r = tax.registerExtNodes([
+      { id: 'boot.ghost.child', parentId: 'boot.ghost', name: 'x', description: 'Orphan.', zone: 'free' },
+    ]);
+    expect(r.registered).toBe(0);
+    expect(r.dropped).toEqual(['boot.ghost.child']);
+  });
+});

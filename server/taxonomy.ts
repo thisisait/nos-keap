@@ -235,6 +235,46 @@ export function registerExtNode(row: {
   return node;
 }
 
+/**
+ * Register EVERY stored grown node, as a fixpoint rather than one pass.
+ *
+ * listExtNodes orders by (created_at, ordinal), and ingest.mjs applies canonical
+ * FILES in directory order with a monotonic created_at — so a slug subtree can
+ * legitimately arrive children-first ('nos.infra.json' sorts before 'nos.json',
+ * giving every child an EARLIER created_at than its root). One pass would drop
+ * the children silently (parent not registered yet), and registration happens
+ * only at boot, so the entire subtree would stay invisible until some later
+ * restart happened to order differently. The layout append learned this lesson
+ * first (ensureLayout's fixpoint); registration needs the same discipline.
+ */
+export function registerExtNodes(
+  rows: Array<{ id: string; parentId: string; name: string; description: string; zone: string }>,
+): { registered: number; dropped: string[] } {
+  let registered = 0;
+  const pending = [...rows];
+  for (let pass = 0; pass < MAX_REGISTRATION_PASSES && pending.length; pass++) {
+    const before = pending.length;
+    for (let i = pending.length - 1; i >= 0; i--) {
+      if (registerExtNode(pending[i])) {
+        pending.splice(i, 1);
+        registered++;
+      }
+    }
+    if (pending.length === before) break; // no progress — the rest are unregisterable
+  }
+  const dropped = pending.map((r) => r.id);
+  if (dropped.length) {
+    console.warn(
+      `[taxonomy] ${dropped.length} grown node(s) unregisterable (parent missing or a root outside the slug shape): ` +
+        dropped.slice(0, 5).join(', '),
+    );
+  }
+  return { registered, dropped };
+}
+
+// A taxonomy deeper than this is a bug, not a tree — the fixpoint must terminate.
+const MAX_REGISTRATION_PASSES = 12;
+
 export function taxonomyNodeCount(): number {
   return nodesById.size;
 }

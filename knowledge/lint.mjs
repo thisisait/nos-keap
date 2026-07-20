@@ -62,7 +62,14 @@ for (const f of files) {
     if (n.kind === 'ext') {
       extIds.add(n.id);
       const parent = n.id.split('.').slice(0, -1).join('.');
-      if (!n.parentId) errors.push(`${at}: ext node missing parentId`);
+      const isRoot = !n.id.includes('.') && /^[a-z]/.test(n.id);
+      if (isRoot) {
+        // A user-defined ROOT: bare slug, and parentId must be ABSENT — a root
+        // carrying one would mask a child whose id lost its dots in an edit.
+        if (n.parentId !== undefined && n.parentId !== '') {
+          errors.push(`${at}: a root must not carry parentId (got '${n.parentId}')`);
+        }
+      } else if (!n.parentId) errors.push(`${at}: ext node missing parentId`);
       else if (n.parentId !== parent) errors.push(`${at}: parentId '${n.parentId}' ≠ id prefix '${parent}'`);
       if (!n.name || !String(n.name).trim()) errors.push(`${at}: ext node missing name`);
       if (!ZONES.has(n.zone)) errors.push(`${at}: bad zone '${n.zone}'`);
@@ -89,8 +96,13 @@ for (const n of allNodes) {
   if (n.kind !== 'ext') continue;
   const parent = n.parentId;
   if (!parent) continue;
-  // a parent under a grown ext root must itself be present
-  if (extIds.has(parent) || (parent.match(/\./g) || []).length <= 2) continue; // seed L0-2 parent OK
+  if (extIds.has(parent)) continue;
+  // NUMERIC parents up to L2 are assumed seed (the static spine lints elsewhere).
+  // A SLUG parent has no seed to fall back on — every ancestor must be present
+  // in the canonical set, or the whole subtree silently fails to register at
+  // boot (registerExtNodes drops nodes whose parent never resolves).
+  const numericParent = /^\d{2}(\.\d{2})*$/.test(parent);
+  if (numericParent && (parent.match(/\./g) || []).length <= 2) continue;
   if (!seen.has(parent)) errors.push(`${n._file} ${n.id}: ext parent '${parent}' not found (orphan)`);
 }
 
