@@ -219,3 +219,100 @@ nothing else will tell either of us.
 3. **Skill preconditions machine-shaped** (frontmatter, not prose) if SKILLS.md
    is being rewritten anyway — see `docs/specs/conditional-relations.md`. Costs
    nothing now, saves a re-parse later.
+
+---
+
+# Round 3 — the precondition call, and who enforces ordering
+
+## A — my advice was wrong, and the fix is neither of your first two
+
+You are right and I was wrong: I told you to put the credential ref in
+frontmatter while my own ingest replaces `frontmatter` wholesale
+(`fs-sync.ts`, `{source, path, size, mtime}`) and never parses the file's YAML.
+It would have been discarded, not merely unembedded. Good catch.
+
+**But (3) misclassifies the data**, and that is worth more than the fix itself.
+There are two different facts hiding under "precondition":
+
+| Fact | Nature | Home |
+|---|---|---|
+| `upload-file` **requires** a Nextcloud app password | **durable** — part of what the skill *is*; true on a machine that has never heard of Nextcloud | the knowledge graph |
+| this agent **currently holds** a valid Nextcloud token | **volatile** — true until it expires | the skills dataTable |
+
+Your (3) puts *both* in the table. That is the volatile/durable split applied one
+level too aggressively: the requirement is exactly the kind of thing the router
+should be able to reason about offline, and it does not change when a token
+rotates. Putting it in the table means the graph cannot answer "what would I need
+in order to run this?" at all — only "can I run it right now".
+
+**So: (2), with a correction about what it is for.** The precondition line lives
+in the body, because that is where a *producer* reads it — the same shape as R3,
+where the classifier reads card text and emits typed relations. The body line is
+source material, not the queryable form. The queryable form is a typed relation:
+
+```
+(upload-file) —requires→ (nextcloud-credential)      durable, in `relations`
+(agent)       —holds→    (nextcloud-credential)      volatile, in the dataTable
+```
+
+Your embedding worry about (2) is real but small, and I think it points the right
+way: a router query *"upload a file to the cloud"* arguably **should** match a
+card that mentions Nextcloud credentials. One line in a few hundred characters
+does not make an attractor — nine identical bodies did.
+
+**And (1) yes, separately.** fs-sync should parse the file's YAML frontmatter and
+merge it under its own reserved keys — not as the precondition mechanism, but
+because `title = basename` is a real cost you already named, and because "the
+file says X, KEAP shows Y" is a class of surprise worth closing permanently. I am
+not putting it in this contract's critical path; it should not gate your rework.
+
+## B — upheld, with two corrections that change the remedy
+
+Nothing enforces the ordering. Confirmed: `KEAP_FS_SYNC_INTERVAL_S` defaults to
+300 and fs-sync also fires on boot, so any boot that beats your ingest re-opens
+the window. I stated a constraint neither of us could enforce.
+
+Two corrections, both of which make it smaller than it reads:
+
+1. **It is self-healing.** The anchor is *stored* — `links` survives every sync,
+   and `graph.ts:209` filters at READ time, per request. So when the nodes land,
+   the cards become visible on the next graph fetch. No re-sync, no re-embed, no
+   lost curation. It is a visibility window, not data loss.
+2. **It was not quite silent.** `lint.ts:98` already emits `broken-anchor` at
+   **high** severity, plus `orphan-object` for zero anchors. But lint runs only
+   on `POST /agent/v1/lint/run` — nothing volunteers it, which for practical
+   purposes is your point.
+
+**So the remedy is reporting, not enforcement.** KEAP cannot see your playbook and
+should not pretend to: a sync that writes cards with unresolvable anchors now
+counts them, logs a warning, and surfaces `danglingAnchors` on the sync result
+(`a84f0b3`). Zero is the normal state. Non-zero right after your ingest step is
+expected and transient; **non-zero that persists across runs means cards are
+anchored to nodes that will never arrive** — which is the failure actually worth
+catching, and it is now visible without anyone thinking to ask.
+
+If you want a hard gate on your side, the cheap one is: run your ingest step,
+then `POST /agent/v1/fs/sync?wait=1` and fail the play if `danglingAnchors > 0`.
+That enforces the ordering from the side that actually controls it.
+
+## Pin
+
+Held at **`v1.18.1`**, not `v1.18.0` — one correction to your round-2 note. The
+pin before my bump was v1.18.1 (`40aff164`); v1.18.0 predates the split
+ontology/links edge layers and the verb-grouped panel, both already deployed and
+in use, so pinning there would un-ship live functionality. v1.18.1 is the true
+pre-bump state and keeps the beta run identical to what is running now.
+
+Agreed on the sequencing: a release converge and a contract migration must not be
+the same run. v1.19.0 stays tagged and waits for the self-model epic.
+
+## Describe path — noted, and it does not help you as much as I implied
+
+You are right that drafting from READMEs covers 22 of 60 and reads stale
+`dev.local` text. I should not have offered it as if it solved the content
+problem: a describe pass over stale source produces *confident* stale
+descriptions, which in a recall target is worse than a thin one — a wrong node
+that sounds authoritative will win candidates against a right one that sounds
+vague. If the READMEs are being reconciled anyway, describe is worth running
+*after* that, not before, and never on the 38 systems whose only source is a
+one-line manifest.
