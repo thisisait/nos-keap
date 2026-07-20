@@ -84,6 +84,16 @@ function applyDomain(key, doc) {
   const self = `'${key}'`, sub = `'${key}.%'`;
   const hasDot = key.includes('.');
   const idC = hasDot ? `id = ${self} OR id LIKE ${sub}` : `id = ${self}`;
+  // Identity drift detector. A producer that derives ids from sort position
+  // renumbers siblings on every insert, and the result is NOT a dangling anchor:
+  // every card still resolves — to the WRONG node. Nothing downstream can see
+  // that (fs-sync's danglingAnchors reports zero, the constellation looks
+  // healthy), because a valid-but-wrong id is indistinguishable from a correct
+  // one after the fact. The only moment the evidence exists is HERE, across the
+  // delete/insert boundary, where both the old and new name for an id are known.
+  const priorNames = new Map(
+    db.prepare(`SELECT id, name FROM taxonomy_nodes_ext WHERE ${idC}`).all().map((r) => [r.id, r.name]),
+  );
   const ndC = hasDot ? `node_id = ${self} OR node_id LIKE ${sub}` : `node_id = ${self}`;
   const frC = hasDot ? `from_id = ${self} OR from_id LIKE ${sub}` : `from_id = ${self}`;
   db.exec(`DELETE FROM taxonomy_nodes_ext WHERE ${idC}`);
@@ -103,15 +113,24 @@ function applyDomain(key, doc) {
     insDesc.run(n.id, en, cs);
     if (n.brief) insMeta.run(n.id, JSON.stringify({ brief: n.brief, briefMeta: { source: 'knowledge', domain: key } }));
   }
+  // An id that kept its slot but changed its name is either a deliberate rename
+  // (rare, usually one) or a renumbering (many at once). Reporting the count and
+  // a sample lets the caller tell them apart; a gate can fail on a threshold.
+  const renamed = [];
+  for (const n of nodes) {
+    if (n.kind !== 'ext') continue;
+    const was = priorNames.get(n.id);
+    if (was !== undefined && was !== n.name) renamed.push({ id: n.id, was, now: n.name });
+  }
   let nRel = 0;
   const txn = db.transaction(() => {
     for (const r of doc.relations || []) { insRel.run(r.from, r.to, r.type, r.explored ?? null, r.source || 'knowledge'); nRel++; }
   });
   txn();
-  return { nNodes: nodes.length, nRel };
+  return { nNodes: nodes.length, nRel, renamed };
 }
 
-const applied = [], skipped = [];
+const applied = [], skipped = [], reidentified = [];
 for (const f of files) {
   const bytes = readFileSync(f);
   const sha = createHash('sha256').update(bytes).digest('hex');
@@ -120,13 +139,21 @@ for (const f of files) {
   const unchanged = !FORCE && markerOf(key) === sha;
   if (unchanged) { skipped.push(key); continue; }
   if (DRY) { applied.push(key); console.log(`would apply ${key} (${doc.nodes.length} nodes, ${(doc.relations || []).length} rel)`); continue; }
-  const { nNodes, nRel } = applyDomain(key, doc);
+  const { nNodes, nRel, renamed } = applyDomain(key, doc);
   insMarker.run(key, sha, nNodes, nRel, new Date(clock * 1000).toISOString());
   applied.push(key);
   console.log(`applied ${key}: ${nNodes} nodes, ${nRel} relations`);
+  if (renamed.length) {
+    reidentified.push(...renamed);
+    console.warn(
+      `  ⚠ ${renamed.length} id(s) kept their slot but changed name — every card anchored to them now points ` +
+        `at a DIFFERENT node, and nothing downstream can detect that:\n` +
+        renamed.slice(0, 5).map((r) => `      ${r.id}: "${r.was}" → "${r.now}"`).join('\n'),
+    );
+  }
 }
 
 const changed = applied.length > 0;
 console.log(`${DRY ? '[dry-run] ' : ''}${applied.length} applied, ${skipped.length} skipped${DRY && changed ? ' — RESTART would follow' : changed ? ' — RESTART to materialize' : ''}`);
-console.log(`INGEST_RESULT ${JSON.stringify({ applied, skipped, changed, dryRun: DRY })}`);
+console.log(`INGEST_RESULT ${JSON.stringify({ applied, skipped, changed, dryRun: DRY, reidentified })}`);
 db?.close();
