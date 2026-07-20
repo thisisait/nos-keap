@@ -313,6 +313,11 @@ export function registerAgentRoutes(app: Express) {
   // from raw agent strings.
   const RELATION_TYPE_RE = /^[a-z][a-z0-9-]{0,63}$/;
 
+  /** Per-endpoint text budget handed to the classifier. Bounded so a full 50-pair
+   *  batch stays a sane payload (50 × 2 × 1k ≈ 100 KB) while still carrying enough
+   *  of the document to type an edge. */
+  const ENDPOINT_TEXT_CAP = 1000;
+
   /** Resolve a relation endpoint to its label + text, or null if it doesn't
    *  exist (a node was retired / an object deleted since the vector was written). */
   function relationEndpoint(kind: db.RelationKind, id: string): { label: string; text: string } | null {
@@ -323,7 +328,19 @@ export function registerAgentRoutes(app: Express) {
     }
     const o = db.getObject(id);
     if (!o) return null;
-    return { label: o.title, text: `${o.title}. ${o.description ?? o.body ?? ''}`.trim() };
+    // description AND body, not `description ?? body`: fs-synced cards carry the
+    // folder path as their description, which is non-empty — so the old coalesce
+    // silently starved the classifier of the whole document (it saw
+    // "postgresql.md. nOS/infra", 22 chars, for a 687-char card). The embedding
+    // that recalled the pair is built from the body (objects.ts objectText), so
+    // typing it from anything less is asking the classifier to justify a match it
+    // cannot see.
+    const text = [`${o.title}.`, o.description ?? '', o.body ?? '']
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .join('\n')
+      .slice(0, ENDPOINT_TEXT_CAP);
+    return { label: o.title, text };
   }
 
   // Candidate pairs for the classifier. Anchored mode (anchorKind+anchorId) or a

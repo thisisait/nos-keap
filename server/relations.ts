@@ -18,6 +18,16 @@ import * as db from './db';
 export const DEFAULT_MAX_DISTANCE = 0.35;
 /** Hard cap on candidates returned in one call, independent of the agent limit. */
 export const CANDIDATE_CAP = 200;
+/**
+ * How many pairs one ref may claim before the sweep starts spending its slots
+ * elsewhere. Pure distance order lets an "attractor" — a generically-worded node
+ * that sits near everything — eat the batch: a live sweep of 50 spent 25 slots on
+ * two nodes ("Databases", "NoSQL Databases"), so the classifier kept re-deciding
+ * the same edge instead of seeing the corpus. This is a REORDERING, not a filter:
+ * a second pass appends everything the cap deferred, so the returned SET is
+ * unchanged and only the front of the batch gets more diverse.
+ */
+export const PER_REF_SOFT_CAP = 3;
 
 export interface CandidatePair {
   fromRef: string;
@@ -76,12 +86,38 @@ export function candidatePairs(opts?: {
   const maxDistance = opts?.maxDistance ?? DEFAULT_MAX_DISTANCE;
   const limit = Math.min(opts?.limit ?? CANDIDATE_CAP, CANDIDATE_CAP);
   if (!db.vectorSearchAvailable()) return [];
-  const rows = db.nearCrossKindPairs(RELATION_KINDS, maxDistance, limit, opts?.sinceTs);
-  const out = rows.map((r) => {
+  // Over-fetch so the diversity pass has something to choose between; without a
+  // surplus the reordering below is a no-op.
+  const fetch = Math.min(Math.max(limit * 4, limit), CANDIDATE_CAP);
+  const rows = db.nearCrossKindPairs(RELATION_KINDS, maxDistance, fetch, opts?.sinceTs);
+  const pairs = rows.map((r) => {
     const o = orient(r.aRefId, toRelationKind(r.aKind), r.bRefId, toRelationKind(r.bKind));
     return { ...o, distance: r.distance, similarity: clampSim(r.distance) };
   });
-  console.log(`[relations] candidatePairs: ${out.length} cross-kind pairs (maxDistance=${maxDistance}, limit=${limit})`);
+
+  // Pass 1 (distance order, ≤ PER_REF_SOFT_CAP per endpoint) then pass 2 (the
+  // deferred remainder, still distance-ordered). Counting BOTH endpoints is what
+  // defuses the attractor: the hot ref is usually the `to` node.
+  const seen = new Map<string, number>();
+  const take = (p: CandidatePair) => {
+    seen.set(p.fromRef, (seen.get(p.fromRef) ?? 0) + 1);
+    seen.set(p.toRef, (seen.get(p.toRef) ?? 0) + 1);
+  };
+  const diverse: CandidatePair[] = [];
+  const deferred: CandidatePair[] = [];
+  for (const p of pairs) {
+    const hot = (seen.get(p.fromRef) ?? 0) >= PER_REF_SOFT_CAP || (seen.get(p.toRef) ?? 0) >= PER_REF_SOFT_CAP;
+    if (hot) deferred.push(p);
+    else {
+      diverse.push(p);
+      take(p);
+    }
+  }
+  const out = [...diverse, ...deferred].slice(0, limit);
+  console.log(
+    `[relations] candidatePairs: ${out.length} cross-kind pairs ` +
+      `(maxDistance=${maxDistance}, limit=${limit}, diverse=${Math.min(diverse.length, limit)}, fetched=${pairs.length})`,
+  );
   return out;
 }
 

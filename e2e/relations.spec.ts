@@ -20,6 +20,13 @@ const RW = { Authorization: 'Bearer e2e-rw', 'Content-Type': 'application/json' 
 
 const OBJ1 = 'rel-obj-alpha';
 const OBJ2 = 'rel-obj-beta';
+// Mirrors an fs-synced card: a SHORT non-empty description (the folder path) plus
+// the real document in the body — the shape that used to starve the classifier.
+const OBJ3 = 'rel-obj-fssynced';
+const OBJ3_DESC = 'nOS/infra';
+const OBJ3_BODY =
+  'Wiring layer for PostgreSQL 16 in the infra compose stack: shared OLTP storage ' +
+  'deployed as postgres:16.14-alpine, exposing port 5432 to the stack network.';
 const AXIS = 300; // distinctive dim → orthogonal to other specs' vectors
 // A distinct MINORITY model: cross-kind candidate recall is model-agnostic (it
 // compares vectors by geometry), but topics clustering counts only the dominant
@@ -37,18 +44,19 @@ function vec(seed: number): number[] {
 
 async function embed(
   request: APIRequestContext,
-  items: Array<{ kind: string; refId: string; seed: number }>,
+  items: Array<{ kind: string; refId: string; seed: number; vector?: number[] }>,
+  model = REL_MODEL,
 ) {
   const res = await request.post('/agent/v1/embeddings', {
     headers: RW,
     data: {
-      model: REL_MODEL,
+      model,
       dim: 768,
       items: items.map((it) => ({
         kind: it.kind,
         refId: it.refId,
         contentHash: `e2e-rel-${it.refId}`,
-        vector: vec(it.seed),
+        vector: it.vector ?? vec(it.seed),
       })),
     },
   });
@@ -68,11 +76,36 @@ test.describe('typed relations pipeline (R3 stage 1)', () => {
     const graph = (await (await request.get('/api/graph')).json()).data as { nodes: Array<{ id: string }> };
     NODE = graph.nodes[0].id;
     expect(NODE).toBeTruthy();
+    const r3 = await request.post('/api/objects', {
+      data: { id: OBJ3, type: 'note', title: 'postgresql.md', description: OBJ3_DESC, body: OBJ3_BODY },
+    });
+    expect(r3.ok()).toBeTruthy();
     await embed(request, [
       { kind: 'taxonomy', refId: NODE, seed: 1 },
       { kind: 'object', refId: OBJ1, seed: 2 },
       { kind: 'object', refId: OBJ2, seed: 3 },
+      { kind: 'object', refId: OBJ3, seed: 4 },
     ]);
+  });
+
+  test('candidate text carries the whole card, not just its description', async ({ request }) => {
+    const r = await request.get('/agent/v1/relations/candidates?maxDistance=0.35&limit=50', { headers: RO });
+    expect(r.ok()).toBeTruthy();
+    const pairs = (await r.json()).data.pairs as Array<{
+      from_ref: string;
+      to_ref: string;
+      fromText: string;
+      toText: string;
+    }>;
+    const p = pairs.find((x) => [x.from_ref, x.to_ref].includes(OBJ3));
+    expect(p, 'OBJ3 candidate present').toBeTruthy();
+    const text = p!.from_ref === OBJ3 ? p!.fromText : p!.toText;
+
+    // The regression: `description ?? body` short-circuited on the non-empty folder
+    // path, so the classifier saw "postgresql.md. nOS/infra" for a card whose
+    // embedding was built from the body. Both must reach the classifier now.
+    expect(text).toContain(OBJ3_DESC);
+    expect(text, 'body reaches the classifier').toContain('postgres:16.14-alpine');
   });
 
   test('candidates sweep: cross-type pairs only, deduped, both endpoints resolved, vocab offered', async ({
@@ -627,5 +660,74 @@ test.describe('relations moderation + rendering + brain endpoint (R3 stage 2)', 
       });
       expect(r.status()).toBe(400);
     }
+  });
+});
+
+/**
+ * Recall diversity (R3 fill quality). An "attractor" — a generically-worded node
+ * whose vector sits nearest to everything — used to eat a whole sweep in pure
+ * distance order, so the classifier spent its batch re-deciding one node instead
+ * of seeing the corpus. candidatePairs() now front-loads a per-ref-capped
+ * selection and appends the remainder, so the batch diversifies WITHOUT dropping
+ * anything. Both halves of that contract are asserted here.
+ */
+test.describe('candidate recall diversity (attractor defusal)', () => {
+  const DAXIS = 305; // own neighbourhood — orthogonal to the AXIS cluster above
+  const DMODEL = 'e2e-relations-diversity-model'; // stays a minority object model
+  const DOBJS = [1, 2, 3, 4, 5].map((i) => `rel-div-obj-${i}`);
+  let HOT = ''; // nearest to every object → the attractor
+  let COOL = ''; // measurably farther, so pure distance order would starve it
+
+  function dvec(offDim: number, offMag: number): number[] {
+    const v = new Array<number>(768).fill(0);
+    v[DAXIS] = 1;
+    if (offMag) v[offDim] = offMag;
+    return v;
+  }
+
+  test('seed: five objects between a near node and a farther one', async ({ request }) => {
+    for (const id of DOBJS) {
+      const r = await request.post('/api/objects', {
+        data: { id, type: 'note', title: id, body: `diversity fixture ${id}` },
+      });
+      expect(r.ok()).toBeTruthy();
+    }
+    const graph = (await (await request.get('/api/graph')).json()).data as { nodes: Array<{ id: string }> };
+    [HOT, COOL] = [graph.nodes[1].id, graph.nodes[2].id];
+    expect(HOT && COOL && HOT !== COOL).toBeTruthy();
+
+    await embed(
+      request,
+      [
+        // HOT is pure axis; COOL carries an off-axis component, so EVERY object is
+        // strictly nearer to HOT — pure distance order yields all 5 HOT pairs first.
+        { kind: 'taxonomy', refId: HOT, seed: 0, vector: dvec(0, 0) },
+        { kind: 'taxonomy', refId: COOL, seed: 0, vector: dvec(500, 0.15) },
+        ...DOBJS.map((id, i) => ({ kind: 'object', refId: id, seed: i, vector: dvec(400 + i, 0.02) })),
+      ],
+      DMODEL,
+    );
+  });
+
+  test('the sweep interleaves the attractor instead of letting it eat the batch', async ({ request }) => {
+    const r = await request.get('/agent/v1/relations/candidates?maxDistance=0.35&limit=50', { headers: RO });
+    expect(r.ok()).toBeTruthy();
+    const pairs = (await r.json()).data.pairs as Array<{ from_ref: string; to_ref: string }>;
+
+    // Only this fixture's pairs, in the order the server returned them.
+    const mine = pairs.filter((p) => DOBJS.includes(p.from_ref) && [HOT, COOL].includes(p.to_ref));
+
+    // Contract half 1 — NOTHING is dropped: all 5×2 pairs still ship.
+    expect(mine.length, 'every object×node pair survives the reorder').toBe(DOBJS.length * 2);
+
+    // Contract half 2 — the attractor is capped up front. Pure distance order puts
+    // all 5 HOT pairs first; the per-ref cap holds it to 3 of the leading 6.
+    const leading = mine.slice(0, 6);
+    expect(leading.filter((p) => p.to_ref === HOT).length).toBeLessThanOrEqual(3);
+    expect(leading.filter((p) => p.to_ref === COOL).length, 'the farther node gets in early').toBeGreaterThan(0);
+  });
+
+  test('cleanup: diversity fixture removed', async ({ request }) => {
+    for (const id of DOBJS) expect((await request.delete(`/api/objects/${id}`)).ok()).toBeTruthy();
   });
 });
