@@ -16,6 +16,11 @@ const REPO = '/Users/pazny/projects/knowledge-explorer-and-preserver'
 // The agents source the bearer tokens from the container so no manual export is
 // needed; the tool talks to the loopback-published agent surface (keap_port 8091).
 const TOKENS = `cd ${REPO} && export KEAP_AGENT_TOKEN_RO=$(docker exec iiab-keap-1 printenv KEAP_AGENT_TOKEN_RO) && export KEAP_AGENT_TOKEN_RW=$(docker exec iiab-keap-1 printenv KEAP_AGENT_TOKEN_RW) && export KEAP_AGENT_NAME=relations-typing-wf`
+// The batch goes agent→agent as a FILE, never as structured output. Endpoint text
+// carries up to 1k chars per side, so a 50-pair batch is ~100 KB — asking an agent
+// to echo that verbatim burns tokens and invites silent corruption of the very
+// refs the write phase must echo exactly. Fetch writes it; typers slice it.
+const BATCH_FILE = '"${CLAUDE_JOB_DIR:-/tmp}"/relations-batch.json'
 
 const anchorFlags = args?.anchorId && args?.anchorKind
   ? ` --anchorId ${args.anchorId} --anchorKind ${args.anchorKind}`
@@ -24,22 +29,10 @@ const maxDistFlag = args?.maxDistance ? ` --maxDistance ${args.maxDistance}` : '
 
 const PAIR_SCHEMA = {
   type: 'object',
-  required: ['pairs', 'vocab'],
+  required: ['count', 'vocab'],
   properties: {
-    pairs: {
-      type: 'array',
-      items: {
-        type: 'object',
-        required: ['from_ref', 'from_kind', 'to_ref', 'to_kind'],
-        properties: {
-          from_ref: { type: 'string' }, from_kind: { type: 'string' },
-          to_ref: { type: 'string' }, to_kind: { type: 'string' },
-          fromLabel: { type: 'string' }, toLabel: { type: 'string' },
-          fromText: { type: 'string' }, toText: { type: 'string' },
-          similarity: { type: 'number' },
-        },
-      },
-    },
+    count: { type: 'number' },
+    model: { type: 'string' },
     vocab: {
       type: 'array',
       items: {
@@ -72,26 +65,37 @@ const TYPED_SCHEMA = {
 }
 
 phase('Fetch')
-const batch = await agent(`Run this exactly and return the parsed JSON it prints (the object with "pairs" and "vocab"):
-${TOKENS} && node ${TOOL} fetch --limit ${LIMIT}${anchorFlags}${maxDistFlag}
-Notes: the tool prints the batch JSON to stdout and a summary to stderr. If it errors with a token or connection message, the container is down or the agent surface is not published — return {"pairs":[],"vocab":[]} and nothing else. Do NOT invent pairs.`, { schema: PAIR_SCHEMA, phase: 'Fetch' })
+const batch = await agent(`Fetch the candidate batch TO A FILE, then report only its size and vocabulary.
 
-const pairs = (batch?.pairs ?? []).filter((p) => p.from_kind !== p.to_kind)
+Run exactly:
+${TOKENS} && node ${TOOL} fetch --limit ${LIMIT}${anchorFlags}${maxDistFlag} --out ${BATCH_FILE}
+
+Then read back ONLY the summary (do not print the pairs — they stay in the file):
+${TOKENS} && node -e 'const b=require(process.argv[1]);console.log(JSON.stringify({count:b.pairs.length,model:b.model,vocab:b.vocab}))' ${BATCH_FILE}
+
+Return that summary object. If the tool errors with a token or connection message, the container is down or the agent surface is not published — return {"count":0,"vocab":[]} and nothing else. Do NOT invent pairs.`, { schema: PAIR_SCHEMA, phase: 'Fetch' })
+
+const count = batch?.count ?? 0
 const vocab = batch?.vocab ?? []
-if (!pairs.length) {
+if (!count) {
   log('No candidate pairs (empty corpus, no vector layer, or container down). Nothing to type.')
   return { fetched: 0, typed: 0, upserted: 0, note: 'no candidates' }
 }
-log(`Fetched ${pairs.length} cross-kind candidate pairs; vocab ${vocab.length} verbs. Typing in batches of ${CHUNK}.`)
+log(`Fetched ${count} cross-kind candidate pairs; vocab ${vocab.length} verbs. Typing in batches of ${CHUNK}.`)
 
 const vocabList = vocab.map((v) => `- ${v.type}${v.label ? ` (${v.label})` : ''}${v.description ? `: ${v.description}` : ''}`).join('\n')
+// Index ranges, not slices: the script never holds the pairs — each typer reads
+// its own window out of the batch file.
 const chunks = []
-for (let i = 0; i < pairs.length; i += CHUNK) chunks.push(pairs.slice(i, i + CHUNK))
+for (let i = 0; i < count; i += CHUNK) chunks.push([i, Math.min(i + CHUNK, count)])
 
 phase('Type')
 const typedChunks = await parallel(
-  chunks.map((chunk, idx) => () =>
+  chunks.map(([lo, hi], idx) => () =>
     agent(`You are typing candidate relation pairs for KEAP's typed knowledge graph. Each pair is two nearby items in embedding space; decide whether a CONTROLLED-vocabulary verb genuinely describes a relation FROM the first item TO the second, reading "from <TYPE> to".
+
+Read YOUR pairs (indices ${lo}..${hi - 1} of ${count}) with exactly this command:
+${TOKENS} && node -e 'const b=require(process.argv[1]);console.log(JSON.stringify(b.pairs.slice(+process.argv[2],+process.argv[3]),null,1))' ${BATCH_FILE} ${lo} ${hi}
 
 Controlled vocabulary (STRONGLY prefer these — propose a new verb only when none fits and the relation is clearly real):
 ${vocabList}
@@ -104,10 +108,7 @@ Rules:
 - A proposed new verb MUST be a lowercase-kebab slug matching /^[a-z][a-z0-9-]{0,63}$/ and mirror the vocabulary's style (e.g. "quantifies", "instantiates"). Reuse before you grow.
 - Echo from_ref/from_kind/to_ref/to_kind EXACTLY as given. Never change kinds; from_kind must differ from to_kind.
 
-Pairs (batch ${idx + 1}/${chunks.length}):
-${JSON.stringify(chunk.map((p) => ({ from_ref: p.from_ref, from_kind: p.from_kind, to_ref: p.to_ref, to_kind: p.to_kind, fromLabel: p.fromLabel, fromText: p.fromText, toLabel: p.toLabel, toText: p.toText, similarity: p.similarity })), null, 1)}
-
-Return { "typed": [ ... ] } with only the pairs you confidently typed.`, { schema: TYPED_SCHEMA, phase: 'Type', label: `type:batch-${idx + 1}` }),
+This is batch ${idx + 1}/${chunks.length}. Return { "typed": [ ... ] } with only the pairs you confidently typed.`, { schema: TYPED_SCHEMA, phase: 'Type', label: `type:batch-${idx + 1}` }),
   ),
 )
 
@@ -121,8 +122,8 @@ for (const c of typedChunks.filter(Boolean)) {
   }
 }
 const typed = [...seen.values()]
-log(`Typed ${typed.length} relations across ${chunks.length} batches (from ${pairs.length} candidates).`)
-if (!typed.length) return { fetched: pairs.length, typed: 0, upserted: 0, note: 'classifier typed nothing' }
+log(`Typed ${typed.length} relations across ${chunks.length} batches (from ${count} candidates).`)
+if (!typed.length) return { fetched: count, typed: 0, upserted: 0, note: 'classifier typed nothing' }
 
 phase('Write')
 const typedJson = JSON.stringify({ model: batch.model ?? 'claude-sonnet-5', relations: typed })
@@ -150,4 +151,4 @@ If the tool reports a validation error, DO NOT edit the data to force it through
 })
 
 log(`Done. ${result?.upserted ?? 0} PROPOSED relations written${result?.proposedTypes?.length ? `; grew vocab (proposed): ${result.proposedTypes.join(', ')}` : ''}. Moderate in Admin → Relations.`)
-return { fetched: pairs.length, typed: typed.length, upserted: result?.upserted ?? 0, proposedTypes: result?.proposedTypes ?? [], error: result?.error }
+return { fetched: count, typed: typed.length, upserted: result?.upserted ?? 0, proposedTypes: result?.proposedTypes ?? [], error: result?.error }
