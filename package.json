@@ -1,7 +1,7 @@
 {
   "name": "keap",
   "private": true,
-  "version": "1.17.2",
+  "version": "1.17.3",
   "type": "module",
   "description": "Knowledge Explorer and Preserver — curated knowledge taxonomy with content links into nOS services, for humans and nOS agents.",
   "scripts": {
