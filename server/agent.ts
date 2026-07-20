@@ -585,6 +585,10 @@ export function registerAgentRoutes(app: Express) {
       schema: { columns: b.columns },
       anchors: b.anchors,
       visibility: b.visibility,
+      // S2⁶ graph-render metadata — forwarded so the nOS face seeder can declare
+      // a table's card look / row projection. Validated by the schema (absent →
+      // card-only). Without this line the block is silently dropped.
+      graph: b.graph,
     });
     if (!parsed.success) return fail(res, 400, parsed.error.issues[0]?.message ?? 'invalid table');
     try {

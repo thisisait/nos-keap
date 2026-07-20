@@ -189,16 +189,135 @@ export const tableVisibilitySchema = z.enum([
 ]);
 export type TableVisibilityContract = z.infer<typeof tableVisibilitySchema>;
 
-export const createTableRequestSchema = z.object({
-  id: z.string().uuid().optional(),
-  title: z.string().min(1).max(160),
-  description: z.string().max(2000).optional(),
-  driver: tableDriverSchema.default('libsql'),
-  schema: tableSchemaSchema,
-  /** taxonomy anchors — where the table's card hangs in the universe */
-  anchors: z.array(z.string()).max(8).default([]),
-  visibility: tableVisibilitySchema.default('private'),
+// ── Graph-render metadata (S2⁶) ──────────────────────────────────────────────
+// A table declares how it projects into the /explore universe. ABSENT → today's
+// card-only behaviour, byte-identical (§3). Stored verbatim in the card
+// `frontmatter.graph` by syncCard; read by server/graph.ts at render.
+
+// Celestial form vocabulary — a zod mirror of asset-types.ts CelestialForm /
+// orbital.ts (KEEP IN SYNC: the values byte-match server/asset-types.ts:21).
+export const celestialFormSchema = z.enum(['planet', 'moon', 'asteroid', 'comet', 'station']);
+export type CelestialFormContract = z.infer<typeof celestialFormSchema>;
+
+// lowercase-kebab slug — mirrors the R3 verb convention (node-kind + edge type).
+const kebabSlugSchema = z
+  .string()
+  .regex(/^[a-z][a-z0-9-]{0,63}$/, 'must be a lowercase-kebab slug');
+
+export const graphMetaSchema = z.object({
+  // Projection mode. 'card' (default) = one table-<slug> card, as today.
+  // 'rows' = ALSO project each row as its own node (materialised in Stage 2;
+  // Stage 1 ACCEPTS the value but renders CARD-ONLY — see server/graph.ts).
+  mode: z.enum(['card', 'rows']).default('card'),
+
+  // CARD visual override (independent of mode; lets a table pick its own look
+  // instead of the generic asteroid/hue-180). Implemented in Stage 1.
+  card: z
+    .object({
+      form: celestialFormSchema.optional(),
+      hue: z.number().min(0).max(360).optional(),
+      glyph: z.string().max(64).optional(),
+    })
+    .optional(),
+
+  // Per-row node projection. Required when mode==='rows'. DEFINED here so the
+  // contract is visible/stable, but Stage 1 does NOT materialise rows.
+  node: z
+    .object({
+      idColumn: z.string().optional(), // column → stable node id; default: row uuid
+      labelColumn: z.string(), // column → node label (required)
+      kind: kebabSlugSchema.default('record'), // node-kind → legend + default visual
+      form: celestialFormSchema.optional(),
+      hue: z.number().min(0).max(360).optional(),
+      glyph: z.string().max(64).optional(),
+      anchorColumn: z.string().optional(), // a taxonomyRef column → the star this row orbits
+    })
+    .optional(),
+
+  // Edge definitions: a column whose cell value points at another graph node.
+  edges: z
+    .array(
+      z.object({
+        column: z.string(), // an objectRef | taxonomyRef column
+        toKind: z.enum(['node', 'object']), // how to resolve the target ref
+        type: kebabSlugSchema.optional(), // edge label / relation verb
+        label: z.string().max(120).optional(), // display label override
+      }),
+    )
+    .max(8)
+    .default([]),
 });
+export type GraphMeta = z.infer<typeof graphMetaSchema>;
+
+export const createTableRequestSchema = z
+  .object({
+    id: z.string().uuid().optional(),
+    title: z.string().min(1).max(160),
+    description: z.string().max(2000).optional(),
+    driver: tableDriverSchema.default('libsql'),
+    schema: tableSchemaSchema,
+    /** taxonomy anchors — where the table's card hangs in the universe */
+    anchors: z.array(z.string()).max(8).default([]),
+    visibility: tableVisibilitySchema.default('private'),
+    /** graph-render metadata (S2⁶) — absent = card-only, byte-identical */
+    graph: graphMetaSchema.optional(),
+  })
+  .superRefine((val, ctx) => {
+    const g = val.graph;
+    if (!g) return;
+    const byKey = new Map(val.schema.columns.map((c) => [c.key, c]));
+    const requireColumn = (col: string | undefined, path: (string | number)[]) => {
+      if (col === undefined) return;
+      if (!byKey.has(col)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `graph references unknown column: ${col}`,
+          path,
+        });
+      }
+    };
+
+    // mode:'rows' ⇒ node present, node.labelColumn names a real column.
+    if (g.mode === 'rows' && !g.node) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "graph.mode 'rows' requires graph.node",
+        path: ['graph', 'node'],
+      });
+    }
+
+    // Node column refs must name real columns.
+    if (g.node) {
+      requireColumn(g.node.labelColumn, ['graph', 'node', 'labelColumn']);
+      requireColumn(g.node.idColumn, ['graph', 'node', 'idColumn']);
+      if (g.node.anchorColumn !== undefined) {
+        requireColumn(g.node.anchorColumn, ['graph', 'node', 'anchorColumn']);
+        const col = byKey.get(g.node.anchorColumn);
+        if (col && col.kind !== 'taxonomyRef') {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: `graph.node.anchorColumn must be a taxonomyRef column, got ${col.kind}`,
+            path: ['graph', 'node', 'anchorColumn'],
+          });
+        }
+      }
+    }
+
+    // Edge column refs must name real columns, kind-compatible with toKind.
+    g.edges.forEach((e, i) => {
+      requireColumn(e.column, ['graph', 'edges', i, 'column']);
+      const col = byKey.get(e.column);
+      if (!col) return;
+      const wantKind = e.toKind === 'object' ? 'objectRef' : 'taxonomyRef';
+      if (col.kind !== wantKind) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `graph.edges[${i}].column kind ${col.kind} is not compatible with toKind '${e.toKind}' (needs ${wantKind}; a user→node mapping does not exist in Stage 1)`,
+          path: ['graph', 'edges', i, 'column'],
+        });
+      }
+    });
+  });
 export type CreateTableRequest = z.infer<typeof createTableRequestSchema>;
 
 /** PATCH /api/tables/:id — move a table between share scopes after creation. */

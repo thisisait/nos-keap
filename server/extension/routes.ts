@@ -169,7 +169,11 @@ export function registerExtensionRoutes(app: Express) {
       query,
       ['taxonomy', 'capture', 'note', 'object'],
       25,
-      { userId: ext.user.id, seeAll: false },
+      // ext.user.groups is hardcoded [] (extension/store.ts) → the object-read
+      // ladder places the extension caller at guest rank (tier-guests + shared),
+      // the least-privilege authenticated bucket. Never private, never a tier
+      // above guest. seeAll:false so admin-all is never granted through here.
+      { userId: ext.user.id, seeAll: false, groups: ext.user.groups },
     );
     const items = result.hits.map(contextHit).filter(Boolean);
     let domain: string | undefined;

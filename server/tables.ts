@@ -42,6 +42,7 @@ import {
   type AggregateQuery,
   type RowFilter,
   type CreateTableRequest,
+  type GraphMeta,
   validateRowValues,
 } from '../shared/contracts/table';
 
@@ -186,7 +187,11 @@ export function listDrivers(): Array<{
 
 // ── Card sync: the table's knowledge_object index card ───────────────────────
 
-export function syncCard(t: Omit<TableInfo, 'capabilities'>, anchors: string[] = []): void {
+export function syncCard(
+  t: Omit<TableInfo, 'capabilities'>,
+  anchors: string[] = [],
+  graph?: GraphMeta,
+): void {
   // Re-syncs (row-count bumps) must not lose the anchors the card already
   // has — merge them in from the existing card's extracted links.
   const existing = db.getObject(`table-${t.id}`);
@@ -199,6 +204,12 @@ export function syncCard(t: Omit<TableInfo, 'capabilities'>, anchors: string[] =
     .map((c) => `${c.label} (${c.kind}${c.role !== 'attribute' ? `, ${c.role}` : ''})`)
     .join(' · ');
   const body = [anchorBody, `Columns: ${columnLine}`].filter(Boolean).join('\n\n');
+  // S2⁶ graph block (frontmatter.graph). Preserve it across re-syncs the same
+  // way anchors are merged above: a row-count bump (upsertRow/deleteRow) calls
+  // syncCard with NO graph arg, so fall back to the existing card's block —
+  // otherwise every row write would wipe the table's declared render metadata.
+  const priorGraph = existing?.frontmatter?.graph as GraphMeta | undefined;
+  const graphBlock = graph ?? priorGraph;
   db.saveObject(t.ownerId, {
     id: `table-${t.id}`,
     type: 'table',
@@ -209,6 +220,9 @@ export function syncCard(t: Omit<TableInfo, 'capabilities'>, anchors: string[] =
       storage: { driver: t.driver },
       columns: t.schema.columns.map(({ key, label, kind, role, unit }) => ({ key, label, kind, role, unit })),
       rowCount: t.rowCount,
+      // Absent (card-only, no override) → key omitted entirely, so an existing
+      // table with no graph block stays byte-identical to today's frontmatter.
+      ...(graphBlock ? { graph: graphBlock } : {}),
     },
     body,
     links: extractRefs(body, `keaptable:${t.id}`),
@@ -304,7 +318,7 @@ const libsqlStore: TableStore = {
       )
       .run(id, ownerId, req.title, req.description ?? null, JSON.stringify(req.schema), req.visibility);
     const t = getTable(id)!;
-    syncCard(t, req.anchors);
+    syncCard(t, req.anchors, req.graph);
     return t;
   },
 

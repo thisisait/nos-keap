@@ -220,7 +220,7 @@ export const rustfsStore: TableStore = {
       throw new Error(`rustfs schema write failed (${put.status})`);
     }
     const t = getTable(id)!;
-    syncCard(t, req.anchors);
+    syncCard(t, req.anchors, req.graph);
     return t;
   },
 

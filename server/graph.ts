@@ -22,6 +22,7 @@ import { liveEmbedAvailable } from './embeddings';
 import { getFsDirStats } from './fs-sync';
 import { anchorNodeIds, type ObjectRef } from './objects';
 import { hybridSearch } from './search';
+import type { GraphMeta } from '../shared/contracts/table';
 
 const ok = (res: Response, data?: unknown) => res.json({ success: true, data });
 const fail = (res: Response, status: number, error: string) =>
@@ -49,7 +50,7 @@ interface EnrichedHit {
 
 function enrich(
   hits: db.NeighborHit[],
-  viewer?: { userId: string; seeAll: boolean },
+  viewer?: { userId: string; seeAll: boolean; groups: string[] },
 ): EnrichedHit[] {
   const out: EnrichedHit[] = [];
   for (const h of hits) {
@@ -80,7 +81,7 @@ function enrich(
         url: c.url ?? undefined,
       });
     } else if (h.kind === 'object') {
-      if (viewer && !db.canReadObject(h.refId, viewer.userId, viewer.seeAll)) continue;
+      if (viewer && !db.canReadObject(h.refId, viewer.userId, viewer.seeAll, viewer.groups)) continue;
       const o = db.getObject(h.refId);
       if (!o) continue;
       const anchors = anchorNodeIds((o.links ?? []) as ObjectRef[]);
@@ -178,7 +179,7 @@ export function registerGraphRoutes(app: Express) {
     // visibility='shared', not owner-prefix — a manually shared card was
     // already readable by anyone via direct GET; the graph now lists what was
     // always readable. 'shared' means graph-listed tenant-wide.
-    const visibleRows = db.getVisibleObjects(req.user.id, req.user.isAdmin);
+    const visibleRows = db.getVisibleObjects(req.user.id, req.user.isAdmin, req.user.groups);
     // Persisted topic-mode assignment (object_id → topic_id). Scoping stays
     // free — the join is keyed per visible-object id, so a topic surfaces only
     // through members the viewer can already see (decision #13).
@@ -188,14 +189,20 @@ export function registerGraphRoutes(app: Express) {
         // encyclopedia — the resolved content type wins over the raw type.
         const contentType = o.resource ? resolveContentRef(o.resource)?.type : undefined;
         const d = assetDescriptor(contentType ?? o.type);
+        // S2⁶ CARD visual override: a table card may declare its own look via
+        // frontmatter.graph.card (form/hue/glyph), layered over the descriptor
+        // default (fallback = today's asteroid/hue-180). Deterministic; absent
+        // block → byte-identical to today. graph.mode is NOT read here — 'rows'
+        // stays card-only in Stage 1 (row materialisation is Stage 2).
+        const cardOverride = (o.frontmatter?.graph as GraphMeta | undefined)?.card;
         return {
           id: o.id,
           title: o.title,
           type: o.type,
           assetType: d.assetType,
-          form: d.form, // planet | moon | asteroid | comet | station
-          glyph: d.glyph,
-          hue: d.hue,
+          form: cardOverride?.form ?? d.form, // planet | moon | asteroid | comet | station
+          glyph: cardOverride?.glyph ?? d.glyph,
+          hue: cardOverride?.hue ?? d.hue,
           anchors: anchorNodeIds((o.links ?? []) as ObjectRef[]).filter((a) => getNode(a)),
           // Filesystem identity (doctrine tree / fs-sync) — the files-core
           // view folds objects into folder constellations along this path.
@@ -365,7 +372,7 @@ export function registerGraphRoutes(app: Express) {
       id,
       mode,
       semantic: true,
-      items: enrich(hits, { userId: req.user.id, seeAll: req.user.isAdmin }),
+      items: enrich(hits, { userId: req.user.id, seeAll: req.user.isAdmin, groups: req.user.groups }),
     });
   });
 
@@ -377,7 +384,7 @@ export function registerGraphRoutes(app: Express) {
     if (!q) return fail(res, 400, 'q required');
     const limit = Math.min(Number(req.query.limit) || 20, MAX_NEIGHBORS);
     const kinds = parseKinds(req.query.kinds);
-    const viewer = { userId: req.user.id, seeAll: req.user.isAdmin };
+    const viewer = { userId: req.user.id, seeAll: req.user.isAdmin, groups: req.user.groups };
     const { hits, legs } = await hybridSearch(q, kinds, limit, viewer);
     const enriched = enrich(
       hits.map((h) => ({ kind: h.kind, refId: h.refId, distance: 0 })),

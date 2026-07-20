@@ -68,6 +68,20 @@ export function readableVisibilities(rank: number): TableVisibility[] {
   );
 }
 
+/**
+ * The non-owner visibilities a caller with these Authentik groups may read —
+ * the object-graph SQL IN() list (server/db.ts getVisibleObjects/canReadObject).
+ * ONE SOURCE OF TRUTH: composes tierRank + readableVisibilities, the same ladder
+ * the table registry uses. 'shared' is rank 99, so this is ALWAYS a strict
+ * superset of the old flat `visibility='shared'` filter (nothing that renders
+ * today stops rendering), and NEVER includes 'private' (rank 0 → never granted).
+ * An empty/unrecognized group set collapses to guest (rank 4) = the least-
+ * privilege authenticated bucket [tier-guests, shared] — never wider.
+ */
+export function readableVisibilitiesFor(groups: string[]): TableVisibility[] {
+  return readableVisibilities(tierRank(groups));
+}
+
 /** Guests (rank 4) are read-only — everyone else may create/own tables. */
 export function canCreateTables(rank: number): boolean {
   return rank <= 3;

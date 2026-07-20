@@ -112,17 +112,27 @@ nOS-side counterparts flagged **[nOS]**).
   replaced X-Frame-Options SAMEORIGIN with a granular CSP `frame-ancestors 'self'
   https://face.<tenant>` so the face **Explore** app can iframe `/explore` (same Authentik
   session, cross-subdomain) — never `*`.
-- **S2⁶ — table graph-render metadata** *(next, companion app)*: a DataTable can already
-  anchor into the universe — `create-table {anchors:[nodeId,…]}` → `syncCard` writes a
-  `table-<slug>` card (type `table`, `[[nodeId]]` refs → node links) that orbits the anchor
-  star; a `taxonomyRef` column anchors each ROW; `objectRef`/`vector` columns exist. Missing:
-  a TABLE-LEVEL contract for how rows render as graph nodes/edges — node-kind, edge
-  definitions, colour/icon per kind. Add an optional `graph` metadata block to the create
-  schema (shared with face via `/agent/v1/tables`). Design first. **Known gap to fix here:**
-  the graph ships non-admins only `visibility='shared'` (+ own) objects, so a `tier-users`
-  table card renders in `/explore` for admins ONLY — either companion sends `visibility:
-  'shared'` for explore-visible tables, or `getVisibleObjects` learns the tier ladder (the
-  latter is a spec-decision-#8 change).
+- **S2⁶ — table graph-render metadata** *(Stage 1 shipped 2026-07-20; Stage 2 next)*: a
+  DataTable can already anchor into the universe — `create-table {anchors:[nodeId,…]}` →
+  `syncCard` writes a `table-<slug>` card (type `table`, `[[nodeId]]` refs → node links) that
+  orbits the anchor star; a `taxonomyRef` column anchors each ROW; `objectRef`/`vector`
+  columns exist. A TABLE-LEVEL contract now declares how rows render as graph nodes/edges —
+  node-kind, edge definitions, colour/icon per kind (spec `docs/specs/table-graph-metadata-
+  spec.md`). **Stage 1 (this ship):** (a) the **visibility-ladder fix** (§4) — `getVisible
+  Objects`/`canReadObject` now thread the caller's Authentik groups and scope by the existing
+  `server/rbac.ts` tier ladder (`readableVisibilitiesFor` = `readableVisibilities(tierRank
+  (groups))`) instead of a flat `visibility='shared'`, so a `tier-users` card reaches
+  tier-users (not admins-only); `'shared'` stays rank-99 → strict superset (nothing that
+  rendered stops), `'private'` never widened, admins unchanged. (b) the optional `graph`
+  block on `createTableRequestSchema` (`celestialFormSchema` + `graphMetaSchema` +
+  `.superRefine` column/slug/kind checks), stored verbatim in `frontmatter.graph` by
+  `syncCard` (preserved across row-count re-syncs), forwarded by the `/agent/v1/tables`
+  passthrough. (c) the **card visual override** — `graph.card.{form,hue,glyph}` layers over
+  the `assetDescriptor` default in `graph.ts` (fallback = today's asteroid/hue-180,
+  byte-identical when absent). `graph.mode` is plumbed through but `mode:'rows'` renders
+  CARD-ONLY in Stage 1. **Stage 2 (next):** `syncRows` materialises each projected row as a
+  first-class `knowledge_object` (D3) with `ROW_OBJECT_CAP` opt-in, anchor/olink refs, and
+  content_hash embed dedup — rows become searchable/embeddable/R3-linkable.
 - **S2⁷ — native agent graph endpoint** *(shipped 2026-07-20, Track R3 stage 2)*:
   `GET /agent/v1/graph` (agentAuth `ro`) → `{nodes, edges, types, meta}` over the bearer —
   taxonomy (bare id) + objects (`object:<id>`) as nodes, CONFIRMED typed relations with full

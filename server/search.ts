@@ -49,12 +49,14 @@ type LegHit = { kind: db.EmbeddingKind; refId: string };
 export interface SearchViewer {
   userId: string;
   seeAll: boolean;
+  /** Authentik tier groups — threaded into the object-read ladder (S2⁶ §4). */
+  groups: string[];
 }
 
 function visibleTo(h: LegHit, viewer?: SearchViewer): boolean {
   if (!viewer || h.kind === 'taxonomy' || h.kind === 'note') return true;
   if (h.kind === 'capture') return db.canReadCapture(h.refId, viewer.userId, viewer.seeAll);
-  return db.canReadObject(h.refId, viewer.userId, viewer.seeAll);
+  return db.canReadObject(h.refId, viewer.userId, viewer.seeAll, viewer.groups);
 }
 
 function key(h: LegHit): string {

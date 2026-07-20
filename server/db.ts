@@ -21,6 +21,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 import { runMigrations } from './migrations';
+import { readableVisibilitiesFor } from './rbac';
 
 let db: Database.Database | null = null;
 let vectorsOk = false;
@@ -901,12 +902,25 @@ export function getObject(id: string): KnowledgeObject | null {
   return row ? mapObjectRow(row) : null;
 }
 
-export function canReadObject(id: string, userId: string, seeAll: boolean): boolean {
+// Row-level read gate for a single object. `groups` is REQUIRED (no default) so
+// a caller can NEVER silently fall back to a wrong visibility set — the tier
+// ladder (server/rbac.ts) is the single source of truth, identical to
+// getVisibleObjects below. seeAll (admin) short-circuits to any row.
+export function canReadObject(
+  id: string,
+  userId: string,
+  seeAll: boolean,
+  groups: string[],
+): boolean {
   if (seeAll) return Boolean(getDb().prepare('SELECT 1 FROM knowledge_objects WHERE id = ?').get(id));
+  const vis = readableVisibilitiesFor(groups); // always includes 'shared'
+  const placeholders = vis.map(() => '?').join(', ');
   return Boolean(
     getDb()
-      .prepare("SELECT 1 FROM knowledge_objects WHERE id = ? AND (user_id = ? OR visibility = 'shared')")
-      .get(id, userId),
+      .prepare(
+        `SELECT 1 FROM knowledge_objects WHERE id = ? AND (user_id = ? OR visibility IN (${placeholders}))`,
+      )
+      .get(id, userId, ...vis),
   );
 }
 
@@ -1194,15 +1208,29 @@ export function getObjectSyncIndex(userId: string): Map<string, ObjectSyncIndexE
  *  world-readable via direct GET; the graph lists what was already readable).
  *  Used ONLY by /api/graph — /api/objects lists stay owner-scoped (admins see
  *  all), so a 5k-file shared mapping never floods every user's Objects page. */
-export function getVisibleObjects(userId: string, seeAll: boolean): KnowledgeObject[] {
+// `groups` is REQUIRED (no default): the S2⁶ visibility-ladder fix (spec §4)
+// replaces the flat `visibility='shared'` filter with the rbac tier ladder, so
+// a tier-scoped object (e.g. a 'tier-users' table card) reaches the callers
+// rbac.ts entitles — not admins only. 'shared' stays rank-99, so the set is a
+// STRICT SUPERSET of today's; 'private' (rank 0) is never granted by a tier.
+export function getVisibleObjects(
+  userId: string,
+  seeAll: boolean,
+  groups: string[],
+): KnowledgeObject[] {
   const d = getDb();
-  const rows = seeAll
-    ? d.prepare('SELECT * FROM knowledge_objects ORDER BY updated_at DESC').all()
-    : d
-        .prepare(
-          "SELECT * FROM knowledge_objects WHERE user_id = ? OR visibility = 'shared' ORDER BY updated_at DESC",
-        )
-        .all(userId);
+  if (seeAll) {
+    return (
+      d.prepare('SELECT * FROM knowledge_objects ORDER BY updated_at DESC').all() as ObjectDbRow[]
+    ).map((r) => mapObjectRow(r));
+  }
+  const vis = readableVisibilitiesFor(groups); // always includes 'shared'
+  const placeholders = vis.map(() => '?').join(', ');
+  const rows = d
+    .prepare(
+      `SELECT * FROM knowledge_objects WHERE user_id = ? OR visibility IN (${placeholders}) ORDER BY updated_at DESC`,
+    )
+    .all(userId, ...vis);
   return (rows as ObjectDbRow[]).map((r) => mapObjectRow(r));
 }
 
