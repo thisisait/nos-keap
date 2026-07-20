@@ -194,6 +194,25 @@ export default function Explore() {
     [nodeById],
   );
 
+  // Facets are derived from the WHOLE corpus, not just the focused node's
+  // neighbourhood. Deriving them from the neighbourhood meant the list was empty
+  // with no focus — so in the default view there was nothing to filter by at all,
+  // while the cards those facets describe were on screen the entire time.
+  const availableTypes = useMemo(() => {
+    const s = new Set<string>();
+    for (const o of graph?.objects ?? []) if (o.type) s.add(o.type);
+    for (const i of neighbors.data?.items ?? []) if (i.dataType) s.add(i.dataType);
+    return [...s].sort();
+  }, [graph, neighbors.data]);
+
+  /** A facet selection is a whitelist; empty means "no filter", not "hide all".
+   *  Declared HERE, above the scene memo that calls it — a later const would be
+   *  in the temporal dead zone when that memo's callback runs. */
+  const passesType = useCallback(
+    (dataType: string | undefined) => !typeFilter.size || (!!dataType && typeFilter.has(dataType)),
+    [typeFilter],
+  );
+
   const starItems = useMemo(() => {
     const items = neighbors.data?.items ?? [];
     return typeFilter.size ? items.filter((i) => i.dataType && typeFilter.has(i.dataType)) : items;
@@ -285,6 +304,7 @@ export default function Explore() {
         galaxyPosOf,
       });
       for (const o of graph.objects ?? []) {
+        if (!passesType(o.type)) continue;
         const p = layout.positions.get(`obj:${o.id}`);
         if (p) nodes.push(objectNode(o, 99, p));
       }
@@ -360,6 +380,10 @@ export default function Explore() {
       for (const o of graph.objects ?? []) {
         const anchor = o.anchors[0];
         if (!anchor) continue;
+        // Filter BEFORE grouping: orbital slots are assigned by (index, count)
+        // within the group, so filtering afterwards would leave gaps and shift
+        // every surviving card as facets change.
+        if (!passesType(o.type)) continue;
         const g = byAnchor.get(anchor);
         if (g) g.push(o);
         else byAnchor.set(anchor, [o]);
@@ -516,12 +540,7 @@ export default function Explore() {
       }
     }
     return { canvasNodes: nodes, canvasLinks: links, coreLayout };
-  }, [graph, focusId, starItems, hueByCategory, nodeById, showOntology, showOlinks, core, effectiveOrder, t, dirStatByPath, mappingById, rootOf]);
-
-  const availableTypes = useMemo(
-    () => [...new Set((neighbors.data?.items ?? []).map((i) => i.dataType).filter(Boolean))] as string[],
-    [neighbors.data],
-  );
+  }, [graph, focusId, starItems, hueByCategory, nodeById, showOntology, showOlinks, passesType, core, effectiveOrder, t, dirStatByPath, mappingById, rootOf]);
 
   const openTarget = (id: string) => {
     if (id.startsWith('topic:')) {
@@ -847,6 +866,7 @@ export default function Explore() {
           data-link-count={canvasLinks.length}
           data-olink-count={canvasLinks.filter((l) => l.olink).length}
           data-vazba-count={canvasLinks.filter((l) => l.vazba).length}
+          data-object-count={canvasNodes.filter((n) => n.object).length}
         >
           {isLoading ? (
             <div className="flex h-full items-center justify-center text-sm text-muted-foreground">

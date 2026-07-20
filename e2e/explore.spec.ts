@@ -162,3 +162,55 @@ test.describe('explore edge-layer toggles', () => {
     expect(new URL(page.url()).searchParams.get('olinks')).toBe('0');
   });
 });
+
+/**
+ * Source facets must describe the CORPUS and filter the SCENE. They did neither:
+ * the list was derived from the focused node's neighbourhood, so with no focus
+ * there were no facets at all, and the selection only ever filtered the semantic
+ * star field — the anchored cards and the files core ignored it completely. With
+ * a distinct card type per skill (~150 bodies) that is the difference between a
+ * usable view and an unfilterable one.
+ */
+test.describe('explore source facets', () => {
+  const ANCHOR = '[[01.01]]';
+  const SKILLS = ['facet-skill-1', 'facet-skill-2', 'facet-skill-3'];
+  const NOTES = ['facet-note-1', 'facet-note-2'];
+
+  test('seed: anchored cards of two distinct types', async ({ request }) => {
+    const mk = (id: string, type: string) =>
+      request.post('/api/objects', {
+        data: { id, type, title: id, body: `facet fixture ${id}, anchored to ${ANCHOR}.` },
+      });
+    for (const id of SKILLS) expect((await mk(id, 'skill')).ok()).toBeTruthy();
+    for (const id of NOTES) expect((await mk(id, 'facetnote')).ok()).toBeTruthy();
+  });
+
+  test('facets exist without a focus and filter the rendered cards', async ({ page }) => {
+    await page.goto('/explore?core=fs');
+    const canvas = page.getByTestId('explore-canvas');
+    const objects = async () => Number(await canvas.getAttribute('data-object-count'));
+
+    // The regression: with no focus the facet list was empty, so a corpus full of
+    // cards offered nothing to filter by.
+    const skillFacet = page.getByText('skill', { exact: true });
+    await expect(skillFacet).toBeVisible();
+
+    const all = await objects();
+    expect(all, 'fixture cards are in the scene').toBeGreaterThan(SKILLS.length);
+
+    // Selecting a facet must remove the other types from the SCENE, not just the
+    // side-panel list.
+    await skillFacet.click();
+    await expect.poll(objects, { message: 'facet filters the scene' }).toBeLessThan(all);
+
+    // Deselecting restores everything — an empty selection means "no filter".
+    await skillFacet.click();
+    await expect.poll(objects).toBe(all);
+  });
+
+  test('cleanup: facet fixture removed', async ({ request }) => {
+    for (const id of [...SKILLS, ...NOTES]) {
+      expect((await request.delete(`/api/objects/${id}`)).ok()).toBeTruthy();
+    }
+  });
+});
