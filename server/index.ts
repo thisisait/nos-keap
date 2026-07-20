@@ -29,6 +29,7 @@ import * as dbmod from './db';
 import { allNodes, registerExtNode, applyDescriptionOverride } from './taxonomy';
 import { ensureLayout } from './layout';
 import { startFsSync } from './fs-sync';
+import { buildVersion } from './build-version';
 import { startTopicSync } from './topics';
 import { startFsWatch } from './fs-watch';
 
@@ -80,8 +81,14 @@ async function main() {
   // Liveness/readiness — the nOS health probe hits this from the host
   // loopback (no Authentik headers), so it MUST be registered before the
   // identity middleware, which 401s header-less requests in production.
+  // `version` is what the code was BUILT from, not the image tag someone chose —
+  // this is the probe nOS already calls, so a pin that builds one ref and labels
+  // it another becomes visible without anyone adding a new check.
   app.get('/api/health', (_req, res) =>
-    res.json({ success: true, data: { status: 'OK', ts: new Date().toISOString() } }),
+    res.json({
+      success: true,
+      data: { status: 'OK', version: buildVersion(), ts: new Date().toISOString() },
+    }),
   );
 
   // Agent surface (/agent/v1) — bearer-token auth, NOT Authentik headers:

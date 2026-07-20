@@ -26,6 +26,7 @@ import { pendingEmbeddings, EMBED_MODEL, EMBED_DIM } from './embeddings';
 import { extractRefs } from './objects';
 import { hybridSearch, markCorpusDirty } from './search';
 import { runLint, lastLintReport } from './lint';
+import { buildVersion } from './build-version';
 import { propose, proposeNode, proposeDescription, proposeBrief, moderationPolicy } from './promotions';
 import { allNodes } from './taxonomy';
 import { normalizeAndSaveCapture, parseEnvelope } from './intake';
@@ -123,6 +124,12 @@ export function registerAgentRoutes(app: Express) {
     const stats = db.corpusStats();
     ok(res, {
       status: 'OK',
+      // The version the running code was BUILT from, read out of the image's own
+      // package.json — not the tag someone believes they deployed. Those are two
+      // different facts, and until this field existed the running system could
+      // not tell them apart: an image labelled with one version and built from
+      // another is invisible from the inside, which is how a dead pin survives.
+      version: buildVersion(),
       surface: TOKEN_RO || TOKEN_RW ? 'enabled' : 'disabled',
       corpus: { taxonomyNodes: taxonomyNodeCount(), ...stats },
       embeddings: db.embeddingStats(),
