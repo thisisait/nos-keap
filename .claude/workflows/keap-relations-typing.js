@@ -9,7 +9,22 @@ export const meta = {
   ],
 }
 
-const LIMIT = Number(args?.limit ?? 60)
+// args may arrive as a JSON-encoded STRING rather than a value. Property access on
+// a string silently yields undefined, so every option falls back to its default and
+// the run looks successful while ignoring what was asked for — a corpus sweep at the
+// default threshold instead of the requested one. Normalise before reading.
+const OPTS = (() => {
+  if (!args) return {}
+  if (typeof args !== 'string') return args
+  try {
+    return JSON.parse(args)
+  } catch {
+    log(`args was an unparseable string (${args.slice(0, 80)}) — falling back to defaults`)
+    return {}
+  }
+})()
+
+const LIMIT = Number(OPTS.limit ?? 60)
 const CHUNK = 12 // pairs per typing subagent — small batches keep the classifier careful
 const TOOL = 'scripts/relations-typing.mjs'
 const REPO = '/Users/pazny/projects/knowledge-explorer-and-preserver'
@@ -22,10 +37,10 @@ const TOKENS = `cd ${REPO} && export KEAP_AGENT_TOKEN_RO=$(docker exec iiab-keap
 // refs the write phase must echo exactly. Fetch writes it; typers slice it.
 const BATCH_FILE = '"${CLAUDE_JOB_DIR:-/tmp}"/relations-batch.json'
 
-const anchorFlags = args?.anchorId && args?.anchorKind
-  ? ` --anchorId ${args.anchorId} --anchorKind ${args.anchorKind}`
+const anchorFlags = OPTS.anchorId && OPTS.anchorKind
+  ? ` --anchorId ${OPTS.anchorId} --anchorKind ${OPTS.anchorKind}`
   : ''
-const maxDistFlag = args?.maxDistance ? ` --maxDistance ${args.maxDistance}` : ''
+const maxDistFlag = OPTS.maxDistance ? ` --maxDistance ${OPTS.maxDistance}` : ''
 
 const PAIR_SCHEMA = {
   type: 'object',
