@@ -104,6 +104,10 @@ export interface FsSyncResult {
   skipped: number;
   users: string[];
   tookMs: number;
+  /** True when a prune was REFUSED because the found-set could not be trusted
+   *  (cap hit, or a walk truncated by an unreadable subtree). Surfaced so a
+   *  silent refusal is observable rather than looking like "nothing to remove". */
+  pruneRefused?: boolean;
 }
 
 // ── fs-watch status registration ────────────────────────────────────────────
@@ -308,15 +312,21 @@ function walkDir(dir: string, rel: string, out: FoundFile[], cap: number, stats?
 }
 
 /** Walk one user's subtree — walkDir + uid stamping. The MAX_FILES cap is
- *  shared across ALL users via the shared out array (unchanged behavior).
- *  The incomplete-walk flag is deliberately DROPPED here: the users pass is
- *  behaviorally frozen, and it has always pruned against a walk truncated by
- *  an unreadable subdir (same pre-existing gap as its capped-prune hazard —
- *  flagged for a future users-pass fix mirroring the mapping rule). */
-function walkUser(uid: string, dir: string, rel: string, out: UserFoundFile[], stats?: Map<string, DirAgg>): void {
+ *  shared across ALL users via the shared out array. Returns false when the walk
+ *  was truncated by an unreadable subdir, which the caller MUST honour: this flag
+ *  used to be dropped here, and the users pass pruned against a truncated
+ *  found-set exactly like the mapping pass did before it grew the same guard. */
+function walkUser(
+  uid: string,
+  dir: string,
+  rel: string,
+  out: UserFoundFile[],
+  stats?: Map<string, DirAgg>,
+): boolean {
   const before = out.length;
-  walkDir(dir, rel, out, MAX_FILES, stats);
+  const complete = walkDir(dir, rel, out, MAX_FILES, stats);
   for (let i = before; i < out.length; i++) out[i].uid = uid;
+  return complete;
 }
 
 function typeOf(relPath: string): string {
@@ -353,6 +363,8 @@ export function syncUserFiles(): FsSyncResult {
   }
 
   const found: UserFoundFile[] = [];
+  // False once any user subtree hits an unreadable dir — see the prune rule below.
+  let walkComplete = true;
   const dirSink = new Map<string, Map<string, DirAgg>>();
   for (const rawDir of readdirSync(USER_FILES_DIR)) {
     if (rawDir.startsWith('.')) continue;
@@ -375,7 +387,7 @@ export function syncUserFiles(): FsSyncResult {
       if (!SYNC_DIRS.has(top)) continue;
       const topDir = path.join(userDir, top);
       const ts = lstatSync(topDir, { throwIfNoEntry: false });
-      if (ts?.isDirectory()) walkUser(uid, topDir, top, found, uidSink);
+      if (ts?.isDirectory() && !walkUser(uid, topDir, top, found, uidSink)) walkComplete = false;
     }
   }
   userDirStats = new Map([...dirSink].map(([uid, m]) => [uid, rollupDirStats(m)]));
@@ -433,11 +445,29 @@ export function syncUserFiles(): FsSyncResult {
     result.upserted++;
     changed = true;
   }
-  // Prune refusal: zero files found while mirrors exist smells like an
-  // unmounted volume or a mid-migration empty dir (the P2 cutover), not a
-  // genuine mass delete — deleting the corpus (and its vectors) on a mount
-  // hiccup would be unrecoverable without a re-scan AND a re-embed.
-  if (found.length === 0 && existing.size > 0) {
+  // Prune rules, mirroring the mapping pass (which grew these first).
+  if (result.skipped === -1) {
+    // Cap hit: the found-set is truncated by construction, so every unseen
+    // mirror is unproven, not absent.
+    result.pruneRefused = true;
+    console.warn(
+      `[fs-sync] users pass: walk capped at ${MAX_FILES} files with ${existing.size} unseen mirrored object(s) — refusing to prune`,
+    );
+  } else if (!walkComplete && existing.size > 0) {
+    // A readdir failed mid-walk (EACCES, a dropped sub-mount). The found-set is
+    // truncated PARTIALLY — sibling dirs still listed, so scanned > 0 and the
+    // zero-scan guard below never fires. Pruning here would mass-delete every
+    // mirror under the unreadable subtree AND reap its vectors, recoverable only
+    // by a full re-scan plus a re-embed. Refuse; the mirrors survive until the
+    // subtree reads again.
+    result.pruneRefused = true;
+    console.warn(
+      `[fs-sync] users pass: walk truncated by an unreadable subtree with ${existing.size} unseen mirrored object(s) — refusing to prune`,
+    );
+  } else if (found.length === 0 && existing.size > 0) {
+    // Zero files found while mirrors exist smells like an unmounted volume or a
+    // mid-migration empty dir (the P2 cutover), not a genuine mass delete.
+    result.pruneRefused = true;
     console.warn(`[fs-sync] 0 files under ${USER_FILES_DIR} but ${existing.size} mirrored objects exist — refusing to prune`);
   } else {
     for (const [id] of existing) {
