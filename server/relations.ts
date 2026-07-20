@@ -138,17 +138,23 @@ export function anchoredCandidates(
   const maxDistance = opts?.maxDistance ?? DEFAULT_MAX_DISTANCE;
   const limit = Math.min(opts?.limit ?? CANDIDATE_CAP, CANDIDATE_CAP);
   if (!db.vectorSearchAvailable()) return [];
-  // Over-fetch from the ANN index: the same-kind drop below can discard many of
-  // the nearest hits, so asking for exactly `limit` could return fewer than
-  // `limit` cross-kind candidates even when more exist. Fetch a wider window,
-  // filter, then cap.
+  // Ask the index for the COMPLEMENTARY kind only. Searching both kinds and
+  // filtering afterwards looks equivalent but is not: the ANN window is filled by
+  // whatever is nearest, and in a corpus of similar cards an object's nearest
+  // neighbours are overwhelmingly other objects. The window would be exhausted by
+  // same-kind hits before a single node appeared, and anchored recall returned
+  // ZERO for every card — no over-fetch multiplier fixes that, it only moves the
+  // threshold. Restricting the search makes every hit cross-kind by construction.
+  const searchKind: db.EmbeddingKind = anchorKind === 'object' ? 'taxonomy' : 'object';
+  // Modest over-fetch remains, for the already-stored pairs skipped below.
   const fetch = Math.min(Math.max(limit * 4, limit), CANDIDATE_CAP);
-  const hits = db.vectorNeighbors(toEmbeddingKind(anchorKind), anchorId, 'related', RELATION_KINDS, fetch);
+  const hits = db.vectorNeighbors(toEmbeddingKind(anchorKind), anchorId, 'related', [searchKind], fetch);
   if (!hits) return [];
   const out: CandidatePair[] = [];
   for (const h of hits) {
     if (h.distance > maxDistance) continue;
-    // Cross-type only: this drops the anchor's own row (same kind + id) too.
+    // Belt and braces: the search is already kind-restricted, so this only guards
+    // against the anchor's own row coming back.
     if (toRelationKind(h.kind) === anchorKind) continue;
     if (db.relationPairExists(anchorId, h.refId)) continue;
     const o = orient(anchorId, anchorKind, h.refId, toRelationKind(h.kind));

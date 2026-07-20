@@ -741,3 +741,70 @@ test.describe('candidate recall diversity (attractor defusal)', () => {
     for (const id of DOBJS) expect((await request.delete(`/api/objects/${id}`)).ok()).toBeTruthy();
   });
 });
+
+/**
+ * Anchored recall must survive a crowd of same-kind neighbours. Searching both
+ * kinds and filtering afterwards let the ANN window fill with same-kind hits
+ * before any cross-kind one appeared — against the live corpus (74 similar
+ * service cards) that returned ZERO candidates for every card, silently. The
+ * pre-existing anchored test anchors on a NODE, where cross-kind hits dominate
+ * naturally, so it could not see this.
+ */
+test.describe('anchored recall survives same-kind crowding', () => {
+  const CAXIS = 310;
+  const CMODEL = 'e2e-relations-crowd-model';
+  const CROWD = [1, 2, 3, 4, 5, 6].map((i) => `rel-crowd-obj-${i}`);
+  let FAR_NODE = '';
+
+  function cvec(offDim: number, offMag: number): number[] {
+    const v = new Array<number>(768).fill(0);
+    v[CAXIS] = 1;
+    v[offDim] = offMag;
+    return v;
+  }
+
+  test('seed: six tightly-packed cards, one node further out', async ({ request }) => {
+    for (const id of CROWD) {
+      const r = await request.post('/api/objects', {
+        data: { id, type: 'note', title: id, body: `crowd fixture ${id}` },
+      });
+      expect(r.ok()).toBeTruthy();
+    }
+    const graph = (await (await request.get('/api/graph')).json()).data as { nodes: Array<{ id: string }> };
+    FAR_NODE = graph.nodes[3].id;
+    expect(FAR_NODE).toBeTruthy();
+
+    await embed(
+      request,
+      [
+        // Every card sits ~0.0001 from every other card; the node sits ~0.042 out.
+        // So the six cards are ALL nearer to the anchor than the node is.
+        ...CROWD.map((id, i) => ({ kind: 'object', refId: id, seed: i, vector: cvec(600 + i, 0.01) })),
+        { kind: 'taxonomy', refId: FAR_NODE, seed: 0, vector: cvec(700, 0.3) },
+      ],
+      CMODEL,
+    );
+  });
+
+  test('a card crowded by same-kind neighbours still recalls its node', async ({ request }) => {
+    // limit=1 keeps the ANN window at 4 — smaller than the crowd of 5 same-kind
+    // neighbours, which is exactly the condition that used to return nothing.
+    const r = await request.get(
+      `/agent/v1/relations/candidates?anchorKind=object&anchorId=${encodeURIComponent(CROWD[0])}&limit=1&maxDistance=0.35`,
+      { headers: RO },
+    );
+    expect(r.ok()).toBeTruthy();
+    const pairs = (await r.json()).data.pairs as Array<{ from_ref: string; to_ref: string; to_kind: string }>;
+
+    expect(pairs.length, 'the crowd must not starve cross-kind recall').toBeGreaterThan(0);
+    expect(pairs[0].from_ref).toBe(CROWD[0]);
+    expect(pairs[0].to_kind).toBe('node');
+    expect(pairs[0].to_ref).toBe(FAR_NODE);
+    // ...and no same-kind pair sneaks through.
+    expect(pairs.every((p) => p.to_kind === 'node')).toBe(true);
+  });
+
+  test('cleanup: crowd fixture removed', async ({ request }) => {
+    for (const id of CROWD) expect((await request.delete(`/api/objects/${id}`)).ok()).toBeTruthy();
+  });
+});
