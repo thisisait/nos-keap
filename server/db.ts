@@ -2603,6 +2603,36 @@ export function listRelations(filter?: { status?: RelationStatus; source?: Relat
   ).map(mapRelationRow);
 }
 
+/** Stage-2 moderation: flip one relation's status (proposed→confirmed/rejected).
+ *  Returns true iff a row was updated. The graph overlay + brain endpoint read
+ *  status='confirmed'; 'rejected' never renders (spatial-memory invariant). */
+export function setRelationStatus(id: string, status: RelationStatus): boolean {
+  return getDb().prepare('UPDATE relations SET status = ? WHERE id = ?').run(status, id).changes > 0;
+}
+
+/** Stage-2 vocab growth: confirm a proposed relation_type into the live palette,
+ *  assigning it a render colour (COALESCE keeps any existing colour when the
+ *  caller passes none). A confirmed verb re-enters the classifier vocabulary
+ *  (agent.ts filters seed|confirmed). Returns true iff a row was updated. */
+export function setRelationTypeStatus(
+  type: string,
+  status: RelationTypeRow['status'],
+  color?: string,
+): boolean {
+  return getDb()
+    .prepare('UPDATE relation_types SET status = ?, color = COALESCE(?, color) WHERE type = ?')
+    .run(status, color ?? null, type).changes > 0;
+}
+
+/** Stage-2 vocab moderation: retire a PROPOSED verb (rejecting the growth). Seed
+ *  and confirmed vocabulary is protected — only the proposed partition deletes.
+ *  Returns true iff a row was removed. */
+export function deleteRelationType(type: string): boolean {
+  return getDb()
+    .prepare("DELETE FROM relation_types WHERE type = ? AND status = 'proposed'")
+    .run(type).changes > 0;
+}
+
 /** True iff a relation already exists between two refs in EITHER direction (any
  *  type). Used to skip already-stored pairs during candidate recall. */
 export function relationPairExists(aRef: string, bRef: string): boolean {

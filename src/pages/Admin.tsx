@@ -21,6 +21,7 @@ import { LintPanel } from '@/components/admin/LintPanel';
 import { ModerationPanel } from '@/components/admin/ModerationPanel';
 import { FsMappingsPanel } from '@/components/admin/FsMappingsPanel';
 import { TopicsPanel } from '@/components/admin/TopicsPanel';
+import { RelationsPanel } from '@/components/admin/RelationsPanel';
 
 const TILE_TYPES = ['recent-pages', 'recent-cities', 'custom-todo', 'progress-stats', 'explore-map'] as const;
 
@@ -232,6 +233,7 @@ export default function Admin() {
             <TabsTrigger value="taxonomy" className="flex-1">{t('admin.tabs.taxonomy')}</TabsTrigger>
             <TabsTrigger value="lint" className="flex-1">{t('admin.tabs.lint')}</TabsTrigger>
             <TabsTrigger value="moderation" className="flex-1">{t('admin.tabs.moderation')}</TabsTrigger>
+            <TabsTrigger value="relations" className="flex-1">{t('admin.tabs.relations')}</TabsTrigger>
             <TabsTrigger value="fs" className="flex-1">{t('admin.tabs.fsMappings')}</TabsTrigger>
             <TabsTrigger value="topics" className="flex-1">{t('admin.tabs.topics')}</TabsTrigger>
           </TabsList>
@@ -246,6 +248,10 @@ export default function Admin() {
 
           <TabsContent value="moderation" className="space-y-6">
             <ModerationPanel />
+          </TabsContent>
+
+          <TabsContent value="relations" className="space-y-6">
+            <RelationsPanel />
           </TabsContent>
 
           <TabsContent value="lint" className="space-y-6">

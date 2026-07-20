@@ -470,6 +470,56 @@ export function registerAgentRoutes(app: Express) {
     ok(res, { upserted: valid.length, proposedTypes: [...proposedTypes], submittedBy: agentLabel });
   });
 
+  // The LLM-consumable typed graph (Track R3 stage 2, roadmap S2⁷). The whole
+  // corpus at system scope — the agent bearer is system-level, so the visible
+  // set IS the corpus (mirrors /agent/v1/objects' seeAll). Nodes carry taxonomy
+  // (bare id) + objects (object:<id>); edges are the CONFIRMED relations with
+  // full provenance. Endpoints that no longer resolve (retired node / deleted
+  // object) are dropped via relationEndpoint — the same both-endpoints-resolve
+  // guard the candidates endpoint uses, so no edge dangles. A STABLE, documented
+  // shape: this is the substrate an LLM reasons over.
+  app.get('/agent/v1/graph', agentAuth('ro'), (_req, res) => {
+    const nodes: Array<{ id: string; kind: db.RelationKind; name: string; description?: string }> = [];
+    for (const n of allNodes()) {
+      nodes.push({ id: n.id, kind: 'node', name: n.name, description: trim(n.description) });
+    }
+    for (const o of db.getObjects('', true)) {
+      nodes.push({
+        id: `object:${o.id}`,
+        kind: 'object',
+        name: o.title,
+        description: trim(o.description ?? o.body ?? undefined),
+      });
+    }
+    const edges = db
+      .listRelations({ status: 'confirmed' })
+      .filter(
+        (r) => relationEndpoint(r.fromKind, r.fromRef) && relationEndpoint(r.toKind, r.toRef),
+      )
+      .map((r) => ({
+        from: r.fromKind === 'object' ? `object:${r.fromRef}` : r.fromRef,
+        to: r.toKind === 'object' ? `object:${r.toRef}` : r.toRef,
+        fromKind: r.fromKind,
+        toKind: r.toKind,
+        type: r.type,
+        confidence: r.confidence,
+        justification: r.justification,
+        source: r.source,
+        model: r.model,
+      }));
+    // The edge vocabulary — active verbs only (seed|confirmed), same filter the
+    // classifier vocab uses. Proposed/rejected verbs are not part of the substrate.
+    const types = db
+      .listRelationTypes()
+      .filter((t) => t.status === 'seed' || t.status === 'confirmed');
+    ok(res, {
+      nodes,
+      edges,
+      types,
+      meta: { vectors: db.vectorSearchAvailable(), embeddings: db.embeddingStats() },
+    });
+  });
+
   // ── DataTables (server/tables.ts) — the agent-bearer config-table surface ──
   // The nOS face seeder + BFF drive these: host callers hold a bearer token,
   // not an Authentik identity, so the SSO-gated /api/tables 401s them. Two
@@ -1202,6 +1252,12 @@ const OPENAPI_SPEC = {
             },
           },
         },
+      },
+    },
+    '/agent/v1/graph': {
+      get: {
+        summary:
+          'Track R3: the LLM-consumable typed knowledge graph. Nodes are taxonomy (bare id) + knowledge objects (object:<id>); edges are CONFIRMED typed relations with provenance (type, confidence, justification, source, model). Also returns the active relation vocabulary (types) and embedding meta. System scope (whole corpus); dangling edges are dropped.',
       },
     },
     '/agent/v1/taxonomy/propose': {

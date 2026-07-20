@@ -113,6 +113,22 @@ export interface GraphRelation {
   explored: string | null;
 }
 
+/** Track R3 stage 2: a typed cross-type relation (Vazby) across any kind pair —
+ *  node↔node, object↔object, object↔node. Bare refs + a kind per endpoint (the
+ *  client prefixes object endpoints `obj:` and filters to drawn bodies); the
+ *  verb label + registry colour ride along for the midpoint sprite / edge hue. */
+export interface GraphCrossRelation {
+  from: string;
+  fromKind: 'node' | 'object';
+  to: string;
+  toKind: 'node' | 'object';
+  type: string;
+  label: string;
+  color: string | null;
+  confidence: number | null;
+  status: string;
+}
+
 export interface GraphPayload {
   nodes: GraphNode[];
   links: GraphLink[];
@@ -122,6 +138,8 @@ export interface GraphPayload {
   objectLinks?: GraphObjectLink[];
   /** Typed concept-relation overlay (beyond parent-child) — rendered behind a toggle. */
   relations?: GraphRelation[];
+  /** Track R3 typed cross-type relations (Vazby) — confirmed by default; behind the toggle. */
+  crossRelations?: GraphCrossRelation[];
   /** Mapped-folder hubs — labels + placement for the files core (admin-managed). */
   fsMappings?: GraphMapping[];
   fsDirs?: GraphDirStat[];

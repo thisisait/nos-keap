@@ -20,6 +20,7 @@ import { registerAgentRoutes } from './agent';
 import { registerFsMappingRoutes } from './fs-mappings';
 import { registerGraphRoutes } from './graph';
 import { registerTopicRoutes } from './topics-routes';
+import { registerRelationRoutes } from './relations-routes';
 import { registerIngestRoutes } from './intake';
 import { registerExtensionRoutes } from './extension/routes';
 import { identityMiddleware } from './identity';
@@ -97,6 +98,7 @@ async function main() {
   registerGraphRoutes(app); // /api/graph* + /api/search/semantic
   registerFsMappingRoutes(app); // /api/fs/* — admin mapped-folders CRUD + roots/browse
   registerTopicRoutes(app); // /api/admin/topics* — admin Topics-mode control plane
+  registerRelationRoutes(app); // /api/admin/relations* — Track R3 relation moderation
   registerApiRoutes(app);
 
   // SPA static + history-fallback (replaces the Apache RewriteRule from the

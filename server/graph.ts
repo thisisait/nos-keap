@@ -264,6 +264,41 @@ export function registerGraphRoutes(app: Express) {
       .listConceptRelations(typedOnly)
       .filter((r) => getNode(r.from) && getNode(r.to))
       .map((r) => ({ source: r.from, target: r.to, type: r.type, explored: r.explored }));
+    // Track R3 stage 2: typed cross-type relations from the generalized `relations`
+    // store (confirmed by default; ?relations=all adds high-confidence proposed).
+    // ToE node↔node is EXCLUDED — it already ships via `relations` above with its
+    // own palette; this layer is the NEW derived/manual cross-type edges (verb +
+    // registry colour). Both-endpoints-visible is load-bearing: object endpoints
+    // must be in the viewer's visible set, node endpoints a live taxonomy node —
+    // the same doctrine objectLinks enforces, so an edge touching a private card
+    // is silently dropped for a viewer who can't see it.
+    const relTypeMeta = new Map(db.listRelationTypes().map((rt) => [rt.type, rt] as const));
+    const crossVisible = (ref: string, kind: string) =>
+      kind === 'object' ? visibleIds.has(ref) : Boolean(getNode(ref));
+    const crossRows = db.listRelations({ status: 'confirmed' }).filter((r) => r.source !== 'toe');
+    if (!typedOnly) {
+      crossRows.push(
+        ...db
+          .listRelations({ status: 'proposed' })
+          .filter((r) => r.source !== 'toe' && (r.confidence ?? 0) >= 0.75),
+      );
+    }
+    const crossRelations = crossRows
+      .filter((r) => crossVisible(r.fromRef, r.fromKind) && crossVisible(r.toRef, r.toKind))
+      .map((r) => {
+        const meta = relTypeMeta.get(r.type);
+        return {
+          from: r.fromRef,
+          fromKind: r.fromKind,
+          to: r.toRef,
+          toKind: r.toKind,
+          type: r.type,
+          label: meta?.label ?? r.type,
+          color: meta?.color ?? null,
+          confidence: r.confidence,
+          status: r.status,
+        };
+      });
     // Repo-flagged directory aggregates (fs walks) — the client textures +
     // sizes repo spheres from these. Scoped like objects: own + shared uids
     // for non-admins, everything for admins, mapping namespaces by the
@@ -291,6 +326,7 @@ export function registerGraphRoutes(app: Express) {
       objects,
       objectLinks,
       relations,
+      crossRelations,
       fsMappings,
       fsDirs,
       topics,

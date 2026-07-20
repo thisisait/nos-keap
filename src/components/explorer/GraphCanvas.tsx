@@ -60,6 +60,7 @@ const NEAR_HOP_CAMERA = 750;
 // the same budget the file-cube name plates (fileLabels) already enforce.
 const STAR_LABEL_CAP = 400; // level-2 star names
 const FOLDER_LABEL_CAP = 400; // files-core folder-hub names
+const REL_LABEL_CAP = 300; // Track R3 typed-relation verb labels (Vazby midpoints)
 // Galaxy/constellation names are orientation anchors, kept always-on UNTIL the
 // object field itself is huge — past that even the top tier is too dense to read.
 const HUGE_FIELD = 5000; // objects
@@ -158,6 +159,12 @@ export interface CanvasLink {
   relation?: boolean;
   relType?: string;
   explored?: string | null;
+  /** Track R3 typed cross-type relation (Vazby): registry colour + verb label +
+   *  confidence-driven width. Distinct from the ToE `relation` layer above. */
+  vazba?: boolean;
+  relVerb?: string;
+  relColor?: string | null;
+  confidence?: number | null;
   /** Files-core folder-tree edge (dir→dir, dir→file). */
   fs?: boolean;
   /** Files-core tether: object → its taxonomy anchor, across space. */
@@ -528,6 +535,25 @@ function buildRepoMesh(node: CanvasNode): THREE.Object3D {
   const g = new THREE.Group();
   g.add(mesh, hubLabel(node, r));
   return g;
+}
+
+/** Track R3 typed-relation verb label — the same dark-plate recipe as the
+ *  star/folder name plates, sat at the edge midpoint (linkPositionUpdate). LOD-
+ *  capped by REL_LABEL_CAP; dense Vazby fall back to hover-only, like stars. */
+function relationLabelSprite(verb: string): THREE.Sprite {
+  const sprite = new SpriteText(verb);
+  sprite.color = '#e9eefc';
+  sprite.textHeight = 3;
+  sprite.fontSize = 110;
+  sprite.fontWeight = '600';
+  sprite.backgroundColor = 'rgba(8,12,22,0.86)';
+  sprite.padding = 1.6;
+  sprite.borderRadius = 1.5;
+  sprite.borderWidth = 0.4;
+  sprite.borderColor = 'rgba(180,195,225,0.35)';
+  const label = sprite as unknown as THREE.Sprite;
+  label.material.depthWrite = false;
+  return noRaycast(label) as THREE.Sprite;
 }
 
 /** Core-view file leaf: a small satellite cube, lang-coloured, optional name. */
@@ -1043,6 +1069,10 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     () => nodes.filter((n) => n.object).length <= HUGE_FIELD,
     [nodes],
   );
+  // Track R3 verb labels ride the SAME LOD doctrine: a sparse Vazby overlay gets
+  // midpoint verb plates; a dense one falls back to hover-only (no thousands of
+  // SpriteText canvases). Counts only the typed cross-type layer.
+  const relLabels = useMemo(() => links.filter((l) => l.vazba).length <= REL_LABEL_CAP, [links]);
   // PERF/S4: instance the file cubes in exactly the regime that is slow — core
   // view with a field too large for name plates (fileLabels off). Below the cap
   // the per-cube meshes stay (few, cheap, and they carry labels); above it the
@@ -1607,6 +1637,33 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
   // rebuild). Custom object bodies are recoloured by the in-place effect above.
   const nodeColorFn = useCallback((n: GraphNode) => nodeColor(n, focusId, lens), [focusId, lens]);
   const nodeValFn = useCallback((n: GraphNode) => nodeSize(n, lens), [lens]);
+  // Track R3: a verb plate for each typed cross-type edge, capped by relLabels.
+  // Memoised on relLabels so its identity is stable (an inline accessor would
+  // rebuild every edge object each render).
+  const linkThreeObjectFn = useCallback(
+    (l: GraphLink): THREE.Object3D =>
+      l.vazba && relLabels && l.relVerb
+        ? relationLabelSprite(l.relVerb)
+        : (false as unknown as THREE.Object3D),
+    [relLabels],
+  );
+  // `link` is typed `object` (not GraphLink) to satisfy the library's standalone
+  // LinkPositionUpdateFn generic, which binds its own {} defaults rather than the
+  // component's CanvasLink — a narrower param would fail the assignment.
+  const linkPositionUpdateFn = useCallback(
+    (
+      obj: THREE.Object3D,
+      coords: { start: { x: number; y: number; z: number }; end: { x: number; y: number; z: number } },
+      link: object,
+    ): boolean => {
+      const l = link as GraphLink;
+      if (!l.vazba) return false; // no plate → default line positioning
+      const { start, end } = coords;
+      obj.position.set((start.x + end.x) / 2, (start.y + end.y) / 2, (start.z + end.z) / 2);
+      return true;
+    },
+    [],
+  );
 
   return (
     <ForceGraph3D
@@ -1622,8 +1679,13 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       nodeColor={nodeColorFn}
       nodeThreeObject={nodeThreeObject}
       nodeThreeObjectExtend={extendsDefaultSphere}
+      linkThreeObject={linkThreeObjectFn}
+      linkThreeObjectExtend={false}
+      linkPositionUpdate={linkPositionUpdateFn}
       linkColor={(l: GraphLink) =>
-        l.relation
+        l.vazba
+          ? l.relColor ?? 'rgba(148,163,184,0.6)' // typed cross-type: registry hue
+          : l.relation
           ? REL_COLOR[l.relType] ?? 'rgba(148,163,184,0.5)'
           : l.mray
             ? 'rgba(45,212,191,0.6)' // mapping-hub tether — the loudest teal
@@ -1644,7 +1706,9 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
         // (one draw call each); width 0 renders a GL line. Bulk links (tree
         // skeleton, fs edges, per-object rays — thousands at scale) MUST stay
         // lines; only the sparse overlays may afford tubes.
-        l.relation
+        l.vazba
+          ? 0.6 + (l.confidence ?? 0.5) * 1.4 // typed cross-type: width by confidence (0.6–2.0)
+          : l.relation
           ? l.explored === 'barely'
             ? 1.8 // research frontier — brightest/thickest
             : l.explored === 'partially'

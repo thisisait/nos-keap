@@ -63,7 +63,8 @@
       "lint": "Lint",
       "moderation": "Moderation",
       "fsMappings": "Mapped folders",
-      "topics": "Topics"
+      "topics": "Topics",
+      "relations": "Relations"
     },
     "objects": {
       "title": "Knowledge objects",
@@ -264,6 +265,18 @@
       "renamed": "Label saved.",
       "unlocked": "Label unlocked — the auto-label is restored.",
       "renameFailed": "Could not update the label."
+    },
+    "relations": {
+      "title": "Proposed relations",
+      "vocabTitle": "Proposed relation types",
+      "pending": "{{count}} pending",
+      "empty": "No proposed relations — nothing to moderate.",
+      "vocabEmpty": "No proposed vocabulary — the palette is stable.",
+      "confirm": "Confirm",
+      "reject": "Reject",
+      "confirmType": "Approve verb",
+      "justification": "Justification",
+      "meta": "{{source}} · confidence {{confidence}}"
     }
   },
   "settings": {

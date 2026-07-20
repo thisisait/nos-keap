@@ -306,3 +306,225 @@ test.describe('typed relations pipeline (R3 stage 1)', () => {
     ).toBe(403);
   });
 });
+
+/**
+ * Track R3 stage 2 — moderation + cross-type rendering payload + the brain
+ * endpoint. Builds on the stage-1 fixtures left in the serial run: OBJ1/OBJ2 are
+ * proposed-derived edges to NODE ('supports' seed, 'illustrates' unknown→proposed
+ * verb). Here an admin CONFIRMS/REJECTS edges and grows the vocabulary, and we
+ * assert the confirmed set surfaces in /api/graph crossRelations + /agent/v1/graph
+ * with provenance, rejected never renders, and a private object's edge is hidden
+ * from a viewer who can't see it.
+ */
+interface AdminRel {
+  id: string;
+  fromRef: string;
+  toRef: string;
+  type: string;
+  status: string;
+  fromLabel: string;
+  toLabel: string;
+}
+interface CrossRel {
+  from: string;
+  fromKind: string;
+  to: string;
+  toKind: string;
+  type: string;
+  color: string | null;
+  confidence: number | null;
+}
+
+async function proposedRelations(request: APIRequestContext): Promise<AdminRel[]> {
+  const r = await request.get('/api/admin/relations?status=proposed');
+  expect(r.ok()).toBeTruthy();
+  return (await r.json()).data.relations as AdminRel[];
+}
+async function crossRelations(
+  request: APIRequestContext,
+  headers?: Record<string, string>,
+): Promise<CrossRel[]> {
+  const r = await request.get('/api/graph', headers ? { headers } : undefined);
+  expect(r.ok()).toBeTruthy();
+  return ((await r.json()).data.crossRelations ?? []) as CrossRel[];
+}
+
+test.describe('relations moderation + rendering + brain endpoint (R3 stage 2)', () => {
+  const PRIV = 'rel-obj-priv'; // alice's private object
+  const ALICE = { 'X-Authentik-Username': 'alice' };
+  const BOB = { 'X-Authentik-Username': 'bob' };
+
+  test('admin lists proposed relations with resolved from/to labels', async ({ request }) => {
+    const rels = await proposedRelations(request);
+    const supports = rels.find((x) => x.type === 'supports' && x.fromRef === OBJ1)!;
+    expect(supports, 'supports edge in the moderation queue').toBeTruthy();
+    expect(supports.fromLabel.length).toBeGreaterThan(0);
+    expect(supports.toLabel.length).toBeGreaterThan(0);
+    expect(supports.status).toBe('proposed');
+    // The proposed derived set is NOT in the confirmed overlay yet.
+    const before = await crossRelations(request);
+    expect(before.some((e) => e.from === OBJ1 && e.type === 'supports')).toBe(false);
+  });
+
+  test('confirm a relation → it enters /api/graph crossRelations with its registry colour', async ({
+    request,
+  }) => {
+    const supports = (await proposedRelations(request)).find(
+      (x) => x.type === 'supports' && x.fromRef === OBJ1,
+    )!;
+    const r = await request.post(`/api/admin/relations/${encodeURIComponent(supports.id)}`, {
+      data: { status: 'confirmed' },
+    });
+    expect(r.ok()).toBeTruthy();
+
+    const cross = await crossRelations(request);
+    const edge = cross.find((e) => e.from === OBJ1 && e.to === NODE && e.type === 'supports')!;
+    expect(edge, 'confirmed object↔node edge renders').toBeTruthy();
+    expect(edge.fromKind).toBe('object');
+    expect(edge.toKind).toBe('node');
+    expect(edge.color).toBe('#34d399'); // the 'supports' seed colour
+    expect(edge.confidence).toBeCloseTo(0.91, 5);
+  });
+
+  test('reject a relation → it never renders', async ({ request }) => {
+    // A fresh proposed edge (distinct type on the same pair) to reject.
+    const post = await request.post('/agent/v1/relations', {
+      headers: { ...RW, 'x-keap-agent': 'e2e-classifier' },
+      data: {
+        relations: [
+          {
+            from_ref: OBJ1,
+            from_kind: 'object',
+            to_ref: NODE,
+            to_kind: 'node',
+            type: 'depends-on',
+            confidence: 0.66,
+            justification: 'To be rejected.',
+          },
+        ],
+      },
+    });
+    expect(post.ok()).toBeTruthy();
+    const dep = (await proposedRelations(request)).find(
+      (x) => x.type === 'depends-on' && x.fromRef === OBJ1,
+    )!;
+    const r = await request.post(`/api/admin/relations/${encodeURIComponent(dep.id)}`, {
+      data: { status: 'rejected' },
+    });
+    expect(r.ok()).toBeTruthy();
+    const cross = await crossRelations(request);
+    expect(cross.some((e) => e.type === 'depends-on' && e.from === OBJ1)).toBe(false);
+  });
+
+  test('vocab grow: approve a proposed type → confirmed with a colour, offered to the classifier', async ({
+    request,
+  }) => {
+    const approve = await request.post('/api/admin/relation-types/illustrates', {
+      data: { status: 'confirmed' },
+    });
+    expect(approve.ok()).toBeTruthy();
+    const body = (await approve.json()).data as { status: string; color: string | null };
+    expect(body.status).toBe('confirmed');
+    expect(body.color, 'a colour is assigned on approval').toBeTruthy();
+
+    // The confirmed verb is now offered in the classifier vocabulary.
+    const cand = await request.get('/agent/v1/relations/candidates?limit=1', { headers: RO });
+    const vocab = (await cand.json()).data.vocab as Array<{ type: string }>;
+    expect(vocab.map((v) => v.type)).toContain('illustrates');
+
+    // Confirm the illustrates EDGE and assert it renders with the approved colour.
+    const ill = (await proposedRelations(request)).find(
+      (x) => x.type === 'illustrates' && x.fromRef === OBJ2,
+    )!;
+    await request.post(`/api/admin/relations/${encodeURIComponent(ill.id)}`, {
+      data: { status: 'confirmed' },
+    });
+    const edge = (await crossRelations(request)).find(
+      (e) => e.from === OBJ2 && e.type === 'illustrates',
+    )!;
+    expect(edge, 'confirmed grown-verb edge renders').toBeTruthy();
+    expect(edge.color).toBe(body.color);
+  });
+
+  test('brain endpoint: /agent/v1/graph ships confirmed typed edges with provenance', async ({
+    request,
+  }) => {
+    const r = await request.get('/agent/v1/graph', { headers: RO });
+    expect(r.ok()).toBeTruthy();
+    const g = (await r.json()).data as {
+      nodes: Array<{ id: string; kind: string; name: string }>;
+      edges: Array<{
+        from: string;
+        to: string;
+        fromKind: string;
+        toKind: string;
+        type: string;
+        confidence: number | null;
+        justification: string | null;
+        source: string;
+        model: string | null;
+      }>;
+      types: Array<{ type: string; status: string }>;
+    };
+    // Nodes: objects prefixed object:<id>, taxonomy bare.
+    expect(g.nodes.some((n) => n.id === `object:${OBJ1}` && n.kind === 'object')).toBe(true);
+    expect(g.nodes.some((n) => n.id === NODE && n.kind === 'node')).toBe(true);
+    // The confirmed supports edge carries full provenance, endpoints resolved.
+    const edge = g.edges.find((e) => e.from === `object:${OBJ1}` && e.type === 'supports')!;
+    expect(edge, 'confirmed edge in the brain substrate').toBeTruthy();
+    expect(edge.to).toBe(NODE);
+    expect(edge.source).toBe('derived');
+    expect(edge.model).toBe('claude-sonnet-e2e');
+    expect((edge.justification ?? '').length).toBeGreaterThan(0);
+    // A rejected edge is absent.
+    expect(g.edges.some((e) => e.type === 'depends-on' && e.from === `object:${OBJ1}`)).toBe(false);
+    // Vocabulary is the active set (seed + confirmed); the grown verb is present.
+    expect(g.types.every((t) => t.status === 'seed' || t.status === 'confirmed')).toBe(true);
+    expect(g.types.some((t) => t.type === 'illustrates' && t.status === 'confirmed')).toBe(true);
+  });
+
+  test('brain endpoint needs a bearer token', async ({ request }) => {
+    expect((await request.get('/agent/v1/graph')).status()).toBe(401);
+  });
+
+  test('visibility: a private object edge is hidden from a viewer who cannot see it', async ({
+    request,
+  }) => {
+    // Alice owns a PRIVATE object; a confirmed typed edge joins it to NODE.
+    const create = await request.post('/api/objects', {
+      headers: ALICE,
+      data: { id: PRIV, type: 'note', title: 'alice private', body: 'secret' },
+    });
+    expect(create.ok()).toBeTruthy();
+    const post = await request.post('/agent/v1/relations', {
+      headers: { ...RW, 'x-keap-agent': 'e2e-classifier' },
+      data: {
+        relations: [
+          {
+            from_ref: PRIV,
+            from_kind: 'object',
+            to_ref: NODE,
+            to_kind: 'node',
+            type: 'supports',
+            confidence: 0.9,
+            justification: 'private-to-node edge.',
+          },
+        ],
+      },
+    });
+    expect(post.ok()).toBeTruthy();
+    const priv = (await proposedRelations(request)).find(
+      (x) => x.type === 'supports' && x.fromRef === PRIV,
+    )!;
+    await request.post(`/api/admin/relations/${encodeURIComponent(priv.id)}`, {
+      data: { status: 'confirmed' },
+    });
+
+    // Admin (local dev, seeAll) sees the edge…
+    const asAdmin = await crossRelations(request);
+    expect(asAdmin.some((e) => e.from === PRIV)).toBe(true);
+    // …but Bob (non-admin, can't see alice's private card) does NOT.
+    const asBob = await crossRelations(request, BOB);
+    expect(asBob.some((e) => e.from === PRIV)).toBe(false);
+  });
+});

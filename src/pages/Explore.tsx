@@ -366,18 +366,54 @@ export default function Explore() {
         });
       }
     }
+    // Object→object refs + Track R3 typed relations share a drawn-endpoint
+    // filter: the orbital branch renders only anchored objects, and a link to an
+    // undrawn endpoint would crash force-graph. `resolveRel` maps a (ref,kind)
+    // to its drawn node id — obj:<id> for objects, the bare id for taxonomy —
+    // or null when that body isn't in the scene.
+    const drawnObj = new Set(nodes.filter((n) => n.id.startsWith('obj:')).map((n) => n.id));
+    const resolveRel = (ref: string, kind: 'node' | 'object'): string | null =>
+      kind === 'object'
+        ? drawnObj.has(`obj:${ref}`)
+          ? `obj:${ref}`
+          : null
+        : nodeById.has(ref)
+          ? ref
+          : null;
+    const pairKey = (a: string, b: string) => [a, b].sort().join(' ');
+    // Typed cross-type relations (Vazby) — confirmed (+ high-conf proposed under
+    // ?relations=all) edges across every kind pair, coloured from the
+    // relation_types registry, verb-labelled at the midpoint, width by
+    // confidence. A pair drawn here suppresses its plain [[object:…]] olink below
+    // (an untyped ref upgrades to the typed edge — never double-drawn).
+    const typedPairs = new Set<string>();
+    if (showRelations) {
+      for (const r of graph.crossRelations ?? []) {
+        const s = resolveRel(r.from, r.fromKind);
+        const tg = resolveRel(r.to, r.toKind);
+        if (!s || !tg) continue;
+        typedPairs.add(pairKey(s, tg));
+        links.push({
+          source: s,
+          target: tg,
+          relation: true,
+          vazba: true,
+          relType: r.type,
+          relVerb: r.label,
+          relColor: r.color,
+          confidence: r.confidence,
+        });
+      }
+    }
     // Object→object ref edges ([[object:<id>]] wiki links) — violet GL lines
-    // between bodies actually present in the scene. The drawn-endpoint filter
-    // is load-bearing: the orbital branch renders only anchored objects, and a
-    // link to an undrawn endpoint would crash force-graph.
+    // between drawn bodies, UNLESS a typed relation already draws that pair.
     if (graph.objectLinks?.length) {
-      const drawnObj = new Set(
-        nodes.filter((n) => n.id.startsWith('obj:')).map((n) => n.id),
-      );
       for (const l of graph.objectLinks) {
         const s = `obj:${l.source}`;
         const tg = `obj:${l.target}`;
-        if (drawnObj.has(s) && drawnObj.has(tg)) links.push({ source: s, target: tg, olink: true });
+        if (!drawnObj.has(s) || !drawnObj.has(tg)) continue;
+        if (typedPairs.has(pairKey(s, tg))) continue;
+        links.push({ source: s, target: tg, olink: true });
       }
     }
     // Concept-relation overlay (imported research graph, e.g. ToE) — typed

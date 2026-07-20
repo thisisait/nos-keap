@@ -123,11 +123,14 @@ nOS-side counterparts flagged **[nOS]**).
   table card renders in `/explore` for admins ONLY — either companion sends `visibility:
   'shared'` for explore-visible tables, or `getVisibleObjects` learns the tier ladder (the
   latter is a spec-decision-#8 change).
-- **S2⁷ — native agent graph endpoint** *(future, optional)*: `GET /agent/v1/graph` →
-  nodes+edges JSON over the bearer, so the nOS face Explore app can render the universe
-  NATIVELY instead of iframing `/explore` (sidesteps framing entirely, gives face full render
-  control). Not a blocker — the v1.14.1 CSP iframe path works today. Larger: exposes the graph
-  model on the agent surface (visibility-scoped, no forward-auth) + a stable node/edge schema.
+- **S2⁷ — native agent graph endpoint** *(shipped 2026-07-20, Track R3 stage 2)*:
+  `GET /agent/v1/graph` (agentAuth `ro`) → `{nodes, edges, types, meta}` over the bearer —
+  taxonomy (bare id) + objects (`object:<id>`) as nodes, CONFIRMED typed relations with full
+  provenance (type, confidence, justification, source, model) as edges, the active verb
+  vocabulary + embedding meta alongside. System scope (whole corpus, no forward-auth, mirrors
+  `/agent/v1/objects`); dangling edges dropped via the both-endpoints-resolve guard. The nOS
+  face Explore app can now render the universe NATIVELY instead of iframing `/explore`, and
+  it is the LLM-consumable substrate for the typed graph.
 - **S3 — OKF bundle export/import** (zip of markdown+frontmatter; dedup by id+hash).
   Interop with Google tooling & openknowledge CLI; the future sharing unit (Phase S).
 - **S4 — RRF hybrid search**: FTS5(BM25) ⊕ vectors ⊕ one-hop taxonomy/link neighbors,
@@ -333,6 +336,23 @@ in-container.
   (moderation reader). Derived edges stay OUT of the `/api/graph` Vazby overlay
   until moderated — ToE rendering is byte-identical. Stage 2 builds moderation +
   cross-type verb rendering + the `/agent/v1/graph` brain endpoint on top.
+- **R3 stage 2 — moderation + cross-type rendering + brain endpoint** *(shipped
+  2026-07-20)*: the human + consumption layer. Admin moderation surface
+  (`/api/admin/relations*`, admin-gated, cloning the topics route + guard):
+  confirm/reject a proposed edge, confirm a proposed verb into the live palette
+  with a render colour (re-enters the classifier vocabulary) or retire it —
+  driven by a new `RelationsPanel` Admin tab (i18n en+cs). DB mutators
+  `setRelationStatus` / `setRelationTypeStatus` / `deleteRelationType`. Rendering:
+  `/api/graph` gains a `crossRelations` field (confirmed derived/manual edges,
+  both-endpoints-visible per viewer; `?relations=all` adds high-confidence
+  proposed) and the explore Vazby overlay assembles typed edges across ALL kind
+  pairs — object endpoints `obj:`-prefixed + drawn-filtered, registry colour,
+  width by confidence, a verb `SpriteText` at the edge midpoint (LOD-capped like
+  the star/folder labels, hover-only past the cap), untyped `[[object:…]]` olinks
+  upgrade to the typed edge (no double-draw). Brain endpoint closes **S2⁷**
+  (above). e2e: moderation confirm/reject flow, vocab-grow, cross-type edge
+  assembly, brain endpoint provenance, and a private-object edge hidden from a
+  non-owner viewer.
 
 ### Track C — Capture overlay (extension + native app)
 

@@ -63,7 +63,8 @@
       "lint": "Lint",
       "moderation": "Moderace",
       "fsMappings": "Mapované složky",
-      "topics": "Témata"
+      "topics": "Témata",
+      "relations": "Vazby"
     },
     "objects": {
       "title": "Znalostní objekty",
@@ -264,6 +265,18 @@
       "renamed": "Popisek uložen.",
       "unlocked": "Popisek odemčen — automatický popisek obnoven.",
       "renameFailed": "Popisek se nepodařilo aktualizovat."
+    },
+    "relations": {
+      "title": "Navržené vazby",
+      "vocabTitle": "Navržené typy vazeb",
+      "pending": "{{count}} čeká",
+      "empty": "Žádné navržené vazby — není co moderovat.",
+      "vocabEmpty": "Žádný navržený slovník — paleta je stabilní.",
+      "confirm": "Potvrdit",
+      "reject": "Zamítnout",
+      "confirmType": "Schválit sloveso",
+      "justification": "Zdůvodnění",
+      "meta": "{{source}} · spolehlivost {{confidence}}"
     }
   },
   "settings": {
