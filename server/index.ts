@@ -57,10 +57,17 @@ async function main() {
   // Relaxed CSP because the SPA is self-hosted behind Traefik+Authentik.
   // frameguard OFF: X-Frame-Options is coarse (SAMEORIGIN blocks the nOS face
   // shell from iframing /explore). We replace it with a GRANULAR CSP
-  // frame-ancestors that allows ONLY same-origin + the face subdomain of this
+  // frame-ancestors that allows ONLY same-origin + the face host of this
   // tenant (never '*'). Unset KEAP_TENANT_DOMAIN ⇒ self-only, unchanged.
+  //
+  // The face host is a CONFIG value, not a constant: nOS moved the shell from
+  // face.<tld> to os.<tld> (2026-07-20), and hardcoding the subdomain meant
+  // that move silently broke /explore embedding until KEAP shipped a new tag.
+  // KEAP_FACE_HOST takes a bare host (no scheme); it falls back to the
+  // historical `face.` prefix so an older nOS pin keeps working unchanged.
   const TENANT_DOMAIN = process.env.KEAP_TENANT_DOMAIN ?? '';
-  const FRAME_ANCESTORS = TENANT_DOMAIN ? `'self' https://face.${TENANT_DOMAIN}` : `'self'`;
+  const FACE_HOST = process.env.KEAP_FACE_HOST || (TENANT_DOMAIN ? `face.${TENANT_DOMAIN}` : '');
+  const FRAME_ANCESTORS = FACE_HOST ? `'self' https://${FACE_HOST}` : `'self'`;
   app.use(helmet({ contentSecurityPolicy: false, frameguard: false }));
   app.use((_req, res, next) => {
     res.setHeader('Content-Security-Policy', `frame-ancestors ${FRAME_ANCESTORS}`);
