@@ -12,7 +12,7 @@
 import { useCallback, useMemo, useState, useRef, useLayoutEffect, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Rocket, Orbit, Search, Waypoints, Boxes, Sparkles, PanelRight } from 'lucide-react';
+import { ArrowLeft, Rocket, Orbit, Search, Waypoints, Link2, Boxes, Sparkles, PanelRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
@@ -36,7 +36,7 @@ const LENS_AXES = [
   { key: 'formalness', label: 'Formal ↔ Empirical' },
   { key: 'dynamism', label: 'Dynamic ↔ Static' },
 ] as const;
-import SidePanel from '@/components/explorer/SidePanel';
+import SidePanel, { type FocusRelation } from '@/components/explorer/SidePanel';
 import DetailPanel, { type DrawerTarget } from '@/components/explorer/DetailPanel';
 import {
   useGraph,
@@ -67,7 +67,12 @@ export default function Explore() {
   const [cameraMode, setCameraMode] = useState<CameraMode>('observer');
   const isMobile = useIsMobile();
   const [panelOpen, setPanelOpen] = useState(false);
-  const [showRelations, setShowRelations] = useState(() => initialParams.get('rel') !== '0');
+  // Two INDEPENDENT edge layers. They were conflated: `rel` gated the typed
+  // ontology (R3 verbs + the ToE concept web) while [[object:…]] wiki refs drew
+  // unconditionally — so turning the toggle off still left the card core webbed
+  // with lines, which read as the toggle being broken.
+  const [showOntology, setShowOntology] = useState(() => initialParams.get('rel') !== '0');
+  const [showOlinks, setShowOlinks] = useState(() => initialParams.get('olinks') !== '0');
   // Detail mode: 'full' forces every orbital body in full form (no instancing /
   // apparent-size hiding) for small fields; 'auto' lets the perf LODs engage.
   const [detail, setDetail] = useState<'auto' | 'full'>(() =>
@@ -98,10 +103,11 @@ export default function Explore() {
     if (focusId) p.set('focus', focusId);
     if (core.on) p.set('core', core.order);
     if (lens.axis) p.set('lens', lens.axis);
-    if (!showRelations) p.set('rel', '0');
+    if (!showOntology) p.set('rel', '0');
+    if (!showOlinks) p.set('olinks', '0');
     if (detail === 'full') p.set('detail', 'full');
     setSearchParams(p, { replace: true });
-  }, [focusId, core.on, core.order, lens.axis, showRelations, detail, setSearchParams]);
+  }, [focusId, core.on, core.order, lens.axis, showOntology, showOlinks, detail, setSearchParams]);
 
   // Ship camera is desktop-only (pointer-lock + WASD/keyboard); on a touch
   // device fall back to observer/orbit so a mobile user can never get stranded
@@ -398,7 +404,7 @@ export default function Explore() {
     // confidence. A pair drawn here suppresses its plain [[object:…]] olink below
     // (an untyped ref upgrades to the typed edge — never double-drawn).
     const typedPairs = new Set<string>();
-    if (showRelations) {
+    if (showOntology) {
       for (const r of graph.crossRelations ?? []) {
         const s = resolveRel(r.from, r.fromKind);
         const tg = resolveRel(r.to, r.toKind);
@@ -418,7 +424,10 @@ export default function Explore() {
     }
     // Object→object ref edges ([[object:<id>]] wiki links) — violet GL lines
     // between drawn bodies, UNLESS a typed relation already draws that pair.
-    if (graph.objectLinks?.length) {
+    // A wiki ref asserts "these two cards mention each other", not a typed
+    // relation, so it is its OWN layer: the Ontology toggle must not claim it,
+    // and it must not draw when the user has asked for no edges.
+    if (showOlinks && graph.objectLinks?.length) {
       for (const l of graph.objectLinks) {
         const s = `obj:${l.source}`;
         const tg = `obj:${l.target}`;
@@ -430,7 +439,7 @@ export default function Explore() {
     // Concept-relation overlay (imported research graph, e.g. ToE) — typed
     // cross-node edges between taxonomy stars, gated by the toggle. Both
     // endpoints are pinned taxonomy nodes, so these are pure drawn edges.
-    if (showRelations) {
+    if (showOntology) {
       for (const r of graph.relations ?? []) {
         if (nodeById.has(r.source) && nodeById.has(r.target)) {
           links.push({
@@ -507,7 +516,7 @@ export default function Explore() {
       }
     }
     return { canvasNodes: nodes, canvasLinks: links, coreLayout };
-  }, [graph, focusId, starItems, hueByCategory, nodeById, showRelations, core, effectiveOrder, t, dirStatByPath, mappingById, rootOf]);
+  }, [graph, focusId, starItems, hueByCategory, nodeById, showOntology, core, effectiveOrder, t, dirStatByPath, mappingById, rootOf]);
 
   const availableTypes = useMemo(
     () => [...new Set((neighbors.data?.items ?? []).map((i) => i.dataType).filter(Boolean))] as string[],
@@ -656,8 +665,51 @@ export default function Explore() {
 
   // The neighbours panel content — hoisted so it can render either as the
   // desktop right rail or inside a mobile Sheet drawer (never both).
+  // Typed relations touching the focused node, in EITHER direction, resolved to
+  // display names. Unlike the drawn edges this is not filtered to bodies in the
+  // scene: the panel is a reading surface, and a relation to something currently
+  // off-screen is exactly the kind of thing the user came here to discover.
+  const objectById = useMemo(
+    () => new Map((graph?.objects ?? []).map((o) => [o.id, o])),
+    [graph],
+  );
+
+  const focusRelations = useMemo<FocusRelation[]>(() => {
+    if (!focusId || !graph?.crossRelations) return [];
+    const nameOf = (ref: string, kind: 'node' | 'object') =>
+      kind === 'node' ? nodeById.get(ref)?.name ?? ref : objectById.get(ref)?.title ?? ref;
+    const out: FocusRelation[] = [];
+    for (const r of graph.crossRelations) {
+      const isFrom = r.fromKind === 'node' && r.from === focusId;
+      const isTo = r.toKind === 'node' && r.to === focusId;
+      if (!isFrom && !isTo) continue;
+      out.push({
+        type: r.type,
+        label: r.label || r.type,
+        color: r.color ?? undefined,
+        confidence: r.confidence ?? undefined,
+        direction: isFrom ? 'out' : 'in',
+        otherRef: isFrom ? r.to : r.from,
+        otherKind: isFrom ? r.toKind : r.fromKind,
+        otherName: isFrom ? nameOf(r.to, r.toKind) : nameOf(r.from, r.fromKind),
+      });
+    }
+    return out;
+  }, [focusId, graph, nodeById, objectById]);
+
   const sidePanelEl = (
     <SidePanel
+      relations={focusRelations}
+      onRelationClick={(r) => {
+        if (r.otherKind === 'node') {
+          setFocusId(r.otherRef);
+          return;
+        }
+        const o = objectById.get(r.otherRef);
+        if (o) {
+          setDrawer({ id: o.id, name: o.title, kind: 'object', dataType: o.type, isStar: false });
+        }
+      }}
       focusName={focusId ? nodeById.get(focusId)?.name ?? null : null}
       mode={mode}
       onModeChange={setMode}
@@ -727,14 +779,26 @@ export default function Explore() {
             </Button>
           )}
           <Button
-            variant={showRelations ? 'default' : 'outline'}
+            variant={showOntology ? 'default' : 'outline'}
             size="sm"
             className="h-8 shrink-0 gap-1.5 text-xs"
-            onClick={() => setShowRelations((v) => !v)}
-            title="Toggle typed concept-relation edges (research web)"
+            onClick={() => setShowOntology((v) => !v)}
+            data-testid="explore-ontology-toggle"
+            title={t('explore.toggle.ontologyHint')}
           >
             <Waypoints className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">Vazby</span>
+            <span className="hidden sm:inline">{t('explore.toggle.ontology')}</span>
+          </Button>
+          <Button
+            variant={showOlinks ? 'default' : 'outline'}
+            size="sm"
+            className="h-8 shrink-0 gap-1.5 text-xs"
+            onClick={() => setShowOlinks((v) => !v)}
+            data-testid="explore-olinks-toggle"
+            title={t('explore.toggle.olinksHint')}
+          >
+            <Link2 className="h-3.5 w-3.5" />
+            <span className="hidden sm:inline">{t('explore.toggle.olinks')}</span>
           </Button>
           <Button
             variant={core.on ? 'default' : 'outline'}

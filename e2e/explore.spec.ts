@@ -82,3 +82,47 @@ test.describe('universe explorer', () => {
     expect(byName.rustfs).toBe(false); // no KEAP_RUSTFS_* in the e2e env
   });
 });
+
+/**
+ * Edge layers are independent. The Ontology toggle used to gate only the typed
+ * relations while [[object:…]] wiki refs drew unconditionally, so switching it
+ * off still left the card core webbed with lines — the toggle looked broken
+ * because a layer it never owned kept drawing.
+ */
+test.describe('explore edge-layer toggles', () => {
+  test('ontology and links are separate toggles, each round-tripping through the URL', async ({
+    page,
+  }) => {
+    await page.goto('/explore');
+    const ontology = page.getByTestId('explore-ontology-toggle');
+    const olinks = page.getByTestId('explore-olinks-toggle');
+    await expect(ontology).toBeVisible();
+    await expect(olinks).toBeVisible();
+
+    // Both default on, so neither param is in a clean URL.
+    expect(page.url()).not.toContain('rel=0');
+    expect(page.url()).not.toContain('olinks=0');
+
+    // Turning ontology off must NOT silence the links layer.
+    await ontology.click();
+    await expect.poll(() => new URL(page.url()).searchParams.get('rel')).toBe('0');
+    expect(new URL(page.url()).searchParams.get('olinks')).toBeNull();
+
+    // ...and the links layer is independently switchable.
+    await olinks.click();
+    await expect.poll(() => new URL(page.url()).searchParams.get('olinks')).toBe('0');
+    expect(new URL(page.url()).searchParams.get('rel')).toBe('0');
+
+    // Both restore.
+    await ontology.click();
+    await olinks.click();
+    await expect.poll(() => new URL(page.url()).searchParams.get('rel')).toBeNull();
+    expect(new URL(page.url()).searchParams.get('olinks')).toBeNull();
+  });
+
+  test('a deep link with olinks=0 starts with the links layer off', async ({ page }) => {
+    await page.goto('/explore?olinks=0');
+    await expect(page.getByTestId('explore-olinks-toggle')).toBeVisible();
+    expect(new URL(page.url()).searchParams.get('olinks')).toBe('0');
+  });
+});

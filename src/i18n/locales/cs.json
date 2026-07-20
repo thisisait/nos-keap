@@ -405,7 +405,11 @@
       "kinds": "Zdroje",
       "dataTypes": "Typy dat",
       "results": "{{count}} bodů",
-      "notSemantic": "bez vektorů"
+      "notSemantic": "bez vektorů",
+      "relations": "Ontologické vazby",
+      "relationsEmpty": "Žádné potvrzené vazby pro tento uzel.",
+      "relOut": "odchozí",
+      "relIn": "příchozí"
     },
     "drawer": {
       "open": "Otevřít obsah",
@@ -465,6 +469,12 @@
         "taxonomy": "Taxonomie",
         "topic": "Témata"
       }
+    },
+    "toggle": {
+      "ontology": "Ontologie",
+      "ontologyHint": "Zobrazit typované ontologické vazby (slovesa R3 + koncepční síť)",
+      "olinks": "Odkazy",
+      "olinksHint": "Zobrazit [[object:…]] odkazy mezi kartami"
     }
   },
   "tables": {

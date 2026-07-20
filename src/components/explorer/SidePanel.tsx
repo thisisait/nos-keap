@@ -3,6 +3,7 @@
  * facets, and the distance-sorted result list. What is checked here decides
  * which stars get rendered behind the focused branch.
  */
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -24,6 +25,23 @@ interface Props {
   semantic: boolean;
   vectorsReady: boolean;
   onItemClick: (item: NeighborItem) => void;
+  /** Confirmed typed relations touching the focused node, either direction. */
+  relations?: FocusRelation[];
+  onRelationClick?: (r: FocusRelation) => void;
+}
+
+/** One typed edge as the panel needs it: which verb, which way, and the far end. */
+export interface FocusRelation {
+  type: string;
+  /** Registry label ("Depends on"); falls back to the raw verb. */
+  label: string;
+  color?: string;
+  confidence?: number;
+  /** 'out' = focus → other, 'in' = other → focus. */
+  direction: 'out' | 'in';
+  otherRef: string;
+  otherKind: 'node' | 'object';
+  otherName: string;
 }
 
 const KINDS = ['taxonomy', 'capture', 'note', 'object'] as const;
@@ -42,12 +60,33 @@ export default function SidePanel({
   semantic,
   vectorsReady,
   onItemClick,
+  relations = [],
+  onRelationClick,
 }: Props) {
   const { t } = useTranslation();
 
   const filtered = typeFilter.size
     ? items.filter((i) => i.dataType && typeFilter.has(i.dataType))
     : items;
+
+  // Group by VERB so the panel reads as an ontology ("Depends on: a, b") rather
+  // than a flat neighbour list. Direction is carried per row, not per group: the
+  // registry has one label per verb and no inverse form, so inventing "Depended
+  // on by" here would be the UI asserting vocabulary the vocabulary does not
+  // have. An arrow is honest and needs no migration.
+  const grouped = useMemo(() => {
+    const by = new Map<string, { label: string; color?: string; rows: FocusRelation[] }>();
+    for (const r of relations) {
+      const g = by.get(r.type) ?? { label: r.label, color: r.color, rows: [] };
+      g.rows.push(r);
+      by.set(r.type, g);
+    }
+    for (const g of by.values()) {
+      g.rows.sort((a, b) => (b.confidence ?? 0) - (a.confidence ?? 0));
+    }
+    // Biggest group first — the node's dominant relation reads at the top.
+    return [...by.entries()].sort((a, b) => b[1].rows.length - a[1].rows.length);
+  }, [relations]);
 
   return (
     <div className="flex h-full w-full flex-col gap-4 bg-background/80 p-4 backdrop-blur">
@@ -108,6 +147,46 @@ export default function SidePanel({
               </Badge>
             ))}
           </div>
+        </div>
+      )}
+
+      {focusName && (
+        <div className="space-y-2" data-testid="panel-relations">
+          <p className="text-xs font-medium text-muted-foreground">{t('explore.panel.relations')}</p>
+          {grouped.length === 0 ? (
+            <p className="text-[11px] text-muted-foreground">{t('explore.panel.relationsEmpty')}</p>
+          ) : (
+            <ol className="space-y-2">
+              {grouped.map(([type, g]) => (
+                <li key={type} data-testid={`relgroup-${type}`}>
+                  <p className="flex items-center gap-1.5 text-[11px] font-medium">
+                    <span
+                      className="inline-block h-2 w-2 shrink-0 rounded-full"
+                      style={{ background: g.color ?? 'hsl(var(--primary))' }}
+                    />
+                    <span className="truncate">{g.label}</span>
+                    <span className="shrink-0 text-muted-foreground">({g.rows.length})</span>
+                  </p>
+                  <ul className="mt-0.5 space-y-0.5 pl-3.5">
+                    {g.rows.map((r) => (
+                      <li key={`${r.direction}:${r.otherKind}:${r.otherRef}`}>
+                        <button
+                          onClick={() => onRelationClick?.(r)}
+                          className="flex w-full items-center gap-1 rounded px-1 py-0.5 text-left text-[11px] hover:bg-muted"
+                          title={r.direction === 'out' ? t('explore.panel.relOut') : t('explore.panel.relIn')}
+                        >
+                          <span className="shrink-0 text-muted-foreground">
+                            {r.direction === 'out' ? '→' : '←'}
+                          </span>
+                          <span className="truncate">{r.otherName}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </li>
+              ))}
+            </ol>
+          )}
         </div>
       )}
 

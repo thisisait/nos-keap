@@ -405,7 +405,11 @@
       "kinds": "Sources",
       "dataTypes": "Data types",
       "results": "{{count}} points",
-      "notSemantic": "no vectors"
+      "notSemantic": "no vectors",
+      "relations": "Ontological relations",
+      "relationsEmpty": "No confirmed relations for this node.",
+      "relOut": "outgoing",
+      "relIn": "incoming"
     },
     "drawer": {
       "open": "Open content",
@@ -465,6 +469,12 @@
         "taxonomy": "Taxonomy",
         "topic": "Topics"
       }
+    },
+    "toggle": {
+      "ontology": "Ontology",
+      "ontologyHint": "Show typed ontological relations (R3 verbs + concept web)",
+      "olinks": "Links",
+      "olinksHint": "Show [[object:…]] references between cards"
     }
   },
   "tables": {
