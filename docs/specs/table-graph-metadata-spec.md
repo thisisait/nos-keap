@@ -43,8 +43,17 @@ side against the same contract.
    callers entitled to them — one source of truth, not a table-only special case.
 4. Stay inside the perf doctrine (U2″): bounded node counts, LOD, deterministic.
 
-Non-goals (this spec): materialising rows as first-class searchable/embeddable
-`knowledge_objects` (see §6 Decision D3, deferred), and any face-side UI.
+**Decisions locked (2026-07-20, owner):** D1 = wire the rbac ladder into
+`getVisibleObjects` (§4). D3 = **materialise** each projected row as a
+first-class `knowledge_object` (§3.1) — rows become searchable, embeddable, and
+R3-linkable. This has a deliberate **synergy**: materialised rows grow the
+object corpus that R3 types over (a DataTable becomes a content source, not just
+a card), which is exactly the "R3 needs more objects" lever. The cost is a real
+storage/embed surface — bounded by a per-table cap + explicit opt-in (§3.1, D5).
+
+Non-goals (this spec): any face-side UI; auto-injecting table edges into the
+moderated R3 relation store (D4 — table edges stay display-only / reuse
+olink+anchor).
 
 ---
 
@@ -106,39 +115,61 @@ Validation rules (enforced in `createTableRequestSchema.superRefine`):
   renders with a neutral colour + label (it does **not** grow the R3 vocab —
   these are table-declared display edges, not moderated relations. See D4).
 
-### 3.1 How `graph.ts` projects rows (mode==='rows')
+### 3.1 How rows materialise (mode==='rows') — **D3: materialised**
 
-For each **visible** `type:'table'` card whose `frontmatter.graph.mode==='rows'`:
-1. Load rows via `storeFor(driver).listRows(tableId)` (already exists), **capped**
-   at `ROW_NODE_CAP` (proposed 500). Beyond the cap: render the card only + a
-   `rowCount` density hint on the card (LOD doctrine); `log`/`meta` reports the
-   truncation — never a silent cut.
-2. Emit one node per row: `id = table-<slug>:row-<idColOrUuid>`, `type = 'table-row'`,
-   `label = row[labelColumn]`, visual from `node.{form,hue,glyph}` (falling back
-   to a per-`kind` default in a small registry, then to `assetDescriptor`).
-3. Anchor: if `node.anchorColumn` resolves to a live node → the row orbits that
-   star; else the row orbits the table card (nested body, `orbit` centre = card).
-4. Edges: for each `edges[]` def, read `row[column]`; if it resolves to a drawn
-   node/object, push a link `{source: rowNodeId, target, vazba?/olink?, type,
-   label}`. Endpoints not in the drawn/visible set are filtered (the existing
-   existence-filter guard — never crash force-graph).
-5. **Rows inherit the card's `visibility`.** They pass the same
-   `getVisibleObjects` gate (§4) — a row-node is never emitted to a caller who
-   can't see the card.
+Rows become first-class `knowledge_objects`, synced by a new `syncRows(t, graph)`
+that runs alongside `syncCard`, on the same triggers (`createTable`, `upsertRow`,
+`deleteRow`, `dropTable`). Not render-time synthesis — a durable materialisation
+mirrored from `table_rows`, idempotent like the card + like embed-sync.
 
-Row-nodes are **ephemeral** (synthesised at render from `table_rows`, not stored
-in `knowledge_objects`) — see Decision D3. They therefore carry width-0 GL-line
-edges by default (bulk-safe), tubes only for the sparse typed-edge case, exactly
-like R3 (`GraphCanvas` PERF doctrine).
+1. **Guarded opt-in.** `mode:'rows'` is only honoured up to `ROW_OBJECT_CAP`
+   (proposed 500) rows per table; a table over the cap is **rejected at
+   create/enable time** with a clear error (not silently truncated) — the owner
+   splits/filters the table or raises the cap deliberately. `meta`/`log` records
+   the count. (Rationale: materialisation is a real storage + embed cost;
+   opt-in + a hard cap keeps a 10k-row table from flooding the object store and
+   the embed queue.)
+2. **One object per row**, via `db.saveObject(t.ownerId, …)`:
+   - `id = table-<slug>:row-<idColValue|rowUuid>` (deterministic → stable orbit +
+     idempotent upsert).
+   - `type = node.kind` (default `'record'`); `assetDescriptor` extended so a
+     `kind` with no built-in maps to `node.{form,hue,glyph}` (else asteroid).
+   - `title = row[labelColumn]`; `body` = a compact rendering of the row's cells
+     (drives search + the embedding).
+   - `visibility = t.visibility` (rows inherit the table's tier).
+   - `links`: `node.anchorColumn` (a `taxonomyRef`) → `[[nodeId]]` anchor ref;
+     each `edges[].column` that's an `objectRef`/`taxonomyRef` → the matching
+     `[[object:…]]`/`[[nodeId]]` ref (reusing `extractRefs`/`classifyRef`), so
+     anchoring + edges ride the **existing** olink/anchor machinery — no new
+     edge path in `graph.ts`.
+   - `frontmatter`: `{ table: t.id, row: <rowId> }` provenance (so a row-object is
+     recognisably table-derived + can be reverse-linked/cleaned).
+3. **Embeddings**: row-objects flow through the normal object embed path with a
+   `content_hash` so an unchanged row is not re-embedded (embed-sync doctrine).
+   This is what makes them R3-linkable (they enter the `object` embedding kind →
+   R3 candidate recall surfaces them — the corpus-growth synergy).
+4. **Lifecycle**: `upsertRow` re-syncs that row's object (create/update,
+   content_hash diff); `deleteRow` deletes it; `dropTable` deletes all row-objects
+   for the table (a `frontmatter.table = <id>` sweep) + the card.
+5. **Render is then FREE**: because rows are real objects, `/api/graph`'s existing
+   `getVisibleObjects` path draws them as nodes and their anchor/olink refs as
+   edges with **no table-specific code in `graph.ts`** — the visibility gate (§4)
+   already scopes them, and edges stay width-0 GL lines in bulk (PERF doctrine),
+   tubes only where an R3 typed relation independently exists.
+
+Net: `syncRows` is the only new write path; `graph.ts` is untouched by rows
+(only the §4 visibility fix + the §3 card-visual override touch it).
 
 ### 3.2 Passthrough chain
 
 `graphMetaSchema` (`shared/contracts/table.ts`) → create body
 (`server/agent.ts:581-588` for `/agent/v1/tables`; the human route likewise) →
 `createTable` (`server/tables.ts:298`) → `syncCard` writes `frontmatter.graph`
-(`tables.ts:208-212`) → `/api/graph` reads it (`graph.ts:186-217`) and, in `rows`
-mode, projects rows. No new table column — it rides the card frontmatter, so
-`data_tables` schema is untouched.
+(`tables.ts:208-212`) **and, in `rows` mode, `syncRows` materialises row-objects
+(§3.1)**. On `upsertRow`/`deleteRow`/`dropTable` both re-sync. `/api/graph` then
+renders card + row-objects through the unchanged `getVisibleObjects` path. No new
+`data_tables` column — the `graph` block rides the card frontmatter; row-objects
+carry `frontmatter.{table,row}` provenance.
 
 ---
 
@@ -177,11 +208,13 @@ all; `private` stays owner+admin only.
   through `syncCard`/`graph.ts` (but `mode:'rows'` returns card-only for now,
   gated). e2e = the visibility matrix + a card rendering with an overridden
   form/hue. No rows-as-nodes yet → low risk, no perf surface.
-- **Stage 2 — rows as nodes + edges** (the §3.1 projection): row-node emission,
-  anchoring, edge defs, `ROW_NODE_CAP`/LOD, the existence-filter + PERF
-  guards. e2e = a `mode:'rows'` table projecting N row-nodes anchored to a star,
-  an edge column drawing to an object/node, cap truncation reported, rows hidden
-  from an unentitled caller.
+- **Stage 2 — rows materialise as objects** (the §3.1 `syncRows` path):
+  per-row `knowledge_object` sync, `ROW_OBJECT_CAP` opt-in guard, anchor/olink
+  refs, embed content_hash dedup, lifecycle sync on upsert/delete/drop. e2e = a
+  `mode:'rows'` table materialising N row-objects anchored to a star, an
+  `objectRef` edge column drawing an olink, an over-cap table rejected at enable,
+  a row edit re-syncing its object, `deleteRow`/`dropTable` cleaning up, rows
+  hidden from an unentitled caller, and a row-object surfacing as an R3 candidate.
 
 Released per the standing flow after each stage (or both together if small).
 
@@ -189,38 +222,41 @@ Released per the standing flow after each stage (or both together if small).
 
 ## 6. Open decisions (ratify before build)
 
-- **D1 — visibility fix approach.** (A) Wire the rbac ladder into
-  `getVisibleObjects` [**recommended** — one source of truth, fixes all objects,
-  the ladder already exists]. (B) Have the companion send `visibility:'shared'`
-  for explore-visible tables [simpler, but leaks tier semantics into the producer
-  and doesn't fix non-table objects]. → **Recommend A.**
-- **D2 — scope now.** Ship Stage 1 only (visibility + card look) and defer
-  rows-as-nodes, or commit to both stages now? → **Recommend both, staged** (D2
-  = do Stage 1 first, decide Stage 2 after seeing it live).
-- **D3 — row identity.** Row-nodes **ephemeral** (synthesised at render)
-  [**recommended** — no duplicate storage, no embed cost, rows stay a table
-  concern] vs **materialised** as `knowledge_objects` [rows become
-  searchable/embeddable/R3-linkable, but 10k-row tables flood the object store +
-  embed queue]. → **Recommend ephemeral**, with a future explicit "promote row →
-  object" action if a row needs to be a first-class citizen.
-- **D4 — edge semantics.** Table-declared `edges[].type` are **display-only**
-  labels (neutral colour if not a known verb), NOT moderated R3 relations
-  [**recommended** — keeps the R3 moderation invariant clean; a table shouldn't
-  inject unmoderated typed edges into the brain]. Confirm the brain endpoint
-  `/agent/v1/graph` does **not** ingest these (it reads the `relations` store
-  only — already true; just assert it).
-- **D5 — `ROW_NODE_CAP`.** Proposed 500/table. Owner call on the number.
+- **D1 — visibility fix approach. ✅ DECIDED (A):** wire the rbac ladder into
+  `getVisibleObjects` — one source of truth, fixes all objects, ladder already
+  exists (§4).
+- **D2 — scope now. → Recommend both, staged** — Stage 1 first (visibility + card
+  look, no storage surface), decide Stage 2 (materialisation) after seeing Stage 1
+  live. (Not blocking; proceeding on this unless the owner objects.)
+- **D3 — row identity. ✅ DECIDED (materialise):** each projected row →
+  first-class `knowledge_object` (§3.1). Rows become searchable/embeddable/
+  R3-linkable (corpus-growth synergy); bounded by `ROW_OBJECT_CAP` opt-in +
+  content_hash embed dedup + lifecycle sync.
+- **D4 — edge semantics. → Recommend display-only** — table `edges[]` render via
+  the existing olink/anchor refs on the row-object; they do **not** enter the
+  moderated R3 `relations` store, and the brain endpoint `/agent/v1/graph` (which
+  reads only that store) is unaffected — assert this in Stage 2 e2e. A row-object
+  can still gain a *typed* R3 edge later, through normal moderation.
+- **D5 — `ROW_OBJECT_CAP`.** Proposed **500/table** (materialisation cost is now
+  storage + embeddings, so this is a real guard, not just a render LOD). Owner
+  call on the number — and whether over-cap is a hard reject (recommended) or a
+  capped-with-warning materialisation.
 
 ---
 
 ## 7. Invariants (unchanged, must hold)
 
-- Spatial memory: taxonomy stars never move; row-node ids deterministic
+- Spatial memory: taxonomy stars never move; row-object ids deterministic
   (`table-<slug>:row-<id>`), so a row keeps its orbit across renders.
 - Default (no `graph` block) = today's behaviour, byte-identical — every existing
   table incl. the face config tables is unaffected.
-- PERF: row-node edges stay width-0 GL lines in bulk; tubes only for sparse typed
-  edges; `ROW_NODE_CAP` + LOD; no silent truncation (report it).
-- Visibility scopes **both** the card and every row-node and every edge endpoint;
-  the R3 brain endpoint ingests only the moderated `relations` store (D4).
+- Idempotency: `syncRows` upserts on the deterministic id; embeddings dedup on
+  `content_hash` (unchanged row → no re-embed); `dropTable`/`deleteRow` clean up
+  their row-objects (no orphans).
+- PERF/scale: `mode:'rows'` is opt-in and capped at `ROW_OBJECT_CAP`; over-cap is
+  a hard reject at enable-time (no silent truncation); row-object edges stay
+  width-0 GL lines in bulk, tubes only for sparse typed edges.
+- Visibility scopes **both** the card and every row-object and every edge
+  endpoint; the R3 brain endpoint ingests only the moderated `relations` store
+  (D4) — table edges never auto-enter it.
 - i18n en+cs for any new UI string; e2e for every new behaviour.
