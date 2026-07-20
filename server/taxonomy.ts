@@ -183,6 +183,34 @@ export function staticNodes(): FlatNode[] {
  * Idempotent; called at startup for every stored row and immediately after
  * an approval materializes a node.
  */
+/** Reserved id range for USER-DEFINED taxonomy roots.
+ *
+ *  The twelve seed domains are `01`–`12` and live in the static spine. A user
+ *  root must never collide with them, and — more importantly — must never be
+ *  added TO them: `bakeLayout` places roots at `angle = i / categories.length`,
+ *  so a thirteenth *seed* root changes the divisor and moves every existing
+ *  domain, rearranging the whole galaxy and destroying spatial memory in one
+ *  release. A user root is therefore always an ext node in this range, appended
+ *  to the layout, never baked into the seed ring. */
+export const USER_ROOT_MIN = 90;
+export const USER_ROOT_MAX = 99;
+
+/** True for a two-digit id inside the reserved user-root range. */
+export function isUserRootId(id: string): boolean {
+  if (!/^\d{2}$/.test(id)) return false;
+  const n = Number(id);
+  return n >= USER_ROOT_MIN && n <= USER_ROOT_MAX;
+}
+
+/**
+ * Merge one grown node into the live tree.
+ *
+ * A row with an EMPTY parentId is a user-defined ROOT (`parent_id` is NOT NULL
+ * in the table, so '' is the sentinel). Roots are accepted only inside the
+ * reserved range — an unrestricted parentless node would be indistinguishable
+ * from a grown node whose parent failed to resolve, which is precisely the
+ * silent-orphan case the parent check exists to catch.
+ */
 export function registerExtNode(row: {
   id: string;
   parentId: string;
@@ -191,21 +219,25 @@ export function registerExtNode(row: {
   zone: string;
 }): FlatNode | null {
   if (nodesById.has(row.id)) return nodesById.get(row.id)!;
-  const parent = nodesById.get(row.parentId);
-  if (!parent) return null;
+  const isRoot = !row.parentId;
+  if (isRoot && !isUserRootId(row.id)) return null;
+  const parent = isRoot ? null : nodesById.get(row.parentId);
+  if (!isRoot && !parent) return null;
   const node: FlatNode = {
     id: row.id,
     name: row.name,
     description: row.description,
-    kind: 'item',
-    parentId: row.parentId,
-    path: parent.path ? `${parent.path} > ${parent.name}` : parent.name,
+    // A root is a category, like the seed domains it sits beside — `kind` drives
+    // rendering weight, so labelling it 'item' would draw a domain as a leaf.
+    kind: isRoot ? 'category' : 'item',
+    parentId: isRoot ? null : row.parentId,
+    path: isRoot ? '' : parent!.path ? `${parent!.path} > ${parent!.name}` : parent!.name,
     childIds: [],
     zone: row.zone as TaxonomyZone,
     ext: true,
   };
   nodesById.set(node.id, node);
-  parent.childIds.push(node.id);
+  if (parent) parent.childIds.push(node.id);
   return node;
 }
 

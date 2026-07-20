@@ -18,16 +18,24 @@
  * pinned (fx/fy/fz) — only semantic stars and nebula dust stay free.
  */
 import crypto from 'node:crypto';
-import { staticNodes, getNode, nodeLevel, type FlatNode } from './taxonomy';
+import { staticNodes, getNode, nodeLevel, isUserRootId, USER_ROOT_MIN, USER_ROOT_MAX, type FlatNode } from './taxonomy';
 import * as db from './db';
 
 const ALGO_VERSION = 'v1';
+// Depth bound for the placement fixpoint below — a taxonomy deeper than this is
+// a bug, not a tree, and the loop must terminate regardless.
+const MAX_PLACEMENT_PASSES = 12;
 
 // Galaxy ring + per-level shell radii. Ring spacing (~733 at 12 galaxies on
 // r=1400) must stay larger than two L2 shells (2×260) so galaxies don't
 // interleave — revisit together, never independently.
 const GALAXY_RING_RADIUS = 1400;
 const GALAXY_PLANE_LIFT = 160; // alternate ±z so the ring isn't a flat disc
+// User-defined roots (ids 90-99) sit on their OWN ring, outside the seed ring.
+// They cannot join the seed ring: that ring's angles are i/categories.length, so
+// adding one would move all twelve seed domains. A wider radius also gives the
+// self-model its own region instead of parking it inside computer science.
+const USER_RING_RADIUS = GALAXY_RING_RADIUS * 1.75;
 const LEVEL_RADIUS = [0, 260, 110, 48, 26];
 
 function levelRadius(level: number): number {
@@ -134,26 +142,73 @@ export function ensureLayout(): string {
     db.saveLayout(points, version);
     console.log(`[layout] baked ${points.length} star positions (${version})`);
   }
+  // Fixpoint, not one pass: a grown node needs its PARENT placed first, and
+  // listExtNodes orders by (created_at, ordinal) — which says nothing about
+  // ancestry. One pass leaves any child that happens to precede its parent with
+  // no position until the next boot, and a node without a position has all of
+  // its cards skipped. A whole subtree ingested in one go (a user root and its
+  // three levels) makes that ordering collision likely rather than exotic.
   let appended = 0;
-  const layout = db.getLayout();
-  for (const ext of db.listExtNodes()) {
-    if (layout.has(ext.id)) continue;
-    if (appendExtNodeToLayout(ext)) appended++;
+  const pending = db.listExtNodes().filter((e) => !db.getLayout().has(e.id));
+  for (let pass = 0; pass < MAX_PLACEMENT_PASSES && pending.length; pass++) {
+    const before = pending.length;
+    for (let i = pending.length - 1; i >= 0; i--) {
+      if (appendExtNodeToLayout(pending[i])) {
+        pending.splice(i, 1);
+        appended++;
+      }
+    }
+    if (pending.length === before) break; // no progress → the rest are unplaceable
   }
   if (appended) console.log(`[layout] appended ${appended} grown star(s)`);
+  if (pending.length) {
+    console.warn(
+      `[layout] ${pending.length} grown star(s) unplaceable (parent missing or outside the user-root range): ` +
+        pending.slice(0, 5).map((e) => e.id).join(', '),
+    );
+  }
   return version;
 }
 
-/** Place + persist one grown node. Parent must already have a position. */
+/**
+ * Deterministic slot for one user-defined root on the outer ring.
+ *
+ * Offset by half a SEED step (π/12) so a user root never shares a ray with a
+ * seed domain: an alignment would need 10i - 12·slot = 5, and the left side is
+ * always even. Without the offset a root could sit directly "behind" a domain
+ * from the camera's point of view at every orbit.
+ */
+function userRootPlacement(id: string): [number, number, number] {
+  const slots = USER_ROOT_MAX - USER_ROOT_MIN + 1;
+  const slot = Number(id) - USER_ROOT_MIN;
+  const angle = (slot / slots) * Math.PI * 2 + Math.PI / 12;
+  return [
+    Math.cos(angle) * USER_RING_RADIUS,
+    Math.sin(angle) * USER_RING_RADIUS,
+    (slot % 2 === 0 ? 1 : -1) * GALAXY_PLANE_LIFT * (0.5 + hash01(id, 'lift')),
+  ];
+}
+
+/** Place + persist one grown node. A non-root's parent must already have a
+ *  position; a user-defined ROOT has no parent and gets its own ring slot —
+ *  without this branch a root received no position at all, and a node without a
+ *  position has every one of its cards skipped (`star.x === undefined`). */
 export function appendExtNodeToLayout(ext: {
   id: string;
   parentId: string;
   ordinal: number;
 }): boolean {
+  const node = getNode(ext.id);
+  if (!node) return false;
+  if (!ext.parentId) {
+    if (!isUserRootId(ext.id)) return false;
+    const [x, y, z] = userRootPlacement(ext.id);
+    db.appendLayoutPoint(ext.id, x, y, z);
+    return true;
+  }
   const layout = db.getLayout();
   const pp = layout.get(ext.parentId);
-  const node = getNode(ext.id);
-  if (!pp || !node) return false;
+  if (!pp) return false;
   const [x, y, z] = appendPlacement(pp, nodeLevel(ext.id), ext.ordinal, ext.id);
   db.appendLayoutPoint(ext.id, x, y, z);
   return true;
