@@ -24,9 +24,14 @@ const OBJ2 = 'rel-obj-beta';
 // the real document in the body — the shape that used to starve the classifier.
 const OBJ3 = 'rel-obj-fssynced';
 const OBJ3_DESC = 'nOS/infra';
+// Deliberately longer than DESCRIPTION_CAP (240) — the browse-surface preview cap
+// must not be what bounds the classifier's evidence.
 const OBJ3_BODY =
   'Wiring layer for PostgreSQL 16 in the infra compose stack: shared OLTP storage ' +
-  'deployed as postgres:16.14-alpine, exposing port 5432 to the stack network.';
+  'deployed as postgres:16.14-alpine, exposing port 5432 to the stack network. ' +
+  'Backups run nightly to the host volume and are pruned after fourteen days. ' +
+  'Connection pooling is handled upstream; the container itself stays stateless ' +
+  'apart from its data volume. TAILMARKER-past-the-preview-cap.';
 const AXIS = 300; // distinctive dim → orthogonal to other specs' vectors
 // A distinct MINORITY model: cross-kind candidate recall is model-agnostic (it
 // compares vectors by geometry), but topics clustering counts only the dominant
@@ -106,6 +111,11 @@ test.describe('typed relations pipeline (R3 stage 1)', () => {
     // embedding was built from the body. Both must reach the classifier now.
     expect(text).toContain(OBJ3_DESC);
     expect(text, 'body reaches the classifier').toContain('postgres:16.14-alpine');
+
+    // ...and the 240-char browse-preview cap is not what bounds it: a marker past
+    // that offset must survive, or ENDPOINT_TEXT_CAP is dead code.
+    expect(text.length).toBeGreaterThan(240);
+    expect(text, 'text past the preview cap survives').toContain('TAILMARKER-past-the-preview-cap');
   });
 
   test('candidates sweep: cross-type pairs only, deduped, both endpoints resolved, vocab offered', async ({

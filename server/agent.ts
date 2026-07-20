@@ -385,8 +385,13 @@ export function registerAgentRoutes(app: Express) {
         to_kind: p.toKind,
         fromLabel: from.label,
         toLabel: to.label,
-        fromText: trim(from.text),
-        toText: trim(to.text),
+        // NOT trim(): that applies DESCRIPTION_CAP (240), the cap for the *browse*
+        // surfaces where a description is a preview line. This text is the
+        // classifier's only evidence for typing an edge, and relationEndpoint has
+        // already bounded it at ENDPOINT_TEXT_CAP — trimming here just silently
+        // undid that larger budget.
+        fromText: from.text,
+        toText: to.text,
         similarity: p.similarity,
       });
     }
