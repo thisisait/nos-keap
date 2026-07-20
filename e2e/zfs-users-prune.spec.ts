@@ -24,6 +24,7 @@ interface SyncResult {
   upserted: number;
   removed: number;
   pruneRefused?: boolean;
+  danglingAnchors?: number;
 }
 
 const sync = async (request: import('@playwright/test').APIRequestContext) =>
@@ -60,6 +61,24 @@ test.describe('users-pass prune guards', () => {
     const r = await sync(request);
     expect(r.pruneRefused ?? false).toBe(false);
     expect(r.removed, 'a genuine delete still prunes').toBe(1);
+  });
+
+  test('a card anchored to a node that does not exist is REPORTED, not silent', async ({
+    request,
+  }) => {
+    // fs-sync runs on boot and on a timer, independent of whatever ingests the
+    // taxonomy, so a card can legitimately arrive before its node. It then
+    // renders nowhere (graph.ts drops the dangling anchor at read time) and
+    // heals by itself once the node lands. The failure mode worth closing is
+    // that happening with nothing said.
+    writeFileSync(path.join(SAFE, 'early.md'), 'anchored ahead of its node [[90.77.77]]\n');
+    const r = await sync(request);
+    expect(r.danglingAnchors ?? 0, 'the sync must report the unresolvable anchor').toBeGreaterThan(0);
+
+    // An ordinary card does not trip it.
+    rmSync(path.join(SAFE, 'early.md'));
+    const clean = await sync(request);
+    expect(clean.danglingAnchors ?? 0).toBe(0);
   });
 
   test('cleanup', async ({ request }) => {

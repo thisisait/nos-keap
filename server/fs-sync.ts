@@ -49,7 +49,8 @@ import { existsSync, lstatSync, readdirSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import * as db from './db';
 import { listRoots, resolveInRoot } from './fs-roots';
-import { extractRefs, type ObjectRef } from './objects';
+import { extractRefs, anchorNodeIds, type ObjectRef } from './objects';
+import { getNode } from './taxonomy';
 import { markCorpusDirty } from './search';
 import { canonicalUid } from './uid';
 
@@ -108,6 +109,12 @@ export interface FsSyncResult {
    *  (cap hit, or a walk truncated by an unreadable subtree). Surfaced so a
    *  silent refusal is observable rather than looking like "nothing to remove". */
   pruneRefused?: boolean;
+  /** Cards written this pass whose [[node]] anchor does not resolve. Such a card
+   *  is INVISIBLE in the constellation view — graph.ts drops the dangling anchor
+   *  at read time — so a sync that produces them must say so. Benign and
+   *  self-healing when the taxonomy simply has not been ingested yet; a standing
+   *  non-zero count means cards are pointing at nodes that will never arrive. */
+  danglingAnchors?: number;
 }
 
 // ── fs-watch status registration ────────────────────────────────────────────
@@ -402,6 +409,7 @@ export function syncUserFiles(): FsSyncResult {
   );
 
   let changed = false;
+  let danglingAnchors = 0;
   for (const f of found) {
     // Hashed id (URL-safe for GET /api/objects/:id); the path itself is data.
     const id = `fs:${f.uid}:${crypto.createHash('sha1').update(f.relPath).digest('hex').slice(0, 16)}`;
@@ -430,6 +438,13 @@ export function syncUserFiles(): FsSyncResult {
     for (const r of [...((prev?.links ?? []) as ObjectRef[]), ...extractRefs(body, undefined)]) {
       links.set(`${r.kind}:${r.ref}`, r);
     }
+    // Count anchors that do not resolve RIGHT NOW. fs-sync runs on boot and on a
+    // timer, independent of whichever job ingests the taxonomy, so a card can
+    // legitimately land before its node exists — it becomes visible by itself on
+    // the next graph read, because anchors are re-filtered per request. What is
+    // NOT acceptable is that happening quietly.
+    const unresolved = anchorNodeIds([...links.values()]).filter((a) => !getNode(a)).length;
+    if (unresolved) danglingAnchors += unresolved;
     db.saveObject(f.uid, {
       id,
       type: typeOf(f.relPath),
@@ -477,6 +492,13 @@ export function syncUserFiles(): FsSyncResult {
     }
   }
   if (changed) markCorpusDirty();
+  if (danglingAnchors) {
+    result.danglingAnchors = danglingAnchors;
+    console.warn(
+      `[fs-sync] ${danglingAnchors} anchor(s) point at taxonomy nodes that do not exist — ` +
+        `those cards render nowhere in the constellation until the nodes are ingested`,
+    );
+  }
 
   result.tookMs = Date.now() - t0;
   lastRun = { at: new Date().toISOString(), result };
