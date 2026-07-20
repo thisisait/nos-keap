@@ -4,7 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 
 /**
- * User-defined taxonomy roots (reserved ids 90-99) — the two holes that blocked
+ * User-defined taxonomy roots (slug ids, e.g. `nos`) — the two holes that blocked
  * a first-tier node, exercised against a real throwaway libSQL DB.
  *
  * Both failed CLOSED and silently, which is why this is unit-tested rather than
@@ -31,7 +31,7 @@ afterAll(() => {
   fs.rmSync(TMP, { recursive: true, force: true });
 });
 
-const ROOT = { id: '90', parentId: '', name: 'nOS', description: 'Platform self-model.', zone: 'free' };
+const ROOT = { id: 'nos', parentId: '', name: 'nOS', description: 'Platform self-model.', zone: 'free' };
 
 describe('registerExtNode — user-defined roots', () => {
   it('accepts a parentless node inside the reserved range', () => {
@@ -45,13 +45,13 @@ describe('registerExtNode — user-defined roots', () => {
     expect(n!.ext).toBe(true);
   });
 
-  it('refuses a parentless node OUTSIDE the reserved range', () => {
+  it('refuses a parentless node that is not a bare slug', () => {
     // Unrestricted parentless nodes would be indistinguishable from a grown node
     // whose parent failed to resolve — exactly the silent orphan the parent check
     // exists to catch.
-    expect(tax.registerExtNode({ ...ROOT, id: '42' })).toBeNull();
-    expect(tax.registerExtNode({ ...ROOT, id: '13' })).toBeNull();
-    expect(tax.registerExtNode({ ...ROOT, id: '90.01' })).toBeNull();
+    expect(tax.registerExtNode({ ...ROOT, id: '42' })).toBeNull();   // numeric = seed shape
+    expect(tax.registerExtNode({ ...ROOT, id: 'nos.infra' })).toBeNull(); // not a ROOT
+    expect(tax.registerExtNode({ ...ROOT, id: 'NOS' })).toBeNull();  // charset
   });
 
   it('cannot hijack a seed domain id', () => {
@@ -63,16 +63,16 @@ describe('registerExtNode — user-defined roots', () => {
   });
 
   it('still refuses a non-root whose parent does not resolve', () => {
-    expect(tax.registerExtNode({ ...ROOT, id: '90.99.99', parentId: '90.99' })).toBeNull();
+    expect(tax.registerExtNode({ ...ROOT, id: 'nos.ghost.child', parentId: 'nos.ghost' })).toBeNull();
   });
 
   it('hangs children off the root normally', () => {
     const stack = tax.registerExtNode({
-      id: '90.01', parentId: '90', name: 'infra', description: 'Infra stack.', zone: 'free',
+      id: 'nos.infra', parentId: 'nos', name: 'infra', description: 'Infra stack.', zone: 'free',
     });
     expect(stack).not.toBeNull();
-    expect(stack!.parentId).toBe('90');
-    expect(tax.getNode('90')!.childIds).toContain('90.01');
+    expect(stack!.parentId).toBe('nos');
+    expect(tax.getNode('nos')!.childIds).toContain('nos.infra');
     // path builds from the root's name even though the root's own path is ''.
     expect(stack!.path).toBe('nOS');
   });
@@ -80,31 +80,30 @@ describe('registerExtNode — user-defined roots', () => {
 
 describe('appendExtNodeToLayout — root placement', () => {
   it('gives a root a position without needing a parent', () => {
-    expect(layout.appendExtNodeToLayout({ id: '90', parentId: '', ordinal: 0 })).toBe(true);
-    const p = db.getLayout().get('90');
+    expect(layout.appendExtNodeToLayout({ id: 'nos', parentId: '', ordinal: 0 })).toBe(true);
+    const p = db.getLayout().get('nos');
     expect(p).toBeTruthy();
     expect(Number.isFinite(p!.x) && Number.isFinite(p!.y) && Number.isFinite(p!.z)).toBe(true);
   });
 
   it('places the root OUTSIDE the seed ring', () => {
-    const p = db.getLayout().get('90')!;
+    const p = db.getLayout().get('nos')!;
     // Seed domains sit at r=1400; a user root must not land among them or its
     // whole subtree reads as part of whichever domain it landed next to.
     const r = Math.hypot(p.x, p.y);
     expect(r).toBeGreaterThan(1400 * 1.5);
   });
 
-  it('never shares a ray with a seed domain', () => {
-    // The half-seed-step offset: an alignment needs 10i - 12·slot = 5, and the
-    // left side is always even. Assert it for every slot in the range.
-    for (let slot = 0; slot < 10; slot++) {
-      const angle = (slot / 10) * Math.PI * 2 + Math.PI / 12;
-      for (let i = 0; i < 12; i++) {
-        const seed = (i / 12) * Math.PI * 2;
-        const delta = Math.abs(((angle - seed) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2));
-        expect(Math.min(delta, Math.PI * 2 - delta)).toBeGreaterThan(0.05);
-      }
-    }
+  it('a second root does not move the first', () => {
+    // The property index-based placement cannot have: position is fixed by the
+    // root's own name, so adding a sibling root disturbs nothing.
+    const before = db.getLayout().get('nos')!;
+    tax.registerExtNode({ id: 'lab', parentId: '', name: 'Lab', description: 'Another root.', zone: 'free' });
+    expect(layout.appendExtNodeToLayout({ id: 'lab', parentId: '', ordinal: 0 })).toBe(true);
+    const after = db.getLayout().get('nos')!;
+    expect(after.x).toBe(before.x);
+    expect(after.y).toBe(before.y);
+    expect(db.getLayout().get('lab')!.x).not.toBe(before.x);
   });
 
   it('refuses a parentless node outside the range, rather than placing it anywhere', () => {
@@ -112,11 +111,11 @@ describe('appendExtNodeToLayout — root placement', () => {
   });
 
   it('places a child once its root is placed', () => {
-    expect(layout.appendExtNodeToLayout({ id: '90.01', parentId: '90', ordinal: 0 })).toBe(true);
-    const p = db.getLayout().get('90.01');
+    expect(layout.appendExtNodeToLayout({ id: 'nos.infra', parentId: 'nos', ordinal: 0 })).toBe(true);
+    const p = db.getLayout().get('nos.infra');
     expect(p).toBeTruthy();
     // The child orbits its root, not the galaxy centre.
-    const root = db.getLayout().get('90')!;
+    const root = db.getLayout().get('nos')!;
     expect(Math.hypot(p!.x - root.x, p!.y - root.y)).toBeLessThan(600);
   });
 });

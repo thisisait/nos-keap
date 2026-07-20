@@ -16,8 +16,16 @@ export interface ObjectRef {
   ref: string;
 }
 
-// Taxonomy ids look like "01", "01.02", "01.02.03.04" — dotted 2-digit runs.
-const NODE_ID = /^\d{2}(?:\.\d{2})*$/;
+// Taxonomy ids come in two shapes, and BOTH are node refs:
+//   seed  "01", "01.02", "01.02.03.04"   — dotted 2-digit runs (the static spine)
+//   grown "nos", "nos.infra.postgresql"  — dotted lowercase slugs (user subtrees)
+// The slug form exists because a numeric segment encodes POSITION: inserting a
+// sibling renumbers the ones after it, and every card anchored to them then
+// resolves to a different node while still looking valid. A slug encodes
+// identity, so insertion is free and that whole failure class disappears.
+// Unambiguous against the other ref kinds: urls need a scheme, objects the
+// `object:` prefix, services a colon.
+const NODE_ID = /^(?:\d{2}(?:\.\d{2})*|[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)*)$/;
 
 function classifyRef(raw: string): ObjectRef | null {
   const ref = raw.trim();

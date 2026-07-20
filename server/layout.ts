@@ -18,7 +18,7 @@
  * pinned (fx/fy/fz) — only semantic stars and nebula dust stay free.
  */
 import crypto from 'node:crypto';
-import { staticNodes, getNode, nodeLevel, isUserRootId, USER_ROOT_MIN, USER_ROOT_MAX, type FlatNode } from './taxonomy';
+import { staticNodes, getNode, nodeLevel, isUserRootId, type FlatNode } from './taxonomy';
 import * as db from './db';
 
 const ALGO_VERSION = 'v1';
@@ -173,19 +173,21 @@ export function ensureLayout(): string {
 /**
  * Deterministic slot for one user-defined root on the outer ring.
  *
- * Offset by half a SEED step (π/12) so a user root never shares a ray with a
- * seed domain: an alignment would need 10i - 12·slot = 5, and the left side is
- * always even. Without the offset a root could sit directly "behind" a domain
- * from the camera's point of view at every orbit.
+ * The angle comes from a hash of the ROOT'S OWN ID, not from its index among
+ * roots. Index-based placement would move every existing root the moment a
+ * second one appeared — the same defect as the seed ring, reintroduced one
+ * layer out. Hashing means a root's position is fixed by its name forever, and
+ * adding another disturbs nothing.
+ *
+ * Two roots can in principle hash close together; with a handful of roots that
+ * is cosmetic, and the alternative trades a rare overlap for guaranteed motion.
  */
 function userRootPlacement(id: string): [number, number, number] {
-  const slots = USER_ROOT_MAX - USER_ROOT_MIN + 1;
-  const slot = Number(id) - USER_ROOT_MIN;
-  const angle = (slot / slots) * Math.PI * 2 + Math.PI / 12;
+  const angle = hash01(id, 'ring') * Math.PI * 2;
   return [
     Math.cos(angle) * USER_RING_RADIUS,
     Math.sin(angle) * USER_RING_RADIUS,
-    (slot % 2 === 0 ? 1 : -1) * GALAXY_PLANE_LIFT * (0.5 + hash01(id, 'lift')),
+    (hash01(id, 'side') < 0.5 ? 1 : -1) * GALAXY_PLANE_LIFT * (0.5 + hash01(id, 'lift')),
   ];
 }
 

@@ -71,7 +71,10 @@ test.describe('users-pass prune guards', () => {
     // renders nowhere (graph.ts drops the dangling anchor at read time) and
     // heals by itself once the node lands. The failure mode worth closing is
     // that happening with nothing said.
-    writeFileSync(path.join(SAFE, 'early.md'), 'anchored ahead of its node [[90.77.77]]\n');
+    // A SLUG anchor, which also proves classifyRef accepts the user-subtree id
+    // shape — an unrecognised ref is dropped silently, so if the regex were
+    // wrong this would report zero and look like success.
+    writeFileSync(path.join(SAFE, 'early.md'), 'anchored ahead of its node [[nos.infra.postgresql]]\n');
     const r = await sync(request);
     expect(r.danglingAnchors ?? 0, 'the sync must report the unresolvable anchor').toBeGreaterThan(0);
 

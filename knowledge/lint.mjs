@@ -21,7 +21,9 @@ const CANON = process.argv.includes('--canonical')
   ? process.argv[process.argv.indexOf('--canonical') + 1]
   : path.join(__dir, 'canonical');
 
-const ID_RE = /^\d{2}(\.\d{2})*$/;
+// Seed spine ids are dotted 2-digit runs; user subtrees are dotted lowercase
+// slugs (a numeric segment encodes position, a slug encodes identity).
+const ID_RE = /^(?:\d{2}(?:\.\d{2})*|[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)*)$/;
 const CYR = /[Ѐ-ӿ]/;
 const ZONES = new Set(['votable', 'free', 'anchor']);
 

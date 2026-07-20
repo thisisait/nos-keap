@@ -183,23 +183,17 @@ export function staticNodes(): FlatNode[] {
  * Idempotent; called at startup for every stored row and immediately after
  * an approval materializes a node.
  */
-/** Reserved id range for USER-DEFINED taxonomy roots.
+/** A USER-DEFINED taxonomy root: one bare lowercase slug, e.g. `nos`.
  *
- *  The twelve seed domains are `01`–`12` and live in the static spine. A user
- *  root must never collide with them, and — more importantly — must never be
- *  added TO them: `bakeLayout` places roots at `angle = i / categories.length`,
- *  so a thirteenth *seed* root changes the divisor and moves every existing
- *  domain, rearranging the whole galaxy and destroying spatial memory in one
- *  release. A user root is therefore always an ext node in this range, appended
- *  to the layout, never baked into the seed ring. */
-export const USER_ROOT_MIN = 90;
-export const USER_ROOT_MAX = 99;
-
-/** True for a two-digit id inside the reserved user-root range. */
+ *  Slugs cannot collide with the seed domains, which are two-digit numerals —
+ *  the disjointness is structural, not a reserved range anyone has to remember.
+ *
+ *  A user root is always an EXT node appended to the layout, never baked into
+ *  the seed ring: `bakeLayout` places roots at `angle = i / categories.length`,
+ *  so admitting one to the static spine would change the divisor, move all
+ *  twelve existing domains, and destroy spatial memory in a single release. */
 export function isUserRootId(id: string): boolean {
-  if (!/^\d{2}$/.test(id)) return false;
-  const n = Number(id);
-  return n >= USER_ROOT_MIN && n <= USER_ROOT_MAX;
+  return /^[a-z][a-z0-9-]*$/.test(id);
 }
 
 /**

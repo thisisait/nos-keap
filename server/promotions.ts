@@ -405,12 +405,32 @@ export function materializeNode(promotionId: string, decidedBy: string): { nodeI
   const parent = getNode(draft.parentId);
   if (!parent) throw new Error(`parent ${draft.parentId} vanished`);
 
-  // Child id = next numeric suffix among ALL siblings (static + grown).
-  const used = parent.childIds
-    .map((cid) => Number(cid.split('.').pop()))
-    .filter((n) => Number.isInteger(n));
-  const next = (used.length ? Math.max(...used) : 0) + 1;
-  const nodeId = `${parent.id}.${String(next).padStart(2, '0')}`;
+  // Child id follows the PARENT'S scheme. Under the numeric seed spine that is
+  // the next free suffix; under a slug subtree it is a slug of the node's own
+  // name, because the whole point of the slug form is that an id names a thing
+  // rather than its place in a list — allocating `….03` there would put position
+  // back into the identity and reopen the renumbering hole it exists to close.
+  const numericParent = /^\d{2}(?:\.\d{2})*$/.test(parent.id);
+  let nodeId: string;
+  if (numericParent) {
+    const used = parent.childIds
+      .map((cid) => Number(cid.split('.').pop()))
+      .filter((n) => Number.isInteger(n));
+    const next = (used.length ? Math.max(...used) : 0) + 1;
+    nodeId = `${parent.id}.${String(next).padStart(2, '0')}`;
+  } else {
+    const base = draft.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 48);
+    if (!base || !/^[a-z]/.test(base)) throw new Error(`cannot derive a slug id from name "${draft.name}"`);
+    // Collision only when two siblings really share a name — suffix rather than
+    // reject, so a legitimate duplicate label does not block the proposal.
+    let candidate = `${parent.id}.${base}`;
+    for (let n = 2; getNode(candidate); n++) candidate = `${parent.id}.${base}-${n}`;
+    nodeId = candidate;
+  }
   const zone = zoneOfLevel(nodeLevel(parent.id) + 1);
   const ordinal = db.extChildCount(parent.id);
 
