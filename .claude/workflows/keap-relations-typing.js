@@ -79,14 +79,23 @@ const TYPED_SCHEMA = {
   },
 }
 
+// A pre-built batch (e.g. from `sweep`, the anchored whole-corpus pass) is typed
+// as-is. The global `fetch` returns the top-N of one ranking, which in a corpus
+// with a flat similarity band reaches only a fraction of the cards — so the file
+// path is the way to type a batch that was assembled properly.
+const SRC_FILE = OPTS.batchFile ? `'${OPTS.batchFile}'` : BATCH_FILE
+const fetchStep = OPTS.batchFile
+  ? `The batch is ALREADY on disk at ${SRC_FILE} — do not fetch anything.`
+  : `Run exactly:
+${TOKENS} && node ${TOOL} fetch --limit ${LIMIT}${anchorFlags}${maxDistFlag} --out ${SRC_FILE}`
+
 phase('Fetch')
-const batch = await agent(`Fetch the candidate batch TO A FILE, then report only its size and vocabulary.
+const batch = await agent(`Report the candidate batch's size and vocabulary. The pairs stay in the file — never print them.
 
-Run exactly:
-${TOKENS} && node ${TOOL} fetch --limit ${LIMIT}${anchorFlags}${maxDistFlag} --out ${BATCH_FILE}
+${fetchStep}
 
-Then read back ONLY the summary (do not print the pairs — they stay in the file):
-${TOKENS} && node -e 'const b=require(process.argv[1]);console.log(JSON.stringify({count:b.pairs.length,model:b.model,vocab:b.vocab}))' ${BATCH_FILE}
+Then read back ONLY the summary:
+${TOKENS} && node -e 'const b=require(process.argv[1]);console.log(JSON.stringify({count:b.pairs.length,model:b.model,vocab:b.vocab}))' ${SRC_FILE}
 
 Return that summary object. If the tool errors with a token or connection message, the container is down or the agent surface is not published — return {"count":0,"vocab":[]} and nothing else. Do NOT invent pairs.`, { schema: PAIR_SCHEMA, phase: 'Fetch' })
 
@@ -110,7 +119,7 @@ const typedChunks = await parallel(
     agent(`You are typing candidate relation pairs for KEAP's typed knowledge graph. Each pair is two nearby items in embedding space; decide whether a CONTROLLED-vocabulary verb genuinely describes a relation FROM the first item TO the second, reading "from <TYPE> to".
 
 Read YOUR pairs (indices ${lo}..${hi - 1} of ${count}) with exactly this command:
-${TOKENS} && node -e 'const b=require(process.argv[1]);console.log(JSON.stringify(b.pairs.slice(+process.argv[2],+process.argv[3]),null,1))' ${BATCH_FILE} ${lo} ${hi}
+${TOKENS} && node -e 'const b=require(process.argv[1]);console.log(JSON.stringify(b.pairs.slice(+process.argv[2],+process.argv[3]),null,1))' ${SRC_FILE} ${lo} ${hi}
 
 Controlled vocabulary (STRONGLY prefer these — propose a new verb only when none fits and the relation is clearly real):
 ${vocabList}

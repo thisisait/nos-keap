@@ -28,6 +28,12 @@ export const CANDIDATE_CAP = 200;
  * unchanged and only the front of the batch gets more diverse.
  */
 export const PER_REF_SOFT_CAP = 3;
+/**
+ * Floor for the anchored ANN window. The kind filter runs AFTER vector_top_k, so
+ * the window must be wide enough to contain rows of the complementary kind before
+ * that filter can find any — independent of how many candidates the caller wants.
+ */
+export const MIN_ANCHOR_WINDOW = 64;
 
 export interface CandidatePair {
   fromRef: string;
@@ -138,16 +144,19 @@ export function anchoredCandidates(
   const maxDistance = opts?.maxDistance ?? DEFAULT_MAX_DISTANCE;
   const limit = Math.min(opts?.limit ?? CANDIDATE_CAP, CANDIDATE_CAP);
   if (!db.vectorSearchAvailable()) return [];
-  // Ask the index for the COMPLEMENTARY kind only. Searching both kinds and
-  // filtering afterwards looks equivalent but is not: the ANN window is filled by
-  // whatever is nearest, and in a corpus of similar cards an object's nearest
-  // neighbours are overwhelmingly other objects. The window would be exhausted by
-  // same-kind hits before a single node appeared, and anchored recall returned
-  // ZERO for every card — no over-fetch multiplier fixes that, it only moves the
-  // threshold. Restricting the search makes every hit cross-kind by construction.
+  // Ask the index for the COMPLEMENTARY kind only, so the rows that come back
+  // are cross-kind by construction rather than mostly same-kind hits we then
+  // throw away.
   const searchKind: db.EmbeddingKind = anchorKind === 'object' ? 'taxonomy' : 'object';
-  // Modest over-fetch remains, for the already-stored pairs skipped below.
-  const fetch = Math.min(Math.max(limit * 4, limit), CANDIDATE_CAP);
+  // The kind filter is a POST-filter on the ANN window (db.vectorNeighborsOf runs
+  // vector_top_k first, then WHERE kind IN (...)), and that window is sized from
+  // the caller's limit. So a small limit gives a window too narrow to contain ANY
+  // row of the other kind: measured live, an anchored call returned 8 pairs at
+  // limit=8 and ZERO at limit=4 — the same card, the same threshold, the nearest
+  // hit sitting at distance 0.353 the whole time. A caller asking for fewer
+  // candidates must not get a worse search, so floor the window independently of
+  // limit rather than letting it collapse.
+  const fetch = Math.min(Math.max(limit * 4, MIN_ANCHOR_WINDOW), CANDIDATE_CAP);
   const hits = db.vectorNeighbors(toEmbeddingKind(anchorKind), anchorId, 'related', [searchKind], fetch);
   if (!hits) return [];
   const out: CandidatePair[] = [];

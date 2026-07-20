@@ -808,3 +808,68 @@ test.describe('anchored recall survives same-kind crowding', () => {
     for (const id of CROWD) expect((await request.delete(`/api/objects/${id}`)).ok()).toBeTruthy();
   });
 });
+
+/**
+ * A smaller `limit` must not mean a worse search. The kind filter is a POST-filter
+ * on the ANN window and that window is sized from the caller's limit, so asking
+ * for fewer candidates used to collapse the window below the point where any
+ * cross-kind row appeared at all — 8 pairs at limit=8, ZERO at limit=4, same card,
+ * same threshold. Reuses the crowd fixture, whose same-kind neighbours are exactly
+ * what fills the window.
+ */
+test.describe('anchored recall does not degrade at small limits', () => {
+  const CAXIS = 311;
+  const CMODEL = 'e2e-relations-window-model';
+  const PACK = [1, 2, 3, 4, 5, 6, 7, 8].map((i) => `rel-window-obj-${i}`);
+  let WNODE = '';
+
+  function wvec(offDim: number, offMag: number): number[] {
+    const v = new Array<number>(768).fill(0);
+    v[CAXIS] = 1;
+    v[offDim] = offMag;
+    return v;
+  }
+
+  test('seed: eight packed cards around one node', async ({ request }) => {
+    for (const id of PACK) {
+      const r = await request.post('/api/objects', {
+        data: { id, type: 'note', title: id, body: `window fixture ${id}` },
+      });
+      expect(r.ok()).toBeTruthy();
+    }
+    const graph = (await (await request.get('/api/graph')).json()).data as { nodes: Array<{ id: string }> };
+    WNODE = graph.nodes[5].id;
+    expect(WNODE).toBeTruthy();
+    await embed(
+      request,
+      [
+        ...PACK.map((id, i) => ({ kind: 'object', refId: id, seed: i, vector: wvec(640 + i, 0.01) })),
+        { kind: 'taxonomy', refId: WNODE, seed: 0, vector: wvec(740, 0.3) },
+      ],
+      CMODEL,
+    );
+  });
+
+  test('limit=1 finds the same nearest node that limit=8 does', async ({ request }) => {
+    const ask = async (limit: number) => {
+      const r = await request.get(
+        `/agent/v1/relations/candidates?anchorKind=object&anchorId=${encodeURIComponent(PACK[0])}&limit=${limit}&maxDistance=0.35`,
+        { headers: RO },
+      );
+      expect(r.ok()).toBeTruthy();
+      return (await r.json()).data.pairs as Array<{ to_ref: string }>;
+    };
+
+    const wide = await ask(8);
+    expect(wide.length, 'wide ask finds the node').toBeGreaterThan(0);
+
+    // The regression: this returned [] while the wide ask returned hits.
+    const narrow = await ask(1);
+    expect(narrow.length, 'a narrow ask must not collapse the search window').toBe(1);
+    expect(narrow[0].to_ref, 'and it is the same nearest node').toBe(wide[0].to_ref);
+  });
+
+  test('cleanup: window fixture removed', async ({ request }) => {
+    for (const id of PACK) expect((await request.delete(`/api/objects/${id}`)).ok()).toBeTruthy();
+  });
+});
