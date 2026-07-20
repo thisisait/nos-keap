@@ -369,21 +369,39 @@ const FM_TYPE_RE = /^[a-z][a-z0-9-]{0,31}$/;
  * Unknown keys ride along untouched in `fm`; a malformed block is treated as
  * body text, never an error — a producer typo must not eat the card.
  */
+/** Bump when parsing SEMANTICS change: it participates in the unchanged-skip,
+ *  so a bump forces one full re-parse pass. Without this leg, a card mirrored
+ *  under an older parser keeps its stale identity until the file itself is
+ *  touched — size and mtime cannot see a parser upgrade. */
+export const FM_VERSION = 1;
+
 export function parseCardFrontmatter(raw: string | undefined): {
   type?: string;
   title?: string;
   fm?: Record<string, string>;
   body: string | undefined;
 } {
-  if (!raw || !raw.startsWith('---\n')) return { body: raw };
-  const end = raw.indexOf('\n---', 4);
-  if (end < 0) return { body: raw };
-  const block = raw.slice(4, end);
-  const rest = raw.slice(end + 4).replace(/^\n/, '');
+  if (!raw) return { body: raw };
+  // CRLF-normalise BEFORE detection: a producer on another OS (or a checkout
+  // with core.autocrlf) writes '---\r\n', and a byte-exact gate would silently
+  // disable frontmatter for that whole tree — type/title lost, no error.
+  const norm = raw.includes('\r\n') ? raw.replace(/\r\n/g, '\n') : raw;
+  if (!norm.startsWith('---\n')) return { body: raw };
+  // The closing delimiter must be a LONE '---' line, not any later substring —
+  // a markdown note that opens with a horizontal rule and has another one pages
+  // later must not have its prefix eaten as junk keys.
+  const close = /\n---[ \t]*(?:\n|$)/.exec(norm.slice(4));
+  if (!close) return { body: raw };
+  const block = norm.slice(4, 4 + close.index);
+  const rest = norm.slice(4 + close.index + close[0].length);
   const fm: Record<string, string> = {};
   for (const line of block.split('\n')) {
-    const m = /^([A-Za-z][A-Za-z0-9_-]*):\s*(.*)$/.exec(line.trim());
-    if (!m) continue;
+    const t = line.trim();
+    if (!t) continue;
+    const m = /^([A-Za-z][A-Za-z0-9_-]*):\s*(.*)$/.exec(t);
+    // STRICT: one non-key line means this is not frontmatter, it is a document
+    // that happens to start with a rule — treat the whole thing as body.
+    if (!m) return { body: raw };
     fm[m[1]] = m[2].trim();
   }
   if (!Object.keys(fm).length) return { body: raw };
@@ -463,6 +481,7 @@ export function syncUserFiles(): FsSyncResult {
       prev &&
       prev.frontmatter?.size === f.size &&
       prev.frontmatter?.mtime === f.mtime &&
+      prev.frontmatter?.fmv === FM_VERSION &&
       (prev.visibility ?? 'private') === visibility
     ) {
       result.unchanged++;
@@ -494,7 +513,7 @@ export function syncUserFiles(): FsSyncResult {
       description: dir === '.' ? undefined : dir,
       tags: [f.relPath.split('/')[0]],
       frontmatter: {
-        source: 'fs', path: f.relPath, size: f.size, mtime: f.mtime,
+        source: 'fs', path: f.relPath, size: f.size, mtime: f.mtime, fmv: FM_VERSION,
         ...(card.fm ? { fm: card.fm } : {}),
       },
       body,
@@ -647,7 +666,13 @@ export function syncMapping(m: db.FsMappingRow): FsMappingSyncResult {
       const id = `fsm:${m.id}:${crypto.createHash('sha1').update(f.relPath).digest('hex').slice(0, 16)}`;
       const prev = index.get(id);
       index.delete(id); // seen → not pruned
-      if (prev && prev.frontmatter?.size === f.size && prev.frontmatter?.mtime === f.mtime && prev.frontmatter?.cfg === cfg) {
+      if (
+        prev &&
+        prev.frontmatter?.size === f.size &&
+        prev.frontmatter?.mtime === f.mtime &&
+        prev.frontmatter?.cfg === cfg &&
+        prev.frontmatter?.fmv === FM_VERSION
+      ) {
         result.unchanged++;
         continue;
       }
@@ -682,7 +707,7 @@ export function syncMapping(m: db.FsMappingRow): FsMappingSyncResult {
           frontmatter: {
             ...template,
             source: 'fs-mapping', mapping: m.id, root: m.rootKey,
-            path: f.relPath, size: f.size, mtime: f.mtime, cfg,
+            path: f.relPath, size: f.size, mtime: f.mtime, cfg, fmv: FM_VERSION,
             ...(card.fm ? { fm: card.fm } : {}),
           },
           body,

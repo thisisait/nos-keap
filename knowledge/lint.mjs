@@ -52,9 +52,24 @@ for (const f of files) {
   try { doc = JSON.parse(readFileSync(f, 'utf8')); }
   catch (e) { errors.push(`${rel}: invalid JSON — ${e.message}`); continue; }
   if (!Array.isArray(doc.nodes)) { errors.push(`${rel}: missing nodes[]`); continue; }
+  // The domain key is BOTH the wipe scope ingest deletes by and a value that is
+  // interpolated into that scope — so it must be shape-valid, and every node in
+  // the file must fall inside it. A node outside its file's scope survives the
+  // wipe on re-apply and the plain INSERT then dies on the id PRIMARY KEY —
+  // bricking ingest for a layout lint had blessed.
+  const key = doc.domain || path.basename(f, '.json');
+  if (!ID_RE.test(key)) { errors.push(`${rel}: malformed domain key '${key}'`); continue; }
+  const owns = (id) => (key.includes('.') ? id === key || id.startsWith(key + '.') : id === key);
   for (const n of doc.nodes) {
     const at = `${rel} ${n.id}`;
     if (!n.id || !ID_RE.test(n.id)) { errors.push(`${at}: malformed id`); continue; }
+    if (!owns(n.id)) errors.push(`${at}: outside this file's domain scope '${key}' — the re-apply wipe will not cover it`);
+    // seed-override overlays a node of the STATIC spine; slug ids never exist
+    // there, so a slug seed-override is a node that lints green, lands only in
+    // node_descriptions, and leaves every child orphaned at boot.
+    if (n.kind === 'seed-override' && /^[a-z]/.test(n.id)) {
+      errors.push(`${at}: seed-override on a slug id — there is no seed node to overlay; use kind 'ext'`);
+    }
     if (seen.has(n.id)) errors.push(`${at}: duplicate id (also in ${seen.get(n.id)})`);
     else seen.set(n.id, rel);
     if (n.level !== (n.id.match(/\./g) || []).length) errors.push(`${at}: level ${n.level} ≠ id depth`);
@@ -103,7 +118,17 @@ for (const n of allNodes) {
   // boot (registerExtNodes drops nodes whose parent never resolves).
   const numericParent = /^\d{2}(\.\d{2})*$/.test(parent);
   if (numericParent && (parent.match(/\./g) || []).length <= 2) continue;
-  if (!seen.has(parent)) errors.push(`${n._file} ${n.id}: ext parent '${parent}' not found (orphan)`);
+  if (numericParent) {
+    // A deep NUMERIC parent may be a real seed node whose canonical presence is
+    // a seed-override row — the override overlays a node that exists in the
+    // static spine, so file-set presence does imply tree presence here.
+    if (!seen.has(parent)) errors.push(`${n._file} ${n.id}: ext parent '${parent}' not found (orphan)`);
+  } else if (!extIds.has(parent)) {
+    // A SLUG parent has no seed to overlay: only an ext row puts it in the
+    // boot tree. A seed-override with a slug id lands in node_descriptions
+    // alone — lint green, subtree silently dropped at boot.
+    errors.push(`${n._file} ${n.id}: slug parent '${parent}' not found among ext nodes (subtree would drop at boot)`);
+  }
 }
 
 if (errors.length) {

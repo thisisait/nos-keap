@@ -112,6 +112,37 @@ test.describe('nOS self-model — taxonomy, cards, router relations', () => {
     expect((await request.delete('/api/objects/skill-dangling-probe')).ok()).toBeTruthy();
   });
 
+  test('a body truncated at the read cap fails the producer LOUDLY, never as "no precondition"', async ({
+    request,
+  }) => {
+    // The read endpoint caps body at 8000 chars. A Requires: line past the cap
+    // is invisible to the producer, and "no line found" must not be conflated
+    // with "line never seen" — the card is reported and the exit code is red.
+    const long = `${'filler line\n'.repeat(700)}Requires: nos.iiab.nextcloud.credential\n`;
+    expect(long.length).toBeGreaterThan(8000);
+    const mk = await request.post('/api/objects', {
+      data: { id: 'skill-truncated-probe', type: 'skill', title: 'long-skill', body: long },
+    });
+    expect(mk.ok()).toBeTruthy();
+
+    let stdout = '';
+    let code = 0;
+    try {
+      stdout = execFileSync('node', [path.join(REPO, 'scripts', 'skills-requires.mjs'), 'post', '--dry-run'], {
+        env: { ...process.env, KEAP_BASE_URL: 'http://localhost:18300', KEAP_AGENT_TOKEN_RO: 'e2e-ro' },
+        encoding: 'utf8',
+      });
+    } catch (e) {
+      const err = e as { status: number; stdout: string };
+      code = err.status;
+      stdout = err.stdout;
+    }
+    expect(code, 'untrusted scan must exit non-zero').toBe(3);
+    const result = JSON.parse(stdout.slice(stdout.indexOf('REQUIRES_RESULT') + 'REQUIRES_RESULT '.length));
+    expect(result.truncated).toEqual(['skill-truncated-probe']);
+    expect((await request.delete('/api/objects/skill-truncated-probe')).ok()).toBeTruthy();
+  });
+
   test('moderation confirms → verb-labelled edges reach the graph and the brain endpoint', async ({
     request,
   }) => {

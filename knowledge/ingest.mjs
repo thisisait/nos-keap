@@ -75,7 +75,13 @@ const insMarker = DRY ? null : db.prepare(`INSERT INTO knowledge_imports (import
 let clock = Math.floor(Date.now() / 1000);
 const tick = () => clock++;
 
+// The domain key is interpolated into the wipe-scope SQL below. Lint validates
+// it too, but ingest is the WRITE — a key like "nos' OR '1'='1" would widen the
+// DELETE to every grown domain, so the write validates for itself.
+const KEY_RE = /^(?:\d{2}(?:\.\d{2})*|[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)*)$/;
+
 function applyDomain(key, doc) {
+  if (!KEY_RE.test(key)) throw new Error(`malformed domain key ${JSON.stringify(key)} — refusing to build a wipe scope from it`);
   // Reset scope = exactly the nodes this file OWNS (dump groups by l1(id), so a
   // file owns every id whose first two segments == key). An L1 key ("01.01")
   // owns its whole subtree (id = key OR id LIKE 'key.%'). An L0 key ("01", no
@@ -164,7 +170,42 @@ for (const f of files) {
   }
 }
 
-const changed = applied.length > 0;
+// Stale-domain sweep (slug trees only): a canonical FILE that disappears or is
+// renamed leaves its rows and marker behind — the subtree keeps registering at
+// boot (its root still resolves), the drift detector sees nothing (wrong key
+// scope), and the next dump resurrects the deleted file. Prune a stale slug
+// domain ONLY when its ROOT is part of this run's file set — that is the signal
+// that this run intends to define that root's whole tree; a subset run that
+// does not carry the root leaves other domains untouched. Numeric seed domains
+// are exempt: their lifecycle is the repo's, not a generator's.
+const prunedDomains = [];
+if (db && !DRY) {
+  const fileKeys = new Set([...applied, ...skipped]);
+  const rootsPresent = new Set([...fileKeys].filter((k) => /^[a-z][a-z0-9-]*$/.test(k)));
+  const markers = db.prepare(`SELECT import_key FROM knowledge_imports`).all().map((r) => r.import_key);
+  for (const key of markers) {
+    if (fileKeys.has(key)) continue;
+    if (!/^[a-z]/.test(key)) continue; // numeric spine: never swept
+    const root = key.split('.')[0];
+    if (!rootsPresent.has(root)) continue;
+    const sub = `'${key}.%'`, self = `'${key}'`;
+    const idC = key.includes('.') ? `id = ${self} OR id LIKE ${sub}` : `id = ${self}`;
+    const ndC = key.includes('.') ? `node_id = ${self} OR node_id LIKE ${sub}` : `node_id = ${self}`;
+    const frC = key.includes('.') ? `from_id = ${self} OR from_id LIKE ${sub}` : `from_id = ${self}`;
+    const tx = db.transaction(() => {
+      db.exec(`DELETE FROM taxonomy_nodes_ext WHERE ${idC}`);
+      db.exec(`DELETE FROM node_descriptions  WHERE ${ndC}`);
+      db.exec(`DELETE FROM taxonomy_metadata  WHERE ${idC}`);
+      db.exec(`DELETE FROM concept_relations  WHERE ${frC}`);
+      db.prepare(`DELETE FROM knowledge_imports WHERE import_key = ?`).run(key);
+    });
+    tx();
+    prunedDomains.push(key);
+    console.warn(`⚠ pruned stale domain '${key}' — its canonical file is gone and its root '${root}' is defined by this run`);
+  }
+}
+
+const changed = applied.length > 0 || prunedDomains.length > 0;
 console.log(`${DRY ? '[dry-run] ' : ''}${applied.length} applied, ${skipped.length} skipped${DRY && changed ? ' — RESTART would follow' : changed ? ' — RESTART to materialize' : ''}`);
-console.log(`INGEST_RESULT ${JSON.stringify({ applied, skipped, changed, dryRun: DRY, reidentified })}`);
+console.log(`INGEST_RESULT ${JSON.stringify({ applied, skipped, changed, dryRun: DRY, reidentified, prunedDomains })}`);
 db?.close();

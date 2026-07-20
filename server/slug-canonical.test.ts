@@ -35,19 +35,25 @@ afterAll(() => {
 });
 
 type CanonNode = { id: string; parentId?: string; [k: string]: unknown };
-const loadDir = (dir: string): Map<string, CanonNode> => {
-  const out = new Map<string, CanonNode>();
+type CanonRel = { from: string; to: string; type: string };
+const loadDir = (dir: string): { nodes: Map<string, CanonNode>; relations: CanonRel[] } => {
+  const nodes = new Map<string, CanonNode>();
+  const relations: CanonRel[] = [];
   for (const sub of fs.readdirSync(dir)) {
     const p = path.join(dir, sub);
     if (fs.statSync(p).isDirectory()) {
       for (const f of fs.readdirSync(p)) {
         if (!f.endsWith('.json')) continue;
-        const doc = JSON.parse(fs.readFileSync(path.join(p, f), 'utf8')) as { nodes: CanonNode[] };
-        for (const n of doc.nodes) out.set(n.id, n);
+        const doc = JSON.parse(fs.readFileSync(path.join(p, f), 'utf8')) as {
+          nodes: CanonNode[];
+          relations?: CanonRel[];
+        };
+        for (const n of doc.nodes) nodes.set(n.id, n);
+        for (const r of doc.relations ?? []) relations.push(r);
       }
     }
   }
-  return out;
+  return { nodes, relations };
 };
 
 describe('slug canonical round-trip', () => {
@@ -63,16 +69,46 @@ describe('slug canonical round-trip', () => {
     run('dump.mjs', [], { OUT_DIR: OUT });
     const a = loadDir(FIXTURE);
     const b = loadDir(OUT);
-    expect([...b.keys()].sort()).toEqual([...a.keys()].sort());
-    for (const [id, src] of a) {
-      const dst = b.get(id)!;
-      // Field-level identity on everything the canonical schema owns.
-      for (const k of ['id', 'level', 'kind', 'parentId', 'name', 'zone', 'ordinal', 'en', 'cs'] as const) {
+    expect([...b.nodes.keys()].sort()).toEqual([...a.nodes.keys()].sort());
+    for (const [id, src] of a.nodes) {
+      const dst = b.nodes.get(id)!;
+      // Field-level identity on everything the canonical schema owns — brief
+      // included: it round-trips through taxonomy_metadata, a separate table,
+      // so node identity alone does not prove it survived.
+      for (const k of ['id', 'level', 'kind', 'parentId', 'name', 'zone', 'ordinal', 'en', 'cs', 'brief'] as const) {
         expect(dst[k], `${id}.${k}`).toEqual(src[k]);
       }
     }
     // The root MUST NOT have grown a parentId in the dump.
-    expect('parentId' in b.get('nos')!).toBe(false);
+    expect('parentId' in b.nodes.get('nos')!).toBe(false);
+    // Relations round-trip through concept_relations — a third table.
+    const key = (r: CanonRel) => `${r.from}|${r.to}|${r.type}`;
+    expect(b.relations.map(key).sort()).toEqual(a.relations.map(key).sort());
+    expect(a.relations.length).toBeGreaterThan(0); // guard the guard: non-empty
+    // And the manifest names every slug domain.
+    const manifest = JSON.parse(fs.readFileSync(path.join(OUT, 'manifest.json'), 'utf8')) as {
+      domains: Array<{ domain: string }>;
+    };
+    expect(manifest.domains.map((d) => d.domain).sort()).toEqual(['nos', 'nos.iiab', 'nos.infra']);
+  });
+
+  it('a removed domain FILE is swept when its root is part of the run', () => {
+    // The ghost-subtree case: renaming/deleting nos.infra.json used to leave
+    // its rows and marker behind — the subtree kept registering at boot, the
+    // drift detector saw nothing (wrong key scope), and the next dump
+    // resurrected the deleted file.
+    const COPY = path.join(TMP, 'canon-copy');
+    fs.cpSync(FIXTURE, COPY, { recursive: true });
+    fs.rmSync(path.join(COPY, 'nos', 'nos.infra.json'));
+    const out = run('ingest.mjs', ['--canonical', COPY, '--force']);
+    const result = JSON.parse(out.slice(out.indexOf('INGEST_RESULT') + 'INGEST_RESULT '.length));
+    expect(result.prunedDomains).toEqual(['nos.infra']);
+    // The rows are genuinely gone, not just the marker.
+    run('dump.mjs', [], { OUT_DIR: path.join(TMP, 'dump2') });
+    const after = loadDir(path.join(TMP, 'dump2'));
+    expect(after.nodes.has('nos.infra')).toBe(false);
+    expect(after.nodes.has('nos.infra.redis')).toBe(false);
+    expect(after.nodes.has('nos.iiab.nextcloud')).toBe(true); // untouched sibling domain
   });
 
   it('a second ingest of the dumped tree is a no-op re-apply (idempotent identity)', () => {

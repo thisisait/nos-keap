@@ -32,7 +32,6 @@ const MODEL = 'mechanical:requires-line@1';
 // Full node ids — dotted lowercase slugs (user subtrees) or dotted 2-digit runs
 // (seed spine). Same acceptance as server/objects.ts classifyRef.
 const NODE_ID_RE = /^(?:\d{2}(?:\.\d{2})*|[a-z][a-z0-9-]*(?:\.[a-z][a-z0-9-]*)*)$/;
-const REQUIRES_LINE = /^Requires:\s*(.+)$/m;
 
 const argv = process.argv.slice(2);
 const DRY = argv.includes('--dry-run');
@@ -76,14 +75,40 @@ for (let offset = 0; ; offset += 50) {
 const relations = [];
 const dangling = [];
 const malformed = [];
+const truncated = [];
+const multiline = [];
+const readFailed = [];
 let withLine = 0;
 const nodeExists = new Map();
 for (const c of cards) {
   const full = await call('GET', `/agent/v1/objects/${encodeURIComponent(c.id)}`);
-  if (!full.ok) continue;
+  if (!full.ok) {
+    // Deleted between list and read, or a transient 500 — either way the card
+    // was NOT scanned, and silence here would read as "no precondition".
+    readFailed.push({ card: c.id, status: full.status });
+    console.error(`  ✗ read failed (${full.status}): ${c.id} — NOT scanned`);
+    continue;
+  }
   const body = full.data.body ?? '';
-  const m = REQUIRES_LINE.exec(body);
-  if (!m) continue; // absent line = no precondition, by contract
+  // The read endpoint caps body at 8000 chars and appends this marker. A card
+  // cut there may have lost its Requires: line, and "no line found" and "line
+  // never seen" must not be the same outcome — report, do not guess.
+  if (body.endsWith('…[truncated]')) {
+    truncated.push(c.id);
+    console.error(`  ✗ body truncated at the read cap: ${c.id} — Requires: line may be unreachable, card NOT trusted`);
+    continue;
+  }
+  const matches = [...body.matchAll(/^Requires:\s*(.+)$/gm)];
+  if (!matches.length) continue; // absent line = no precondition, by contract
+  if (matches.length > 1) {
+    // The contract is ONE line (present-or-absent atomicity). A second line is
+    // a producer violation — report it rather than silently honouring only the
+    // first, which would make half a declaration look whole.
+    multiline.push(c.id);
+    console.error(`  ✗ ${matches.length} Requires: lines in ${c.id} — the contract is one; card skipped, fix the producer`);
+    continue;
+  }
+  const m = matches[0];
   withLine++;
   for (const raw of m[1].split(',')) {
     const ref = raw.trim();
@@ -116,6 +141,11 @@ for (const d of malformed) console.error(`  ✗ malformed ref in ${d.card}: ${JS
 let upserted = 0;
 if (relations.length && !DRY) {
   if (!TOKEN_RW) die('no KEAP_AGENT_TOKEN_RW — needed to post');
+  // One atomic batch, deliberately: the server is validate-all-then-write, so a
+  // single stale row (a node deleted between probe and POST) rejects the whole
+  // batch with zero writes. That is the correct failure for a mechanical
+  // producer — the state moved under it, so re-run against the new state rather
+  // than half-writing the old one.
   const res = await call('POST', '/agent/v1/relations', { model: MODEL, relations });
   if (!res.ok) die(`POST failed (${res.status}): ${JSON.stringify(res.data).slice(0, 200)}`);
   upserted = res.data.upserted ?? 0;
@@ -125,4 +155,7 @@ console.error(
     `${relations.length} relation(s)${DRY ? ' (dry-run, nothing sent)' : `, ${upserted} upserted`}` +
     `${dangling.length ? `, ${dangling.length} dangling SKIPPED` : ''}`,
 );
-console.log(`REQUIRES_RESULT ${JSON.stringify({ scanned: cards.length, withLine, posted: DRY ? 0 : upserted, dangling, malformed })}`);
+console.log(`REQUIRES_RESULT ${JSON.stringify({ scanned: cards.length, withLine, posted: DRY ? 0 : upserted, dangling, malformed, truncated, multiline, readFailed })}`);
+// Anything unscanned or untrusted is a FAILURE exit: a cron wrapper must see
+// "we did not read everything" as red, not as a quieter shade of green.
+if (truncated.length || multiline.length || readFailed.length) process.exit(3);

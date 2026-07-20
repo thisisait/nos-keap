@@ -29,8 +29,17 @@
    "name": "redis",
    "zone": "free",
    "ordinal": 1,
-   "en": "Redis, the shared key-value cache and ephemeral queue backend. Holds hot state, sessions and work queues; nothing durable lives here."
+   "en": "Redis, the shared key-value cache and ephemeral queue backend. Holds hot state, sessions and work queues; nothing durable lives here.",
+   "brief": "### Concepts\n- key-value store\n- ephemeral queues"
   }
  ],
- "relations": []
+ "relations": [
+  {
+   "from": "nos.infra.redis",
+   "to": "nos.infra.postgresql",
+   "type": "related-concept",
+   "explored": null,
+   "source": "knowledge"
+  }
+ ]
 }

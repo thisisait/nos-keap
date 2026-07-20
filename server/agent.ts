@@ -319,6 +319,8 @@ export function registerAgentRoutes(app: Express) {
   // a lowercase kebab slug, starts with a letter, ≤64 chars. Gates palette growth
   // from raw agent strings.
   const RELATION_TYPE_RE = /^[a-z][a-z0-9-]{0,63}$/;
+  // Verbs owned by deterministic producers — never offered to the classifier.
+  const MECHANICAL_VERBS = new Set(['requires']);
 
   /** Per-endpoint text budget handed to the classifier. Bounded so a full 50-pair
    *  batch stays a sane payload (50 × 2 × 1k ≈ 100 KB) while still carrying enough
@@ -403,10 +405,14 @@ export function registerAgentRoutes(app: Express) {
       });
     }
     // Controlled vocabulary offered to the classifier: the active registry
-    // (seed + admin-confirmed). Proposed/rejected verbs are not suggested.
+    // (seed + admin-confirmed), MINUS mechanical-only verbs. 'requires' is
+    // written exclusively by the Requires:-line producer with confidence 1 —
+    // offering it to the LLM would let a plausible-sounding guess upsert over
+    // mechanical provenance via the (from,to,type) ON CONFLICT. The verb still
+    // lists, renders and moderates everywhere else; it is only never SUGGESTED.
     const vocab = db
       .listRelationTypes()
-      .filter((t) => t.status === 'seed' || t.status === 'confirmed')
+      .filter((t) => (t.status === 'seed' || t.status === 'confirmed') && !MECHANICAL_VERBS.has(t.type))
       .map((t) => ({ type: t.type, label: t.label, description: t.description ?? undefined }));
     ok(res, { model: db.embeddingStats().model, pairs, vocab });
   });
