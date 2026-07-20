@@ -146,3 +146,76 @@ which is precisely the failure mode that made `_stack.md` an attractor.
 - SKILLS.md targets `dev.local` domains and `~/stacks/...` paths. Routing to
   endpoints that no longer exist is worse than not routing, so that reconcile
   should land before the cards are embedded.
+
+---
+
+# Round 2 — delivered, and the three invariants
+
+Answering `nOS:docs/doctrine/cross-repo-contracts.md`. Full reply and reasoning:
+`docs/specs/nos-selfmodel-reply-01.md`.
+
+## Delivered on `dev` (unreleased)
+
+| What | Commit | Note |
+|---|---|---|
+| Users-pass prune guards | `05d61eb` | Your objection, upheld. Refuses on cap hit, truncated walk, zero-scan-with-mirrors; `pruneRefused` surfaces on the result. |
+| User-defined roots `90`–`99` | `aecd59c` | `registerExtNode` accepts a parentless node in range; roots get their own layout ring at 1.75× the seed radius. |
+| Layout placement fixpoint | `aecd59c` | `listExtNodes` orders by `(created_at, ordinal)`, which says nothing about ancestry — one pass left a child preceding its parent unplaced until the next boot. |
+
+So `90` → `90.NN` → `90.NN.MM` is now expressible and renderable. Not yet
+released; the pin bump follows once you have a fixture to gate against.
+
+## Identity
+
+**Nodes:** the dotted id IS the identity — `90.01.03` is that system forever.
+Renaming is free; renumbering is a delete plus a create, and it orphans every
+card anchored to the old id. So **the id must be derived from something stable
+about the service, never from its position in a sorted list.** If `90.01.03` is
+"whatever sorted third in the infra stack", adding a service renumbers its
+siblings and silently detaches their cards. That is the failure this section
+exists to prevent, and it is entirely on the producer side.
+
+**Cards:** `fs:<uid>:<sha1(relPath)[:16]>` — identity is the **path**, so a
+renamed file is a delete plus a create (new id, new embedding, lost relations).
+Path stability matters more than filename beauty; pick the names once.
+
+## Visibility
+
+The one that fails silently, per your own doctrine.
+
+- A card whose `anchors[0]` does not resolve is **dropped without a warning**
+  (`server/graph.ts:209`) and renders nowhere in the constellation view.
+- A node with no layout position has **every one of its cards skipped**
+  (`star.x === undefined`).
+
+Both look identical to "the tree is fine but empty". Hence the ordering
+constraint: **ingest nodes BEFORE re-anchoring cards.** Cards-then-nodes leaves
+every affected card invisible for the width of that window, with nothing logged.
+
+My gate asserts no card carries an unresolvable anchor, precisely because
+nothing else will tell either of us.
+
+## Removal
+
+- **Cards:** the users pass prunes fs-sourced objects whose file is gone — and,
+  as of `05d61eb`, refuses to prune whenever the found-set is untrustworthy. A
+  removed service's cards disappear on the next sync. Correct and intended.
+- **Nodes:** `knowledge/ingest.mjs` re-applies a canonical file when its sha256
+  changes. **Dropping a node from the canonical file is what deletes it** — and
+  since the taxonomy is install-invariant, a node should disappear only when nOS
+  genuinely stops shipping that service, never because an estate has it disabled.
+- **The asymmetry to hold:** a node outliving its cards is the designed steady
+  state ("nOS can do this, you have not enabled it"). A card outliving its node
+  is a bug — it becomes invisible, not an error.
+
+## Open, and yours to answer
+
+1. **Node-description quality.** Objection in the reply doc, with the measurement
+   behind it: install-invariant taxonomy puts ~60 nodes into the space that R3
+   recalls *into*, and two generically-worded nodes already took 25 of 50
+   candidate slots in a live sweep. Templated descriptions would be a worse
+   regression than the `_stack.md` cards, not a smaller one.
+2. **Node id derivation** — see Identity. Say what it is keyed on.
+3. **Skill preconditions machine-shaped** (frontmatter, not prose) if SKILLS.md
+   is being rewritten anyway — see `docs/specs/conditional-relations.md`. Costs
+   nothing now, saves a re-parse later.
