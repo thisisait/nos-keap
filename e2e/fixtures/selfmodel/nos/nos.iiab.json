@@ -9,7 +9,7 @@
    "name": "iiab",
    "zone": "free",
    "ordinal": 1,
-   "en": "The iiab content stack: user-facing knowledge and file services served behind the tenant domain \u2014 the part of the estate a person actually browses."
+   "en": "The iiab content stack: what a person on the tenant actually browses \u2014 knowledge, media and collaboration services behind the tenant domain."
   },
   {
    "id": "nos.iiab.nextcloud",
@@ -29,7 +29,7 @@
    "name": "nextcloud-credential",
    "zone": "free",
    "ordinal": 0,
-   "en": "The Nextcloud app password issued to agents. Grants WebDAV and OCS access as the bot user; skills that touch tenant files require it."
+   "en": "The Nextcloud app password issued to agent accounts. An issued secret, nothing more: WebDAV and OCS calls authenticate with it, and it can be rotated without changing what any skill does."
   }
  ],
  "relations": []

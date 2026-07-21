@@ -3,7 +3,7 @@
   "private": true,
   "version": "1.21.0",
   "type": "module",
-  "description": "Knowledge Explorer and Preserver — curated knowledge taxonomy with content links into nOS services, for humans and nOS agents.",
+  "description": "Knowledge Explorer and Preserver \u2014 curated knowledge taxonomy with content links into nOS services, for humans and nOS agents.",
   "scripts": {
     "dev": "concurrently -n web,api -c blue,green \"vite\" \"npm run dev:api\"",
     "dev:web": "vite",
@@ -35,6 +35,7 @@
     "relations:post": "node scripts/relations-typing.mjs post",
     "relations:list": "node scripts/relations-typing.mjs list",
     "relations:requires": "node scripts/skills-requires.mjs post",
+    "gate:recall": "node scripts/recall-gate.mjs",
     "preview": "vite preview",
     "test:e2e": "playwright test",
     "demo:selfmodel": "node deploy/demo-selfmodel.mjs"

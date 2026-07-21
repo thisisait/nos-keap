@@ -1,0 +1,26 @@
+{
+  "comment": "Recall gate query set. Each case asserts MEANING, not length: the named target must win (or co-win) the query, and no forbidden ref may rank above it. 'node:<id>' names a taxonomy node; 'title:<t>' names a card by title (fs-sync ids are content-addressed, titles are the stable handle). The forbid lists encode the _stack.md failure class: a stack or root must never beat the specific system or skill its query names.",
+  "k": 5,
+  "cases": [
+    {
+      "q": "upload a file to cloud storage",
+      "expect": ["title:upload-file", "node:nos.iiab.nextcloud"],
+      "forbid": ["node:nos.infra", "node:nos", "node:nos.iiab"]
+    },
+    {
+      "q": "flush the redis cache",
+      "expect": ["title:cache-flush", "node:nos.infra.redis"],
+      "forbid": ["node:nos.infra", "node:nos"]
+    },
+    {
+      "q": "relational database for SQL transactions",
+      "expect": ["node:nos.infra.postgresql"],
+      "forbid": ["node:nos.infra.redis", "node:nos.infra"]
+    },
+    {
+      "q": "which credential is needed to access user files",
+      "expect": ["node:nos.iiab.nextcloud.credential"],
+      "forbid": ["node:nos", "node:nos.infra"]
+    }
+  ]
+}
