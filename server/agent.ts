@@ -124,6 +124,13 @@ export function registerAgentRoutes(app: Express) {
     const stats = db.corpusStats();
     ok(res, {
       status: 'OK',
+      // Contract versions this build IMPLEMENTS — not the build version (that
+      // is `version` below, a proxy that moves on every patch). selfmodel: 1 =
+      // the slug-tree canonical contract as pinned by the nOS golden fixture
+      // (429fc44c) and the symmetric gates; the number gained a referent the
+      // day the fixture passed the consumer gate, and changes only when the
+      // shared surface changes incompatibly.
+      contracts: { selfmodel: 1 },
       // The version the running code was BUILT from, read out of the image's own
       // package.json — not the tag someone believes they deployed. Those are two
       // different facts, and until this field existed the running system could

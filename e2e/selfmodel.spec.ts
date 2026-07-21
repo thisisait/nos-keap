@@ -26,6 +26,15 @@ const SKILLS_SRC = path.join(REPO, 'e2e', 'fixtures', 'selfmodel-skills');
 const SKILLS_DST = path.join(REPO, 'e2e', '.userfiles', 'nos-docs', 'nOS', 'skills');
 
 test.describe('nOS self-model — taxonomy, cards, router relations', () => {
+  test('the agent health surface declares the selfmodel contract version', async ({ request }) => {
+    const h = (await (
+      await request.get('/agent/v1/health', { headers: RO })
+    ).json()) as { data: { contracts?: Record<string, number> } };
+    // The nOS wet gate compares this against the contract it was built for —
+    // the runtime says which contract it IMPLEMENTS, not which tag it wears.
+    expect(h.data.contracts?.selfmodel).toBe(1);
+  });
+
   test('the slug subtree registered at boot, root on its own ring', async ({ request }) => {
     const graph = (await (await request.get('/api/graph')).json()).data as {
       nodes: Array<{ id: string; name: string; level: number; parentId: string | null; x?: number; y?: number }>;

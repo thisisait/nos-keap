@@ -54,7 +54,11 @@ const VERDICT = {
 // Scratch DB per run. roundtrip-setup builds the subset of the schema ingest
 // touches; the live DB is never opened — a gate that can corrupt what it guards
 // is not a gate.
-const SETUP = `cd ${REPO} && export SCRATCH=$(mktemp -d) && node knowledge/roundtrip-setup.mjs >/dev/null 2>&1`
+// KEAP_DATA_DIR must reach the setup script too — without it the schema lands
+// in the default /tmp/scratch while every later command points at $SCRATCH,
+// and the first ingest dies on "no such table". Found the hard way: the gate's
+// first real run failed on its own harness, not on the fixture.
+const SETUP = `cd ${REPO} && export SCRATCH=$(mktemp -d) && KEAP_DATA_DIR=$SCRATCH node knowledge/roundtrip-setup.mjs >/dev/null 2>&1`
 
 phase('Ingest')
 const ingest = await agent(`Apply a self-model fixture through KEAP's REAL import path and report what landed.

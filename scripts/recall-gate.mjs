@@ -34,6 +34,11 @@ const arg = (name, dflt) => {
   const i = process.argv.indexOf(`--${name}`);
   return i >= 0 && process.argv[i + 1] ? process.argv[i + 1] : dflt;
 };
+// --base http://…: query an ALREADY-RUNNING KEAP read-only — no scratch boot,
+// no ingest, no embedding. The fixture mode proves a tree BEFORE it ships; the
+// base mode measures the corpus that actually shipped (post-install, embedded
+// by the live pulse job). Same queries, same semantics, same exit codes.
+const LIVE_BASE = arg('base', null);
 const FIXTURE = arg('fixture', 'e2e/fixtures/selfmodel');
 const SKILLS = arg('skills', 'e2e/fixtures/selfmodel-skills');
 const QUERIES = arg('queries', 'e2e/fixtures/selfmodel-recall.json');
@@ -56,6 +61,36 @@ try {
 const spec = JSON.parse(readFileSync(QUERIES, 'utf8'));
 const K = spec.k ?? 5;
 
+if (LIVE_BASE) {
+  // Read-only live path: sections 1–2 (scratch + embed) do not apply. The live
+  // estate runs KEAP_TRUSTED_PROXY=1, so the human /api surface 401s headerless
+  // host requests — everything here goes through the agent surface with the RO
+  // bearer (export KEAP_AGENT_TOKEN_RO=$(docker exec iiab-keap-1 printenv …)).
+  const base = LIVE_BASE.replace(/\/$/, '');
+  const tok = process.env.KEAP_AGENT_TOKEN_RO ?? process.env.KEAP_AGENT_TOKEN_RW;
+  if (!tok) { console.error('✗ --base needs KEAP_AGENT_TOKEN_RO'); process.exit(1); }
+  const H = { authorization: `Bearer ${tok}` };
+  const TL = (ms) => ({ signal: AbortSignal.timeout(ms) });
+
+  const brain = (await (await fetch(`${base}/agent/v1/graph`, { headers: H, ...TL(30_000) })).json()).data;
+  const nodeIds = new Set(brain.nodes.filter((n) => n.kind === 'node' || !n.kind).map((n) => n.id));
+  const idByTitle = new Map();
+  for (let offset = 0; ; offset += 50) {
+    const page = (await (
+      await fetch(`${base}/agent/v1/objects?limit=50&offset=${offset}`, { headers: H, ...TL(30_000) })
+    ).json()).data;
+    for (const o of page.results ?? []) idByTitle.set(o.title, o.id);
+    if (!(page.results ?? []).length || offset + 50 >= (page.total ?? 0)) break;
+  }
+  const search = async (q) => {
+    const r = (await (
+      await fetch(`${base}/agent/v1/search/semantic?q=${encodeURIComponent(q)}&limit=30`, { headers: H, ...TL(30_000) })
+    ).json()).data;
+    return (r.results ?? []).map((h) => ({ kind: h.kind, refId: h.id, legs: h.legs ?? [] }));
+  };
+  await runCaseSet({ nodeIds, idByTitle, anchorsById: new Map(), search }, (code) => process.exit(code), 0);
+}
+
 // ── 1) Scratch KEAP: ingest fixture → boot → fs-sync skills ─────────────────
 // --reuse keeps an existing scratch (skips setup+embedding) for query iteration;
 // --keep leaves the server and data up after the run.
@@ -69,7 +104,13 @@ if (!REUSE) {
   execFileSync('node', ['knowledge/ingest.mjs', '--canonical', FIXTURE], { env, stdio: 'ignore' });
 }
 const USERFILES = path.join(DIR, 'userfiles');
-if (!REUSE) cpSync(SKILLS, path.join(USERFILES, 'nos-docs', 'nOS', 'skills'), { recursive: true });
+// Skills are optional: a nodes-only canonical fixture still gates its node
+// descriptions against the queries that have node expectations. Never mix a
+// DIFFERENT tree's cards in to make titles resolve — that would measure a
+// corpus nobody ships.
+const HAS_SKILLS = SKILLS !== 'none' && existsSync(SKILLS);
+if (!REUSE && HAS_SKILLS) cpSync(SKILLS, path.join(USERFILES, 'nos-docs', 'nOS', 'skills'), { recursive: true });
+if (!HAS_SKILLS) console.error(`· no skills dir (${SKILLS}) — title: expectations will be unresolvable and SKIPPED, not failed`);
 
 // Probe on '::' (dual-stack): the server listens unbound, so a leftover holder
 // on IPv6 makes an IPv4-only probe lie about the port being free.
@@ -170,11 +211,38 @@ for (let round = 0; round < (REUSE ? 1 : 12); round++) {
 console.error(`· corpus embedded: ${embedded} item(s)${REUSE ? ' (reuse — remainder assumed present)' : ''}`);
 if (!embedded && !REUSE) { console.error('✗ nothing to embed — fixture produced no corpus'); stop(1); }
 
-// ── 3) Resolve title→id for cards, then run the cases ───────────────────────
-const graph = (await (await fetch(`${BASE}/api/graph`, T(30_000))).json()).data;
-const idByTitle = new Map(graph.objects.map((o) => [o.title, o.id]));
+{
+  const T2 = (ms) => ({ signal: AbortSignal.timeout(ms) });
+  const graph = (await (await fetch(`${BASE}/api/graph`, T2(30_000))).json()).data;
+  await runCaseSet(
+    {
+      nodeIds: new Set(graph.nodes.map((n) => n.id)),
+      idByTitle: new Map(graph.objects.map((o) => [o.title, o.id])),
+      anchorsById: new Map(graph.objects.map((o) => [o.id, o.anchors ?? []])),
+      search: async (q) => {
+        const r = (await (
+          await fetch(`${BASE}/api/search/semantic?q=${encodeURIComponent(q)}&limit=30`, T2(30_000))
+        ).json()).data;
+        return (r.items ?? []).map((h) => ({ kind: h.kind, refId: h.refId, legs: h.legs ?? [] }));
+      },
+    },
+    stop,
+    embedded,
+  );
+}
+
+// ── 3) Resolve refs, rank within scope, gate ────────────────────────────────
+async function runCaseSet({ nodeIds, idByTitle, anchorsById, search }, stop, embedded) {
+// An expectation that references nothing in the corpus is NOT a recall failure —
+// it is an unmeasurable case, and conflating the two turns a coverage gap into
+// a wall of false reds that buries the real signal. Unresolvable refs (a node
+// absent from this tree, a card title with no card) drop the ref; a case with
+// NO resolvable expectation is skipped and counted loudly.
 const resolve = (ref) => {
-  if (ref.startsWith('node:')) return { kind: 'taxonomy', refId: ref.slice(5) };
+  if (ref.startsWith('node:')) {
+    const id = ref.slice(5);
+    return nodeIds.has(id) ? { kind: 'taxonomy', refId: id } : null;
+  }
   if (ref.startsWith('title:')) {
     const id = idByTitle.get(ref.slice(6));
     return id ? { kind: 'object', refId: id } : null;
@@ -206,7 +274,6 @@ const isRelevance = (h) => !Array.isArray(h.legs) || h.legs.length === 0 || h.le
 // capture, the thing this gate exists to catch. Proper ancestors of any
 // expected ref are therefore excluded from the ranking (and reported, so the
 // exemption is visible rather than silent).
-const anchorsById = new Map(graph.objects.map((o) => [o.id, o.anchors ?? []]));
 const properAncestors = (expectedResolved) => {
   const out = new Set([scopeRoot]);
   const nodeIds = [];
@@ -224,14 +291,17 @@ const properAncestors = (expectedResolved) => {
 };
 
 const failures = [];
+const skipped = [];
 const report = [];
 for (const c of spec.cases) {
-  const res = (await (
-    await fetch(`${BASE}/api/search/semantic?q=${encodeURIComponent(c.q)}&limit=30`, T(30_000))
-  ).json()).data;
-  const all = (res.items ?? []).map(hitKey);
-  const legsByKey = new Map((res.items ?? []).map((h) => [hitKey(h), h.legs ?? []]));
-  const scoped = (res.items ?? []).filter((h) => inScope(h) && isRelevance(h)).map(hitKey);
+  if (!c.expect.map(resolve).filter(Boolean).length) {
+    skipped.push(c.q);
+    continue;
+  }
+  const hits = await search(c.q);
+  const all = hits.map(hitKey);
+  const legsByKey = new Map(hits.map((h) => [hitKey(h), h.legs ?? []]));
+  const scoped = hits.filter((h) => inScope(h) && isRelevance(h)).map(hitKey);
   const top = scoped.slice(0, K);
 
   const expectedResolved = c.expect.map(resolve).filter(Boolean);
@@ -260,5 +330,13 @@ for (const c of spec.cases) {
   }
 }
 
-console.log(`RECALL_RESULT ${JSON.stringify({ cases: spec.cases.length, failed: failures, embedded, report })}`);
+if (skipped.length) {
+  console.error(`⚠ ${skipped.length}/${spec.cases.length} case(s) SKIPPED — expectations reference nothing in this corpus (coverage gap, not recall)`);
+}
+const measured = spec.cases.length - skipped.length;
+console.log(`RECALL_RESULT ${JSON.stringify({ cases: spec.cases.length, measured, skipped: skipped.length, failed: failures, embedded, report })}`);
+// Nothing measurable is the embedder-missing situation in another coat: loud
+// non-green, never a pass.
+if (!measured) { console.error('⚠ RECALL GATE: zero measurable cases'); stop(4); }
 stop(failures.length ? 1 : 0);
+}
