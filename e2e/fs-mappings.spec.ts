@@ -371,8 +371,8 @@ test.describe('mapped folders', () => {
     expect(payload.data.objects.filter((o) => o.mapping === mapId)).toHaveLength(1);
 
     await expect(page.locator('canvas').first()).toBeVisible({ timeout: 15_000 });
-    await page.getByRole('button', { name: 'Core', exact: true }).click();
-    await page.waitForTimeout(2500); // camera flight into the ring center
+    // Core is on by default — no toggle needed, just let the scene settle.
+    await page.waitForTimeout(2500);
     await page.screenshot({ path: 'e2e/screenshots/core-mapping.png' });
   });
 

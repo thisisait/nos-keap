@@ -138,6 +138,9 @@ export interface CanvasNode {
   categoryHue: number;
   /** Knowledge scope = subtree size (descendants) — drives node SIZE. */
   scope?: number;
+  /** Core-view relocated user-root subtree (slug roots) — damps the L0 halo
+   *  so a 560u nebula sprite never sits inside the core. */
+  sat?: boolean;
   /** Focus-halo orbit (semantic dust): slow revolution around the focus. */
   orbit?: { cx: number; cy: number; cz: number; r: number; phase: number; tilt: number; speed: number };
   /** Recency (unix seconds): objects = file mtime / card updatedAt; folder
@@ -689,7 +692,10 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     if (!ref) return;
     try {
       if (coreView) {
-        ref.cameraPosition({ x: 0, y: -220, z: 820 }, { x: 0, y: 0, z: 0 }, warpMs(1200));
+        // Frame radius ~1000: the central core (≤420) plus the SAT ring (700)
+        // where standalone mappings AND relocated user-root constellations sit
+        // — the old 820u close-up cropped everything on that ring.
+        ref.cameraPosition({ x: 0, y: -320, z: 1550 }, { x: 0, y: 0, z: 0 }, warpMs(1200));
       } else {
         ref.zoomToFit(warpMs(900), 60);
       }
@@ -1190,7 +1196,10 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     // default sphere (the sphere is the lens-coloured body): galaxy › constellation
     // › star, then planets (L3) and satellites (L4+) are the bare sphere by size.
     const g = new THREE.Group();
-    if (node.level === 0) g.add(nebulaSprite(node.categoryHue)); // galaxy
+    // A relocated user-root (core view, node.sat) trades its 560u nebula for
+    // the 70u constellation disc — inside the core the full nebula would
+    // additive-bloom the whole center into one white ball.
+    if (node.level === 0) g.add(node.sat ? galaxyDisc(node.categoryHue) : nebulaSprite(node.categoryHue)); // galaxy
     else if (node.level === 1) g.add(galaxyDisc(node.categoryHue)); // constellation
     else if (node.level === 2) g.add(starGlow(node.categoryHue)); // star
     // Two label tiers, each on its own budget: galaxy/constellation ANCHORS

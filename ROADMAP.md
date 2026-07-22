@@ -364,6 +364,22 @@ in-container.
   assembly, brain endpoint provenance, and a private-object edge hidden from a
   non-owner viewer.
 
+### Track D — Domain packs & the context injector (anchoring worlds)
+
+> Owner direction (2026-07-22): the substrate must record *business logic — up
+> to the whole world* — and serve it back as in-the-box decision logic, a
+> knowledge base, and an **LLM context injector**. Standing target: one
+> constellation = a state's entire legislation + case law.
+
+Design: `docs/specs/ontology-anchoring.md`. Four-layer anchoring model
+(skeleton = taxonomy user roots / evidence = cards / assertions = R3 /
+rules = R4), **domain packs** as the generalised self-model pipeline (slug
+root + canonical files + golden fixture + recall-gate acceptance), scale
+tiers S/M/L (full payload → hub aggregates + region fetch → region
+streaming), and `/agent/v1/context` — rules-first, budget-bounded, citable
+context assembly for LLM consumers. Sequencing: R4 → context v1 (tier S) →
+pack contract v1 → tier M payload. R4 spec: `docs/specs/conditional-relations.md`.
+
 ### Track C — Capture overlay (extension + native app)
 
 > Owner direction: overlay = browser extension, likely later a native app.

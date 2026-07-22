@@ -46,7 +46,12 @@ import {
   type GraphObject,
 } from '@/hooks/useExplorerData';
 import { orbitalPosition } from '@/components/explorer/orbital';
-import { computeCore, type CoreLayout, type CoreOrder } from '@/components/explorer/core';
+import {
+  computeCore,
+  userRootConstellation,
+  type CoreLayout,
+  type CoreOrder,
+} from '@/components/explorer/core';
 import { repoLangs, hash01 } from '@/components/explorer/repoVisuals';
 
 export default function Explore() {
@@ -86,13 +91,15 @@ export default function Explore() {
     return axis ? { axis } : {};
   });
   // Files core: objects leave their orbital slots and form a 3D core at the
-  // ring center, reordered by filesystem / taxonomy / (later) topic.
+  // ring center, reordered by filesystem / taxonomy / (later) topic. ON by
+  // default (owner decision 2026-07-22: the center IS the home view) — an
+  // absent ?core means core-on/fs, `core=0` is the explicit off state, and
+  // the old `core=<order>` links keep meaning exactly what they said.
   const [core, setCore] = useState<{ on: boolean; order: CoreOrder }>(() => {
     const c = initialParams.get('core');
     const orders: CoreOrder[] = ['fs', 'taxonomy', 'topic'];
-    return c && orders.includes(c as CoreOrder)
-      ? { on: true, order: c as CoreOrder }
-      : { on: false, order: 'fs' };
+    if (c === '0') return { on: false, order: 'fs' };
+    return { on: true, order: c && orders.includes(c as CoreOrder) ? (c as CoreOrder) : 'fs' };
   });
 
   // State → URL (replace, so a focus change doesn't spam the back stack). This
@@ -101,7 +108,9 @@ export default function Explore() {
   useEffect(() => {
     const p = new URLSearchParams();
     if (focusId) p.set('focus', focusId);
-    if (core.on) p.set('core', core.order);
+    // Core-on/fs is the default → clean URL; off is explicit (`core=0`).
+    if (!core.on) p.set('core', '0');
+    else if (core.order !== 'fs') p.set('core', core.order);
     if (lens.axis) p.set('lens', lens.axis);
     if (!showOntology) p.set('rel', '0');
     if (!showOlinks) p.set('olinks', '0');
@@ -285,6 +294,31 @@ export default function Explore() {
       // Files core: EVERY object (anchored or not) relocates to the 3D core at
       // the ring center; taxonomy stars stay pinned, rays tether objects to
       // their anchors across space. See core.ts for the reorder geometries.
+      //
+      // User-root constellations join the core too: slug roots (the nOS
+      // self-model, future domain packs) live on the OUTER user ring in the
+      // observer view, but the core is the "everything in the middle"
+      // projection — leaving them outside strands their skills/cards' anchors
+      // above the ring with a cross-sky ray bundle. Core-only override of the
+      // pinned fx (observer spatial memory untouched); `sat` damps the L0
+      // nebula halo so a relocated root can't white-out the core.
+      for (const n of graph.nodes) {
+        if (n.parentId || !/^[a-z][a-z0-9-]*$/.test(n.id)) continue;
+        const satPos = userRootConstellation(
+          n.id,
+          { x: n.x ?? 0, y: n.y ?? 0 },
+          (id) => [...(kids.get(id) ?? [])].sort(),
+        );
+        for (const nd of nodes) {
+          const p = satPos.get(nd.id);
+          if (p) {
+            nd.fx = p[0];
+            nd.fy = p[1];
+            nd.fz = p[2];
+            nd.sat = true;
+          }
+        }
+      }
       const galaxyPosOf = (nodeId: string) => {
         const g = nodeById.get(rootOf(nodeId));
         return g && g.x !== undefined ? { id: g.id, x: g.x, y: g.y!, z: g.z! } : null;
@@ -358,14 +392,22 @@ export default function Explore() {
           fz: p[2],
         });
       }
-      for (const l of layout.fsLinks) links.push({ ...l, fs: true });
+      // Endpoint guard on EVERY core edge: the Data-types facet hides objects
+      // AFTER the layout computed its links, and an edge into an undrawn node
+      // makes d3's link init throw mid-update — the scene then collapses onto
+      // the origin as one giant bloom ball. Only edges whose both endpoints
+      // are actually in the scene may ship.
+      const drawnCore = new Set(nodes.map((n) => n.id));
+      for (const l of layout.fsLinks) {
+        if (drawnCore.has(l.source) && drawnCore.has(l.target)) links.push({ ...l, fs: true });
+      }
       for (const r of layout.rays) {
-        if (nodeById.has(r.target)) links.push({ ...r, ray: true });
+        if (drawnCore.has(r.source) && nodeById.has(r.target)) links.push({ ...r, ray: true });
       }
       // Mapping-hub tethers (hub → taxonomy root/links); the nodeById filter
       // drops dangling anchors (deleted ext taxonomy nodes) silently.
       for (const r of layout.mrays) {
-        if (nodeById.has(r.target)) links.push({ ...r, mray: true });
+        if (drawnCore.has(r.source) && nodeById.has(r.target)) links.push({ ...r, mray: true });
       }
       coreLayout = layout;
     } else {
@@ -486,11 +528,15 @@ export default function Explore() {
       // reheated over every node (see the orbit note). Objects/folders carry the
       // pinned fx we just built; core hubs come from the layout map.
       const builtFocus = nodes.find((n) => n.id === focusId);
+      // Built node FIRST: in the core view a relocated user-root star carries
+      // its core fx, while nodeById still holds the baked outer-ring position
+      // — preferring the latter parked the halo (and its tethers) across the
+      // sky from the node the camera just flew to.
       const fp: [number, number, number] | undefined =
-        fc && fc.x !== undefined
-          ? [fc.x, fc.y!, fc.z!]
-          : builtFocus?.fx != null
-            ? [builtFocus.fx, builtFocus.fy!, builtFocus.fz!]
+        builtFocus?.fx != null
+          ? [builtFocus.fx, builtFocus.fy!, builtFocus.fz!]
+          : fc && fc.x !== undefined
+            ? [fc.x, fc.y!, fc.z!]
             : coreLayout?.positions.get(focusId);
       let dustIdx = 0;
       for (const item of starItems) {

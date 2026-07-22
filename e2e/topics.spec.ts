@@ -155,7 +155,7 @@ test.describe('topics mode', () => {
     await page.goto('/explore');
     await graphResponse;
     await expect(page.locator('canvas').first()).toBeVisible({ timeout: 15_000 });
-    await page.getByRole('button', { name: 'Core', exact: true }).click();
+    // Core is on by default — the reorder bar is already visible.
     const topicsBtn = page.getByRole('button', { name: 'Topics' });
     await expect(topicsBtn).toBeDisabled();
     await expect(topicsBtn).toHaveAttribute(
@@ -314,7 +314,7 @@ test.describe('topics mode', () => {
     await page.goto('/explore');
     await graphResponse;
     await expect(page.locator('canvas').first()).toBeVisible({ timeout: 15_000 });
-    await page.getByRole('button', { name: 'Core', exact: true }).click();
+    // Core is on by default — go straight to the (now enabled) Topics order.
     const topicsBtn = page.getByRole('button', { name: 'Topics' });
     await expect(topicsBtn).toBeEnabled();
     await topicsBtn.click();

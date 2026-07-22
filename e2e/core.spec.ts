@@ -77,14 +77,11 @@ test.describe('files core', () => {
     await graphResponse;
     await expect(page.locator('canvas').first()).toBeVisible({ timeout: 15_000 });
 
-    // Off by default — no reorder bar.
+    // ON by default (the center is the home view) — the reorder bar is
+    // already there: Folders (default, active), Taxonomy, Topics
+    // (disabled — no object vectors seeded here, so no clusters ship).
     const coreButton = page.getByRole('button', { name: 'Core', exact: true });
     await expect(coreButton).toBeVisible();
-    await expect(page.getByRole('button', { name: 'Folders' })).toHaveCount(0);
-
-    await coreButton.click();
-    // Reorder bar appears: Folders (default, active), Taxonomy, Topics
-    // (disabled — no object vectors seeded here, so no clusters ship).
     const folders = page.getByRole('button', { name: 'Folders' });
     await expect(folders).toBeVisible();
     const topicsBtn = page.getByRole('button', { name: 'Topics' });
@@ -102,9 +99,12 @@ test.describe('files core', () => {
     await page.waitForTimeout(1200);
     await page.screenshot({ path: 'e2e/screenshots/core-taxonomy.png' });
 
-    // Toggle off — the bar goes away, the camera flies back out.
+    // Toggle off — the bar goes away, the camera flies back out; on again —
+    // the bar returns (round-trip from the new on-by-default state).
     await coreButton.click();
     await expect(page.getByRole('button', { name: 'Folders' })).toHaveCount(0);
+    await coreButton.click();
+    await expect(page.getByRole('button', { name: 'Folders' })).toBeVisible();
   });
 
   test('cleanup: seeded objects removed', async ({ request }) => {

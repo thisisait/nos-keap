@@ -263,6 +263,43 @@ function placeHubs(
   });
 }
 
+/**
+ * User-root constellation (core view) — a slug taxonomy root (`nos`, future
+ * domain packs) and its whole ext subtree relocate INTO the core region while
+ * the core is on. Observer view keeps them on the outer USER ring
+ * (server/layout.ts); the core is the "everything in the middle" projection,
+ * so the second brain's own trees join the files there. Hub angle = the
+ * root's BAKED outer-ring angle (x/y plane), so the constellation faces its
+ * spatial-memory home and rays leave radially; shells reuse the standalone-
+ * mapping profile (satRadius). Deterministic in (baked angle, ids) — core-only,
+ * observer positions are untouched.
+ */
+export function userRootConstellation(
+  rootId: string,
+  baked: { x: number; y: number },
+  childIdsOf: (id: string) => string[],
+): Map<string, [number, number, number]> {
+  const pos = new Map<string, [number, number, number]>();
+  const theta = Math.atan2(baked.y, baked.x);
+  const at: [number, number, number] = [
+    Math.cos(theta) * SAT_RING,
+    Math.sin(theta) * SAT_RING,
+    (hash01(`uz:${rootId}`) - 0.5) * 120,
+  ];
+  const placeNode = (id: string, p: [number, number, number], depth: number): void => {
+    pos.set(id, p);
+    const kids = childIdsOf(id);
+    const r = satRadius(depth + 1);
+    kids.forEach((cid, i) => {
+      const d = fibDir(i, kids.length, cid);
+      const j = 0.85 + hash01(`r:${cid}`) * 0.3;
+      placeNode(cid, [p[0] + d[0] * r * j, p[1] + d[1] * r * j, p[2] + d[2] * r * j], depth + 1);
+    });
+  };
+  placeNode(rootId, at, 0);
+  return pos;
+}
+
 function taxonomyLayout(
   objects: GraphObject[],
   galaxyOf: (o: GraphObject) => { id: string; x: number; y: number; z: number } | null,

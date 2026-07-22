@@ -10,12 +10,10 @@ test.describe('addressable explore view', () => {
   test('core toggle + reorder write the URL, and a reload restores them', async ({ page }) => {
     await page.goto('/explore');
     await expect(page.locator('canvas').first()).toBeVisible({ timeout: 15_000 });
-    // Clean start — no explore params.
+    // Clean start — no explore params; core-on/fs IS the default (no ?core),
+    // so the reorder bar is already visible.
     expect(new URL(page.url()).search).toBe('');
-
-    // Core ON → ?core=fs (fs is the default order).
-    await page.getByRole('button', { name: 'Core', exact: true }).click();
-    await expect.poll(() => new URL(page.url()).searchParams.get('core')).toBe('fs');
+    await expect(page.getByRole('button', { name: 'Folders', exact: true })).toBeVisible();
 
     // Reorder to Taxonomy → ?core=taxonomy.
     await page.getByRole('button', { name: 'Taxonomy', exact: true }).click();
@@ -29,9 +27,13 @@ test.describe('addressable explore view', () => {
     await expect(page.getByRole('button', { name: 'Folders', exact: true })).toBeVisible();
     expect(new URL(page.url()).searchParams.get('core')).toBe('taxonomy');
 
-    // Core OFF → the param drops (clean URL, no stale ?core).
+    // Core OFF → explicit ?core=0 (absence now means the on-by-default view),
+    // and a fresh load of that URL restores the off state (no reorder bar).
     await page.getByRole('button', { name: 'Core', exact: true }).click();
-    await expect.poll(() => new URL(page.url()).searchParams.has('core')).toBe(false);
+    await expect.poll(() => new URL(page.url()).searchParams.get('core')).toBe('0');
+    await page.goto(page.url());
+    await expect(page.locator('canvas').first()).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole('button', { name: 'Folders', exact: true })).toHaveCount(0);
   });
 
   test('relations toggle round-trips as ?rel=0', async ({ page }) => {
