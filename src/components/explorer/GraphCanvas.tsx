@@ -107,6 +107,15 @@ const IMPOSTOR_BODY_R = 4; // representative rendered body radius (√FORM_SIZE�
 const IMPOSTOR_FULL_APP = 0.0025; // body apparent size ≤ this → nebula full opacity
 const IMPOSTOR_GONE_APP = 0.008; // ≥ this → bodies legible, nebula gone
 
+// Proximity label LOD — a name plate materialises once its node's apparent
+// size crosses SHOW and survives until it drops under KEEP (hysteresis); at
+// most MAX at once, largest-on-screen first. Covers everything the S2 budgets
+// left permanently unlabeled (deep taxonomy stars, over-budget cubes/folders,
+// observer bodies) — the "zoom in and the names appear" tier of the LOD arc.
+const PROX_LABEL_SHOW = 0.035;
+const PROX_LABEL_KEEP = 0.024;
+const PROX_LABEL_MAX = 48;
+
 export interface CanvasNode {
   id: string;
   name: string;
@@ -375,6 +384,22 @@ function tailSprite(): THREE.Texture {
 const _nebulaTex = radialSprite('rgba(255,255,255,0.9)', 'rgba(255,255,255,0.28)');
 const _discTex = radialSprite('rgba(255,255,255,1)', 'rgba(255,255,255,0.35)');
 const _cometTex = tailSprite();
+
+/** Hollow ring — the focus pulse outline (a stroke, not a glow blob). */
+function ringTexture(): THREE.Texture {
+  const c = document.createElement('canvas');
+  c.width = c.height = 128;
+  const g = c.getContext('2d')!;
+  g.strokeStyle = 'rgba(255,255,255,0.95)';
+  g.lineWidth = 7;
+  g.beginPath();
+  g.arc(64, 64, 54, 0, Math.PI * 2);
+  g.stroke();
+  const tex = new THREE.CanvasTexture(c);
+  tex.needsUpdate = true;
+  return tex;
+}
+const _pulseTex = ringTexture();
 
 // Decorative overlays (nebula halo, galaxy disc, labels, comet tail) must NOT
 // intercept clicks — a 560u nebula sprite would swallow every click meant for a
@@ -1059,26 +1084,28 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
 
   // Cube name plates are per-node canvas textures — cap them to small fields
   // so a 20k-file mapping doesn't allocate 20k sprite canvases at once.
+  // 'full' detail = the owner explicitly asked to see EVERYTHING — every label
+  // budget below yields to it (the field may lag; that is the toggle's deal).
   const fileLabels = useMemo(
-    () => Boolean(coreView) && nodes.filter((n) => n.object && n.path).length <= 400,
-    [nodes, coreView],
+    () => (Boolean(coreView) && nodes.filter((n) => n.object && n.path).length <= 400) || forceDetail,
+    [nodes, coreView, forceDetail],
   );
 
   // Same LOD budget for the two other unbounded label sources: folder-hub names
   // and level-2 star names. Both derive from `nodes`, so they only re-evaluate
   // on a graphData change — exactly when the node meshes rebuild anyway.
   const folderLabels = useMemo(
-    () => nodes.filter((n) => n.folder).length <= FOLDER_LABEL_CAP,
-    [nodes],
+    () => nodes.filter((n) => n.folder).length <= FOLDER_LABEL_CAP || forceDetail,
+    [nodes, forceDetail],
   );
   const starLabels = useMemo(
-    () => nodes.filter((n) => n.star).length <= STAR_LABEL_CAP,
-    [nodes],
+    () => nodes.filter((n) => n.star).length <= STAR_LABEL_CAP || forceDetail,
+    [nodes, forceDetail],
   );
   // Galaxy/constellation anchors stay on unless the whole object field is huge.
   const anchorLabels = useMemo(
-    () => nodes.filter((n) => n.object).length <= HUGE_FIELD,
-    [nodes],
+    () => nodes.filter((n) => n.object).length <= HUGE_FIELD || forceDetail,
+    [nodes, forceDetail],
   );
   // Track R3 verb labels ride the SAME LOD doctrine: a sparse Vazby overlay gets
   // midpoint verb plates; a dense one falls back to hover-only (no thousands of
@@ -1203,9 +1230,11 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     else if (node.level === 1) g.add(galaxyDisc(node.categoryHue)); // constellation
     else if (node.level === 2) g.add(starGlow(node.categoryHue)); // star
     // Two label tiers, each on its own budget: galaxy/constellation ANCHORS
-    // (level <= 1) stay on unless the field is huge; STAR names cull past the cap.
+    // (level <= 1) stay on unless the field is huge; STAR names cull past the
+    // cap. Plain taxonomy stars (L2+) normally get proximity labels only (the
+    // effect below) — EXCEPT in 'full' detail, where every node is named.
     const isAnchor = node.level <= 1;
-    if ((isAnchor && anchorLabels) || (!isAnchor && node.star && starLabels)) {
+    if ((isAnchor && anchorLabels) || (!isAnchor && (node.star ? starLabels : forceDetail))) {
       const sprite = new SpriteText(node.name);
       sprite.color = '#e9eefc';
       sprite.textHeight = node.level <= 1 ? 6 : 3.2;
@@ -1230,7 +1259,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     // lens is deliberately NOT a dep (read via lensRef): a lens toggle must not
     // change this accessor's identity, or react-force-graph rebuilds EVERY mesh.
     // The recency recolour is applied in place to the existing bodies below.
-  }, [coreView, fileLabels, folderLabels, starLabels, anchorLabels, instanceCubes, instanceBodies]);
+  }, [coreView, fileLabels, folderLabels, starLabels, anchorLabels, instanceCubes, instanceBodies, forceDetail]);
 
   // Lens recolour, IN PLACE (replaces the old fgRef.refresh(), which set
   // _flushObjects → cleared the node-object cache → rebuilt thousands of
@@ -1647,6 +1676,168 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
   }, [graphData, coreView, mode, instanceBodies, forceDetail]);
+
+  // Proximity labels — the "zoom reveals names" tier of the LOD arc. Permanent
+  // name plates are budget-capped (S2) and deep taxonomy stars never grew one
+  // at all, so a close-up used to be a field of anonymous spheres. This effect
+  // materialises a plate for whatever the camera is actually near: apparent
+  // size past PROX_LABEL_SHOW earns one, kept until it falls under
+  // PROX_LABEL_KEEP (hysteresis against boundary flicker), at most
+  // PROX_LABEL_MAX at once (largest-on-screen first). Sprites live in the
+  // scene (outside the forceGraph subtree) and never raycast; the camera-move
+  // guard makes an idle frame free.
+  useEffect(() => {
+    if (mode === 'ship') return;
+    // A node qualifies iff the CURRENT budgets gave it no permanent plate.
+    const hasPlate = (n: CanvasNode): boolean =>
+      n.repo
+        ? true
+        : n.folder
+          ? folderLabels
+          : n.object
+            ? Boolean(coreView) && !instanceCubes && fileLabels
+            : n.star
+              ? starLabels
+              : n.level <= 1
+                ? anchorLabels
+                : forceDetail;
+    const cands = graphData.nodes.filter(
+      (n) => n.fx != null && !n.orbit && !hasPlate(n),
+    ) as Array<CanvasNode & { fx: number; fy: number; fz: number }>;
+    if (!cands.length) return;
+    const radius = cands.map((n) => Math.sqrt(Math.max(nodeSize(n), 0.01)) * 2.4);
+    const pool = new Map<string, THREE.Sprite>();
+    const drop = (id: string, s: THREE.Sprite) => {
+      scene?.remove(s);
+      (s.material.map as THREE.Texture | null)?.dispose?.();
+      s.material.dispose();
+      pool.delete(id);
+    };
+    let scene: THREE.Scene | null = null;
+    let raf = 0;
+    let lastX = Infinity;
+    let lastY = Infinity;
+    let lastZ = Infinity;
+    const step = () => {
+      const ref = fgRef.current;
+      if (ref) {
+        if (!scene) {
+          try {
+            scene = ref.scene();
+          } catch {
+            // Renderer not ready — retry next frame.
+          }
+        }
+        const cp = ref.camera().position;
+        const dmx = cp.x - lastX;
+        const dmy = cp.y - lastY;
+        const dmz = cp.z - lastZ;
+        if (scene && dmx * dmx + dmy * dmy + dmz * dmz > 0.5) {
+          lastX = cp.x;
+          lastY = cp.y;
+          lastZ = cp.z;
+          const vis: Array<{ i: number; app: number }> = [];
+          for (let i = 0; i < cands.length; i++) {
+            const dx = cp.x - cands[i].fx;
+            const dy = cp.y - cands[i].fy;
+            const dz = cp.z - cands[i].fz;
+            const app = radius[i] / (Math.sqrt(dx * dx + dy * dy + dz * dz) || 1);
+            if (app > (pool.has(cands[i].id) ? PROX_LABEL_KEEP : PROX_LABEL_SHOW)) vis.push({ i, app });
+          }
+          vis.sort((a, b) => b.app - a.app);
+          const wantIdx = vis.slice(0, PROX_LABEL_MAX);
+          const wantIds = new Set(wantIdx.map((v) => cands[v.i].id));
+          for (const [id, s] of pool) if (!wantIds.has(id)) drop(id, s);
+          for (const { i } of wantIdx) {
+            const n = cands[i];
+            if (pool.has(n.id)) continue;
+            const sprite = new SpriteText(n.name);
+            sprite.color = '#dfe6f5';
+            sprite.textHeight = n.object ? 2.2 : 3;
+            sprite.fontSize = 110;
+            sprite.fontWeight = '600';
+            sprite.backgroundColor = 'rgba(8,12,22,0.86)';
+            sprite.padding = 1.6;
+            sprite.borderRadius = 1.5;
+            sprite.borderWidth = 0.4;
+            sprite.borderColor = 'rgba(180,195,225,0.35)';
+            const label = sprite as unknown as THREE.Sprite;
+            label.position.set(n.fx, n.fy - (radius[i] + 4), n.fz);
+            label.material.depthWrite = false;
+            noRaycast(label);
+            scene.add(label);
+            pool.set(n.id, label);
+          }
+        }
+      }
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => {
+      cancelAnimationFrame(raf);
+      for (const [id, s] of pool) drop(id, s);
+    };
+  }, [graphData, mode, coreView, fileLabels, folderLabels, starLabels, anchorLabels, instanceCubes, forceDetail]);
+
+  // Focus pulse — a short blinking outline ring on the focused node once a
+  // focus lands (click, search, "Focus in graph"), so the target catches the
+  // eye even when the near-hop guard skipped all camera motion — the case the
+  // owner flagged: the panel closes, the camera stays, and nothing visibly
+  // happened. ~2.6s, tracking the node; reduced motion = steady fade, no blink.
+  useEffect(() => {
+    if (!focusId) return;
+    const node = graphData.nodes.find((n) => n.id === focusId) as
+      | (CanvasNode & { x?: number; y?: number; z?: number })
+      | undefined;
+    if (!node) return;
+    const r = Math.sqrt(Math.max(nodeSize(node, lensRef.current), 1)) * 2.4;
+    const sprite = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: _pulseTex,
+        color: 0xe8f0ff,
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+      }),
+    );
+    noRaycast(sprite);
+    let scene: THREE.Scene | null = null;
+    let raf = 0;
+    const t0 = performance.now();
+    const DUR = 2600;
+    const step = () => {
+      const ref = fgRef.current;
+      if (ref) {
+        if (!scene) {
+          try {
+            scene = ref.scene();
+            scene.add(sprite);
+          } catch {
+            // Renderer not ready — retry next frame.
+          }
+        }
+        const t = (performance.now() - t0) / DUR;
+        if (t >= 1) {
+          scene?.remove(sprite);
+          sprite.material.dispose();
+          return; // done — no further frames
+        }
+        // Follow the node (focus dust keeps orbiting; pinned nodes are static).
+        sprite.position.set(node.x ?? node.fx ?? 0, node.y ?? node.fy ?? 0, node.z ?? node.fz ?? 0);
+        const blink = REDUCED_MOTION ? 1 : 0.45 + 0.55 * Math.abs(Math.cos(t * Math.PI * 5));
+        sprite.material.opacity = (1 - t) * 0.9 * blink;
+        sprite.scale.setScalar(r * (3.6 - 1.6 * t));
+      }
+      raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => {
+      cancelAnimationFrame(raf);
+      scene?.remove(sprite);
+      sprite.material.dispose();
+    };
+  }, [focusId, graphData]);
 
   // Memoised so the accessor identity only changes on a focus/lens change (an
   // inline arrow changes every render → a node digest every render). These

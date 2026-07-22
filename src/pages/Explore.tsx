@@ -1017,7 +1017,11 @@ export default function Explore() {
             onClose={() => setDrawer(null)}
             onFocus={(id) => {
               setDrawer(null);
-              setFocusId(id);
+              // Null-then-set so RE-focusing the already-focused node still
+              // fires the warp + focus pulse — without it the state doesn't
+              // change and "Focus in graph" visibly did nothing (owner report).
+              setFocusId(null);
+              requestAnimationFrame(() => setFocusId(id));
             }}
             onSelect={openTarget}
           />
