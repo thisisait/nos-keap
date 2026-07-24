@@ -41,6 +41,9 @@ const loadDir = (dir: string): { nodes: Map<string, CanonNode>; relations: Canon
   const relations: CanonRel[] = [];
   for (const sub of fs.readdirSync(dir)) {
     const p = path.join(dir, sub);
+    // A dump root carries the ontology layer beside the domain dirs; it has its
+    // own format and its own suite (knowledge/ontology-sot.test.ts).
+    if (sub === 'ontology') continue;
     if (fs.statSync(p).isDirectory()) {
       for (const f of fs.readdirSync(p)) {
         if (!f.endsWith('.json')) continue;

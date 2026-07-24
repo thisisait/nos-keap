@@ -140,6 +140,16 @@ export function registerAgentRoutes(app: Express) {
       surface: TOKEN_RO || TOKEN_RW ? 'enabled' : 'disabled',
       corpus: { taxonomyNodes: taxonomyNodeCount(), ...stats },
       embeddings: db.embeddingStats(),
+      // Durability surface. `database.id` changes if and only if the DB file was
+      // recreated, so a monitor that records it turns a silent data-directory
+      // replacement into an alert — the 2026-07-22 reset was invisible from
+      // outside for two days because every count rebuilt itself and nothing
+      // published the one fact that had not.
+      // `ontology.curatedRelations` is the layer with no rebuild path other
+      // than knowledge/ontology: zero here on a system that had edges means the
+      // SoT was never ingested, not that the classifier found nothing.
+      database: db.getDbIdentity(),
+      ontology: db.ontologyStats(),
     });
   });
 

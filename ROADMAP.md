@@ -364,6 +364,21 @@ in-container.
   assembly, brain endpoint provenance, and a private-object edge hidden from a
   non-owner viewer.
 
+- **R3 durability — the ontology as versioned SoT** *(shipped 2026-07-24)*: the
+  moderated typed-relation store had no source outside the container, so the
+  2026-07-22 data-directory reset took the whole derived set with it and nothing
+  noticed for two days (every other layer rebuilt itself from its source, so the
+  corpus looked healthy). `knowledge/ontology/` now versions the verb registry
+  (including moderated growth the code seed cannot carry) and every typed edge
+  with its **moderation verdict** and provenance; `dump`/`ingest`/`lint`/
+  `roundtrip` extended, ownership defined once in `_ontology.mjs`. Applied as an
+  ADDITIVE UPSERT, never wipe-then-insert — `relations` has two writers (this
+  importer and the live classifier), and removal is `status='rejected'`, which
+  the files carry. `/agent/v1/health` gained `database` (an id stored inside the
+  DB, so a changed id is proof the file was replaced) and `ontology` counts, so a
+  silent replacement becomes something a monitor can alert on. Review + the
+  measured vector-index finding: `docs/specs/durability-and-integrity.md`.
+
 ### Track D — Domain packs & the context injector (anchoring worlds)
 
 > Owner direction (2026-07-22): the substrate must record *business logic — up

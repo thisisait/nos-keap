@@ -31,6 +31,15 @@ jobs:
         run: node knowledge/lint.mjs
       - name: Round-trip identity (ingest → dump → diff == 0)
         run: node knowledge/roundtrip.mjs
+      # roundtrip.mjs can only gate shapes the repo's own files contain, and the
+      # ontology layer shipped with zero relations in it — so on its own it
+      # would prove nothing about the relation format. This suite supplies the
+      # data the repo lacks (every status, both sources, the rejection paths).
+      # It lives here rather than in `app` because that workflow ignores
+      # knowledge/**: a knowledge-only change would otherwise skip the one
+      # suite written to gate it.
+      - name: Ontology SoT round-trip (synthetic relations)
+        run: npx vitest run knowledge
       - name: Ingest dry-run
         run: node knowledge/ingest.mjs --dry-run --canonical knowledge/canonical
       - name: Brief cross-refs in sync

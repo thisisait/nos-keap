@@ -12,9 +12,14 @@
  * relation endpoints present; every ext parent resolves (to another node here or
  * a seed id we can't see — only an ext-id parent that is missing is an error).
  */
-import { readdirSync, statSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, statSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import {
+  ONTOLOGY_DIR, RELATIONS_SUBDIR, TYPES_FILE,
+  VALID_KINDS, VALID_SOURCES, VALID_STATUS, VALID_TYPE_STATUS,
+  relationKey, relationPartition,
+} from './_ontology.mjs';
 
 const __dir = path.dirname(fileURLToPath(import.meta.url));
 const CANON = process.argv.includes('--canonical')
@@ -131,10 +136,64 @@ for (const n of allNodes) {
   }
 }
 
+// ── ontology layer ─────────────────────────────────────────────────────────
+// Everything checkable without a DB. The load-bearing one is PARTITION
+// PLACEMENT: ingest's reset scope and dump's grouping are both derived from
+// relationPartition(), so a row hand-edited into the wrong file makes the two
+// disagree about ownership — the round-trip gate would fail with a confusing
+// byte diff, and on a live system the row would be written to one file and
+// looked for in another.
+const ONT = path.join(path.dirname(CANON), ONTOLOGY_DIR);
+let ontTypes = 0, ontRels = 0;
+if (existsSync(ONT)) {
+  const typesPath = path.join(ONT, TYPES_FILE);
+  const verbs = new Set();
+  if (existsSync(typesPath)) {
+    const doc = JSON.parse(readFileSync(typesPath, 'utf8'));
+    for (const t of doc.types || []) {
+      if (!t.type) { errors.push(`${TYPES_FILE}: a verb entry has no 'type'`); continue; }
+      if (verbs.has(t.type)) errors.push(`${TYPES_FILE}: duplicate verb '${t.type}'`);
+      if (!t.label) errors.push(`${TYPES_FILE} ${t.type}: missing label`);
+      if (!VALID_TYPE_STATUS.has(t.status ?? 'seed')) errors.push(`${TYPES_FILE} ${t.type}: bad status '${t.status}'`);
+      verbs.add(t.type);
+      ontTypes++;
+    }
+  } else {
+    errors.push(`ontology/: ${TYPES_FILE} is missing — relations cannot be validated against a vocabulary`);
+  }
+
+  const relDir = path.join(ONT, RELATIONS_SUBDIR);
+  const seenRel = new Map(); // key → file
+  if (existsSync(relDir)) {
+    for (const f of readdirSync(relDir).filter((e) => e.endsWith('.json')).sort()) {
+      const rel = path.join(RELATIONS_SUBDIR, f);
+      const doc = JSON.parse(readFileSync(path.join(relDir, f), 'utf8'));
+      const declared = doc.partition || path.basename(f, '.json');
+      if (declared !== path.basename(f, '.json')) {
+        errors.push(`${rel}: declares partition '${declared}' but is named '${path.basename(f, '.json')}'`);
+      }
+      for (const r of doc.relations || []) {
+        const key = relationKey(r);
+        ontRels++;
+        if (!r.from || !r.to || !r.type) { errors.push(`${rel} ${key}: missing from/to/type`); continue; }
+        if (seenRel.has(key)) errors.push(`${rel} ${key}: duplicate of ${seenRel.get(key)} — the store's UNIQUE(from,to,type) makes these one row`);
+        seenRel.set(key, rel);
+        if (!VALID_KINDS.has(r.fromKind ?? 'node') || !VALID_KINDS.has(r.toKind ?? 'node')) errors.push(`${rel} ${key}: bad kind`);
+        if (!VALID_STATUS.has(r.status ?? 'proposed')) errors.push(`${rel} ${key}: bad status '${r.status}'`);
+        if (!VALID_SOURCES.has(r.source ?? 'derived')) errors.push(`${rel} ${key}: bad source '${r.source}' (toe rows are versioned by canonical/, not here)`);
+        if (r.confidence != null && (typeof r.confidence !== 'number' || r.confidence < 0 || r.confidence > 1)) errors.push(`${rel} ${key}: confidence out of 0..1`);
+        if (verbs.size && !verbs.has(r.type)) errors.push(`${rel} ${key}: verb '${r.type}' is not in ${TYPES_FILE} — ingest would drop this edge`);
+        const want = relationPartition(r);
+        if (want !== declared) errors.push(`${rel} ${key}: belongs in '${want}.json' — dump and ingest would disagree about which file owns it`);
+      }
+    }
+  }
+}
+
 if (errors.length) {
   console.error(`✗ ${errors.length} violation(s):`);
   for (const e of errors.slice(0, 200)) console.error('  ' + e);
   if (errors.length > 200) console.error(`  … +${errors.length - 200} more`);
   process.exit(1);
 }
-console.log(`✓ knowledge lint clean — ${seen.size} nodes across ${files.length} files`);
+console.log(`✓ knowledge lint clean — ${seen.size} nodes across ${files.length} files; ontology: ${ontTypes} verbs, ${ontRels} relations`);

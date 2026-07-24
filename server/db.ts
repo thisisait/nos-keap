@@ -373,6 +373,115 @@ export async function initDb(): Promise<void> {
     }
   }
   initializeAppMetadata();
+  establishDbIdentity();
+}
+
+/** Identity of the database FILE itself — a value that changes if and only if
+ *  the database was recreated. */
+export type DbIdentity = {
+  /** Random per-database id. A changed id means a different database, full stop. */
+  id: string;
+  /** When this database first came into existence (unix seconds). */
+  initializedAt: number;
+  /** This process created it — i.e. it booted onto an empty data directory. */
+  freshThisBoot: boolean;
+};
+
+let dbIdentity: DbIdentity | null = null;
+
+/**
+ * Record (or read back) this database's identity.
+ *
+ * On 2026-07-22 the live data directory was replaced and the DB recreated. The
+ * corpus rebuilt itself from its sources — canonical ingest, fs-sync — so from
+ * the outside everything looked healthy, and the loss (the entire moderated
+ * relation set, which had no source to rebuild from) went unnoticed for two
+ * days. Nothing was wrong with the recovery; what was missing was any way to
+ * ask "is this the same database it was yesterday?"
+ *
+ * An id stored INSIDE the database answers that: it cannot survive a recreation,
+ * so a changed `id` (or a jumped `initializedAt`) is proof the file was
+ * replaced, and a monitor can alert on it.
+ *
+ * A database that predates this field must not masquerade as fresh — otherwise
+ * every existing deployment would cry wolf on its first upgraded boot. The
+ * discriminator is content: a DB carrying curated rows is demonstrably not new,
+ * so it is adopted with its identity backdated to its own oldest evidence.
+ */
+function establishDbIdentity(): void {
+  const d = getDb();
+  const row = d
+    .prepare("SELECT value FROM app_settings WHERE user_id = 'system' AND key = 'db_identity'")
+    .get() as { value: string } | undefined;
+  if (row) {
+    try {
+      const parsed = JSON.parse(row.value) as { id: string; initializedAt: number };
+      dbIdentity = { ...parsed, freshThisBoot: false };
+      return;
+    } catch {
+      /* unreadable — fall through and re-establish */
+    }
+  }
+  const populated =
+    (d.prepare('SELECT COUNT(*) c FROM taxonomy_nodes_ext').get() as { c: number }).c > 0 ||
+    (d.prepare('SELECT COUNT(*) c FROM knowledge_objects').get() as { c: number }).c > 0;
+  const now = Math.floor(Date.now() / 1000);
+  // An adopted database is backdated to when it actually came into existence —
+  // its own oldest migration. That is the same evidence the 2026-07-22 forensics
+  // ran on (six migrations sharing one timestamp is a DB born in that second),
+  // and it means `initializedAt` reads as the creation date for every database,
+  // not just the ones born after this field existed.
+  const born = populated
+    ? ((d.prepare('SELECT MIN(applied_at) t FROM schema_migrations').get() as { t: number | null }).t ?? now)
+    : now;
+  const identity = { id: crypto.randomUUID(), initializedAt: born };
+  d.prepare(
+    `INSERT INTO app_settings (user_id, key, value, updated_at) VALUES ('system', 'db_identity', ?, ?)
+     ON CONFLICT(user_id, key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`,
+  ).run(JSON.stringify(identity), now);
+  dbIdentity = { ...identity, freshThisBoot: !populated };
+  if (!populated) {
+    console.warn(
+      `[db] EMPTY DATA DIRECTORY — this process created a new database (id ${identity.id}).\n` +
+        '      Expected on a first install. On a system that was already live it means the\n' +
+        '      data directory was replaced: everything with a source (canonical ingest,\n' +
+        '      fs-sync) will rebuild, everything without one is GONE. Check that the\n' +
+        '      ontology layer (knowledge/ontology) has been ingested — the moderated\n' +
+        '      relation set has no other source.',
+    );
+  }
+}
+
+/** Identity of the running database — null before initDb(). */
+export function getDbIdentity(): DbIdentity | null {
+  return dbIdentity;
+}
+
+/** Ontology-layer census: the R3 store, split the way its durability matters —
+ *  `toe` rows are mirrored from canonical/ at every boot, everything else lives
+ *  or dies with knowledge/ontology. */
+export function ontologyStats(): {
+  verbs: number;
+  toeRelations: number;
+  curatedRelations: number;
+  byStatus: Record<string, number>;
+} {
+  const d = getDb();
+  const verbs = (d.prepare('SELECT COUNT(*) c FROM relation_types').get() as { c: number }).c;
+  const rows = d
+    .prepare("SELECT source, status, COUNT(*) c FROM relations GROUP BY source, status")
+    .all() as Array<{ source: string; status: string; c: number }>;
+  const byStatus: Record<string, number> = {};
+  let toeRelations = 0;
+  let curatedRelations = 0;
+  for (const r of rows) {
+    if (r.source === 'toe') toeRelations += r.c;
+    else {
+      curatedRelations += r.c;
+      byStatus[r.status] = (byStatus[r.status] ?? 0) + r.c;
+    }
+  }
+  return { verbs, toeRelations, curatedRelations, byStatus };
 }
 
 export function getDb(): Database.Database {

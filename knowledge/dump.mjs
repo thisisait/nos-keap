@@ -20,6 +20,10 @@
 import Database from 'libsql';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
+import {
+  ONTOLOGY_DIR, RELATIONS_SUBDIR, TYPES_FILE,
+  partitionFile, relationPartition, sortRelations, toFileRecord,
+} from './_ontology.mjs';
 
 const DATA_DIR = process.env.KEAP_DATA_DIR ?? '/app/data';
 const OUT_DIR = process.env.OUT_DIR ?? '/tmp/kdump';
@@ -46,6 +50,27 @@ const extNodes = db.prepare('SELECT * FROM taxonomy_nodes_ext').all();
 const descs = db.prepare('SELECT * FROM node_descriptions').all();
 const metaRows = db.prepare('SELECT * FROM taxonomy_metadata').all();
 const rels = db.prepare('SELECT * FROM concept_relations').all();
+
+// ── ontology layer (R3) ────────────────────────────────────────────────────
+// The moderated typed-edge store + its controlled vocabulary. A pre-006 DB (or
+// the roundtrip scratch schema before it grew these tables) has neither, and a
+// dump that throws there would break the CI gate for an unrelated reason — so a
+// missing table reads as "this layer is empty", not as a failure.
+const tableOf = (sql, fallback) => { try { return db.prepare(sql).all(); } catch { return fallback; } };
+// source='toe' is EXCLUDED by design: those rows are a boot-time mirror of
+// concept_relations, which the canonical domain files already version. Dumping
+// them here would put the same edge under two sources of truth, and the first
+// re-ingest that touched one and not the other would leave them disagreeing
+// with no way to tell which side was right.
+const ontRels = tableOf(
+  `SELECT id, from_ref, to_ref, from_kind, to_kind, type, confidence, justification, source, status, model, created_at
+     FROM relations WHERE source != 'toe'`,
+  [],
+);
+const relTypes = tableOf(
+  'SELECT type, label, color, description, status FROM relation_types ORDER BY type',
+  [],
+);
 
 const extById = new Map(extNodes.map((n) => [n.id, n]));
 const descById = new Map(descs.map((d) => [d.node_id, d]));
@@ -88,6 +113,14 @@ if (INSPECT) {
     const s = seedOverrides[0];
     console.log('sample seed-override:', s.node_id, '| en:', (s.description_en || '').slice(0, 60), '| cs:', (s.description_cs || '').slice(0, 60));
   }
+  // ontology layer
+  const byStatus = {};
+  for (const r of ontRels) byStatus[r.status] = (byStatus[r.status] || 0) + 1;
+  console.log('relation_types:', relTypes.length, JSON.stringify(relTypes.reduce((a, t) => ({ ...a, [t.status]: (a[t.status] || 0) + 1 }), {})));
+  console.log('ontology relations (source != toe):', ontRels.length, JSON.stringify(byStatus));
+  const parts = {};
+  for (const r of ontRels) { const p = relationPartition(r); parts[p] = (parts[p] || 0) + 1; }
+  console.log('ontology partitions:', JSON.stringify(parts));
   db.close();
 } else {
   // full canonical export — one file per L1 domain, nodes sorted by id
@@ -131,5 +164,41 @@ if (INSPECT) {
   writeFileSync(path.join(OUT_DIR, 'manifest.json'), JSON.stringify({ domains: manifest }, null, 1) + '\n');
   console.log(`wrote ${domains.size} domain files + manifest to ${OUT_DIR}`);
   console.log(`totals: ${emitted.size} nodes, ${rels.length} relations`);
+
+  // ── ontology layer ───────────────────────────────────────────────────────
+  // Written UNCONDITIONALLY, including when both sets are empty: the files are
+  // the SoT's statement about what exists, and an absent file is indistinguish-
+  // able from "we never dumped this" — which is the ambiguity that let the
+  // 2026-07-22 loss go unnoticed. An empty file says "empty" out loud.
+  const ontDir = path.join(OUT_DIR, ONTOLOGY_DIR);
+  const relDir = path.join(ontDir, RELATIONS_SUBDIR);
+  mkdirSync(relDir, { recursive: true });
+  writeFileSync(
+    path.join(ontDir, TYPES_FILE),
+    JSON.stringify({ version: 1, types: relTypes.map((t) => ({
+      type: t.type, label: t.label, color: t.color, description: t.description, status: t.status,
+    })) }, null, 1) + '\n',
+  );
+
+  const partitions = new Map();
+  for (const r of ontRels) {
+    const p = relationPartition(r);
+    if (!partitions.has(p)) partitions.set(p, []);
+    partitions.get(p).push(toFileRecord(r));
+  }
+  const ontManifest = [];
+  for (const [p, list] of [...partitions.entries()].sort()) {
+    sortRelations(list);
+    writeFileSync(
+      path.join(relDir, partitionFile(p)),
+      JSON.stringify({ version: 1, partition: p, relations: list }, null, 1) + '\n',
+    );
+    ontManifest.push({ partition: p, file: path.join(RELATIONS_SUBDIR, partitionFile(p)), relations: list.length });
+  }
+  writeFileSync(
+    path.join(ontDir, 'manifest.json'),
+    JSON.stringify({ version: 1, types: relTypes.length, relations: ontRels.length, partitions: ontManifest }, null, 1) + '\n',
+  );
+  console.log(`ontology: ${relTypes.length} verbs, ${ontRels.length} relations across ${partitions.size} partition file(s)`);
   db.close();
 }
