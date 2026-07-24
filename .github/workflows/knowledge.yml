@@ -35,6 +35,11 @@ jobs:
         run: node knowledge/spine-render.mjs --check
       - name: Lint canonical knowledge
         run: node knowledge/lint.mjs
+      # P-2: the artifact the nOS cortex port is graded against. Runs here as
+      # well as in the unit suite so a fixture can never be edited into
+      # agreement with a broken reference implementation.
+      - name: onto1 composition conformance
+        run: node knowledge/onto1-conformance.mjs
       - name: Round-trip identity (ingest → dump → diff == 0)
         run: node knowledge/roundtrip.mjs
       # roundtrip.mjs can only gate shapes the repo's own files contain, and the
