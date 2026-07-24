@@ -915,6 +915,11 @@ export interface CortexAnalysis {
   truncated: boolean;
 }
 
+/** Re-exported for the RESOLUTION stage (server/cortex-resolve.ts), which must
+ *  build phase-4 entries in the identical shape — including the additive
+ *  `line`/`column`. Two constructors would be two contracts. */
+export { issue as cortexIssue };
+
 function issue(
   code: CortexIssueCode,
   message: string,

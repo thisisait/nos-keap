@@ -34,6 +34,10 @@ import { syncAllFs, syncMapping, fsSyncStatus, USER_FILES_DIR } from './fs-sync'
 import { scheduleTopicRecluster, clusterTopics } from './topics';
 import { getTable, listTables, storeFor } from './tables';
 import { createTableRequestSchema } from '../shared/contracts/table';
+import { cortexValidateRequestSchema } from '../shared/contracts/cortex';
+import { CORTEX_CONTRACT_VERSION, cortexRegistryHash, listOpcodes } from './cortex-opcodes';
+import { cortexOntologyVersion } from './cortex-ontology-version';
+import { validateCortex } from './cortex-validate';
 import { listRoots } from './fs-roots';
 import { TOKEN_RO, TOKEN_RW, tokenEquals } from './tokens';
 import { candidatePairs, anchoredCandidates, DEFAULT_MAX_DISTANCE, type CandidatePair } from './relations';
@@ -130,7 +134,12 @@ export function registerAgentRoutes(app: Express) {
       // (429fc44c) and the symmetric gates; the number gained a referent the
       // day the fixture passed the consumer gate, and changes only when the
       // shared surface changes incompatibly.
-      contracts: { selfmodel: 1 },
+      // `cortex` is an ADDED key, never a bump of `selfmodel` — that field is
+      // asserted toBe(1) at e2e/selfmodel.spec.ts:35 and compared by the nOS
+      // cross-repo wet gate, so incrementing it to declare an unrelated contract
+      // would break both. `cortex` moves on any incompatible change to the
+      // opcode registry, the AST schema or the error codes.
+      contracts: { selfmodel: 1, cortex: CORTEX_CONTRACT_VERSION },
       // The version the running code was BUILT from, read out of the image's own
       // package.json — not the tag someone believes they deployed. Those are two
       // different facts, and until this field existed the running system could
@@ -149,7 +158,14 @@ export function registerAgentRoutes(app: Express) {
       // than knowledge/ontology: zero here on a system that had edges means the
       // SoT was never ingested, not that the classifier found nothing.
       database: db.getDbIdentity(),
-      ontology: db.ontologyStats(),
+      // `ontology.version` (cortex D4) is a CONTENT HASH of the live operand
+      // vocabulary — the taxonomy tree as `getNode` will actually answer it,
+      // plus the seed/confirmed relation verbs. It is what a validated Cortex
+      // AST is stamped with, and Wing compares it at dispatch to decide whether
+      // a cached AST is still describing the same language. Derived, so unlike a
+      // declared version it cannot go stale; the four counts beside it are a
+      // census and were never a version.
+      ontology: { ...db.ontologyStats(), version: cortexOntologyVersion() },
     });
   });
 
@@ -1165,6 +1181,42 @@ export function registerAgentRoutes(app: Express) {
     markCorpusDirty();
     ok(res, { id, submittedBy: `agent:${req.agentName}` });
   });
+
+  // ── Cortex: typecheck a pipeline program ──────────────────────────────────
+  // docs/specs/cortex-validate.md. Tokenize → parse → typecheck against the live
+  // ontology → AST or typed errors.
+  //
+  // agentAuth('ro'), NOT 'rw': the endpoint has ZERO side effects — no row, no
+  // proposal, no embedding, no cache warm — and requiring a write token to
+  // typecheck would force the executor to hold write credentials for a read
+  // operation, which is exactly backwards.
+  //
+  // This route reads NOTHING from `req.agentName`. That header is self-asserted
+  // and unbound to the token (server/agent.ts:73); it may be logged, it may not
+  // be believed, and no scope, filter or limit here keys on it.
+  app.post('/agent/v1/validate', agentAuth('ro'), (req, res) => {
+    const parsed = cortexValidateRequestSchema.safeParse(req.body);
+    // Phase 1. A malformed REQUEST is a transport error; a malformed PROGRAM is
+    // data (§3.1), and comes back as a 200 report with typed entries — the
+    // precedent is POST /agent/v1/taxonomy/describe, which returns its per-item
+    // errors[] inside an ok().
+    if (!parsed.success) return fail(res, 400, parsed.error.issues[0]?.message ?? 'invalid request');
+    ok(res, validateCortex(parsed.data.source, parsed.data.ttlSeconds));
+  });
+
+  // The published opcode registry (D3). Wing fetches this at boot and in CI and
+  // compares it against its handler map: handlers ⊉ opcodes → Wing refuses to
+  // start (it would accept ASTs it cannot dispatch); handlers ⊃ opcodes → a
+  // logged warning only, because those handlers are merely unreachable.
+  // Ordering rule for adding a capability: Wing ships the handler FIRST, KEAP
+  // enables the opcode SECOND.
+  app.get('/agent/v1/validate/opcodes', agentAuth('ro'), (_req, res) => {
+    ok(res, {
+      contract: CORTEX_CONTRACT_VERSION,
+      registryHash: cortexRegistryHash(),
+      opcodes: listOpcodes(),
+    });
+  });
 }
 
 // Hand-maintained minimal OpenAPI 3.1 description of the surface above.
@@ -1609,6 +1661,42 @@ const OPENAPI_SPEC = {
       get: {
         summary: 'Object detail: full card + resolved content link',
         parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'string' } }],
+      },
+    },
+    '/agent/v1/validate': {
+      post: {
+        summary:
+          'Typecheck a Cortex pipeline program against the live ontology. Zero side effects. Returns an AST or typed errors as DATA inside a 200 — a 400 means the request envelope was malformed, never that the program was. tax:/rel: resolve at system scope; kg:/ent: return a constant namespace_not_resolvable; db:/svc:/doc: are deferred to Wing. Never authorizes anything (data.scope.authorizes is always false).',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['source'],
+                properties: {
+                  source: {
+                    type: 'string',
+                    description: 'the pipeline program, e.g. "@input | classify(tax:01.01)"',
+                  },
+                  ttlSeconds: {
+                    type: 'integer',
+                    minimum: 60,
+                    maximum: 3600,
+                    default: 900,
+                    description: 'clamped, never rejected; stamped into ast.binding',
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    '/agent/v1/validate/opcodes': {
+      get: {
+        summary:
+          'The published Cortex opcode registry + its hash. Wing compares this against its handler map at boot and in CI.',
       },
     },
   },
