@@ -16,16 +16,24 @@ import path from 'node:path';
  * relations, so that gate proves nothing about relations. This suite supplies
  * the data the repo lacks: every status, both sources, present and absent
  * optional fields, and the rejection paths.
+ *
+ * PLAIN ESM ON PURPOSE. Everything it tests is .mjs, and it runs in the
+ * `knowledge` CI workflow, which installs with --ignore-scripts to stay
+ * independent of the app build. That skips the `wxt prepare` postinstall, so
+ * .wxt/tsconfig.json — which tsconfig.extension.json extends, and which the root
+ * tsconfig references — never exists, and the TS transform then fails to resolve
+ * a tsconfig for ANY .ts file in the repo. A TypeScript test here would drag the
+ * whole browser-extension toolchain into a data-only gate.
  */
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const DUMP = path.join(HERE, 'dump.mjs');
 const INGEST = path.join(HERE, 'ingest.mjs');
 
-let TMP: string;
+let TMP;
 
 /** Schema subset ingest/dump touch. Mirrors migration 006 + the canonical tables. */
-function scratchDb(dir: string) {
+function scratchDb(dir) {
   mkdirSync(dir, { recursive: true });
   const db = new Database(path.join(dir, 'keap.db'));
   db.exec('PRAGMA journal_mode=WAL');
@@ -59,7 +67,7 @@ const ROWS = [
     confidence: 1, justification: 'slug-root partition', source: 'manual', status: 'confirmed', model: null, created_at: 1784916500 },
 ];
 
-function seed(db: InstanceType<typeof Database>) {
+function seed(db) {
   for (const v of VERBS) {
     db.prepare('INSERT INTO relation_types (type, label, color, description, status, created_at) VALUES (?,?,?,?,?,1)')
       .run(v.type, v.label, v.color, v.description, v.status);
@@ -71,25 +79,25 @@ function seed(db: InstanceType<typeof Database>) {
   }
 }
 
-function runDump(dataDir: string, outDir: string) {
+function runDump(dataDir, outDir) {
   execFileSync('node', [DUMP], { env: { ...process.env, KEAP_DATA_DIR: dataDir, OUT_DIR: outDir }, stdio: 'pipe' });
 }
 
-function runIngest(dataDir: string, canonDir: string, ontologyDir: string) {
+function runIngest(dataDir, canonDir, ontologyDir) {
   const out = execFileSync('node', [INGEST, '--canonical', canonDir], {
     env: { ...process.env, KEAP_DATA_DIR: dataDir, ONTOLOGY_DIR: ontologyDir },
     encoding: 'utf8',
   });
   const line = out.split('\n').find((l) => l.startsWith('INGEST_RESULT '));
-  return { out, result: JSON.parse(line!.slice('INGEST_RESULT '.length)) };
+  return { out, result: JSON.parse(line.slice('INGEST_RESULT '.length)) };
 }
 
 /** All ontology files as path → raw text (byte comparison, no parsed projection). */
-function ontologyFiles(root: string): Map<string, string> {
-  const out = new Map<string, string>();
+function ontologyFiles(root) {
+  const out = new Map();
   const dir = path.join(root, 'ontology');
   if (!existsSync(dir)) return out;
-  const walk = (d: string, prefix: string) => {
+  const walk = (d, prefix) => {
     for (const e of readdirSync(d, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
       const p = path.join(d, e.name);
       if (e.isDirectory()) walk(p, path.join(prefix, e.name));
@@ -129,7 +137,7 @@ describe('ontology SoT — dump ∘ ingest identity', () => {
     const a = ontologyFiles(sot);
 
     const rels = JSON.parse(readFileSync(path.join(sot, 'ontology', 'relations', '03-applied-sciences-technology.json'), 'utf8'));
-    expect(rels.relations.map((r: { type: string }) => r.type).sort()).toEqual(['exemplifies', 'requires']);
+    expect(rels.relations.map((r) => r.type).sort()).toEqual(['exemplifies', 'requires']);
     // toe row excluded
     const allRefs = [...a.values()].join('');
     expect(allRefs).not.toContain('r-toe');
@@ -158,10 +166,10 @@ describe('ontology SoT — dump ∘ ingest identity', () => {
     scratchDb(dir).close();
     runIngest(dir, path.join(TMP, 'canonical'), path.join(TMP, 'sot', 'ontology'));
     const db = new Database(path.join(dir, 'keap.db'), { readonly: true });
-    const rows = db.prepare('SELECT from_ref, to_ref, type, status, confidence, model, created_at FROM relations ORDER BY from_ref').all() as Array<Record<string, unknown>>;
+    const rows = db.prepare('SELECT from_ref, to_ref, type, status, confidence, model, created_at FROM relations ORDER BY from_ref').all();
     db.close();
     expect(rows.map((r) => r.status).sort()).toEqual(['confirmed', 'confirmed', 'proposed', 'rejected']);
-    const rejected = rows.find((r) => r.status === 'rejected')!;
+    const rejected = rows.find((r) => r.status === 'rejected');
     expect(rejected.from_ref).toBe('01.02.03');
     // provenance survives verbatim — a rebuild that reset these would quietly
     // relabel when and by what each edge was typed
@@ -172,7 +180,7 @@ describe('ontology SoT — dump ∘ ingest identity', () => {
 
   it('restores a grown verb the code seed does not carry', () => {
     const db = new Database(path.join(TMP, 'verdicts', 'keap.db'), { readonly: true });
-    const grown = db.prepare("SELECT * FROM relation_types WHERE type = 'interprets'").get() as { status: string; color: string } | undefined;
+    const grown = db.prepare("SELECT * FROM relation_types WHERE type = 'interprets'").get();
     db.close();
     expect(grown?.status).toBe('confirmed');
     expect(grown?.color).toBe('#818cf8');
@@ -187,7 +195,7 @@ describe('ontology SoT — dump ∘ ingest identity', () => {
 });
 
 describe('ontology SoT — what it refuses, loudly', () => {
-  const write = (name: string, doc: unknown) => {
+  const write = (name, doc) => {
     const dir = path.join(TMP, name, 'ontology');
     mkdirSync(path.join(dir, 'relations'), { recursive: true });
     writeFileSync(path.join(dir, 'relation-types.json'), JSON.stringify({ version: 1, types: VERBS }, null, 1) + '\n');
@@ -222,7 +230,7 @@ describe('ontology SoT — what it refuses, loudly', () => {
     const { result } = runIngest(dir, path.join(TMP, 'canonical'), ont);
     expect(result.ontology.relations).toBe(1);
     expect(result.ontology.malformed).toHaveLength(4);
-    expect(result.ontology.malformed.map((m: { why: string }) => m.why).some((w: string) => w.includes('toe'))).toBe(true);
+    expect(result.ontology.malformed.map((m) => m.why).some((w) => w.includes('toe'))).toBe(true);
   });
 
   it('reports overwriting a live moderation verdict rather than doing it quietly', () => {
@@ -251,7 +259,7 @@ describe('ontology SoT — what it refuses, loudly', () => {
     db.close();
     runIngest(dir, path.join(TMP, 'canonical'), path.join(TMP, 'sot', 'ontology'));
     const check = new Database(path.join(dir, 'keap.db'), { readonly: true });
-    const still = check.prepare("SELECT status FROM relations WHERE id = 'r-new'").get() as { status: string } | undefined;
+    const still = check.prepare("SELECT status FROM relations WHERE id = 'r-new'").get();
     check.close();
     expect(still?.status).toBe('proposed');
   });

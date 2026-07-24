@@ -38,8 +38,13 @@ jobs:
       # It lives here rather than in `app` because that workflow ignores
       # knowledge/**: a knowledge-only change would otherwise skip the one
       # suite written to gate it.
+      # The trailing slash matters: a bare `knowledge` filter also matches
+      # server/knowledge-lint.test.ts, and this job installs with
+      # --ignore-scripts (no `wxt prepare`), so no .ts file in the repo can be
+      # transformed here — the root tsconfig references an extension config that
+      # extends the generated .wxt/tsconfig.json.
       - name: Ontology SoT round-trip (synthetic relations)
-        run: npx vitest run knowledge
+        run: npx vitest run knowledge/
       - name: Ingest dry-run
         run: node knowledge/ingest.mjs --dry-run --canonical knowledge/canonical
       - name: Brief cross-refs in sync
