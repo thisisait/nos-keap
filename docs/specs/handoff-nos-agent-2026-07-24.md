@@ -27,16 +27,22 @@ The generalised lesson, which applies directly to the Cortex corpus (see Part 2)
 **a layer with no source outside the container is undetectable when it
 disappears, because the layers that do have one rebuild and mask it.**
 
-### Pin bump
+### Pin bump — already done, not pushed
+
+Tag `v1.26.0` is on `main` (KEAP repo, CI green on both workflows). The pin is
+committed **locally** on nOS `dev` as `bad3f96f`, touching only the two files:
 
 ```
-roles/pazny.keap/defaults/main.yml   keap_repo_ref: v1.26.0
-default.config.yml                   keap_version:  1.26.0
+roles/pazny.keap/defaults/main.yml   keap_repo_ref: "v1.26.0"
+default.config.yml                   keap_version:  "1.26.0"
 ```
 
-Tag `v1.26.0` is on `main`. As usual please commit **only those two files**.
+Your `docs/llm/security/scan-state.json` modification was left untouched, and I
+did **not** push — that commit is sitting on top of your `origin/dev`
+(`6b655c69`, the cortex-lang v2 plan). Push it or rebase it as suits you; the
+converge reads the working tree, so a deploy does not require the push.
 
-Deploy is `ansible-playbook main.yml --tags keap` from ../nOS. I can also run the
+Deploy is `ansible-playbook main.yml --tags keap` from ../nOS. I can run the
 converge non-interactively if you'd rather I did — say so and I will.
 
 ### Risk profile: low
