@@ -136,6 +136,50 @@ for (const n of allNodes) {
   }
 }
 
+// ── seed spine (P-1) ───────────────────────────────────────────────────────
+// The spine is now data, so it needs the gate the delta already had. Before P-1
+// its correctness was guaranteed by being TypeScript that had to compile; a JSON
+// file has no such backstop, and a malformed id here flows straight into the
+// composed tree — where a valid-but-wrong id is indistinguishable from a correct
+// one, the same failure `applyDomain`'s drift detector exists for.
+const SPINE = path.join(path.dirname(CANON), 'spine');
+let spineNodes = 0;
+if (existsSync(SPINE)) {
+  const spineIds = new Map(); // id → file
+  const NUM_ID = /^\d{2}(\.\d{2})*$/;
+  const walkSpine = (node, file, parentId, kind) => {
+    const id = node.id;
+    if (!id || !NUM_ID.test(id)) {
+      errors.push(`spine/${file}: ${kind} id ${JSON.stringify(id)} is not a dotted 2-digit id`);
+      return;
+    }
+    if (spineIds.has(id)) errors.push(`spine/${file}: duplicate id '${id}' (also in ${spineIds.get(id)})`);
+    spineIds.set(id, `spine/${file}`);
+    spineNodes++;
+    if (!node.name || !String(node.name).trim()) errors.push(`spine/${file} ${id}: missing name`);
+    // Structural parentage: the composition in server/taxonomy.ts derives
+    // parentId from NESTING, while ids encode position. If the two disagree the
+    // tree silently reparents.
+    if (parentId !== null && !id.startsWith(`${parentId}.`)) {
+      errors.push(`spine/${file} ${id}: nested under '${parentId}' but its id is not a child of it`);
+    }
+    for (const sub of Object.values(node.subcategories ?? {})) walkSpine(sub, file, id, 'subcategory');
+    for (const item of node.items ?? []) walkSpine(item, file, id, 'item');
+  };
+  for (const f of readdirSync(SPINE).filter((e) => e.endsWith('.json') && e !== 'manifest.json').sort()) {
+    const doc = JSON.parse(readFileSync(path.join(SPINE, f), 'utf8'));
+    if (!doc.key || !doc.category) { errors.push(`spine/${f}: expected { key, category }`); continue; }
+    const prefix = f.slice(0, 2);
+    if (doc.category.id !== prefix) errors.push(`spine/${f}: category id '${doc.category.id}' does not match the file's '${prefix}' prefix — file order IS domain order`);
+    walkSpine(doc.category, f, null, 'category');
+  }
+  const manifestPath = path.join(SPINE, 'manifest.json');
+  if (existsSync(manifestPath)) {
+    const m = JSON.parse(readFileSync(manifestPath, 'utf8'));
+    if (m.totalNodes !== spineNodes) errors.push(`spine/manifest.json: totalNodes ${m.totalNodes} but ${spineNodes} nodes present`);
+  }
+}
+
 // ── ontology layer ─────────────────────────────────────────────────────────
 // Everything checkable without a DB. The load-bearing one is PARTITION
 // PLACEMENT: ingest's reset scope and dump's grouping are both derived from
@@ -196,4 +240,7 @@ if (errors.length) {
   if (errors.length > 200) console.error(`  … +${errors.length - 200} more`);
   process.exit(1);
 }
-console.log(`✓ knowledge lint clean — ${seen.size} nodes across ${files.length} files; ontology: ${ontTypes} verbs, ${ontRels} relations`);
+console.log(
+  `✓ knowledge lint clean — spine: ${spineNodes} nodes; delta: ${seen.size} nodes across ${files.length} files; ` +
+    `ontology: ${ontTypes} verbs, ${ontRels} relations`,
+);

@@ -27,6 +27,12 @@ jobs:
       # Only libsql is needed for the knowledge tools; skip lifecycle scripts
       # (wxt prepare etc.) so the gate stays fast and independent of the app build.
       - run: npm ci --ignore-scripts
+      # P-1: the 790-node seed spine is DATA (knowledge/spine/*.json) and
+      # src/game/data/taxonomy.ts is generated from it. Same gate shape as the
+      # brief cross-refs below — render and diff, so the checked-in artifact can
+      # never drift from its source.
+      - name: Seed spine in sync
+        run: node knowledge/spine-render.mjs --check
       - name: Lint canonical knowledge
         run: node knowledge/lint.mjs
       - name: Round-trip identity (ingest → dump → diff == 0)
