@@ -639,6 +639,29 @@ exists to avoid.
    which is the only signal an ambiguity check has.
 4. Filter to the subtree if a hint id was given (ancestor walk via
    `getAncestors`, `server/taxonomy.ts:159`).
+
+   > **ERRATUM (implemented as corrected).** Steps 3–4 as written contradict
+   > §3.7/D6 and §8 vector 3, which both promise the scope hint *narrows* rather
+   > than filtering after the fact. `searchTaxonomyFts` applies `ORDER BY rank
+   > LIMIT ?` in SQL, before the scope is known, so filtering a fixed 32-row page
+   > answers "the best 32 in the **tree**" when the question was "the best 32 in
+   > **this subtree**". Measured on the seed spine: all 32 global hits for
+   > "engineering" live under `03.01`, so `tax:02.02[engineering]` — the subtree
+   > named "Software Engineering" — filtered to zero and returned
+   > `unknown_operand`, the exact mis-teaching step 2 exists to prevent, reached
+   > through the remedy §3.7 hands back. Likewise `tax:06[technology]`, whose one
+   > in-scope match ranks 171st of 212.
+   >
+   > 32 is therefore a **page size, not a horizon**: the implementation widens the
+   > page (32 → 128 → 512 → 4096) until enough in-scope hits exist to rank, or the
+   > index is exhausted, or the ceiling is reached. The whole-tree case never
+   > escalates, so the common path still issues exactly one query.
+   >
+   > The same erratum applies to the exact-name refinement of step 5: node `02.01`
+   > is named exactly "Mathematics" and ranks 32nd of 44, so a name-equality rule
+   > answered from a ranking page could not fire for the very case it exists for,
+   > and no hint could rescue it. Name equality is answered from the tree
+   > (`allNodes()`, scoped by the same ancestor walk), not from an FTS page.
 5. `rank` is fts5 bm25: **negative, more negative = better**. Sort ascending.
    Ambiguity rule: let `r0` be the best rank and `r1` the second. If
    `|r1 - r0| < 0.10 * |r0|` → **`ambiguous_operand`**, returning up to 5

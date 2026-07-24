@@ -847,7 +847,18 @@ function buildAst(source: string, tree: CortexTree): BuiltAst {
   const stages: CortexAstStage[] = tree.stages.map((stage, index) => {
     const spec = getOpcode(stage.opcode);
     const operands: CortexAstOperand[] = [];
-    const params: Record<string, CortexAstParam> = {};
+    // NULL-PROTOTYPE on purpose. Param keys are model-authored word tokens
+    // (`WORD_CHAR` admits `__proto__`, `constructor`, `toString`), and on a
+    // plain object literal `params['__proto__'] = {…}` invokes the inherited
+    // setter instead of creating an own property: the key vanished from
+    // `Object.keys`/JSON, and the `hasOwnProperty` duplicate guard below could
+    // never see a second occurrence of it, so `__proto__=a, __proto__=b`
+    // silently produced no `duplicate_param` while `limit=1, limit=2` did.
+    // A map keyed by untrusted text must not have a prototype.
+    const params: Record<string, CortexAstParam> = Object.create(null) as Record<
+      string,
+      CortexAstParam
+    >;
 
     for (const arg of stage.args) {
       if (arg.kind === 'entity') {
@@ -1225,7 +1236,21 @@ export function analyzeCortex(source: string): CortexAnalysis {
       for (const kv of kvs) {
         if (seen.has(kv.key)) continue; // already reported as duplicate_param
         seen.add(kv.key);
-        const paramSpec = spec.params[kv.key] as CortexParamSpec | undefined;
+        // OWN properties only. `spec.params` is a plain (frozen) object literal
+        // from ./cortex-opcodes, and `Object.freeze` does not remove
+        // `Object.prototype`, so an unguarded read resolved every inherited
+        // member name — `constructor`, `toString`, `valueOf`, `hasOwnProperty`,
+        // `__proto__` — to a truthy value with no `.type`. The `unknown_param`
+        // branch below was then unreachable for exactly those keys: they fell
+        // through to `checkParamValue`'s `default: return false` and came back
+        // as `invalid_param_value` with `expectedType` undefined (dropped by
+        // JSON), an entry missing a field §4.2 declares — and, worse, the
+        // open-param pass-through for Wing-owned operands was silently
+        // unavailable for them, so `insert(db:products, constructor=1)` on a
+        // table with a column named `constructor` was rejected outright.
+        const paramSpec = Object.prototype.hasOwnProperty.call(spec.params, kv.key)
+          ? (spec.params[kv.key] as CortexParamSpec)
+          : undefined;
         if (!paramSpec) {
           if (openParams) continue;
           errors.push(

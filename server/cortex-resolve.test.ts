@@ -24,6 +24,7 @@ let taxonomy: typeof import('./taxonomy');
 let lang: typeof import('./cortex-lang');
 let opcodes: typeof import('./cortex-opcodes');
 let ontologyVersion: typeof import('./cortex-ontology-version');
+let resolve: typeof import('./cortex-resolve');
 let cortex: typeof import('./cortex-validate');
 
 beforeAll(async () => {
@@ -37,6 +38,7 @@ beforeAll(async () => {
   lang = await import('./cortex-lang');
   opcodes = await import('./cortex-opcodes');
   ontologyVersion = await import('./cortex-ontology-version');
+  resolve = await import('./cortex-resolve');
   cortex = await import('./cortex-validate');
 });
 
@@ -253,6 +255,115 @@ describe('ambiguity discrimination (the §3.8 threshold, re-tuned)', () => {
     // AND over both, and only one node carries both.
     const operand = firstOperand(run('@input | classify(tax:node[Projectile motion])'));
     expect(operand.id).toBe('01.01.01.01.02');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// FTS PAGE STARVATION — the fanout is a page size, not a horizon.
+//
+// `searchTaxonomyFts` applies `ORDER BY rank LIMIT ?` in SQL, before the scope
+// hint or the name rule can be applied. Every measurement below is against the
+// real seed spine, and every one of them USED to come back wrong.
+// ---------------------------------------------------------------------------
+
+describe('the FTS page never decides what exists (§3.7 / §3.8)', () => {
+  it('an exact NAME match is answered from the tree, not from the page it fell off', () => {
+    // Measured: "Mathematics" has 44 hits and node 02.01 — named exactly
+    // "Mathematics" — ranks 32nd, one past a 32-row page, because bm25
+    // systematically prefers the short-named descendants that carry the term in
+    // `path`. The exact-name rule exists precisely to resolve this case, and a
+    // pre-scoping LIMIT made it unable to fire.
+    const page = db.searchTaxonomyFts('Mathematics', 32);
+    expect(page.length).toBe(32);
+    expect(page.some((h) => h.id === '02.01')).toBe(false);
+
+    expect(firstOperand(run('@input | classify(tax:node[Mathematics])'))).toMatchObject({
+      id: '02.01',
+      resolvedName: 'Mathematics',
+    });
+    // 03.01 "Engineering" ranks 50th and is the ONLY node with that exact name.
+    expect(firstOperand(run('@input | classify(tax:node[Engineering])')).id).toBe('03.01');
+  });
+
+  it('a narrower scope hint is a NARROWING, not a filter over the global page', () => {
+    // §3.7 hands the model a narrower hint as THE remedy for ambiguity. Scoping
+    // after a global LIMIT made that remedy a dead end: all 32 global hits for
+    // "engineering" live under 03.01, so the subtree literally named "Software
+    // Engineering" filtered down to zero and answered "operand does not
+    // resolve" — teaching the model to rewrite a term that was correct.
+    const page = db.searchTaxonomyFts('engineering', 32);
+    expect(page.every((h) => !h.id.startsWith('02.02'))).toBe(true);
+
+    const report = run('@input | classify(tax:02.02[engineering])');
+    expect(codes(report)).toEqual(['ambiguous_operand']);
+    const detail = report.errors[0].detail as { candidates: Array<{ id: string }> };
+    expect(detail.candidates.length).toBeLessThanOrEqual(5);
+    // every candidate is IN the hinted subtree — the hint narrowed the search
+    expect(detail.candidates.every((c) => c.id.startsWith('02.02'))).toBe(true);
+    expect(detail.candidates.map((c) => c.id)).toContain('02.02.04');
+  });
+
+  it('a single in-subtree hit far down the global ranking still resolves', () => {
+    // "technology" has 212 hits; exactly one lives under 06, at rank 171. A
+    // 32-row page made `tax:06[technology]` a false unknown_operand.
+    expect(db.searchTaxonomyFts('technology', 32).some((h) => h.id.startsWith('06'))).toBe(false);
+    expect(firstOperand(run('@input | classify(tax:06[technology])'))).toMatchObject({
+      id: '06.02.01.05',
+      resolvedName: 'Recording Technology',
+    });
+  });
+
+  it('still reports a genuine miss as unknown_operand rather than widening forever', () => {
+    // The escalation stops at "the index had nothing more to give"; it must not
+    // turn an out-of-scope term into a hit.
+    const report = run('@input | classify(tax:01.02[Kinematics])');
+    expect(codes(report)).toEqual(['unknown_operand']);
+    expect(report.errors[0].detail).toEqual({ ns: 'tax', surface: 'Kinematics' });
+  });
+});
+
+// ---------------------------------------------------------------------------
+// §4.4 — the candidate cap, on EVERY branch that emits candidates
+// ---------------------------------------------------------------------------
+
+describe('ambiguous_operand candidate cap (§4.4)', () => {
+  it('caps the exact-NAME tie at CORTEX_CANDIDATE_CAP, like the bm25 and rel: branches', () => {
+    // The seed spine's 12 duplicate names all come in PAIRS, so the cap is
+    // never exceeded by seed data alone — but `registerExtNodes` imposes no
+    // name-uniqueness rule, and a canonical file tree with a per-service
+    // "Overview" node is the ordinary shape ingest produces. Uncapped, this
+    // branch published up to CORTEX_FTS_FANOUT (32) ids in one error, against
+    // the one quantitative disclosure limit the contract states.
+    const { dropped } = taxonomy.registerExtNodes([
+      { id: 'ovw', parentId: '', name: 'Overview Fixture Root', description: '', zone: 'anchor' },
+      ...Array.from({ length: 8 }, (_, i) => ({
+        id: `ovw.svc${i}`,
+        parentId: 'ovw',
+        name: 'Overview',
+        description: '',
+        zone: 'free' as const,
+      })),
+    ]);
+    expect(dropped).toEqual([]);
+    db.rebuildTaxonomyFts(taxonomy.allNodes());
+
+    const report = run('@input | classify(tax:node[Overview])');
+    expect(codes(report)).toEqual(['ambiguous_operand']);
+    const detail = report.errors[0].detail as {
+      candidates: Array<Record<string, unknown>>;
+    };
+    expect(detail.candidates.length).toBe(resolve.CORTEX_CANDIDATE_CAP);
+    for (const candidate of detail.candidates) {
+      expect(Object.keys(candidate).sort()).toEqual(['id', 'name', 'path']);
+      expect(candidate.name).toBe('Overview'); // the exact-name branch, not bm25
+    }
+  });
+
+  it('a two-way exact-name tie on SEED data reports both and picks neither', () => {
+    const report = run('@input | classify(tax:node[Logic])');
+    expect(codes(report)).toEqual(['ambiguous_operand']);
+    const detail = report.errors[0].detail as { candidates: Array<{ id: string }> };
+    expect(detail.candidates.map((c) => c.id)).toEqual(['02.03', '05.02.05']);
   });
 });
 
@@ -512,10 +623,36 @@ describe('D4 — the ontology fingerprint', () => {
   it('serializes the vocabulary the RESOLVER uses — dropped ext rows are absent', () => {
     const canonical = ontologyVersion.canonicalOntologyVocabulary();
     expect(canonical).toContain('t\t01.01\t01\tPhysics');
-    expect(canonical).toContain('r\trequires\tseed');
+    expect(canonical).toContain('r\trequires\tseed\trequires');
+    expect(canonical).toContain('r\tanalogous-to\tseed\tanalogous to');
     expect(canonical).not.toContain('orphan.dropped');
     expect(canonical).not.toContain('cortex-planted'); // status='proposed'
     expect(canonical.endsWith('\n')).toBe(false);
+  });
+
+  it('MOVES on a verb LABEL edit — the `rel:` half of the rename rule', () => {
+    // A label is not decoration: `resolveVerb` matches the bracket term against
+    // it and `bind` writes it into `operand.resolvedName`, so a label edit both
+    // changes what late binding resolves to and staleens every AST that
+    // recorded it. knowledge/ingest.mjs UPSERTs `label` from the checked-in SoT
+    // on every run, so this is an ordinary operation, not a hypothetical.
+    const before = ontologyVersion.cortexOntologyVersion();
+    const original = db.getRelationType('defines')!.label;
+    expect(codes(run('@input | link(rel:verb[renamed])'))).toEqual(['unknown_operand']);
+
+    db.getDb().prepare('UPDATE relation_types SET label = ? WHERE type = ?').run('renamed thing', 'defines');
+    try {
+      // the resolver's answer changed…
+      expect(firstOperand(run('@input | link(rel:verb[renamed])'))).toMatchObject({
+        id: 'defines',
+        resolvedName: 'renamed thing',
+      });
+      // …so the drift signal Wing revalidates on MUST have changed with it
+      expect(ontologyVersion.cortexOntologyVersion()).not.toBe(before);
+    } finally {
+      db.getDb().prepare('UPDATE relation_types SET label = ? WHERE type = ?').run(original, 'defines');
+    }
+    expect(ontologyVersion.cortexOntologyVersion()).toBe(before);
   });
 });
 

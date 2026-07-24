@@ -40,7 +40,7 @@
  * operand reaching this module is already grammar-legal and shape-legal.
  */
 import * as db from './db';
-import { getAncestors, getNode, type FlatNode } from './taxonomy';
+import { allNodes, getAncestors, getNode, type FlatNode } from './taxonomy';
 import { NAMESPACE_POLICY, RESERVED_SCOPE_WORDS, CORTEX_SCOPE } from './cortex-opcodes';
 import { cortexIssue, type CortexAst, type CortexAstOperand, type CortexIssue } from './cortex-lang';
 
@@ -48,11 +48,29 @@ import { cortexIssue, type CortexAst, type CortexAstOperand, type CortexIssue } 
 // Tunables — every one of them pinned by server/cortex-resolve.test.ts
 // ---------------------------------------------------------------------------
 
-/** How many FTS hits to consider before scoping/filtering. Over-fetch: a
- *  subtree-scoped search (`tax:01.01[…]`) discards hits outside the subtree, and
- *  a fanout equal to the candidate cap would let five out-of-scope hits starve a
- *  correct in-scope one. */
+/** How many IN-SCOPE FTS hits the ranking rule wants before it stops fetching.
+ *  Over-fetch: a subtree-scoped search (`tax:01.01[…]`) discards hits outside
+ *  the subtree, and a fanout equal to the candidate cap would let five
+ *  out-of-scope hits starve a correct in-scope one.
+ *
+ *  This is a PAGE SIZE, not a ceiling on what the search may see — see
+ *  `scopedHits`. A fixed `LIMIT 32` applied in SQL, before the scope is known,
+ *  is not "over-fetch", it is starvation with a bigger constant: on the seed
+ *  spine every one of the 32 global hits for "engineering" lives under `03.01`,
+ *  so `tax:02.02[engineering]` (the subtree literally named "Software
+ *  Engineering") filtered down to zero and was reported as `unknown_operand` —
+ *  teaching the model to rewrite a term that was correct, the single worst
+ *  repair-loop lesson available, and reached through the very scope hint §3.7
+ *  hands back as the remedy for `ambiguous_operand`. */
 export const CORTEX_FTS_FANOUT = 32;
+
+/** The hard ceiling on the escalation in `scopedHits`. A subtree-scoped query
+ *  re-fetches a wider page until the SCOPE is covered rather than until the
+ *  TREE is; this bounds the worst case (4 queries: 32 → 128 → 512 → 4096) so a
+ *  grown corpus cannot turn a read-only validate into a table scan per operand.
+ *  4096 is comfortably above the ~1840-node target corpus, so on any tree this
+ *  system is planned for, "exhausted" is what stops the loop, not this. */
+export const CORTEX_FTS_MAX_FANOUT = 4096;
 
 /** §4.4 — candidate lists are capped at 5 and carry `{id, name, path}` only. */
 export const CORTEX_CANDIDATE_CAP = 5;
@@ -219,26 +237,6 @@ function resolveTaxonomy(operand: CortexAstOperand, stage: number, ctx: ResolveC
     return;
   }
 
-  // Call `db.searchTaxonomyFts` DIRECTLY. The existing helper `searchNodes`
-  // (server/agent.ts:108) throws `rank` away, and `rank` is the only signal an
-  // ambiguity check has. Never `hybridSearch`: its score is RRF
-  // `1/(60+rank+1)`, where adjacent ranks differ by ~0.00026 and the value is
-  // bounded to ~0.016 regardless of match quality — a threshold built on it
-  // fires on every query or on none.
-  const scoped = db
-    .searchTaxonomyFts(operand.surface, CORTEX_FTS_FANOUT)
-    .map((hit) => ({ hit, node: getNode(hit.id) }))
-    .filter(
-      (row): row is { hit: db.FtsHit; node: FlatNode } =>
-        row.node !== null && inSubtree(row.hit.id, hint, wholeTree),
-    )
-    .sort((a, b) => a.hit.rank - b.hit.rank); // bm25: negative, ascending = best first
-
-  if (scoped.length === 0) {
-    ctx.errors.push(unknownOperand(operand, stage, ctx));
-    return;
-  }
-
   // REFINEMENT of §3.8 step 5, and the one place this stage adds a rule the
   // spec does not state. An exact, case-insensitive match on a node's NAME is a
   // categorically stronger signal than a bm25 ranking, and it is checked first:
@@ -253,14 +251,31 @@ function resolveTaxonomy(operand: CortexAstOperand, stage: number, ctx: ResolveC
   //     the term genuinely is ambiguous and this branch reports it as such.
   //   - It cannot rescue vector 4 (`motion`): no node is named "motion", so the
   //     bm25 margin rule below is what runs, unchanged.
+  //
+  // It is answered from the TREE (`allNodes`), not from an FTS page. A name
+  // equality test is not a ranking question and must not inherit a ranking
+  // question's truncation: node `02.01` is named exactly "Mathematics" and sits
+  // at position 32 of the global FTS result for "Mathematics" — one past the
+  // page — so the rule whose entire purpose is to make that case resolve could
+  // not fire, and no scope hint could rescue it, because the hint was applied
+  // after the LIMIT. Same oracle as everywhere else in this module (`getNode` /
+  // `allNodes`), so a dropped ext row stays unresolvable here too.
   const needle = operand.surface.trim().toLowerCase();
-  const exact = scoped.filter((row) => row.node.name.trim().toLowerCase() === needle);
+  const exact = nodesNamedExactly(needle, hint, wholeTree);
   if (exact.length === 1) {
-    bind(operand, exact[0].node.id, exact[0].node.name);
+    bind(operand, exact[0].id, exact[0].name);
     return;
   }
   if (exact.length > 1) {
-    ctx.errors.push(ambiguous(operand, stage, ctx, exact.map((row) => candidateOf(row.node))));
+    ctx.errors.push(
+      ambiguous(operand, stage, ctx, exact.slice(0, CORTEX_CANDIDATE_CAP).map(candidateOf)),
+    );
+    return;
+  }
+
+  const scoped = scopedHits(operand.surface, hint, wholeTree);
+  if (scoped.length === 0) {
+    ctx.errors.push(unknownOperand(operand, stage, ctx));
     return;
   }
 
@@ -281,6 +296,65 @@ function resolveTaxonomy(operand: CortexAstOperand, stage: number, ctx: ResolveC
   }
 
   bind(operand, scoped[0].node.id, scoped[0].node.name);
+}
+
+interface ScopedHit {
+  hit: db.FtsHit;
+  node: FlatNode;
+}
+
+/**
+ * The in-scope FTS page, fetched until the SCOPE is covered.
+ *
+ * `db.searchTaxonomyFts` applies `ORDER BY rank LIMIT ?` in SQL, before the
+ * scope hint is known to it, so a single fixed fetch answers "the best N in the
+ * TREE" when the question asked was "the best N in THIS SUBTREE". Those differ
+ * catastrophically whenever a term is popular outside the hinted subtree:
+ * "technology" has 212 hits on the seed spine and the single one inside `06`
+ * ranks 171st, so one page of 32 made `tax:06[technology]` a false
+ * `unknown_operand`.
+ *
+ * So: widen the page until either enough IN-SCOPE hits exist to rank
+ * (`CORTEX_FTS_FANOUT` of them), or the index is exhausted (a short page proves
+ * there is no more), or the ceiling is hit. The whole-tree case (`tax:node[…]`,
+ * the overwhelming majority) never escalates — its first page is already fully
+ * in scope — so this costs one query there, exactly as before.
+ *
+ * Still read-only: `searchTaxonomyFts` is a SELECT and re-running it with a
+ * larger LIMIT is still a SELECT.
+ */
+function scopedHits(surface: string, hint: string, wholeTree: boolean): ScopedHit[] {
+  let limit = CORTEX_FTS_FANOUT;
+  for (;;) {
+    // Call `db.searchTaxonomyFts` DIRECTLY. The existing helper `searchNodes`
+    // (server/agent.ts:108) throws `rank` away, and `rank` is the only signal an
+    // ambiguity check has. Never `hybridSearch`: its score is RRF
+    // `1/(60+rank+1)`, where adjacent ranks differ by ~0.00026 and the value is
+    // bounded to ~0.016 regardless of match quality — a threshold built on it
+    // fires on every query or on none.
+    const page = db.searchTaxonomyFts(surface, limit);
+    const scoped = page
+      .map((hit) => ({ hit, node: getNode(hit.id) }))
+      .filter(
+        (row): row is ScopedHit => row.node !== null && inSubtree(row.hit.id, hint, wholeTree),
+      )
+      .sort((a, b) => a.hit.rank - b.hit.rank); // bm25: negative, ascending = best first
+
+    if (scoped.length >= CORTEX_FTS_FANOUT) return scoped;
+    if (page.length < limit) return scoped; // the index had nothing more to give
+    if (limit >= CORTEX_FTS_MAX_FANOUT) return scoped;
+    limit = Math.min(limit * 4, CORTEX_FTS_MAX_FANOUT);
+  }
+}
+
+/** Every node in scope whose NAME equals `needle` (already trimmed and
+ *  lower-cased), ordered by id so the candidate list is deterministic rather
+ *  than dependent on tree-insertion order. */
+function nodesNamedExactly(needle: string, hint: string, wholeTree: boolean): FlatNode[] {
+  if (!needle) return [];
+  return allNodes()
+    .filter((node) => node.name.trim().toLowerCase() === needle && inSubtree(node.id, hint, wholeTree))
+    .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 }
 
 /** Subtree containment via the ancestor walk (`getAncestors`), NOT a dotted

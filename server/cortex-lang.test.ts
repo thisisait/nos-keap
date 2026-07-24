@@ -562,6 +562,57 @@ describe('params', () => {
       got: 'bool',
     });
   });
+
+  // -------------------------------------------------------------------------
+  // Param keys are MODEL-AUTHORED TEXT, and the lexer's WORD_CHAR admits every
+  // `Object.prototype` member name. Both the registry lookup and the AST's
+  // `params` map are keyed by that text, so neither may inherit anything.
+  // -------------------------------------------------------------------------
+
+  const PROTOTYPE_KEYS = ['constructor', 'toString', 'valueOf', 'hasOwnProperty', '__proto__'];
+
+  it('treats a prototype-named key as UNKNOWN on a KEAP-owned stage, not as a declared one', () => {
+    // An unguarded `spec.params[key]` read resolves each of these to an
+    // inherited function, skipping the `unknown_param` branch entirely and
+    // emitting `invalid_param_value` with `expectedType` undefined — an entry
+    // missing a field §4.2 declares for that code, telling the repair loop
+    // "wrong type" about a parameter that does not exist.
+    for (const key of PROTOTYPE_KEYS) {
+      const err = only(`@input | classify(tax:01, ${key}=1)`);
+      expect(err.code).toBe('unknown_param');
+      expect(err.detail).toEqual({ opcode: 'classify', key, allowed: ['threshold'] });
+    }
+  });
+
+  it('the open-param pass-through covers prototype-named keys too (a column may be called `constructor`)', () => {
+    // §5: KEAP does not know the products table's schema, so it may not reject
+    // a column name — and "which strings JavaScript happens to inherit" is not
+    // a schema fact KEAP is entitled to assert.
+    for (const key of PROTOTYPE_KEYS) {
+      const { errors, ast } = analyzeCortex(`@input | insert(db:products, ${key}=true)`);
+      expect(codes(errors)).toEqual([]);
+      const params = ast!.pipeline.stages[0].params;
+      expect(Object.prototype.hasOwnProperty.call(params, key)).toBe(true);
+      expect(params[key]).toMatchObject({ value: true });
+      expect(Object.keys(params)).toContain(key);
+      expect(JSON.parse(JSON.stringify(params))[key]).toMatchObject({ value: true });
+    }
+  });
+
+  it('catches a duplicate `__proto__` — the params map has no prototype to write through', () => {
+    // On a plain object literal `params['__proto__'] = {…}` invokes the
+    // inherited setter instead of creating an own property, so the
+    // hasOwnProperty duplicate guard never saw the second occurrence.
+    const { errors, ast } = analyzeCortex('@input | insert(db:x, __proto__=true, __proto__=false)');
+    expect(codes(errors)).toEqual(['duplicate_param']);
+    expect(errors[0].detail).toEqual({ key: '__proto__' });
+    expect(ast).toBeNull();
+
+    const params = parseCortex('@input | insert(db:x, __proto__=true)').ast!.pipeline.stages[0]
+      .params;
+    expect(Object.getPrototypeOf(params)).toBeNull();
+    expect(params.__proto__).toMatchObject({ value: true });
+  });
 });
 
 // ---------------------------------------------------------------------------

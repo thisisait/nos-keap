@@ -12,7 +12,7 @@
  * Canonical serialization — LF-joined, no trailing newline:
  *
  *   t \t <id> \t <parentId | "-"> \t <name>     every node in allNodes(), id ASC
- *   r \t <type> \t <status>                     relation_types with status IN
+ *   r \t <type> \t <status> \t <label>          relation_types with status IN
  *                                               ('seed','confirmed'), type ASC
  *
  * then `onto1:` + the first 16 hex chars of sha256.
@@ -54,6 +54,18 @@ function isLiveVerbStatus(status: string): boolean {
  *    actually used, not a superset that exists on disk.
  *  - `name` — a rename must invalidate a stored precedent (plan §6.3 compares
  *    "the name it had at capture"). Without `name`, a rename is invisible here.
+ *  - `label`, for the SAME reason on the `rel:` half, which the first cut of
+ *    this module missed. A verb's label is not decoration: `resolveVerb`
+ *    matches the bracket term against it in both the exact and the substring
+ *    tier (server/cortex-resolve.ts:345, :350) and `bind` writes it into
+ *    `operand.resolvedName`. So a label edit is resolution-affecting and is
+ *    recorded in the AST — exactly the two properties that make node `name`
+ *    load-bearing above. knowledge/ingest.mjs UPSERTs `label` from the checked-in
+ *    SoT (knowledge/ontology/relation-types.json) on every run, so a re-ingest
+ *    after an editorial label change could flip `rel:verb[…]` from a unique bind
+ *    to `ambiguous_operand`, or leave a cached AST carrying a `resolvedName`
+ *    that no longer exists, while the fingerprint stayed byte-identical and
+ *    Wing's "ontologyVersion moved → revalidate" rule never fired.
  *  - `parentId` — a re-parent changes `node.path`, which `rebuildTaxonomyFts`
  *    indexes, which changes late-binding results. It is resolution-affecting.
  *  - `description` is deliberately EXCLUDED. K1 curated overrides
@@ -72,7 +84,7 @@ export function canonicalOntologyVocabulary(): string {
   for (const row of [...db.listRelationTypes()]
     .filter((r) => isLiveVerbStatus(r.status))
     .sort((a, b) => byCodeUnit(a.type, b.type))) {
-    lines.push(['r', row.type, row.status].join('\t'));
+    lines.push(['r', row.type, row.status, row.label].join('\t'));
   }
 
   return lines.join('\n');
