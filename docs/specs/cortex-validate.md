@@ -109,7 +109,7 @@ over `tax:` are also safe (§4.4).
   guest and return `unknown_operand` for most real cards — the same refusal, with
   more code and a false claim of authorization.
 - **`ent:`** has **no backing at all**. `object_type_definitions`
-  (`server/migrations.ts:60`) is created by migration 001 and touched by **zero
+  (`server/migrations.ts:83`) is created by migration 001 and touched by **zero
   lines of code** in the repo — no reader, no writer, no accessor. The review
   (`nos-cortex-lang-review-02.md:43`) named it as *"the plausible backing"*; that
   was a naming recommendation to the nOS side, not a statement that it has rows.

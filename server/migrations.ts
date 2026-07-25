@@ -57,6 +57,29 @@ const MIGRATIONS: Migration[] = [
       );
       CREATE INDEX IF NOT EXISTS extension_drafts_owner_idx ON extension_drafts(owner_id, expires_at);
 
+      -- UNUSED as of v1.27.0 — dead schema, deliberately retained.
+      --
+      -- Created by this migration since 001 and touched by ZERO lines of code:
+      -- no reader, no writer, no accessor, no test. It has never held a row in
+      -- any environment. The only live type surface is db.objectTypes()
+      -- ("SELECT DISTINCT type FROM knowledge_objects"), which is an *observed*
+      -- enum derived from instances — not a registry, and not backed by this.
+      --
+      -- Kept rather than dropped: a drop migration costs more than the empty
+      -- table does (it is ~1KB of catalogue and costs nothing at runtime), and
+      -- it is the named destination for one specific piece of pending work.
+      --
+      -- It becomes real when, and ONLY when, nos-cortex-lang's "ent:" operand
+      -- gets a writer. cortex-validate.md §1.4 refuses "ent:" outright *because*
+      -- this table is empty — validating against an empty registry yields a
+      -- route that appears to typecheck entity references while rejecting
+      -- every one of them. Populating this table (a real type-registry writer,
+      -- plus a visibility-aware reader) is the P3 prerequisite that turns "ent:"
+      -- from refused into resolvable.
+      --
+      -- If that work is abandoned, this table has no second use case — drop it
+      -- then. Until then, do not build on it without adding the writer first.
+      -- See docs/specs/cortex-validate.md and docs/specs/nos-cortex-lang-review-02.md.
       CREATE TABLE IF NOT EXISTS object_type_definitions (
         id TEXT PRIMARY KEY,
         user_id TEXT NOT NULL,
