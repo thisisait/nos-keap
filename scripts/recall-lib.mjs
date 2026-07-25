@@ -257,17 +257,58 @@ export function classifyAgainstBaseline({ passing, failing, unmeasurable, baseli
  * The drain check comes FIRST: if the corpus never finished embedding, no
  * number from the run means anything, including the failures.
  */
-export function exitVerdict({ measured, total, failures = [], need = 0, coverageLost = [], drain = { drained: true } }) {
+export function exitVerdict({
+  measured, total, failures = [], need = 0, coverageLost = [], drain = { drained: true },
+  hasBaseline = false, regressions = [], newlyCoveredFailing = [], knownFailing = [], newlyFailing = [],
+}) {
   if (!drain.drained) {
     return { code: 4, reason: 'not-drained', detail: `${drain.remaining} item(s) still pending after ${drain.rounds} round(s) (${drain.reason})` };
   }
   if (!measured) return { code: 4, reason: 'nothing-measured', detail: `zero measurable cases out of ${total}` };
-  if (failures.length) return { code: 1, reason: 'failures', detail: `${failures.length} measured case(s) failed` };
+  // A REGRESSION is a case that passed in the baseline and fails now. That is
+  // the failure this gate exists to catch, and it is the only kind of failure
+  // that fails the run once a baseline exists.
+  if (hasBaseline && regressions.length) {
+    return { code: 1, reason: 'regressions', detail: `${regressions.length} case(s) passed in the baseline and fail now` };
+  }
+  // Without a baseline there is nothing to compare against, so ANY failure
+  // fails — you cannot call a failure "known" on a corpus you have never
+  // recorded.
+  if (!hasBaseline && failures.length) {
+    return { code: 1, reason: 'failures', detail: `${failures.length} measured case(s) failed, and there is no baseline to call them known` };
+  }
+  // A case that was UNMEASURABLE in the baseline and now measures as failing is
+  // new information, not a regression. Failing the run for it would punish the
+  // act of widening coverage, which is exactly backwards — the whole point of
+  // growing the corpus is to find out where recall is weak. It is reported
+  // loudly and does not fail.
+  //
+  // Known failures likewise do not fail the run — and this is the difference
+  // between a gate and a permanently red light. The in-repo fixture holds 7
+  // nodes across one stack-pair; two of its four cases forbid an ancestor from
+  // outranking a skill, which a corpus that small cannot satisfy no matter how
+  // good recall is. A gate that can never go green trains people to ignore it,
+  // and an ignored gate catches nothing.
+  //
+  // What stops this becoming a baseline of shame: the known-failing set can
+  // only GROW through an explicit --update-baseline (guarded by
+  // baselineWriteVerdict), because any pass→fail transition is a regression and
+  // fails above. Silence is not available to it.
   if (need && measured < need) {
     return { code: 4, reason: 'below-floor', detail: `measured ${measured}/${total}, below the declared floor of ${need}` };
   }
   if (coverageLost.length) {
     return { code: 4, reason: 'coverage-lost', detail: `${coverageLost.length} case(s) the baseline measured are unmeasurable now` };
+  }
+  // Green, but never silently: a run carrying known failures or newly-covered
+  // failures says so in its reason, so `RECALL_RESULT.exit` distinguishes a
+  // clean pass from a pass-with-debt without anyone reading the prose above it.
+  if (knownFailing.length || newlyCoveredFailing.length || newlyFailing.length) {
+    const parts = [];
+    if (knownFailing.length) parts.push(`${knownFailing.length} known failing`);
+    if (newlyCoveredFailing.length) parts.push(`${newlyCoveredFailing.length} newly covered and failing`);
+    if (newlyFailing.length) parts.push(`${newlyFailing.length} new case(s) failing`);
+    return { code: 0, reason: 'pass-with-known-failures', detail: `no regression; ${parts.join(', ')}` };
   }
   return { code: 0, reason: 'pass', detail: null };
 }

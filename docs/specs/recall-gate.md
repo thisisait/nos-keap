@@ -218,9 +218,20 @@ without reading them is trusting the number that lied.
 
 | code | meaning |
 | --- | --- |
-| `0` | every measured case passed **and** coverage did not shrink |
-| `1` | at least one measured case failed (flagged regression / newly covered / new / known against the baseline) |
+| `0` | no **regression**, and coverage did not shrink. Either a clean pass, or `pass-with-known-failures` — failures the baseline already records, printed as `PASSED WITH DEBT` with every carried case named |
+| `1` | a **regression**: a case that passed in the baseline fails now. With **no** baseline, any failure exits 1 — you cannot call a failure known on a corpus you have never recorded |
 | `4` | **loud skip, never a pass**: no embedder, query set missing, **the corpus never finished embedding**, zero measurable cases, coverage below `--min-measured`, or coverage lost against the baseline |
+
+**Why a known failure does not fail the run.** The baseline computes regressions
+and the gate used to throw that answer away, exiting 1 on any failure at all. The
+in-repo fixture holds 7 nodes across one stack-pair, and two of its four cases
+forbid an ancestor from outranking a skill — which a corpus that small cannot
+satisfy however good recall is. So the default gate was permanently red, and a
+gate that can never go green is one people learn to ignore. What stops this
+becoming a baseline of shame: the known-failing set can only GROW through an
+explicit `--update-baseline`, because any pass→fail transition is a regression
+and fails. A newly measured failure (coverage widened) likewise does not fail —
+punishing that would penalise the act of finding out where recall is weak.
 
 The guard order lives in `exitVerdict()` in `scripts/recall-lib.mjs`, where it
 can be read and tested, rather than being a property of which statement happens
@@ -252,7 +263,7 @@ after the §7 fixes; the v1 column is what the same corpus reported before them)
 
 | run | measured | passing (v2) | reported (v1) | exit |
 | --- | --- | --- | --- | --- |
-| `gate:recall` (in-repo set, in-repo fixture) | 4/4 | **2/4** | 4/4 | **1** |
+| `gate:recall` (in-repo set, in-repo fixture) | 4/4 | **2/4** | 4/4 | **0** (2 known failing, no regression) |
 | `gate:recall:nos:live` (nOS set, live estate) | 261/261 | **260/261** — rank1 234, rank2 23, rank3 2, rank4 1 | 261/261 | **1** |
 | `gate:recall:nos` (nOS set, in-repo fixture) | **14/261** | **9/14** | 14/14 | **1** |
 

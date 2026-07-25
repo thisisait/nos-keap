@@ -334,7 +334,7 @@ describe('exit verdict order and the measured floor', () => {
     const base = { measured: 261, total: 261, need: 131, coverageLost: [] };
     expect(exitVerdict({ ...base, failures: ['x'], drain: { drained: false, remaining: 1, rounds: 12, reason: 'round-ceiling' } }).reason).toBe('not-drained');
     expect(exitVerdict({ ...base, measured: 0, failures: [] }).reason).toBe('nothing-measured');
-    expect(exitVerdict({ ...base, failures: ['x'] }).code).toBe(1);
+    expect(exitVerdict({ ...base, failures: ['x'] }).code).toBe(1); // no baseline ⇒ strict
     expect(exitVerdict({ ...base, measured: 100, failures: [] }).reason).toBe('below-floor');
     expect(exitVerdict({ ...base, failures: [], coverageLost: ['x'] }).reason).toBe('coverage-lost');
     expect(exitVerdict({ ...base, failures: [] }).code).toBe(0);
@@ -350,5 +350,68 @@ describe('exit verdict order and the measured floor', () => {
 
   it('declares a semantics generation, so old baselines can be refused', () => {
     expect(SEMANTICS).toBeGreaterThanOrEqual(2);
+  });
+});
+
+/**
+ * The sixth defect, found by running the gate rather than reading it: the
+ * baseline comparison computed REGRESSIONS, printed them, and then threw the
+ * answer away. `exitVerdict` failed on `failures.length`, so a run reporting
+ * "0 regressions, 2 known failing" still exited 1.
+ *
+ * That is not a cosmetic bug. The in-repo fixture holds 7 nodes across one
+ * stack-pair, and two of its four cases forbid an ancestor from outranking a
+ * skill — which a corpus that small cannot satisfy no matter how good recall
+ * is. So `npm run gate:recall` was permanently red, and a gate that can never
+ * go green is one people learn to ignore.
+ */
+describe('exit verdict distinguishes a regression from a known failure', () => {
+  const base = { measured: 4, total: 4, drain: { drained: true } };
+
+  it('fails on a regression — passed in the baseline, fails now', () => {
+    const v = exitVerdict({ ...base, failures: ['q'], hasBaseline: true, regressions: ['q'] });
+    expect(v.code).toBe(1);
+    expect(v.reason).toBe('regressions');
+  });
+
+  it('passes when the only failures are ones the baseline already recorded', () => {
+    const v = exitVerdict({ ...base, failures: ['q'], hasBaseline: true, knownFailing: ['q'] });
+    expect(v.code).toBe(0);
+    expect(v.reason).toBe('pass-with-known-failures');
+    // green, but never silently — the reason itself carries the debt
+    expect(v.detail).toContain('1 known failing');
+  });
+
+  it('does not punish widening coverage: a newly measured failure is news, not a regression', () => {
+    const v = exitVerdict({ ...base, failures: ['q'], hasBaseline: true, newlyCoveredFailing: ['q'] });
+    expect(v.code).toBe(0);
+    expect(v.detail).toContain('newly covered');
+  });
+
+  it('does not punish adding a case to the query set either', () => {
+    const v = exitVerdict({ ...base, failures: ['q'], hasBaseline: true, newlyFailing: ['q'] });
+    expect(v.code).toBe(0);
+    expect(v.detail).toContain('new case');
+  });
+
+  it('stays strict with NO baseline — a failure cannot be called known on a corpus never recorded', () => {
+    const v = exitVerdict({ ...base, failures: ['q'], hasBaseline: false });
+    expect(v.code).toBe(1);
+    expect(v.reason).toBe('failures');
+  });
+
+  it('a regression still fails even when known failures are present alongside it', () => {
+    const v = exitVerdict({ ...base, failures: ['a', 'b'], hasBaseline: true, regressions: ['a'], knownFailing: ['b'] });
+    expect(v.code).toBe(1);
+    expect(v.reason).toBe('regressions');
+  });
+
+  it('a clean run is still a plain pass, not a pass-with-debt', () => {
+    expect(exitVerdict({ ...base, failures: [] }).reason).toBe('pass');
+  });
+
+  it('drain and nothing-measured still outrank the baseline comparison', () => {
+    expect(exitVerdict({ ...base, failures: ['q'], hasBaseline: true, knownFailing: ['q'], drain: { drained: false, remaining: 3, rounds: 12, reason: 'round-ceiling' } }).code).toBe(4);
+    expect(exitVerdict({ ...base, measured: 0, failures: [], hasBaseline: true }).code).toBe(4);
   });
 });

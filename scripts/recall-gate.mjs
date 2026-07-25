@@ -687,7 +687,14 @@ const record = {
 // The baseline is the only thing standing between this repo and another "corpus
 // exhausted", so a run that cannot speak for the set may not overwrite it.
 const need = measuredFloor(MIN_MEASURED, total);
-const verdict = exitVerdict({ measured, total, failures, need, coverageLost, drain });
+const verdict = exitVerdict({
+  measured, total, failures, need, coverageLost, drain,
+  // The baseline classification is not decoration: a case that FAILED in the
+  // baseline and fails now is not news, while one that PASSED and fails now is
+  // the whole point. Passing `hasBaseline` keeps the no-baseline case strict —
+  // you cannot call a failure known on a corpus you have never recorded.
+  hasBaseline: Boolean(baseline), regressions, newlyCoveredFailing, knownFailing, newlyFailing,
+});
 if (UPDATE_BASELINE) {
   const writeOk = baselineWriteVerdict({ measured, total, need, coverageLost, drain, priorMeasured, force: FORCE_BASELINE });
   if (writeOk.allow) {
@@ -758,6 +765,17 @@ switch (verdict.reason) {
   case 'coverage-lost':
     console.error(`⚠ RECALL GATE SKIPPED-LOUD: ${verdict.detail}.`);
     console.error('  The cases that still run all passed — but the gate covers less than it did. Not a pass.');
+    break;
+  case 'pass-with-known-failures':
+    // Green, and it says what it is carrying. A pass whose failing cases are
+    // invisible on the last line is how a known-failure set turns into a
+    // baseline of shame — the number has to be in front of whoever ran it, not
+    // only in RECALL_RESULT.
+    console.error(`✓ RECALL GATE PASSED WITH DEBT — ${verdict.detail}`);
+    console.error(`  ${passing.length}/${measured} measured case(s) pass, ${failures.length} carried:`);
+    for (const q of failures) console.error(`    · "${q}"`);
+    console.error('  No case that passed in the baseline fails now. These are recorded failures, and they can only');
+    console.error('  grow through an explicit --update-baseline — a pass→fail transition is a regression and fails.');
     break;
   default:
     console.error(`✓ RECALL GATE PASSED — ${pct(passing.length, measured)} of measured, measuring ${pct(measured, total)} of the set`);
