@@ -49,11 +49,25 @@ COPY --from=build /app/dist-server ./dist-server
 # Opt-in fixture seed (run by the nOS keap role via `docker exec`, gated on
 # keap_seed_fixtures) — a standalone .mjs, no deps beyond global fetch.
 COPY --from=build /app/deploy/seed-fixtures.mjs ./deploy/seed-fixtures.mjs
-# Knowledge pipeline tools (CODE only — the canonical data is NOT baked; the
-# pazny.keap role bind-mounts knowledge/canonical read-only and the ingest runs
-# from git, so a data change needs no image rebuild). ingest.mjs is the single
-# idempotent import path (replaces the retired import-domain/import-toe); dump.mjs
-# re-exports the live curated delta; lint.mjs validates canonical bundles.
+# Knowledge pipeline tools (CODE only — the canonical data is NOT baked).
+# ingest.mjs is the single idempotent import path (replaces the retired
+# import-domain/import-toe); dump.mjs re-exports the live curated delta;
+# lint.mjs validates canonical bundles.
+#
+# HEADS UP — these three COPYs are dead in the nOS deployment. The pazny.keap
+# role no longer mounts knowledge/canonical alone: since 2026-07-24 it mounts
+# the WHOLE knowledge/ dir over /app/knowledge (compose.yml.j2:48), which
+# shadows every file below. The ingest that actually runs is the host
+# checkout's, executing against THIS image's node_modules (ingest.mjs imports
+# libsql) — one source directory sampled at two different times, with nothing
+# asserting the samples agree.
+#
+# They are kept, not deleted: removing them makes the image unable to ingest at
+# all if the mount is ever absent, and the mount's presence is the nOS side's
+# call, not ours. Do not "fix" the split by baking knowledge/ wholesale without
+# reading the spec first — that trades the skew for an image rebuild on every
+# canonical edit, which is a deployment-shape decision.
+# See docs/specs/deploy-knowledge-mount-split.md.
 COPY --from=build /app/knowledge/ingest.mjs ./knowledge/ingest.mjs
 COPY --from=build /app/knowledge/dump.mjs ./knowledge/dump.mjs
 COPY --from=build /app/knowledge/lint.mjs ./knowledge/lint.mjs
