@@ -860,6 +860,16 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     return () => {
       clearTimeout(t);
       try {
+        // exhaustive-deps wants fgRef.current copied into a variable at effect
+        // SETUP time and used here instead. That would be wrong: setup runs
+        // before the force-graph renderer exists (which is exactly why the
+        // body above waits 100ms before touching it), so the captured value
+        // would be null and this cleanup would return early every time —
+        // leaking the ship model's geometry/materials into the THREE scene and
+        // leaving navigation controls disabled and the pointer locked. We
+        // deliberately read the CURRENT ref: teardown must act on whatever
+        // graph instance is live at unmount, not on a snapshot from mount.
+        // eslint-disable-next-line react-hooks/exhaustive-deps -- see above: setup-time capture is null, cleanup must read the live ref
         const ref = fgRef.current;
         if (!ref) return;
         const model = modelRef.current;

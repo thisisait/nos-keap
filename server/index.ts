@@ -130,7 +130,6 @@ async function main() {
   });
 
   app.listen(PORT, () => {
-    // eslint-disable-next-line no-console
     console.log(`[keap] listening on :${PORT} — static from ${STATIC_DIR}`);
     // Doctrine-tree mirror (class-3 per-user files → knowledge objects) —
     // AFTER listen so a large first scan never stalls the nOS health probe.
@@ -148,7 +147,6 @@ async function main() {
 }
 
 main().catch((err) => {
-  // eslint-disable-next-line no-console
   console.error('[keap] fatal', err);
   process.exit(1);
 });

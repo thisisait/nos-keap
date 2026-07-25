@@ -1,5 +1,5 @@
 import { useTheme } from "next-themes"
-import { Toaster as Sonner, toast } from "sonner"
+import { Toaster as Sonner } from "sonner"
 
 type ToasterProps = React.ComponentProps<typeof Sonner>
 
@@ -26,4 +26,9 @@ const Toaster = ({ ...props }: ToasterProps) => {
   )
 }
 
-export { Toaster, toast }
+// NOTE: this file deliberately re-exports no `toast`. It used to pass the
+// sonner package's own toast() straight through, which nothing imported (app
+// code calls useToast from @/hooks/use-toast) while costing this file its Fast
+// Refresh under react-refresh/only-export-components. Import { toast } from
+// "sonner" directly if you ever need the imperative API.
+export { Toaster }

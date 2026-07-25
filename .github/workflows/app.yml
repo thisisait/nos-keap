@@ -24,9 +24,13 @@ jobs:
         with:
           node-version: '22'
       - run: npm ci
-      # Lint gates since the 2026-07-19 burndown: 0 errors, warnings frozen at
-      # the post-burndown count — new warnings fail the build too.
-      - run: npx eslint . --max-warnings 31
+      # Lint gates since the 2026-07-19 burndown: 0 errors, 0 warnings.
+      # The cap was 31 (the post-burndown freeze) until the 2026-07-25 debt
+      # clearance took the tree to zero. Keep it at 0: a cap set to the current
+      # count is a ratchet nobody notices tightening, and at 31 the next new
+      # warning failed the build anyway — so 0 is the same contract without
+      # pretending the 31 were acceptable.
+      - run: npx eslint . --max-warnings 0
       # Unit tests (vitest, server/**) — the canonical-uid contract lives here.
       - run: npm test
       - run: npm run build

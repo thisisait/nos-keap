@@ -1,4 +1,3 @@
-import { useCallback } from 'react';
 import { useServerHealth } from './useServerHealth';
 import { coursesApi } from '../services/api/courses';
 import { taxonomyApi } from '../services/api/taxonomy';
@@ -13,71 +12,68 @@ import { appApi } from '../services/api/app';
 // Re-export types for backward compatibility
 export type { UserProgress, TaxonomyMetadata, HomepageTile, AppMetadata, TodoItem } from '../types/database';
 
+/**
+ * Thin facade over the per-domain API modules, plus server-health state.
+ *
+ * Every method below is a plain function held on a module-scope object literal
+ * (see services/api/*.ts) — the reference is created once at module evaluation
+ * and never reassigned, and none of them close over `this`. They are therefore
+ * already referentially stable across renders, which is the only property a
+ * consumer's dependency array needs.
+ *
+ * These used to be wrapped in `useCallback(api.method, [])`. That wrapper was a
+ * no-op: `useCallback` with an empty dep array returns the function it was given
+ * on the first render and returns that same one forever, and the input was
+ * already the same reference every render. It also tripped
+ * react-hooks/exhaustive-deps 22 times ("received a function whose dependencies
+ * are unknown"), because the rule cannot see inside a non-inline function to
+ * check its deps. Passing the stable references straight through is identical at
+ * runtime and honest to the linter.
+ */
 export const useDatabase = () => {
   const { isInitialized, error } = useServerHealth();
-
-  // Courses
-  const getCourses = useCallback(coursesApi.getCourses, []);
-  const getUserStats = useCallback(coursesApi.getUserStats, []);
-  const updateProgress = useCallback(coursesApi.updateProgress, []);
-
-  // Completion
-  const getCompletedItems = useCallback(completionApi.getCompletedItems, []);
-  const toggleItemCompletion = useCallback(completionApi.toggleItemCompletion, []);
-
-  // Taxonomy
-  const getTaxonomyMetadata = useCallback(taxonomyApi.getTaxonomyMetadata, []);
-  const saveTaxonomyMetadata = useCallback(taxonomyApi.saveTaxonomyMetadata, []);
-  const deleteTaxonomyMetadata = useCallback(taxonomyApi.deleteTaxonomyMetadata, []);
-
-  // Metadata
-  const getAllMetadataApi = useCallback(metadataApi.getAllMetadata, []);
-  const getMetadataByDomainApi = useCallback(metadataApi.getMetadataByDomain, []);
-  const saveMetadataApi = useCallback(metadataApi.saveMetadata, []);
-
-  // Homepage
-  const getHomepageTiles = useCallback(homepageApi.getHomepageTiles, []);
-  const saveHomepageTiles = useCallback(homepageApi.saveHomepageTiles, []);
-
-  // Activity
-  const trackActivity = useCallback(activityApi.trackActivity, []);
-  const getRecentActivity = useCallback(activityApi.getRecentActivity, []);
-
-  // App
-  const getAppMetadata = useCallback(appApi.getAppMetadata, []);
-
-  // Settings
-  const saveSetting = useCallback(settingsApi.saveSetting, []);
-  const getSetting = useCallback(settingsApi.getSetting, []);
-
-  // Todos
-  const getTodos = useCallback(todosApi.getTodos, []);
-  const saveTodo = useCallback(todosApi.saveTodo, []);
-  const deleteTodo = useCallback(todosApi.deleteTodo, []);
 
   return {
     isInitialized,
     error,
-    getCourses,
-    getUserStats,
-    updateProgress,
-    getCompletedItems,
-    toggleItemCompletion,
-    getTaxonomyMetadata,
-    saveTaxonomyMetadata,
-    deleteTaxonomyMetadata,
-    getAllMetadataApi,
-    getMetadataByDomainApi,
-    saveMetadataApi,
-    getHomepageTiles,
-    saveHomepageTiles,
-    trackActivity,
-    getRecentActivity,
-    getAppMetadata,
-    saveSetting,
-    getSetting,
-    getTodos,
-    saveTodo,
-    deleteTodo
+
+    // Courses
+    getCourses: coursesApi.getCourses,
+    getUserStats: coursesApi.getUserStats,
+    updateProgress: coursesApi.updateProgress,
+
+    // Completion
+    getCompletedItems: completionApi.getCompletedItems,
+    toggleItemCompletion: completionApi.toggleItemCompletion,
+
+    // Taxonomy
+    getTaxonomyMetadata: taxonomyApi.getTaxonomyMetadata,
+    saveTaxonomyMetadata: taxonomyApi.saveTaxonomyMetadata,
+    deleteTaxonomyMetadata: taxonomyApi.deleteTaxonomyMetadata,
+
+    // Metadata
+    getAllMetadataApi: metadataApi.getAllMetadata,
+    getMetadataByDomainApi: metadataApi.getMetadataByDomain,
+    saveMetadataApi: metadataApi.saveMetadata,
+
+    // Homepage
+    getHomepageTiles: homepageApi.getHomepageTiles,
+    saveHomepageTiles: homepageApi.saveHomepageTiles,
+
+    // Activity
+    trackActivity: activityApi.trackActivity,
+    getRecentActivity: activityApi.getRecentActivity,
+
+    // App
+    getAppMetadata: appApi.getAppMetadata,
+
+    // Settings
+    saveSetting: settingsApi.saveSetting,
+    getSetting: settingsApi.getSetting,
+
+    // Todos
+    getTodos: todosApi.getTodos,
+    saveTodo: todosApi.saveTodo,
+    deleteTodo: todosApi.deleteTodo
   };
 };
