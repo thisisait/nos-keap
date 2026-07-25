@@ -3,10 +3,13 @@
   "mode": "live",
   "k": 5,
   "scope": "nos",
-  "recorded": "2026-07-25T10:44:23.076Z",
+  "semantics": 2,
+  "recorded": "2026-07-25T11:29:51.770Z",
   "total": 261,
   "measured": 261,
-  "passingCount": 261,
+  "passingCount": 260,
+  "forbidRefsCompared": 528,
+  "forbidRefsNamed": 528,
   "passing": [
     "account settings",
     "activate name",
@@ -84,7 +87,6 @@
     "how much memory is service using",
     "how to play title",
     "is Prometheus running",
-    "is everything up",
     "list BI dashboards",
     "list all automations",
     "list applications",
@@ -270,6 +272,8 @@
     "write article",
     "write documentation for topic"
   ],
-  "failing": [],
+  "failing": [
+    "is everything up"
+  ],
   "unmeasurable": {}
 }

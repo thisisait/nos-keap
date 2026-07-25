@@ -3,16 +3,20 @@
   "mode": "fixture",
   "k": 5,
   "scope": "nos",
-  "recorded": "2026-07-25T10:46:11.140Z",
+  "semantics": 2,
+  "recorded": "2026-07-25T11:30:17.552Z",
   "total": 4,
   "measured": 4,
-  "passingCount": 4,
+  "passingCount": 2,
+  "forbidRefsCompared": 9,
+  "forbidRefsNamed": 9,
   "passing": [
     "flush the redis cache",
-    "relational database for SQL transactions",
+    "relational database for SQL transactions"
+  ],
+  "failing": [
     "upload a file to cloud storage",
     "which credential is needed to access user files"
   ],
-  "failing": [],
   "unmeasurable": {}
 }
