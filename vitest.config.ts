@@ -15,10 +15,17 @@ import { defineConfig } from 'vitest/config';
  * .wxt/tsconfig.json for the root tsconfig to reference — the TS transform
  * cannot resolve a tsconfig at all there. Keeping them plain ESM keeps a
  * data-only gate free of the extension toolchain.
+ *
+ * `scripts/**` carries the recall gate's decision layer (scripts/recall-lib.mjs).
+ * It is here because the five defects that layer shipped with were invisible to
+ * every gate in the chain: the only way to exercise the logic was to run the
+ * whole gate against a live estate and read a summary that did not report the
+ * quantity that was broken. Same `.mjs` rule, same reason — the `knowledge` job
+ * filters to `knowledge/`, so these run in `app`, where npm ci is complete.
  */
 export default defineConfig({
   test: {
-    include: ['server/**/*.test.ts', 'knowledge/**/*.test.mjs'],
+    include: ['server/**/*.test.ts', 'knowledge/**/*.test.mjs', 'scripts/**/*.test.mjs'],
     environment: 'node',
   },
 });

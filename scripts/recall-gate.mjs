@@ -39,9 +39,9 @@
  *   0  every measured case passed, and coverage did not shrink
  *   1  at least one measured case failed (name in the output; flagged NEW when
  *      the baseline recorded it passing)
- *   4  SKIPPED/LOUD: no embedder reachable, nothing measurable, coverage below
- *      --min-measured (default 50% of the set), or coverage lost against the
- *      baseline. NOT a pass —
+ *   4  SKIPPED/LOUD: no embedder reachable, the corpus never finished
+ *      embedding, nothing measurable, coverage below --min-measured (default
+ *      50% of the set), or coverage lost against the baseline. NOT a pass —
  *      a gate that cannot run must never be readable as green (doctrine:
  *      gates.md).
  */
@@ -49,6 +49,19 @@ import { execFileSync, spawn } from 'node:child_process';
 import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:net';
 import path from 'node:path';
+// The decision layer — what a case MEANS, what the baseline comparison says,
+// whether the run may be recorded — lives in a module with no I/O so it can be
+// unit-tested (scripts/recall-lib.test.mjs). This file is boot, embed, search
+// and print; recall-lib.mjs is judgement.
+import {
+  SEMANTICS,
+  baselineWriteVerdict,
+  classifyAgainstBaseline,
+  embedCorpus,
+  exitVerdict,
+  gradeCase,
+  measuredFloor,
+} from './recall-lib.mjs';
 
 const REPO = path.resolve('.');
 const arg = (name, dflt) => {
@@ -85,6 +98,9 @@ const BASELINE = arg(
   ),
 );
 const UPDATE_BASELINE = process.argv.includes('--update-baseline');
+// --force-baseline: record even a degraded run. There is no path to erasing a
+// baseline's coverage by accident — see baselineWriteVerdict().
+const FORCE_BASELINE = process.argv.includes('--force-baseline');
 const NO_BASELINE = process.argv.includes('--no-baseline');
 // --min-measured 261 | 95% | 0 (to disable) — the declared denominator floor.
 // It DEFAULTS to 50% rather than to nothing, because the failure being fixed
@@ -109,6 +125,8 @@ const CAUSES = {
 const DEGRADED = {
   'degraded:card-absent': 'measured on the NODE only — the named card is not in this corpus',
   'degraded:node-absent': 'measured on the CARD only — the named node is not in this corpus',
+  'degraded:presence-only': 'PRESENCE ONLY — the case named forbid refs and not one of them could be compared',
+  'degraded:forbid-partial': 'partial relative order — some forbid refs name nothing here and were not compared',
 };
 
 // ── 0) The embedder must exist, or this is a SKIP, never a pass ─────────────
@@ -169,7 +187,23 @@ if (LIVE_BASE) {
     ).json()).data;
     return (d?.links ?? []).filter((l) => l.kind === 'node').map((l) => l.ref);
   };
-  await runCaseSet({ nodeIds, idsByTitle, anchorsById: new Map(), fetchAnchors, search }, (code) => process.exit(code), 0);
+  // The live corpus is embedded by the pulse job, not by this script — but a
+  // half-embedded live corpus is exactly as untrustworthy as a half-embedded
+  // scratch one: the vector leg is missing for whatever has not been reached,
+  // so competitors do not compete and cases pass on the lexical leg alone.
+  // Read-only, and it is the same post-condition the fixture path asserts.
+  const pend = (await (
+    await fetch(`${base}/agent/v1/embeddings/pending?limit=1`, { headers: H, ...TL(30_000) })
+  ).json()).data;
+  const liveDrain = {
+    embedded: 0,
+    rounds: 0,
+    remaining: pend?.total ?? 0,
+    drained: (pend?.total ?? 0) === 0,
+    reason: (pend?.total ?? 0) === 0 ? 'drained' : 'live-pending',
+  };
+  console.error(`· live corpus: pending ${liveDrain.drained ? 'DRAINED' : `${liveDrain.remaining} item(s) NOT embedded`}`);
+  await runCaseSet({ nodeIds, idsByTitle, anchorsById: new Map(), fetchAnchors, search }, (code) => process.exit(code), liveDrain);
 }
 
 // ── 1) Scratch KEAP: ingest fixture → boot → fs-sync skills ─────────────────
@@ -245,52 +279,66 @@ await fetch(`${BASE}/agent/v1/fs/sync?wait=1`, { method: 'POST', headers: rw, bo
 
 // ── 2) Embed the WHOLE corpus through the REAL loop: page pending → batch-
 // embed via Ollama (`input` accepts an array — one call per chunk, not per
-// text) → POST back, until pending drains. The full corpus INCLUDING the seed
+// text) → POST back, UNTIL PENDING DRAINS. The full corpus INCLUDING the seed
 // spine is embedded deliberately: the fixture items must win their queries
 // against everything the live vector leg would rank, not in an empty room.
 // Pending pages at 500 and lists taxonomy first, so a single page never even
 // reaches the fixture refs — that is why this loops.
-let embedded = 0;
-let dim = 768;
-for (let round = 0; round < (REUSE ? 1 : 12); round++) {
-  const pRes = await fetch(`${BASE}/agent/v1/embeddings/pending?limit=500`, { headers: rw, ...T(30_000) });
-  if (!pRes.ok) { console.error(`✗ pending fetch failed (${pRes.status})`); stop(1); }
-  const pending = (await pRes.json()).data;
-  dim = pending.dim ?? dim;
-  const batch = pending.items ?? [];
-  if (!batch.length) break;
-  console.error(`· round ${round + 1}: embedding ${batch.length} of ${pending.total} pending`);
-  const items = [];
-  for (let i = 0; i < batch.length; i += 64) {
-    const chunk = batch.slice(i, i + 64);
-    const r = await (await fetch(`${OLLAMA}/api/embed`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ model: MODEL, input: chunk.map((p) => p.text) }),
-      ...T(120_000),
-    })).json();
-    const vecs = r.embeddings ?? [];
-    for (let j = 0; j < chunk.length; j++) {
-      if (Array.isArray(vecs[j])) {
-        items.push({ kind: chunk[j].kind, refId: chunk[j].refId, contentHash: chunk[j].contentHash, vector: vecs[j] });
+//
+// The drain is a POST-CONDITION, not a hope: the loop used to stop at a hard 12
+// rounds (6000 items) and nothing checked what was left, so a corpus larger
+// than the ceiling — exactly what shipping "a larger canonical fixture (nOS's
+// tree, nOS's cards)" produces — was measured half-embedded and exited 0. The
+// ceiling survives only as a runaway guard; reaching it is now a loud skip.
+const MAX_ROUNDS = REUSE ? 1 : 200;
+const drain = await embedCorpus({
+  maxRounds: MAX_ROUNDS,
+  log: (m) => console.error(m),
+  fetchPending: async () => {
+    const pRes = await fetch(`${BASE}/agent/v1/embeddings/pending?limit=500`, { headers: rw, ...T(30_000) });
+    if (!pRes.ok) { console.error(`✗ pending fetch failed (${pRes.status})`); stop(1); }
+    return (await pRes.json()).data;
+  },
+  embedBatch: async (batch) => {
+    const items = [];
+    for (let i = 0; i < batch.length; i += 64) {
+      const chunk = batch.slice(i, i + 64);
+      const r = await (await fetch(`${OLLAMA}/api/embed`, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ model: MODEL, input: chunk.map((p) => p.text) }),
+        ...T(120_000),
+      })).json();
+      const vecs = r.embeddings ?? [];
+      for (let j = 0; j < chunk.length; j++) {
+        if (Array.isArray(vecs[j])) {
+          items.push({ kind: chunk[j].kind, refId: chunk[j].refId, contentHash: chunk[j].contentHash, vector: vecs[j] });
+        }
       }
     }
-  }
-  if (!items.length) { console.error('✗ embedder returned nothing for a non-empty batch'); stop(1); }
+    return items;
+  },
   // 500 vectors of 768 floats is ~3.5 MB of JSON — past the server's 2 MB body
   // limit — so the write goes back in slices, like the live embed-sync job's.
-  for (let i = 0; i < items.length; i += 150) {
-    const posted = await (await fetch(`${BASE}/agent/v1/embeddings`, {
-      method: 'POST', headers: rw,
-      body: JSON.stringify({ model: MODEL, dim, items: items.slice(i, i + 150) }),
-      ...T(60_000),
-    })).json();
-    if (posted.success === false) { console.error(`✗ embeddings POST rejected: ${posted.error}`); stop(1); }
-  }
-  embedded += items.length;
-}
-console.error(`· corpus embedded: ${embedded} item(s)${REUSE ? ' (reuse — remainder assumed present)' : ''}`);
+  postVectors: async (items, dim) => {
+    for (let i = 0; i < items.length; i += 150) {
+      const posted = await (await fetch(`${BASE}/agent/v1/embeddings`, {
+        method: 'POST', headers: rw,
+        body: JSON.stringify({ model: MODEL, dim: dim ?? 768, items: items.slice(i, i + 150) }),
+        ...T(60_000),
+      })).json();
+      if (posted.success === false) { console.error(`✗ embeddings POST rejected: ${posted.error}`); stop(1); }
+    }
+  },
+});
+const embedded = drain.embedded;
+console.error(`· corpus embedded: ${embedded} item(s) in ${drain.rounds} round(s) — pending ${drain.drained ? 'DRAINED' : `NOT drained (${drain.remaining} left, ${drain.reason})`}`);
+if (drain.reason === 'embedder-empty') { console.error('✗ embedder returned nothing for a non-empty batch'); stop(1); }
 if (!embedded && !REUSE) { console.error('✗ nothing to embed — fixture produced no corpus'); stop(1); }
+// --reuse deliberately embeds one page and assumes the rest is already there;
+// it is an iteration aid, never a gate result, so it opts out of the assertion
+// rather than pretending it drained.
+if (REUSE) drain.drained = true;
 
 {
   const T2 = (ms) => ({ signal: AbortSignal.timeout(ms) });
@@ -311,12 +359,12 @@ if (!embedded && !REUSE) { console.error('✗ nothing to embed — fixture produ
       },
     },
     stop,
-    embedded,
+    drain,
   );
 }
 
 // ── 3) Resolve refs, rank within scope, gate ────────────────────────────────
-async function runCaseSet({ nodeIds, idsByTitle, anchorsById, fetchAnchors, search }, stop, embedded) {
+async function runCaseSet({ nodeIds, idsByTitle, anchorsById, fetchAnchors, search }, stop, drain) {
 // An expectation that references nothing in the corpus is NOT a recall failure —
 // it is an unmeasurable case, and conflating the two turns a coverage gap into
 // a wall of false reds that buries the real signal. Unresolvable refs (a node
@@ -390,46 +438,12 @@ const resolveRefs = async (refs, scopeOverride) => {
   return { resolved, nodeRefs, nodeHits, titleRefs, titleHits, ambiguous };
 };
 
-const hitKey = (h) => `${h.kind}:${h.refId}`;
-
-// The gate ranks WITHIN the self-model scope. The _stack.md failure was a
-// RELATIVE one — generic self-model items capturing queries that specific ones
-// should own — and that is the regression class this gate exists for. Absolute
-// corpus-wide rank (against 790 curated seed nodes) is a different, stricter
-// property; it is reported as diagnostics but never gated, or every generic
-// phrasing would fail against the seed spine and the gate would be ignored.
+// Ranking scope, the ancestor exemption, the graph-leg rule and the two-half
+// verdict all live in scripts/recall-lib.mjs — see gradeCase(). They are pure
+// functions over plain data precisely because the defect that voided the forbid
+// half of all 261 cases could only be seen by reading them, never by running
+// them.
 const scopeRoot = spec.scope ?? 'nos';
-const inScope = (h) =>
-  h.kind === 'object' || (h.kind === 'taxonomy' && (h.refId === scopeRoot || h.refId.startsWith(scopeRoot + '.')));
-// A hit whose ONLY leg is 'graph' is context, not relevance: the graph leg hops
-// one step out from the real hits, which structurally boosts parents, siblings
-// and children of everything relevant — a stack is every system's neighbour, so
-// it would rank on topology no matter what its text says. The router routes on
-// MEANING, so the gate ranks only hits that earned a lexical or vector leg.
-const isRelevance = (h) => !Array.isArray(h.legs) || h.legs.length === 0 || h.legs.some((l) => l !== 'graph');
-
-// Ancestors of the expected target are NAVIGATION, not competition. The graph
-// leg exists to surface a hit's lineage, so a parent stack or the root ranking
-// beside the target is the search working as designed — while a SIBLING or an
-// unrelated item above the target is the _stack.md class: same-granularity
-// capture, the thing this gate exists to catch. Proper ancestors of any
-// expected ref are therefore excluded from the ranking (and reported, so the
-// exemption is visible rather than silent).
-const properAncestors = (expectedResolved) => {
-  const out = new Set([scopeRoot]);
-  const ids = [];
-  for (const e of expectedResolved) {
-    if (e.kind === 'taxonomy') ids.push(e.refId);
-    else ids.push(...(anchorsById.get(e.refId) ?? []));
-  }
-  for (const id of ids) {
-    const segs = id.split('.');
-    for (let i = 1; i < segs.length; i++) out.add(segs.slice(0, i).join('.'));
-  }
-  // never exclude something that is itself expected
-  for (const e of expectedResolved) if (e.kind === 'taxonomy') out.delete(e.refId);
-  return out;
-};
 
 const failures = [];
 const passing = [];
@@ -438,6 +452,13 @@ const degraded = []; // { q, cause }
 const report = [];
 const ranks = new Map();
 let ancestorExemptions = 0;
+// The forbid half, counted. A gate whose relative-order assertions all quietly
+// evaporate must say so on its own summary line — that is the disclosure whose
+// absence let 261/261 be recorded with zero forbid refs ever compared.
+let forbidNamed = 0;
+let forbidResolved = 0;
+let forbidComparable = 0;
+let forbidCases = 0;
 let bothInTop = 0;
 let cardOnly = 0;
 let nodeOnly = 0;
@@ -464,53 +485,51 @@ for (const c of spec.cases) {
   // Anchors of every resolved card, so properAncestors() sees the same lineage
   // in both modes (fixture had them from /api/graph; live now fetches them).
   for (const e of exp.resolved) if (e.kind === 'object') await anchorsOf(e.refId);
-  // Measured, but on less than the case named — say so rather than let a node
-  // hit stand in silently for the skill the case is actually about.
-  if (exp.titleRefs && !exp.titleHits) degraded.push({ q: c.q, cause: 'degraded:card-absent' });
-  else if (exp.nodeRefs && !exp.nodeHits) degraded.push({ q: c.q, cause: 'degraded:node-absent' });
 
   const hits = await search(c.q);
-  const all = hits.map(hitKey);
-  const legsByKey = new Map(hits.map((h) => [hitKey(h), h.legs ?? []]));
-  const scoped = hits.filter((h) => inScope(h) && isRelevance(h)).map(hitKey);
-  const top = scoped.slice(0, K);
+  // The forbid half is resolved with its FULL record, not just `.resolved`:
+  // what a forbid ref failed to resolve to is the difference between "no
+  // forbid ref outranks the target" and "no forbid ref was ever compared".
+  const fbd = await resolveRefs(c.forbid ?? [], c.expect.filter((r) => r.startsWith('node:')).map((r) => r.slice(5)));
+  const g = gradeCase({ hits, expect: exp, forbid: fbd, anchorsById, scopeRoot, k: K });
 
-  const expectedResolved = exp.resolved;
-  const expected = expectedResolved.map(hitKey);
-  const ancestors = properAncestors(expectedResolved);
-  const ranked = top.filter((k2) => !(k2.startsWith('taxonomy:') && ancestors.has(k2.slice('taxonomy:'.length))));
-  const excluded = top.filter((k2) => !ranked.includes(k2));
-  const forbidden = (await resolveRefs(c.forbid ?? [], c.expect.filter((r) => r.startsWith('node:')).map((r) => r.slice(5)))).resolved
-    .map(hitKey)
-    .filter((f) => ranked.includes(f) || !excluded.includes(f));
-  const bestExpected = Math.min(...expected.map((e) => (ranked.indexOf(e) + 1 || Infinity)));
-  const bestForbidden = Math.min(...forbidden.map((f) => (ranked.indexOf(f) + 1 || Infinity)));
-
-  const inTop = bestExpected !== Infinity;
-  const cleanRank = bestForbidden === Infinity || bestExpected < bestForbidden;
-  const ok = inTop && cleanRank;
-  if (excluded.length) ancestorExemptions++;
+  // Measured, but on less than the case named — say so rather than let a node
+  // hit stand in silently for the skill the case is actually about, or let a
+  // forbid list that resolved to nothing read as a clean relative order.
+  for (const cause of g.degraded) degraded.push({ q: c.q, cause });
+  forbidNamed += g.forbidNamed;
+  forbidResolved += g.forbidResolved;
+  forbidComparable += g.forbidComparable;
+  if (g.forbidComparable) forbidCases++;
+  if (g.excluded.length) ancestorExemptions++;
   // `expect` is a UNION (system node OR skill card), so a pass does NOT mean the
   // skill won. Count which half carried it — a pass carried only by the system
   // node is a weaker result than it looks, and the summary says how many.
-  if (ok) {
-    const nodeIn = expectedResolved.some((e) => e.kind === 'taxonomy' && ranked.includes(hitKey(e)));
-    const cardIn = expectedResolved.some((e) => e.kind === 'object' && ranked.includes(hitKey(e)));
-    if (nodeIn && cardIn) bothInTop++;
-    else if (cardIn) cardOnly++;
+  if (g.ok) {
+    if (g.nodeIn && g.cardIn) bothInTop++;
+    else if (g.cardIn) cardOnly++;
     else nodeOnly++;
-    ranks.set(bestExpected, (ranks.get(bestExpected) ?? 0) + 1);
+    ranks.set(g.bestExpected, (ranks.get(g.bestExpected) ?? 0) + 1);
   }
-  report.push({ q: c.q, ok, scopedRank: inTop ? bestExpected : null, ancestorsExcluded: excluded, corpusTop: all.slice(0, 5), scopedTop: ranked });
-  if (!ok) {
+  report.push({
+    q: c.q,
+    ok: g.ok,
+    scopedRank: g.inTop ? g.bestExpected : null,
+    blockedBy: g.blockedBy,
+    forbidComparable: g.forbidComparable,
+    ancestorsExcluded: g.excluded,
+    corpusTop: g.corpusTop,
+    scopedTop: g.ranked,
+  });
+  if (!g.ok) {
     failures.push(c.q);
     console.error(`✗ "${c.q}"`);
-    console.error(`    expected one of [${expected.join(', ')}] — best rank ${inTop ? bestExpected : 'MISS'}${!cleanRank ? `, but forbidden ${forbidden.find((f) => ranked.indexOf(f) + 1 === bestForbidden)} ranks ${bestForbidden}` : ''}`);
-    console.error(`    ranked: ${ranked.map((k2) => `${k2}[${(legsByKey.get(k2) ?? []).join('+')}]`).join('  ')}`);
-    if (excluded.length) console.error(`    (ancestors exempt: ${excluded.join('  ')})`);
+    console.error(`    expected one of [${g.expected.join(', ')}] — best rank ${g.inTop ? g.bestExpected : 'MISS'}${!g.cleanRank ? `, but forbidden ${g.blockedBy} ranks ${g.bestForbidden}` : ''}`);
+    console.error(`    ranked: ${g.ranked.map((k2) => `${k2}[${(g.legsByKey.get(k2) ?? []).join('+')}]`).join('  ')}`);
+    if (g.excluded.length) console.error(`    (ancestors exempt: ${g.excluded.join('  ')})`);
   } else {
     passing.push(c.q);
-    console.error(`✓ "${c.q}" → rank ${bestExpected}${excluded.length ? `  (ancestors exempt: ${excluded.join(' ')})` : ''}`);
+    console.error(`✓ "${c.q}" → rank ${g.bestExpected}${g.forbidComparable ? '' : ' (NO forbid ref compared)'}${g.excluded.length ? `  (ancestors exempt: ${g.excluded.join(' ')})` : ''}`);
   }
 }
 
@@ -543,10 +562,20 @@ for (const [cause, list] of [...byCause].sort((a, b) => b[1].length - a[1].lengt
   if (top.length) console.error(`            missing: ${top.map(([s, n]) => `${s}×${n}`).join(', ')}${bySystem.size > 8 ? `, +${bySystem.size - 8} more` : ''}`);
 }
 if (degraded.length) {
-  console.error(`   DEGRADED       ${degraded.length}/${measured} measured on LESS than the case named`);
+  const degradedCases = new Set(degraded.map((d) => d.q)).size;
+  console.error(`   DEGRADED       ${degradedCases}/${measured} measured on LESS than the case named`);
   for (const [cause, n] of [...degradedByCause].sort((a, b) => b[1] - a[1])) {
     console.error(`     ${String(n).padStart(5)}  ${cause} — ${DEGRADED[cause]}`);
   }
+}
+// The forbid half is HALF THE GATE, so it gets its own line whether or not it
+// is healthy. `forbid` is the point: the _stack.md failure was RELATIVE, and a
+// run in which no forbid ref was ever compared has measured presence only —
+// exactly the "is the right thing somewhere in the top 5" gate this one exists
+// to not be. It read 261/261 while that number was 0.
+console.error(`   FORBID HALF    ${forbidComparable}/${forbidNamed} ref(s) compared (${forbidResolved} resolved) across ${forbidCases}/${measured} measured case(s)`);
+if (forbidNamed && !forbidComparable) {
+  console.error('     ⚠ NOT ONE forbid ref was compared — every result above is a PRESENCE result only');
 }
 if (passing.length) {
   // `expect` is a union; a pass is not proof the skill won. Say which half won.
@@ -567,33 +596,56 @@ if (!NO_BASELINE && existsSync(BASELINE)) {
   try { baseline = JSON.parse(readFileSync(BASELINE, 'utf8')); }
   catch { console.error(`⚠ baseline ${BASELINE} is unreadable — comparing against nothing`); }
 }
+// What the FILE claims, kept separately from what the comparison accepts: a
+// baseline refused for a mode/semantics mismatch still guards its own
+// denominator against being overwritten by a thinner run.
+const priorMeasured = baseline?.measured ?? 0;
 const nowUnmeasurable = new Map(unmeasurable.map((u) => [u.q, u.cause]));
-const nowPassing = new Set(passing);
-const nowFailing = new Set(failures);
 let regressions = [];
 let newlyFailing = [];
+let newlyCoveredFailing = [];
+let knownFailing = [];
 let coverageLost = [];
 let fixed = [];
-let newCoverage = [];
+let newCoveragePassing = [];
+let newCoverageFailing = [];
 if (baseline) {
   if (baseline.mode !== MODE || baseline.queries !== QUERIES) {
     console.error(`⚠ baseline was recorded for ${baseline.queries} in ${baseline.mode} mode — comparison would be apples to oranges, ignoring it`);
     baseline = null;
   }
 }
+// A baseline recorded under different SEMANTICS is refused for exactly the same
+// reason as one recorded for another mode: the number it holds answers a
+// different question. Generation 1 baselines were recorded while the ancestor
+// exemption voided the forbid half, so every one of their passes asserted
+// presence only — comparing this run against them would report the newly-live
+// relative-order failures as KEAP ranking REGRESSIONS, which they are not.
+if (baseline && (baseline.semantics ?? 1) !== SEMANTICS) {
+  console.error(`⚠ baseline ${BASELINE} was recorded under gate semantics v${baseline.semantics ?? 1}; this gate is v${SEMANTICS}.`);
+  console.error('  v1 passes were measured with the forbid half disabled by the ancestor exemption, so they do not');
+  console.error('  compare — refusing it. Re-record with --update-baseline once the failures below are judged.');
+  baseline = null;
+}
 if (baseline) {
-  const wasPassing = new Set(baseline.passing ?? []);
-  const wasFailing = new Set(baseline.failing ?? []);
-  const wasUnmeasurable = new Set(Object.keys(baseline.unmeasurable ?? {}));
-  regressions = [...nowFailing].filter((q) => wasPassing.has(q));
-  newlyFailing = [...nowFailing].filter((q) => !wasPassing.has(q) && !wasFailing.has(q));
-  coverageLost = [...nowUnmeasurable.keys()].filter((q) => wasPassing.has(q) || wasFailing.has(q));
-  fixed = [...nowPassing].filter((q) => wasFailing.has(q));
-  newCoverage = [...nowPassing, ...nowFailing].filter((q) => wasUnmeasurable.has(q));
+  ({
+    regressions, knownFailing, newlyCoveredFailing, newlyFailing,
+    coverageLost, fixed, newCoveragePassing, newCoverageFailing,
+  } = classifyAgainstBaseline({
+    passing, failing: failures, unmeasurable: [...nowUnmeasurable.keys()], baseline,
+  }));
   console.error('');
   console.error(`── vs baseline ${BASELINE} (recorded ${baseline.recorded ?? '?'}, measured ${baseline.measured}/${baseline.total}) ──`);
   console.error(`   REGRESSIONS    ${regressions.length}  (passed then, fail now — a KEAP ranking regression)`);
   for (const q of regressions) console.error(`     ✗ "${q}"`);
+  // A case the baseline recorded as UNMEASURABLE is not "a new expectation" —
+  // it was in the set all along, as a coverage gap. Calling it new hid the one
+  // classification this section exists to get right, and double-counted it
+  // under NEW COVERAGE at the same time.
+  if (newlyCoveredFailing.length) {
+    console.error(`   NEWLY COVERED & FAILING  ${newlyCoveredFailing.length}  (the baseline could not measure it; it is measured now, and fails)`);
+    for (const q of newlyCoveredFailing) console.error(`     ✗ "${q}"`);
+  }
   if (newlyFailing.length) {
     console.error(`   NEW & FAILING  ${newlyFailing.length}  (case not in the baseline at all — a new expectation, not a regression)`);
     for (const q of newlyFailing) console.error(`     ✗ "${q}"`);
@@ -601,7 +653,7 @@ if (baseline) {
   console.error(`   COVERAGE LOST  ${coverageLost.length}  (was measurable, now unmeasurable — a corpus gap, NOT a recall failure)`);
   for (const q of coverageLost.slice(0, 10)) console.error(`     ⚠ "${q}" — ${nowUnmeasurable.get(q)}`);
   if (coverageLost.length > 10) console.error(`     … +${coverageLost.length - 10} more`);
-  console.error(`   NEW COVERAGE   ${newCoverage.length}  (unmeasurable then, measured now)`);
+  console.error(`   NEW COVERAGE   ${newCoveragePassing.length + newCoverageFailing.length}  (unmeasurable then, measured now — ${newCoveragePassing.length} passing, ${newCoverageFailing.length} failing above)`);
   console.error(`   FIXED          ${fixed.length}  (failed then, passes now)`);
 } else if (!NO_BASELINE) {
   console.error('');
@@ -614,18 +666,40 @@ const record = {
   mode: MODE,
   k: K,
   scope: scopeRoot,
+  semantics: SEMANTICS,
   recorded: new Date().toISOString(),
   total,
   measured,
   passingCount: passing.length,
+  forbidRefsCompared: forbidComparable,
+  forbidRefsNamed: forbidNamed,
   passing: [...passing].sort(),
   failing: [...failures].sort(),
   unmeasurable: Object.fromEntries([...nowUnmeasurable].sort((a, b) => a[0].localeCompare(b[0]))),
 };
+
+// ── 6) Verdict FIRST, baseline write second ─────────────────────────────────
+// The order is the fix. --update-baseline used to write the file at the top of
+// this section, ahead of every guard below, so a run that ended in SKIPPED-LOUD
+// had already replaced a 261/261 record with its own degraded one — and every
+// later run compared against the smaller set, found no lost coverage and no
+// regressions, and printed RECALL GATE PASSED with the missing cases invisible.
+// The baseline is the only thing standing between this repo and another "corpus
+// exhausted", so a run that cannot speak for the set may not overwrite it.
+const need = measuredFloor(MIN_MEASURED, total);
+const verdict = exitVerdict({ measured, total, failures, need, coverageLost, drain });
 if (UPDATE_BASELINE) {
-  mkdirSync(path.dirname(BASELINE), { recursive: true });
-  writeFileSync(BASELINE, `${JSON.stringify(record, null, 2)}\n`);
-  console.error(`· baseline written: ${BASELINE} (${passing.length} passing, ${measured}/${total} measured)`);
+  const writeOk = baselineWriteVerdict({ measured, total, need, coverageLost, drain, priorMeasured, force: FORCE_BASELINE });
+  if (writeOk.allow) {
+    mkdirSync(path.dirname(BASELINE), { recursive: true });
+    writeFileSync(BASELINE, `${JSON.stringify(record, null, 2)}\n`);
+    console.error(`· baseline written: ${BASELINE} (${passing.length} passing, ${measured}/${total} measured, semantics v${SEMANTICS})`);
+    if (writeOk.forced) console.error(`  ⚠ FORCED over: ${writeOk.blockers.join('; ')}`);
+  } else {
+    console.error(`✗ baseline NOT written — this run cannot speak for the set:`);
+    for (const b of writeOk.blockers) console.error(`    · ${b}`);
+    console.error(`  ${existsSync(BASELINE) ? `${BASELINE} is left as it was` : 'nothing was recorded'}. Re-run against a healthy corpus, or --force-baseline deliberately.`);
+  }
 }
 
 console.log(`RECALL_RESULT ${JSON.stringify({
@@ -640,41 +714,53 @@ console.log(`RECALL_RESULT ${JSON.stringify({
   degradedByCause: Object.fromEntries(degradedByCause),
   passShape: { nodeAndCard: bothInTop, cardOnly, systemNodeOnly: nodeOnly },
   ranks: Object.fromEntries([...ranks].sort((a, b) => a[0] - b[0])),
+  forbid: { named: forbidNamed, resolved: forbidResolved, compared: forbidComparable, cases: forbidCases },
+  drain: { drained: drain.drained, remaining: drain.remaining, rounds: drain.rounds, reason: drain.reason },
   baseline: baseline
-    ? { path: BASELINE, regressions, newlyFailing, coverageLost, newCoverage: newCoverage.length, fixed: fixed.length }
+    ? {
+      path: BASELINE,
+      regressions,
+      newlyFailing,
+      newlyCoveredFailing,
+      knownFailing,
+      coverageLost,
+      newCoverage: newCoveragePassing.length + newCoverageFailing.length,
+      fixed: fixed.length,
+    }
     : null,
-  embedded,
+  semantics: SEMANTICS,
+  embedded: drain.embedded,
+  exit: verdict,
   report,
 })}`);
 
-// ── 6) Exit: 0 pass · 1 regression · 4 loud skip ────────────────────────────
-// Nothing measurable is the embedder-missing situation in another coat: loud
-// non-green, never a pass. So is a run that measured a fraction of the set, or
-// one that lost coverage the baseline had — those are gates that did not run,
-// not gates that passed.
-if (!measured) { console.error(`⚠ RECALL GATE: zero measurable cases out of ${total} — nothing was measured`); stop(4); }
-if (failures.length) {
-  const label = baseline
-    ? `${regressions.length} regression(s), ${newlyFailing.length} new, ${failures.length - regressions.length - newlyFailing.length} known`
-    : `${failures.length} failure(s), no baseline to classify them`;
-  console.error(`✗ RECALL GATE FAILED — ${label}`);
-  stop(1);
-}
-if (MIN_MEASURED && MIN_MEASURED !== '0' && MIN_MEASURED !== 'none') {
-  const need = MIN_MEASURED.endsWith('%')
-    ? Math.ceil((total * parseFloat(MIN_MEASURED)) / 100)
-    : parseInt(MIN_MEASURED, 10);
-  if (measured < need) {
-    console.error(`⚠ RECALL GATE SKIPPED-LOUD: measured ${measured}/${total}, below the declared floor of ${need} (--min-measured ${MIN_MEASURED}).`);
+// Exit: 0 pass · 1 failure · 4 loud skip. The ORDER of these guards is in
+// exitVerdict() in recall-lib.mjs, where it can be read and tested, rather than
+// being a property of which statement happens to come first.
+switch (verdict.reason) {
+  case 'not-drained':
+    console.error(`⚠ RECALL GATE SKIPPED-LOUD: the corpus never finished embedding — ${verdict.detail}.`);
+    console.error('  A partially embedded corpus has no vector leg for whatever was not reached, so the cases that');
+    console.error('  did run were graded against competitors that could not compete. Not a pass.');
+    break;
+  case 'nothing-measured':
+    console.error(`⚠ RECALL GATE: ${verdict.detail} — nothing was measured`);
+    break;
+  case 'failures':
+    console.error(`✗ RECALL GATE FAILED — ${baseline
+      ? `${regressions.length} regression(s), ${newlyCoveredFailing.length} newly covered, ${newlyFailing.length} new, ${knownFailing.length} known`
+      : `${failures.length} failure(s), no baseline to classify them`}`);
+    break;
+  case 'below-floor':
+    console.error(`⚠ RECALL GATE SKIPPED-LOUD: ${verdict.detail} (--min-measured ${MIN_MEASURED}).`);
     console.error('  Every measured case passed, but this run does not speak for the set. Not a pass.');
-    stop(4);
-  }
+    break;
+  case 'coverage-lost':
+    console.error(`⚠ RECALL GATE SKIPPED-LOUD: ${verdict.detail}.`);
+    console.error('  The cases that still run all passed — but the gate covers less than it did. Not a pass.');
+    break;
+  default:
+    console.error(`✓ RECALL GATE PASSED — ${pct(passing.length, measured)} of measured, measuring ${pct(measured, total)} of the set`);
 }
-if (coverageLost.length) {
-  console.error(`⚠ RECALL GATE SKIPPED-LOUD: ${coverageLost.length} case(s) the baseline measured are unmeasurable now.`);
-  console.error('  The cases that still run all passed — but the gate covers less than it did. Not a pass.');
-  stop(4);
-}
-console.error(`✓ RECALL GATE PASSED — ${pct(passing.length, measured)} of measured, measuring ${pct(measured, total)} of the set`);
-stop(0);
+stop(verdict.code);
 }
