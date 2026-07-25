@@ -36,6 +36,8 @@
     "relations:list": "node scripts/relations-typing.mjs list",
     "relations:requires": "node scripts/skills-requires.mjs post",
     "gate:recall": "node scripts/recall-gate.mjs",
+    "gate:recall:nos": "node scripts/recall-gate.mjs --queries \"${KEAP_NOS_QUERIES:-../nOS/tests/fixtures/selfmodel-recall.json}\"",
+    "gate:recall:nos:live": "node scripts/recall-gate.mjs --queries \"${KEAP_NOS_QUERIES:-../nOS/tests/fixtures/selfmodel-recall.json}\" --base \"${KEAP_BASE:-http://127.0.0.1:8091}\" --min-measured 100%",
     "preview": "vite preview",
     "test:e2e": "playwright test",
     "demo:selfmodel": "node deploy/demo-selfmodel.mjs"

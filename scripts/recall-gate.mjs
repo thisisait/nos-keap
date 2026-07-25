@@ -16,16 +16,37 @@
  * cloud storage’ the Nextcloud skill wins, and no stack or root ranks above
  * it".
  *
- *   node scripts/recall-gate.mjs [--fixture DIR] [--skills DIR] [--queries F]
+ *   node scripts/recall-gate.mjs [--queries F] [--fixture DIR] [--skills DIR]
+ *                                [--base URL] [--baseline F] [--update-baseline]
+ *                                [--min-measured N|N%]
  *
- * Exit codes — three states, deliberately distinct:
- *   0  every case passed
- *   1  at least one case failed (a recall regression, name in the output)
- *   4  SKIPPED: no embedder reachable — loud, and NOT a pass. A gate that
- *      cannot run must never be readable as green (doctrine: gates.md).
+ * THE DENOMINATOR IS PART OF THE RESULT. A gate that measures 14 of 261 cases
+ * and exits 0 is not a passing gate, it is a lie with a green light — this repo
+ * shipped exactly that once ("corpus exhausted") and does not intend to again.
+ * Every number this script prints carries its base: measured/total,
+ * passing/measured, and the unmeasurable remainder BROKEN DOWN BY CAUSE, so a
+ * coverage collapse can never read as a pass.
+ *
+ * Two problems, two numbers, never mixed:
+ *   REGRESSION   a case the recorded baseline says passed now FAILS. KEAP's
+ *                fault (ranking moved). Exit 1.
+ *   CORPUS GAP   a case whose expectations name nothing in the corpus under
+ *                test. NOT a recall result at all — it is coverage that never
+ *                happened, and it is the corpus owner's to close. Exit 4 when
+ *                it eats the coverage the baseline recorded.
+ *
+ * Exit codes — four states, deliberately distinct:
+ *   0  every measured case passed, and coverage did not shrink
+ *   1  at least one measured case failed (name in the output; flagged NEW when
+ *      the baseline recorded it passing)
+ *   4  SKIPPED/LOUD: no embedder reachable, nothing measurable, coverage below
+ *      --min-measured (default 50% of the set), or coverage lost against the
+ *      baseline. NOT a pass —
+ *      a gate that cannot run must never be readable as green (doctrine:
+ *      gates.md).
  */
 import { execFileSync, spawn } from 'node:child_process';
-import { cpSync, existsSync, mkdirSync, readFileSync, rmSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createServer } from 'node:net';
 import path from 'node:path';
 
@@ -41,10 +62,54 @@ const arg = (name, dflt) => {
 const LIVE_BASE = arg('base', null);
 const FIXTURE = arg('fixture', 'e2e/fixtures/selfmodel');
 const SKILLS = arg('skills', 'e2e/fixtures/selfmodel-skills');
+// --queries is FIRST CLASS: the query set is an input, not a constant, and the
+// interesting sets live outside this repo (nOS owns the 261-case self-model set
+// at tests/fixtures/selfmodel-recall.json — see `npm run gate:recall:nos`).
+// The gate never copies a foreign set in; it reads it where its owner keeps it,
+// so the two repos cannot silently diverge.
 const QUERIES = arg('queries', 'e2e/fixtures/selfmodel-recall.json');
+const MODE = LIVE_BASE ? 'live' : 'fixture';
+// The baseline is per (query set × mode): fixture mode and live mode measure
+// different corpora, and comparing across them would manufacture exactly the
+// coverage lie this gate exists to prevent.
+// The whole PATH is slugified, not just the basename: the in-repo set and the
+// nOS set are both called selfmodel-recall.json, and a shared baseline file
+// between two different query sets is the same class of mistake as a shared
+// denominator between two different corpora.
+const BASELINE = arg(
+  'baseline',
+  path.join(
+    'e2e',
+    'baselines',
+    `${QUERIES.replace(/\.json$/, '').replace(/^[./]+/, '').replace(/[^A-Za-z0-9]+/g, '-')}.${MODE}.json`,
+  ),
+);
+const UPDATE_BASELINE = process.argv.includes('--update-baseline');
+const NO_BASELINE = process.argv.includes('--no-baseline');
+// --min-measured 261 | 95% | 0 (to disable) — the declared denominator floor.
+// It DEFAULTS to 50% rather than to nothing, because the failure being fixed
+// here is precisely a green exit over a 5% sample: a gate must refuse to call
+// itself passing when most of its set never ran, whether or not CI remembered
+// to ask. Runs that legitimately measure a subset say so explicitly.
+const MIN_MEASURED = arg('min-measured', '50%');
 const OLLAMA = process.env.KEAP_OLLAMA_URL ?? 'http://127.0.0.1:11434';
 const MODEL = process.env.KEAP_EMBED_MODEL ?? 'nomic-embed-text';
 const DIR = path.join(REPO, 'e2e', '.recall-gate');
+
+// Why a case could not be measured. These are NOT failures and never share a
+// number with one: each says something different about whose problem it is.
+const CAUSES = {
+  'gap:both-absent': 'corpus gap — neither the expected node nor the expected card exists here',
+  'gap:node-absent': 'corpus gap — the only expectation is a node id absent from this corpus',
+  'gap:card-absent': 'corpus gap — the only expectation is a card title absent from this corpus',
+  'ambiguous-title': 'ambiguous title — the title exists on several cards and nothing scopes it',
+};
+// Measured, but on LESS than the case named. Coverage that reads as real must
+// say how much of the expectation it actually exercised.
+const DEGRADED = {
+  'degraded:card-absent': 'measured on the NODE only — the named card is not in this corpus',
+  'degraded:node-absent': 'measured on the CARD only — the named node is not in this corpus',
+};
 
 // ── 0) The embedder must exist, or this is a SKIP, never a pass ─────────────
 try {
@@ -58,8 +123,13 @@ try {
   process.exit(4);
 }
 
+if (!existsSync(QUERIES)) {
+  console.error(`⚠ RECALL GATE SKIPPED: query set not found at ${QUERIES} — nothing was measured`);
+  process.exit(4);
+}
 const spec = JSON.parse(readFileSync(QUERIES, 'utf8'));
 const K = spec.k ?? 5;
+console.error(`· query set: ${QUERIES} — ${spec.cases.length} case(s), k=${K}, mode=${MODE}`);
 
 if (LIVE_BASE) {
   // Read-only live path: sections 1–2 (scratch + embed) do not apply. The live
@@ -74,12 +144,12 @@ if (LIVE_BASE) {
 
   const brain = (await (await fetch(`${base}/agent/v1/graph`, { headers: H, ...TL(30_000) })).json()).data;
   const nodeIds = new Set(brain.nodes.filter((n) => n.kind === 'node' || !n.kind).map((n) => n.id));
-  const idByTitle = new Map();
+  const idsByTitle = new Map();
   for (let offset = 0; ; offset += 50) {
     const page = (await (
       await fetch(`${base}/agent/v1/objects?limit=50&offset=${offset}`, { headers: H, ...TL(30_000) })
     ).json()).data;
-    for (const o of page.results ?? []) idByTitle.set(o.title, o.id);
+    for (const o of page.results ?? []) idsByTitle.set(o.title, [...(idsByTitle.get(o.title) ?? []), o.id]);
     if (!(page.results ?? []).length || offset + 50 >= (page.total ?? 0)) break;
   }
   const search = async (q) => {
@@ -88,7 +158,18 @@ if (LIVE_BASE) {
     ).json()).data;
     return (r.results ?? []).map((h) => ({ kind: h.kind, refId: h.id, legs: h.legs ?? [] }));
   };
-  await runCaseSet({ nodeIds, idByTitle, anchorsById: new Map(), search }, (code) => process.exit(code), 0);
+  // The list surface does not carry anchors; the detail surface does. Fetched
+  // lazily and memoised (only for cards a case actually names), so anchor
+  // scoping and the ancestor exemption behave IDENTICALLY in both modes —
+  // previously --base ran with an empty anchor map and a weaker exemption,
+  // which quietly made the live run stricter than the fixture run.
+  const fetchAnchors = async (id) => {
+    const d = (await (
+      await fetch(`${base}/agent/v1/objects/${encodeURIComponent(id)}`, { headers: H, ...TL(30_000) })
+    ).json()).data;
+    return (d?.links ?? []).filter((l) => l.kind === 'node').map((l) => l.ref);
+  };
+  await runCaseSet({ nodeIds, idsByTitle, anchorsById: new Map(), fetchAnchors, search }, (code) => process.exit(code), 0);
 }
 
 // ── 1) Scratch KEAP: ingest fixture → boot → fs-sync skills ─────────────────
@@ -214,11 +295,14 @@ if (!embedded && !REUSE) { console.error('✗ nothing to embed — fixture produ
 {
   const T2 = (ms) => ({ signal: AbortSignal.timeout(ms) });
   const graph = (await (await fetch(`${BASE}/api/graph`, T2(30_000))).json()).data;
+  const idsByTitle = new Map();
+  for (const o of graph.objects) idsByTitle.set(o.title, [...(idsByTitle.get(o.title) ?? []), o.id]);
   await runCaseSet(
     {
       nodeIds: new Set(graph.nodes.map((n) => n.id)),
-      idByTitle: new Map(graph.objects.map((o) => [o.title, o.id])),
+      idsByTitle,
       anchorsById: new Map(graph.objects.map((o) => [o.id, o.anchors ?? []])),
+      fetchAnchors: null,
       search: async (q) => {
         const r = (await (
           await fetch(`${BASE}/api/search/semantic?q=${encodeURIComponent(q)}&limit=30`, T2(30_000))
@@ -232,23 +316,80 @@ if (!embedded && !REUSE) { console.error('✗ nothing to embed — fixture produ
 }
 
 // ── 3) Resolve refs, rank within scope, gate ────────────────────────────────
-async function runCaseSet({ nodeIds, idByTitle, anchorsById, search }, stop, embedded) {
+async function runCaseSet({ nodeIds, idsByTitle, anchorsById, fetchAnchors, search }, stop, embedded) {
 // An expectation that references nothing in the corpus is NOT a recall failure —
 // it is an unmeasurable case, and conflating the two turns a coverage gap into
 // a wall of false reds that buries the real signal. Unresolvable refs (a node
 // absent from this tree, a card title with no card) drop the ref; a case with
-// NO resolvable expectation is skipped and counted loudly.
-const resolve = (ref) => {
-  if (ref.startsWith('node:')) {
-    const id = ref.slice(5);
-    return nodeIds.has(id) ? { kind: 'taxonomy', refId: id } : null;
-  }
-  if (ref.startsWith('title:')) {
-    const id = idByTitle.get(ref.slice(6));
-    return id ? { kind: 'object', refId: id } : null;
-  }
-  return null;
+// NO resolvable expectation is skipped and counted loudly, WITH ITS CAUSE.
+
+// Anchors of a card, memoised. The fixture path has them all up front (/api/graph
+// ships them); the live agent list surface does not, so they are fetched per id
+// on demand. Same map either way — one code path below.
+const anchorsOf = async (id) => {
+  if (anchorsById.has(id)) return anchorsById.get(id);
+  const a = fetchAnchors ? await fetchAnchors(id).catch(() => []) : [];
+  anchorsById.set(id, a);
+  return a;
 };
+
+// `title:` IS NOT A UNIQUE HANDLE, and pretending it was is a defect this gate
+// shipped with: idByTitle was built last-write-wins, so on an estate where six
+// skill names repeat across systems (create-document, list-users, list-databases,
+// …) 30 cases named a duplicated title and 13 resolved to a card owned by a
+// DIFFERENT system than the case meant. Measured result: 3 false reds (ERPNext's
+// create-document ranked #1 while the gate graded Outline's) and 2 false greens.
+// The fix is anchor scoping: a `title:` ref is resolved WITHIN the subtree of the
+// node the same case names. Preference order — the card anchored at (or under)
+// the expected node, else a card anchored at an ancestor of it; ties and
+// no-match are UNRESOLVED rather than guessed, because a guess is how the false
+// reds happened in the first place.
+const scopeTitle = async (title, scopeNodes) => {
+  const ids = idsByTitle.get(title) ?? [];
+  if (ids.length <= 1) return { ids, why: ids.length ? null : 'card-absent' };
+  if (!scopeNodes.length) return { ids: [], why: 'ambiguous' };
+  const exact = [];
+  const ancestor = [];
+  for (const id of ids) {
+    const anchors = await anchorsOf(id);
+    for (const n of scopeNodes) {
+      if (anchors.some((a) => a === n || a.startsWith(`${n}.`))) { exact.push(id); break; }
+      if (anchors.some((a) => n.startsWith(`${a}.`))) { ancestor.push(id); break; }
+    }
+  }
+  const picked = exact.length ? exact : ancestor;
+  return picked.length ? { ids: picked, why: null } : { ids: [], why: 'ambiguous' };
+};
+
+// Resolve one case's ref list. Returns the resolved hits PLUS the per-half
+// verdict, so the summary can say WHY something was not measured instead of
+// lumping every miss into one anonymous "skipped" bucket.
+const resolveRefs = async (refs, scopeOverride) => {
+  // A forbid list is scoped by the case's EXPECT nodes, not by its own: "the
+  // stack must not beat the skill" names the stack, and the stack is precisely
+  // not the thing that scopes the skill's title.
+  const scopeNodes = scopeOverride ?? refs.filter((r) => r.startsWith('node:')).map((r) => r.slice(5));
+  const resolved = [];
+  let nodeRefs = 0;
+  let nodeHits = 0;
+  let titleRefs = 0;
+  let titleHits = 0;
+  let ambiguous = 0;
+  for (const ref of refs) {
+    if (ref.startsWith('node:')) {
+      nodeRefs++;
+      const id = ref.slice(5);
+      if (nodeIds.has(id)) { nodeHits++; resolved.push({ kind: 'taxonomy', refId: id }); }
+    } else if (ref.startsWith('title:')) {
+      titleRefs++;
+      const { ids, why } = await scopeTitle(ref.slice(6), scopeNodes);
+      if (why === 'ambiguous') ambiguous++;
+      if (ids.length) { titleHits++; for (const id of ids) resolved.push({ kind: 'object', refId: id }); }
+    }
+  }
+  return { resolved, nodeRefs, nodeHits, titleRefs, titleHits, ambiguous };
+};
+
 const hitKey = (h) => `${h.kind}:${h.refId}`;
 
 // The gate ranks WITHIN the self-model scope. The _stack.md failure was a
@@ -276,12 +417,12 @@ const isRelevance = (h) => !Array.isArray(h.legs) || h.legs.length === 0 || h.le
 // exemption is visible rather than silent).
 const properAncestors = (expectedResolved) => {
   const out = new Set([scopeRoot]);
-  const nodeIds = [];
+  const ids = [];
   for (const e of expectedResolved) {
-    if (e.kind === 'taxonomy') nodeIds.push(e.refId);
-    else nodeIds.push(...(anchorsById.get(e.refId) ?? []));
+    if (e.kind === 'taxonomy') ids.push(e.refId);
+    else ids.push(...(anchorsById.get(e.refId) ?? []));
   }
-  for (const id of nodeIds) {
+  for (const id of ids) {
     const segs = id.split('.');
     for (let i = 1; i < segs.length; i++) out.add(segs.slice(0, i).join('.'));
   }
@@ -291,26 +432,56 @@ const properAncestors = (expectedResolved) => {
 };
 
 const failures = [];
-const skipped = [];
+const passing = [];
+const unmeasurable = []; // { q, cause, systems }
+const degraded = []; // { q, cause }
 const report = [];
+const ranks = new Map();
+let ancestorExemptions = 0;
+let bothInTop = 0;
+let cardOnly = 0;
+let nodeOnly = 0;
 for (const c of spec.cases) {
-  if (!c.expect.map(resolve).filter(Boolean).length) {
-    skipped.push(c.q);
+  const exp = await resolveRefs(c.expect);
+  if (!exp.resolved.length) {
+    // WHY nothing resolved is the whole point. "247 skipped" says nothing;
+    // "247 skipped because this fixture holds 3 of the 22 systems the set asks
+    // about" says whose problem it is and what closing it would cost.
+    const cause = exp.ambiguous && !exp.nodeRefs
+      ? 'ambiguous-title'
+      : exp.nodeRefs && exp.titleRefs
+        ? 'gap:both-absent'
+        : exp.nodeRefs
+          ? 'gap:node-absent'
+          : 'gap:card-absent';
+    unmeasurable.push({
+      q: c.q,
+      cause,
+      systems: c.expect.filter((r) => r.startsWith('node:')).map((r) => r.slice(5)),
+    });
     continue;
   }
+  // Anchors of every resolved card, so properAncestors() sees the same lineage
+  // in both modes (fixture had them from /api/graph; live now fetches them).
+  for (const e of exp.resolved) if (e.kind === 'object') await anchorsOf(e.refId);
+  // Measured, but on less than the case named — say so rather than let a node
+  // hit stand in silently for the skill the case is actually about.
+  if (exp.titleRefs && !exp.titleHits) degraded.push({ q: c.q, cause: 'degraded:card-absent' });
+  else if (exp.nodeRefs && !exp.nodeHits) degraded.push({ q: c.q, cause: 'degraded:node-absent' });
+
   const hits = await search(c.q);
   const all = hits.map(hitKey);
   const legsByKey = new Map(hits.map((h) => [hitKey(h), h.legs ?? []]));
   const scoped = hits.filter((h) => inScope(h) && isRelevance(h)).map(hitKey);
   const top = scoped.slice(0, K);
 
-  const expectedResolved = c.expect.map(resolve).filter(Boolean);
+  const expectedResolved = exp.resolved;
   const expected = expectedResolved.map(hitKey);
   const ancestors = properAncestors(expectedResolved);
   const ranked = top.filter((k2) => !(k2.startsWith('taxonomy:') && ancestors.has(k2.slice('taxonomy:'.length))));
   const excluded = top.filter((k2) => !ranked.includes(k2));
-  const forbidden = (c.forbid ?? [])
-    .map(resolve).filter(Boolean).map(hitKey)
+  const forbidden = (await resolveRefs(c.forbid ?? [], c.expect.filter((r) => r.startsWith('node:')).map((r) => r.slice(5)))).resolved
+    .map(hitKey)
     .filter((f) => ranked.includes(f) || !excluded.includes(f));
   const bestExpected = Math.min(...expected.map((e) => (ranked.indexOf(e) + 1 || Infinity)));
   const bestForbidden = Math.min(...forbidden.map((f) => (ranked.indexOf(f) + 1 || Infinity)));
@@ -318,6 +489,18 @@ for (const c of spec.cases) {
   const inTop = bestExpected !== Infinity;
   const cleanRank = bestForbidden === Infinity || bestExpected < bestForbidden;
   const ok = inTop && cleanRank;
+  if (excluded.length) ancestorExemptions++;
+  // `expect` is a UNION (system node OR skill card), so a pass does NOT mean the
+  // skill won. Count which half carried it — a pass carried only by the system
+  // node is a weaker result than it looks, and the summary says how many.
+  if (ok) {
+    const nodeIn = expectedResolved.some((e) => e.kind === 'taxonomy' && ranked.includes(hitKey(e)));
+    const cardIn = expectedResolved.some((e) => e.kind === 'object' && ranked.includes(hitKey(e)));
+    if (nodeIn && cardIn) bothInTop++;
+    else if (cardIn) cardOnly++;
+    else nodeOnly++;
+    ranks.set(bestExpected, (ranks.get(bestExpected) ?? 0) + 1);
+  }
   report.push({ q: c.q, ok, scopedRank: inTop ? bestExpected : null, ancestorsExcluded: excluded, corpusTop: all.slice(0, 5), scopedTop: ranked });
   if (!ok) {
     failures.push(c.q);
@@ -326,17 +509,172 @@ for (const c of spec.cases) {
     console.error(`    ranked: ${ranked.map((k2) => `${k2}[${(legsByKey.get(k2) ?? []).join('+')}]`).join('  ')}`);
     if (excluded.length) console.error(`    (ancestors exempt: ${excluded.join('  ')})`);
   } else {
+    passing.push(c.q);
     console.error(`✓ "${c.q}" → rank ${bestExpected}${excluded.length ? `  (ancestors exempt: ${excluded.join(' ')})` : ''}`);
   }
 }
 
-if (skipped.length) {
-  console.error(`⚠ ${skipped.length}/${spec.cases.length} case(s) SKIPPED — expectations reference nothing in this corpus (coverage gap, not recall)`);
+// ── 4) The report NAMES ITS DENOMINATOR ─────────────────────────────────────
+// Rule of this file: no percentage is ever printed without the fraction that
+// produced it. A bare "98% recall" over an invisible base is how "corpus
+// exhausted" happened; this block exists so that reading the output honestly is
+// the path of least resistance.
+const total = spec.cases.length;
+const measured = total - unmeasurable.length;
+const pct = (n, d) => (d ? `${((100 * n) / d).toFixed(1)}% (${n}/${d})` : `n/a (0/${d})`);
+const byCause = new Map();
+for (const u of unmeasurable) byCause.set(u.cause, [...(byCause.get(u.cause) ?? []), u]);
+const degradedByCause = new Map();
+for (const d of degraded) degradedByCause.set(d.cause, (degradedByCause.get(d.cause) ?? 0) + 1);
+
+console.error('');
+console.error(`── RECALL GATE — ${QUERIES} (${MODE} mode, k=${K}, scope=${scopeRoot}) ──`);
+console.error(`   cases in set   ${total}`);
+console.error(`   MEASURED       ${pct(measured, total)} of the set`);
+console.error(`   PASSING        ${pct(passing.length, measured)} of MEASURED  ← never of ${total}`);
+console.error(`   FAILING        ${failures.length}/${measured} measured`);
+console.error(`   UNMEASURABLE   ${unmeasurable.length}/${total} — not failures, and not passes either`);
+for (const [cause, list] of [...byCause].sort((a, b) => b[1].length - a[1].length)) {
+  console.error(`     ${String(list.length).padStart(5)}  ${cause} — ${CAUSES[cause]}`);
+  // Which systems the gap is made of: the actionable half of a coverage number.
+  const bySystem = new Map();
+  for (const u of list) for (const s of new Set(u.systems)) bySystem.set(s, (bySystem.get(s) ?? 0) + 1);
+  const top = [...bySystem].sort((a, b) => b[1] - a[1]).slice(0, 8);
+  if (top.length) console.error(`            missing: ${top.map(([s, n]) => `${s}×${n}`).join(', ')}${bySystem.size > 8 ? `, +${bySystem.size - 8} more` : ''}`);
 }
-const measured = spec.cases.length - skipped.length;
-console.log(`RECALL_RESULT ${JSON.stringify({ cases: spec.cases.length, measured, skipped: skipped.length, failed: failures, embedded, report })}`);
+if (degraded.length) {
+  console.error(`   DEGRADED       ${degraded.length}/${measured} measured on LESS than the case named`);
+  for (const [cause, n] of [...degradedByCause].sort((a, b) => b[1] - a[1])) {
+    console.error(`     ${String(n).padStart(5)}  ${cause} — ${DEGRADED[cause]}`);
+  }
+}
+if (passing.length) {
+  // `expect` is a union; a pass is not proof the skill won. Say which half won.
+  console.error(`   PASS SHAPE     node+card ${bothInTop} · card only ${cardOnly} · SYSTEM NODE ONLY ${nodeOnly} (the named skill never made top-${K})`);
+  const hist = [...ranks].sort((a, b) => a[0] - b[0]).map(([r, n]) => `rank${r} ${n}`).join(' · ');
+  console.error(`   RANKS          ${hist}${ranks.get(K) ? `   ← ${ranks.get(K)} case(s) sit at rank ${K}, one slot from a miss` : ''}`);
+  console.error(`   ANCESTOR EXEMPTION fired on ${ancestorExemptions}/${measured} measured case(s)`);
+}
+
+// ── 5) Baseline: REGRESSION and CORPUS GAP are different problems ───────────
+// The baseline records which cases passed, so a later run can say "these five
+// USED TO PASS and now fail" (KEAP's ranking moved — a regression) separately
+// from "these forty were never measurable here" (the corpus does not contain
+// what the set asks about — the corpus owner's problem). Sharing one number
+// between those two is how a coverage collapse gets mistaken for a healthy gate.
+let baseline = null;
+if (!NO_BASELINE && existsSync(BASELINE)) {
+  try { baseline = JSON.parse(readFileSync(BASELINE, 'utf8')); }
+  catch { console.error(`⚠ baseline ${BASELINE} is unreadable — comparing against nothing`); }
+}
+const nowUnmeasurable = new Map(unmeasurable.map((u) => [u.q, u.cause]));
+const nowPassing = new Set(passing);
+const nowFailing = new Set(failures);
+let regressions = [];
+let newlyFailing = [];
+let coverageLost = [];
+let fixed = [];
+let newCoverage = [];
+if (baseline) {
+  if (baseline.mode !== MODE || baseline.queries !== QUERIES) {
+    console.error(`⚠ baseline was recorded for ${baseline.queries} in ${baseline.mode} mode — comparison would be apples to oranges, ignoring it`);
+    baseline = null;
+  }
+}
+if (baseline) {
+  const wasPassing = new Set(baseline.passing ?? []);
+  const wasFailing = new Set(baseline.failing ?? []);
+  const wasUnmeasurable = new Set(Object.keys(baseline.unmeasurable ?? {}));
+  regressions = [...nowFailing].filter((q) => wasPassing.has(q));
+  newlyFailing = [...nowFailing].filter((q) => !wasPassing.has(q) && !wasFailing.has(q));
+  coverageLost = [...nowUnmeasurable.keys()].filter((q) => wasPassing.has(q) || wasFailing.has(q));
+  fixed = [...nowPassing].filter((q) => wasFailing.has(q));
+  newCoverage = [...nowPassing, ...nowFailing].filter((q) => wasUnmeasurable.has(q));
+  console.error('');
+  console.error(`── vs baseline ${BASELINE} (recorded ${baseline.recorded ?? '?'}, measured ${baseline.measured}/${baseline.total}) ──`);
+  console.error(`   REGRESSIONS    ${regressions.length}  (passed then, fail now — a KEAP ranking regression)`);
+  for (const q of regressions) console.error(`     ✗ "${q}"`);
+  if (newlyFailing.length) {
+    console.error(`   NEW & FAILING  ${newlyFailing.length}  (case not in the baseline at all — a new expectation, not a regression)`);
+    for (const q of newlyFailing) console.error(`     ✗ "${q}"`);
+  }
+  console.error(`   COVERAGE LOST  ${coverageLost.length}  (was measurable, now unmeasurable — a corpus gap, NOT a recall failure)`);
+  for (const q of coverageLost.slice(0, 10)) console.error(`     ⚠ "${q}" — ${nowUnmeasurable.get(q)}`);
+  if (coverageLost.length > 10) console.error(`     … +${coverageLost.length - 10} more`);
+  console.error(`   NEW COVERAGE   ${newCoverage.length}  (unmeasurable then, measured now)`);
+  console.error(`   FIXED          ${fixed.length}  (failed then, passes now)`);
+} else if (!NO_BASELINE) {
+  console.error('');
+  console.error(`⚠ no baseline at ${BASELINE} — every failure below is reported as a plain failure, and`);
+  console.error('  regression cannot be told from pre-existing debt. Record one with --update-baseline.');
+}
+
+const record = {
+  queries: QUERIES,
+  mode: MODE,
+  k: K,
+  scope: scopeRoot,
+  recorded: new Date().toISOString(),
+  total,
+  measured,
+  passingCount: passing.length,
+  passing: [...passing].sort(),
+  failing: [...failures].sort(),
+  unmeasurable: Object.fromEntries([...nowUnmeasurable].sort((a, b) => a[0].localeCompare(b[0]))),
+};
+if (UPDATE_BASELINE) {
+  mkdirSync(path.dirname(BASELINE), { recursive: true });
+  writeFileSync(BASELINE, `${JSON.stringify(record, null, 2)}\n`);
+  console.error(`· baseline written: ${BASELINE} (${passing.length} passing, ${measured}/${total} measured)`);
+}
+
+console.log(`RECALL_RESULT ${JSON.stringify({
+  queries: QUERIES,
+  mode: MODE,
+  cases: total,
+  measured,
+  passing: passing.length,
+  failed: failures,
+  unmeasurable: unmeasurable.length,
+  unmeasurableByCause: Object.fromEntries([...byCause].map(([c, l]) => [c, l.length])),
+  degradedByCause: Object.fromEntries(degradedByCause),
+  passShape: { nodeAndCard: bothInTop, cardOnly, systemNodeOnly: nodeOnly },
+  ranks: Object.fromEntries([...ranks].sort((a, b) => a[0] - b[0])),
+  baseline: baseline
+    ? { path: BASELINE, regressions, newlyFailing, coverageLost, newCoverage: newCoverage.length, fixed: fixed.length }
+    : null,
+  embedded,
+  report,
+})}`);
+
+// ── 6) Exit: 0 pass · 1 regression · 4 loud skip ────────────────────────────
 // Nothing measurable is the embedder-missing situation in another coat: loud
-// non-green, never a pass.
-if (!measured) { console.error('⚠ RECALL GATE: zero measurable cases'); stop(4); }
-stop(failures.length ? 1 : 0);
+// non-green, never a pass. So is a run that measured a fraction of the set, or
+// one that lost coverage the baseline had — those are gates that did not run,
+// not gates that passed.
+if (!measured) { console.error(`⚠ RECALL GATE: zero measurable cases out of ${total} — nothing was measured`); stop(4); }
+if (failures.length) {
+  const label = baseline
+    ? `${regressions.length} regression(s), ${newlyFailing.length} new, ${failures.length - regressions.length - newlyFailing.length} known`
+    : `${failures.length} failure(s), no baseline to classify them`;
+  console.error(`✗ RECALL GATE FAILED — ${label}`);
+  stop(1);
+}
+if (MIN_MEASURED && MIN_MEASURED !== '0' && MIN_MEASURED !== 'none') {
+  const need = MIN_MEASURED.endsWith('%')
+    ? Math.ceil((total * parseFloat(MIN_MEASURED)) / 100)
+    : parseInt(MIN_MEASURED, 10);
+  if (measured < need) {
+    console.error(`⚠ RECALL GATE SKIPPED-LOUD: measured ${measured}/${total}, below the declared floor of ${need} (--min-measured ${MIN_MEASURED}).`);
+    console.error('  Every measured case passed, but this run does not speak for the set. Not a pass.');
+    stop(4);
+  }
+}
+if (coverageLost.length) {
+  console.error(`⚠ RECALL GATE SKIPPED-LOUD: ${coverageLost.length} case(s) the baseline measured are unmeasurable now.`);
+  console.error('  The cases that still run all passed — but the gate covers less than it did. Not a pass.');
+  stop(4);
+}
+console.error(`✓ RECALL GATE PASSED — ${pct(passing.length, measured)} of measured, measuring ${pct(measured, total)} of the set`);
+stop(0);
 }

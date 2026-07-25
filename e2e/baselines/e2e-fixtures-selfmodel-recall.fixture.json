@@ -1,0 +1,18 @@
+{
+  "queries": "e2e/fixtures/selfmodel-recall.json",
+  "mode": "fixture",
+  "k": 5,
+  "scope": "nos",
+  "recorded": "2026-07-25T10:46:11.140Z",
+  "total": 4,
+  "measured": 4,
+  "passingCount": 4,
+  "passing": [
+    "flush the redis cache",
+    "relational database for SQL transactions",
+    "upload a file to cloud storage",
+    "which credential is needed to access user files"
+  ],
+  "failing": [],
+  "unmeasurable": {}
+}
