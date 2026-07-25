@@ -389,7 +389,8 @@ in-container.
 Design: `docs/specs/ontology-anchoring.md`. Four-layer anchoring model
 (skeleton = taxonomy user roots / evidence = cards / assertions = R3 /
 rules = R4), **domain packs** as the generalised self-model pipeline (slug
-root + canonical files + golden fixture + recall-gate acceptance), scale
+root + canonical files + golden fixture + recall-gate acceptance —
+`docs/specs/recall-gate.md`), scale
 tiers S/M/L (full payload → hub aggregates + region fetch → region
 streaming), and `/agent/v1/context` — rules-first, budget-bounded, citable
 context assembly for LLM consumers. Sequencing: R4 → context v1 (tier S) →
