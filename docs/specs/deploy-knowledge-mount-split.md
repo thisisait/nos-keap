@@ -1,9 +1,24 @@
 # The knowledge/ mount split — one SoT, two sampling times
 
-Status: **open hazard, documented not fixed.** Written against KEAP v1.27.0 and
-the `pazny.keap` role as it stood on 2026-07-25. Every claim below is cited to a
-file and line so the nOS side can act on a written statement instead of the
-memory of a conversation.
+Status: **partly fixed — the acute bug is closed, the structural hazard is not.**
+Written against KEAP v1.27.0 and the `pazny.keap` role as it stood on 2026-07-25;
+**re-measured against the role on 2026-07-26** (scorecard in §6.1). Every claim
+below is cited to a file and line so the nOS side can act on a written statement
+instead of the memory of a conversation.
+
+**What changed since this was written.** The mount now covers the whole of
+`knowledge/` rather than `canonical/` alone, which closes the 2026-07-24 failure
+(the 1.26.0 image shipped `ingest.mjs` without `_ontology.mjs` →
+`ERR_MODULE_NOT_FOUND` on a blank all-on). And the role's `git` task lost a
+`failed_when` override that had been reclassifying an unfetchable ref as `ok` —
+so a bad pin now **fails the converge** instead of silently building the previous
+checkout under the new image tag. That is a better fix than the assertion §6.1
+asked for, because it removes the cause rather than detecting the symptom.
+
+**What did not change.** Nothing asserts the image and the mount are the same
+commit. Within one converge they are, because the `git` task runs before both the
+build and the mount render. Between converges they can diverge, and §2's failure
+modes stand.
 
 **KEAP cannot fix this.** The wiring lives entirely in the nOS repo
 (`roles/pazny.keap/`), which this repo must treat as read-only. What follows is
@@ -197,6 +212,40 @@ agree.
 ## 6. What a converge would have to do differently
 
 For the nOS side. Ordered cheapest-first; the first two remove most of the risk.
+
+### 6.1 Scorecard, measured 2026-07-26
+
+| # | ask | state | evidence |
+|---|---|---|---|
+| 1 | assert the checkout is at the pin | **addressed differently, and better** | `tasks/main.yml:62-77` — the `failed_when` override is gone, so the git module's own fetch-failure path fails the converge. F4 is dead at the root rather than detected |
+| 2 | assert `keap_version` == `keap_repo_ref` | **partial** | asserted in CI (`tests/anatomy/test_keap_pin_not_cancelled.py`), not as a converge pre-flight. A hand-edited `default.config.yml` on the host still converges |
+| 3 | immutable image tag per build | **not done** | `compose.yml.j2:30` is still `image: nos/keap:{{ keap_version }}` with `build:` every converge. `keap_version` still cannot be used to roll back |
+| 4 | version handshake before ingest | **not done** | no check between `/app/package.json` and the mounted tree. See §6.2 — the offer below is unchanged and unclaimed |
+| 5 | snapshot the mount (optional) | **not done** | — |
+| 6 | correct the two stale comments | **done 2026-07-26** | both rewritten; `compose.yml.j2` no longer says data changes ride the git ref, `post.yml` no longer says the mount is canonical-only |
+
+Net: the two failure modes that actually fired (07-24's partial mount, and a bad
+pin building the old checkout) are closed. Items 3 and 4 — the ones that make a
+rollback trustworthy and an ingest refuse skew — are open.
+
+### 6.2 The KEAP-side offer, still open
+
+Item 4 needs a stamp inside the mounted tree, because the mount shadows
+`/app/knowledge` completely and the image's `package.json` is the only unshadowed
+version fact. The shape that fits this repo's existing discipline is a generated
+artifact plus a `--check` gate, exactly like `spine-render.mjs`:
+
+- `knowledge/release.json` — generated from `package.json`, CI-gated to match
+  (which requires adding `package.json` to the `knowledge` workflow's `paths:`
+  filter, or a release bump can desync it without CI noticing);
+- `knowledge/version-check.mjs` — run as `docker exec` before `ingest.mjs`,
+  comparing the mounted `release.json` against the image's `package.json`, exit
+  non-zero on skew.
+
+Unbuilt as of v1.29.0. It is a real cost — one more generated file to keep in
+step at every release — against a failure that is currently low-probability and
+silent. Say the word and it lands; it is written down here so the trade-off is
+made deliberately rather than forgotten.
 
 1. **Assert the checkout is at the pin, before building.**
    After the `git` task (`roles/pazny.keap/tasks/main.yml:63`), fail loudly if

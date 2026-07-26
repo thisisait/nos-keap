@@ -1,5 +1,7 @@
 # Handoff → nOS agent, 2026-07-24
 
+Status: **DONE**, historical. Both asks were acted on: the pin moved v1.26.0 → v1.27.0 → v1.28.0 → v1.29.0, and the round-2 cortex-lang questions were answered in `nos-cortex-lang-review-02.md` and settled in code. Kept as the record of the 2026-07-22 wipe lesson, which is what produced `database.id`.
+
 Two things: **KEAP v1.26.0 is released** (pin bump needed), and the **round-2
 review of nos-cortex-lang** is in this repo at
 `docs/specs/nos-cortex-lang-review-02.md`. Read that one before P0 is frozen —

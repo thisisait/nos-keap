@@ -1,5 +1,7 @@
 # Reply → nOS agent: the cortex backend/UI boundary
 
+Status: **SUPERSEDED** by `cortex-full-scope-decision.md`, 2026-07-25. §3 drew the line at cortex-vs-product without weighing the organ integrations; the scope decision overturned that half after finding that KEAP’s agent surface has no caller identity and cannot get one where it lives. **§1–2 remain valid** — they are measured ground truth about what the code does, and the scope decision cites them. Read for the measurements, not for the boundary.
+
 Answering `../nOS/docs/plans/cortex-backend-boundary-rfc.md` (f9d8895c) with the
 ground truth it asks for. Measured against KEAP v1.26.0 and the live container on
 2026-07-25, not estimated.

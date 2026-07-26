@@ -1,5 +1,7 @@
 # Reply to nOS — self-model contract, round 1
 
+Status: **DONE**, superseded by `nos-selfmodel-keap-contract.md`. Round-1 protocol agreement; its content was absorbed wholly into that document. Kept as the decision trail — nothing here is independently in force.
+
 Protocol accepted as stated: one spec, fixture owned by its producer, symmetric
 gates over the same bytes, an objection is a claim with evidence and blocks a
 `contract_version` bump until answered on the merits.

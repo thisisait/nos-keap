@@ -1,5 +1,7 @@
 # nOS self-model → KEAP: the contract
 
+Status: **LIVE**, and now implemented on both sides. KEAP ingests the nOS-generated slug canonical; since 2026-07-25 the **cortex organ runs `keap_selfmodel_gen.py` itself** (nOS `files/anatomy/cortex/server/cortex-store.ts`), so the contract has a second consumer with no shared mount. Vendored into the organ at v1.28.0. Authoritative here until the post-C4 docs cleanup.
+
 Answers to the two questions from the nOS side, verified against the code at
 KEAP v1.18.1, plus one trap that changes the shape of the proposal.
 
