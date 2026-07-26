@@ -10,7 +10,7 @@ Measured 2026-07-26 against this tree. Every number here is reproducible with
 ## In one paragraph
 
 A curated, bilingual (English + Czech) taxonomy of general human knowledge —
-**2 393 concept nodes across 12 top-level domains, six depth levels, and 4 643
+**2 403 concept nodes across 12 top-level domains, six depth levels, and 4 643
 cross-references** — plus a controlled vocabulary of 16 relation verbs for typed,
 moderated edges on top. It is a *navigational scaffold*: a shape for organising
 knowledge and hanging real material on, not an encyclopaedia and not an
@@ -25,14 +25,14 @@ uneven — see *Domains* — but nothing is a bare label any more.
 | | count |
 | --- | --- |
 | top-level domains | 12 |
-| nodes | **2 393** (790 spine + 1 603 extensions) |
+| nodes | **2 403** (790 spine + 1 613 extensions) |
 | depth levels | 0–5 |
 | cross-references | 4 643, of which **209 are hand-curated cross-domain edges** |
 | relation verbs (controlled) | 16 |
-| typed moderated edges | **417** across all 16 verbs — see *Two relation layers* |
+| typed moderated edges | **442** across all 16 verbs — see *Two relation layers* |
 | first-level branches with no children | **0** (was 55) |
-| English descriptions | 2 393 / 2 393 (100 %) |
-| Czech descriptions | 2 245 / 2 393 (**94 %**) |
+| English descriptions | 2 403 / 2 403 (100 %) |
+| Czech descriptions | 2 262 / 2 403 (**94 %**) |
 
 Nodes per level: 12 · 95 · 527 · 847 · 897 · 15.
 
@@ -45,7 +45,7 @@ down from 67 % but it is still the dominant fact about this corpus.
 | id | domain | spine | extensions | total |
 | --- | --- | --- | --- | --- |
 | 01 | Natural sciences | 70 | 741 | **811** |
-| 02 | Formal sciences | 135 | 270 | **405** |
+| 02 | Formal sciences | 135 | 280 | **415** |
 | 04 | Social sciences | 41 | 275 | **316** |
 | 03 | Applied sciences | 211 | 48 | **259** |
 | 05 | Humanities | 71 | 111 | **182** |
@@ -130,7 +130,7 @@ This trips people up, so it is stated plainly:
 | layer | table | edges | vocabulary |
 | --- | --- | --- | --- |
 | **concept cross-references** | `concept_relations` | 4 434 | `references` (2 203), `related-concept` (730), `shared-structure` (725), `shared-math` (540), `conjecture` (103), `limit` (62), `duality` (58), `conflict` (13) |
-| **typed moderated graph (R3)** | `relations` | **417** | the 16 controlled verbs in `ontology/relation-types.json` |
+| **typed moderated graph (R3)** | `relations` | **442** | the 16 controlled verbs in `ontology/relation-types.json` |
 
 The first came out of the import pipeline and is versioned inside
 `canonical/*.json`. The second is the moderated layer — every edge carries a
@@ -169,7 +169,7 @@ must be understood before B, which is why `prerequisite-for` is the largest verb
 and why a curated layer beats a hierarchy for the question a learner actually
 asks.
 
-**Shape:** 417 edges touching 429 distinct nodes across all twelve domains;
+**Shape:** 442 edges touching 447 distinct nodes across all twelve domains;
 **166 of them (40 %) cross a top-level domain**. The most connected nodes are
 methodological rather than topical — mathematics, thermodynamics, microeconomics,
 econometrics — which is what a well-formed knowledge graph should look like.
@@ -227,7 +227,7 @@ relations; a test corpus for retrieval systems.
   roughly an order of magnitude relative to every other domain. Reweight or grow
   first — do not discover this in the loss curve.
 - **Uniformly bilingual.** 6 % of nodes have no Czech description.
-- **A dense semantic graph.** The moderated typed layer holds 417 edges touching 429 of 2 393 nodes. It is a deliberate spine of high-value assertions, not coverage — roughly one node in six is on it.
+- **A dense semantic graph.** The moderated typed layer holds 442 edges touching 447 of 2 403 nodes. It is a deliberate spine of high-value assertions, not coverage — roughly one node in six is on it.
 
 ## Weights — planned, not present
 
