@@ -122,8 +122,23 @@ over `tax:` are also safe (§4.4).
   > "`ent:` → `object_type_definitions`". KEAP cannot implement that in P1,
   > because the table is empty dead schema. Validating against it would produce a
   > route that *appears* to typecheck `ent:` and in fact rejects everything.
-  > This spec refuses `ent:` explicitly instead, and §7 names populating that
-  > registry as the P3 prerequisite.
+  > This spec refuses `ent:` explicitly instead.
+
+  > **Resolved 2026-07-26 — the backing exists, under another name.** The
+  > registry `ent:` needed is `data_tables` + `table_rows` +
+  > `table_row_history`: user-defined `schema_json`, per-user ownership,
+  > `visibility`, a storage-driver abstraction, live rows, a live consumer.
+  > `ent:` resolves against **that**; `object_type_definitions` is slated for
+  > drop. Two sources feed the registry — estate entities reflected from Wing's
+  > schema (`ent:service`, `ent:job`, `ent:run`, available immediately) and
+  > company entities declared or inferred from imported material. `ent:`
+  > resolution and AgentKit's tools must share one registry: two disagreeing
+  > views of what exists is worse than no `ent:` at all.
+  > See nOS `docs/plans/cortex-self-core.md` §6b.
+  >
+  > **This does not change P1's behaviour.** `ent:` stays `unresolved` until that
+  > resolver is built and a visibility-aware reader exists — and note the reader
+  > is now the *only* remaining blocker, not the registry.
 
 ### 1.5 Options explicitly rejected
 

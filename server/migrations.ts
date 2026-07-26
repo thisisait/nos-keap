@@ -65,21 +65,26 @@ const MIGRATIONS: Migration[] = [
       -- ("SELECT DISTINCT type FROM knowledge_objects"), which is an *observed*
       -- enum derived from instances — not a registry, and not backed by this.
       --
-      -- Kept rather than dropped: a drop migration costs more than the empty
-      -- table does (it is ~1KB of catalogue and costs nothing at runtime), and
-      -- it is the named destination for one specific piece of pending work.
+      -- SUPERSEDED 2026-07-26 — this table is now slated for DROP, and nothing
+      -- should be built on it.
       --
-      -- It becomes real when, and ONLY when, nos-cortex-lang's "ent:" operand
-      -- gets a writer. cortex-validate.md §1.4 refuses "ent:" outright *because*
-      -- this table is empty — validating against an empty registry yields a
-      -- route that appears to typecheck entity references while rejecting
-      -- every one of them. Populating this table (a real type-registry writer,
-      -- plus a visibility-aware reader) is the P3 prerequisite that turns "ent:"
-      -- from refused into resolvable.
+      -- It was kept as the named destination for one piece of pending work: a
+      -- type registry that would turn nos-cortex-lang's "ent:" operand from
+      -- refused into resolvable (cortex-validate.md §1.4 refuses "ent:" outright
+      -- *because* this table is empty — validating against an empty registry
+      -- yields a route that appears to typecheck entity references while
+      -- rejecting every one of them).
       --
-      -- If that work is abandoned, this table has no second use case — drop it
-      -- then. Until then, do not build on it without adding the writer first.
-      -- See docs/specs/cortex-validate.md and docs/specs/nos-cortex-lang-review-02.md.
+      -- That registry turned out to exist already, under another name.
+      -- data_tables carries id / user_id / schema_json / driver / visibility
+      -- with table_rows for instances and table_row_history for lineage:
+      -- user-defined schema, per-user ownership, a storage-driver abstraction,
+      -- live rows and a live consumer. "ent:" resolves against THAT.
+      -- See nOS docs/plans/cortex-self-core.md §6b.
+      --
+      -- The drop rides the same change that lands "ent:" resolution; doing it
+      -- earlier would be a migration for a table nobody reads.
+      -- See docs/specs/cortex-validate.md §1.4.
       CREATE TABLE IF NOT EXISTS object_type_definitions (
         id TEXT PRIMARY KEY,
         user_id TEXT NOT NULL,

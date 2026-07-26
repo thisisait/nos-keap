@@ -1,7 +1,7 @@
 # The `onto1:` composition contract
 
 Status: **normative.** P-2 of the cortex backend/UI split
-(`../nOS/docs/plans/cortex-backend-boundary-decision.md` §6a). Written against
+(the cortex backend/UI boundary decision, deleted 2026-07-26; git history). Written against
 KEAP v1.26.0.
 
 **Reference implementation:** `knowledge/onto1-compose.mjs` (plain ESM, no server,

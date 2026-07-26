@@ -22,5 +22,16 @@ nOS `docs/hidden_fees/` — that is the one place to look for what we owe. Specs
 describe what is; fees describe what will cost. A spec that starts explaining a
 workaround is a fee that landed in the wrong file.
 
-The cross-repo view (which specs the cortex organ vendors, what moves at each
-stage) is nOS `docs/plans/cortex-specs-ledger.md`.
+## These specs are leaving
+
+nOS `docs/plans/cortex-self-core.md` moves the runtime out of this repo. KEAP
+becomes **data and weights only** — no server, no UI. Every spec above describes
+runtime and therefore follows its code out, at the stage named in
+nOS `docs/plans/cortex-specs-ledger.md`. Eight already have a vendored copy in
+the organ.
+
+What replaces them here is documentation of **the dataset**: what the taxonomy
+covers, how the ontology is structured, how weights are versioned and what they
+were trained on. None of it is written yet.
+
+Read the ledger before adding a spec here — it may already belong in nOS.
