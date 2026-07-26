@@ -309,36 +309,15 @@
  ],
  "relations": [
   {
-   "from": "04.02",
-   "to": "04.01",
-   "type": "references",
-   "explored": null,
-   "source": "brief-xref"
-  },
-  {
-   "from": "04.02",
-   "to": "04.03",
-   "type": "references",
-   "explored": null,
-   "source": "brief-xref"
-  },
-  {
-   "from": "04.02",
-   "to": "04.05",
-   "type": "references",
-   "explored": null,
-   "source": "brief-xref"
-  },
-  {
-   "from": "04.02",
-   "to": "04.09",
-   "type": "references",
-   "explored": null,
-   "source": "brief-xref"
-  },
-  {
    "from": "04.02.01.01",
    "to": "04.04.09",
+   "type": "related-concept",
+   "explored": null,
+   "source": "curated-xref"
+  },
+  {
+   "from": "04.02.01.02",
+   "to": "04.01",
    "type": "related-concept",
    "explored": null,
    "source": "curated-xref"
@@ -358,8 +337,22 @@
    "source": "curated-xref"
   },
   {
+   "from": "04.02.02.05",
+   "to": "05.08",
+   "type": "related-concept",
+   "explored": null,
+   "source": "curated-xref"
+  },
+  {
    "from": "04.02.03.04",
    "to": "04.06.07",
+   "type": "related-concept",
+   "explored": null,
+   "source": "curated-xref"
+  },
+  {
+   "from": "04.02.04.02",
+   "to": "04.05.04",
    "type": "related-concept",
    "explored": null,
    "source": "curated-xref"
@@ -386,25 +379,32 @@
    "source": "curated-xref"
   },
   {
-   "from": "04.02.01.02",
+   "from": "04.02",
    "to": "04.01",
-   "type": "related-concept",
+   "type": "references",
    "explored": null,
-   "source": "curated-xref"
+   "source": "brief-xref"
   },
   {
-   "from": "04.02.02.05",
-   "to": "05.08",
-   "type": "related-concept",
+   "from": "04.02",
+   "to": "04.03",
+   "type": "references",
    "explored": null,
-   "source": "curated-xref"
+   "source": "brief-xref"
   },
   {
-   "from": "04.02.04.02",
-   "to": "04.05.04",
-   "type": "related-concept",
+   "from": "04.02",
+   "to": "04.05",
+   "type": "references",
    "explored": null,
-   "source": "curated-xref"
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.02",
+   "to": "04.09",
+   "type": "references",
+   "explored": null,
+   "source": "brief-xref"
   }
  ]
 }

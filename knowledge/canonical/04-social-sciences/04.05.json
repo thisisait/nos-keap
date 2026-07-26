@@ -342,27 +342,6 @@
  ],
  "relations": [
   {
-   "from": "04.05",
-   "to": "04.02",
-   "type": "references",
-   "explored": null,
-   "source": "brief-xref"
-  },
-  {
-   "from": "04.05",
-   "to": "04.04",
-   "type": "references",
-   "explored": null,
-   "source": "brief-xref"
-  },
-  {
-   "from": "04.05",
-   "to": "04.06",
-   "type": "references",
-   "explored": null,
-   "source": "brief-xref"
-  },
-  {
    "from": "04.05.01.01",
    "to": "04.06.05",
    "type": "related-concept",
@@ -398,8 +377,36 @@
    "source": "curated-xref"
   },
   {
+   "from": "04.05.02.05",
+   "to": "04.06.06",
+   "type": "related-concept",
+   "explored": null,
+   "source": "curated-xref"
+  },
+  {
+   "from": "04.05.03.05",
+   "to": "05.08",
+   "type": "related-concept",
+   "explored": null,
+   "source": "curated-xref"
+  },
+  {
+   "from": "04.05.04.03",
+   "to": "04.06.03",
+   "type": "related-concept",
+   "explored": null,
+   "source": "curated-xref"
+  },
+  {
    "from": "04.05.04.04",
    "to": "04.04.05",
+   "type": "related-concept",
+   "explored": null,
+   "source": "curated-xref"
+  },
+  {
+   "from": "04.05.04.05",
+   "to": "04.08.05",
    "type": "related-concept",
    "explored": null,
    "source": "curated-xref"
@@ -419,32 +426,25 @@
    "source": "curated-xref"
   },
   {
-   "from": "04.05.04.03",
-   "to": "04.06.03",
-   "type": "related-concept",
+   "from": "04.05",
+   "to": "04.02",
+   "type": "references",
    "explored": null,
-   "source": "curated-xref"
+   "source": "brief-xref"
   },
   {
-   "from": "04.05.02.05",
-   "to": "04.06.06",
-   "type": "related-concept",
+   "from": "04.05",
+   "to": "04.04",
+   "type": "references",
    "explored": null,
-   "source": "curated-xref"
+   "source": "brief-xref"
   },
   {
-   "from": "04.05.03.05",
-   "to": "05.08",
-   "type": "related-concept",
+   "from": "04.05",
+   "to": "04.06",
+   "type": "references",
    "explored": null,
-   "source": "curated-xref"
-  },
-  {
-   "from": "04.05.04.05",
-   "to": "04.08.05",
-   "type": "related-concept",
-   "explored": null,
-   "source": "curated-xref"
+   "source": "brief-xref"
   }
  ]
 }

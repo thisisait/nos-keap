@@ -364,6 +364,62 @@
  ],
  "relations": [
   {
+   "from": "05.03.01.02",
+   "to": "01.01",
+   "type": "related-concept",
+   "explored": null,
+   "source": "curated-xref"
+  },
+  {
+   "from": "05.03.03.04",
+   "to": "02.02.01",
+   "type": "related-concept",
+   "explored": null,
+   "source": "curated-xref"
+  },
+  {
+   "from": "05.03.03.04",
+   "to": "02.03.01",
+   "type": "related-concept",
+   "explored": null,
+   "source": "curated-xref"
+  },
+  {
+   "from": "05.03.04.02",
+   "to": "02.03.02",
+   "type": "related-concept",
+   "explored": null,
+   "source": "curated-xref"
+  },
+  {
+   "from": "05.03.04.03",
+   "to": "02.03.01",
+   "type": "related-concept",
+   "explored": null,
+   "source": "curated-xref"
+  },
+  {
+   "from": "05.03.05.03",
+   "to": "04.03",
+   "type": "related-concept",
+   "explored": null,
+   "source": "curated-xref"
+  },
+  {
+   "from": "05.03.06.02",
+   "to": "04.01",
+   "type": "related-concept",
+   "explored": null,
+   "source": "curated-xref"
+  },
+  {
+   "from": "05.03.06.04",
+   "to": "05.06",
+   "type": "related-concept",
+   "explored": null,
+   "source": "curated-xref"
+  },
+  {
    "from": "05.03",
    "to": "04",
    "type": "references",
@@ -397,62 +453,6 @@
    "type": "references",
    "explored": null,
    "source": "brief-xref"
-  },
-  {
-   "from": "05.03.03.04",
-   "to": "02.02.01",
-   "type": "related-concept",
-   "explored": null,
-   "source": "curated-xref"
-  },
-  {
-   "from": "05.03.03.04",
-   "to": "02.03.01",
-   "type": "related-concept",
-   "explored": null,
-   "source": "curated-xref"
-  },
-  {
-   "from": "05.03.04.03",
-   "to": "02.03.01",
-   "type": "related-concept",
-   "explored": null,
-   "source": "curated-xref"
-  },
-  {
-   "from": "05.03.04.02",
-   "to": "02.03.02",
-   "type": "related-concept",
-   "explored": null,
-   "source": "curated-xref"
-  },
-  {
-   "from": "05.03.06.02",
-   "to": "04.01",
-   "type": "related-concept",
-   "explored": null,
-   "source": "curated-xref"
-  },
-  {
-   "from": "05.03.01.02",
-   "to": "01.01",
-   "type": "related-concept",
-   "explored": null,
-   "source": "curated-xref"
-  },
-  {
-   "from": "05.03.06.04",
-   "to": "05.06",
-   "type": "related-concept",
-   "explored": null,
-   "source": "curated-xref"
-  },
-  {
-   "from": "05.03.05.03",
-   "to": "04.03",
-   "type": "related-concept",
-   "explored": null,
-   "source": "curated-xref"
   }
  ]
 }
