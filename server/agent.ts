@@ -38,6 +38,13 @@ import { cortexValidateRequestSchema } from '../shared/contracts/cortex';
 import { CORTEX_CONTRACT_VERSION, cortexRegistryHash, listOpcodes } from './cortex-opcodes';
 import { cortexOntologyVersion } from './cortex-ontology-version';
 import { validateCortex } from './cortex-validate';
+import {
+  CortexBackendError,
+  cortexBackend,
+  cortexBackendHealth,
+  remoteOpcodes,
+  remoteValidate,
+} from './cortex-backend';
 import { listRoots } from './fs-roots';
 import { TOKEN_RO, TOKEN_RW, tokenEquals } from './tokens';
 import { candidatePairs, anchoredCandidates, DEFAULT_MAX_DISTANCE, type CandidatePair } from './relations';
@@ -45,6 +52,19 @@ import { candidatePairs, anchoredCandidates, DEFAULT_MAX_DISTANCE, type Candidat
 const ok = (res: Response, data?: unknown) => res.json({ success: true, data });
 const fail = (res: Response, status: number, error: string) =>
   res.status(status).json({ success: false, error });
+
+/**
+ * The proxied-cortex error path (P-5). A `CortexBackendError` already carries
+ * the status the caller should see and the far side's own words; anything else
+ * escaping the client is a bug HERE and must not be dressed up as an upstream
+ * problem — it gets a 500 and is logged, because a mislabelled error sends the
+ * next operator to the wrong host.
+ */
+const failBackend = (res: Response, err: unknown) => {
+  if (err instanceof CortexBackendError) return fail(res, err.status, err.message);
+  console.error('[cortex] unexpected proxy failure', err);
+  return fail(res, 500, 'cortex proxy failed');
+};
 
 // Token tiers live in server/tokens.ts (shared with the /ingest surface).
 
@@ -124,9 +144,19 @@ function searchNodes(q: string, domain: string | undefined, limit: number) {
 export function registerAgentRoutes(app: Express) {
   // Unauthenticated: liveness alias with corpus stats (container liveness for
   // the nOS probe is /api/health; this one is for agents/dashboards).
+  // The handler gained ONE asynchronous input at P-5: the organ probe. The
+  // payload is assembled synchronously first and the probe is grafted on after,
+  // so a reasoning backend that is down can never be the reason this endpoint
+  // fails to answer — health that dies with its subject is a monitor that goes
+  // quiet exactly when it is needed. `.catch` is unreachable by construction
+  // (probeOrgan swallows everything) and still answers, because "unreachable by
+  // construction" is a claim about today's code, not a guarantee.
   app.get('/agent/v1/health', (_req, res) => {
     const stats = db.corpusStats();
-    ok(res, {
+    // Derived once and used twice: as the census field below, and as the left
+    // side of the port-drift comparison in the `cortex` block.
+    const localOntologyVersion = cortexOntologyVersion();
+    const payload = {
       status: 'OK',
       // Contract versions this build IMPLEMENTS — not the build version (that
       // is `version` below, a proxy that moves on every patch). selfmodel: 1 =
@@ -165,8 +195,21 @@ export function registerAgentRoutes(app: Express) {
       // a cached AST is still describing the same language. Derived, so unlike a
       // declared version it cannot go stale; the four counts beside it are a
       // census and were never a version.
-      ontology: { ...db.ontologyStats(), version: cortexOntologyVersion() },
-    });
+      ontology: { ...db.ontologyStats(), version: localOntologyVersion },
+    };
+    // WHERE reasoning is answered from (P-5). `ontology.version` above stays the
+    // LOCAL derived hash in both modes — it describes this store's census and
+    // moves with the four counts beside it, and repointing it at the organ would
+    // make one field describe two different databases depending on a variable.
+    // Under organ mode the authoritative binding for a dispatched AST is
+    // `cortex.binding`, and a consumer that gates on it should read the organ
+    // directly rather than through this proxy.
+    cortexBackendHealth(localOntologyVersion)
+      .then((cortex) => ok(res, { ...payload, cortex }))
+      .catch((err) => {
+        console.error('[health] cortex probe failed', err);
+        ok(res, { ...payload, cortex: null });
+      });
   });
 
   // Unauthenticated: self-description (mcpo/Open WebUI consume this).
@@ -1194,6 +1237,13 @@ export function registerAgentRoutes(app: Express) {
   // This route reads NOTHING from `req.agentName`. That header is self-asserted
   // and unbound to the token (server/agent.ts:73); it may be logged, it may not
   // be believed, and no scope, filter or limit here keys on it.
+  //
+  // P-5: under `CORTEX_BACKEND_URL` this is PROXIED to the nOS cortex organ and
+  // the local typechecker never runs. The envelope is still validated HERE —
+  // a malformed request is KEAP's 400 to give, and forwarding garbage to the
+  // organ to be told the same thing costs a round trip and blames the wrong
+  // process in the organ's logs. See server/cortex-backend.ts for why an
+  // unreachable organ is a 502 and not a fallback to the local implementation.
   app.post('/agent/v1/validate', agentAuth('ro'), (req, res) => {
     const parsed = cortexValidateRequestSchema.safeParse(req.body);
     // Phase 1. A malformed REQUEST is a transport error; a malformed PROGRAM is
@@ -1201,7 +1251,12 @@ export function registerAgentRoutes(app: Express) {
     // precedent is POST /agent/v1/taxonomy/describe, which returns its per-item
     // errors[] inside an ok().
     if (!parsed.success) return fail(res, 400, parsed.error.issues[0]?.message ?? 'invalid request');
-    ok(res, validateCortex(parsed.data.source, parsed.data.ttlSeconds));
+    if (cortexBackend() === 'local') {
+      return ok(res, validateCortex(parsed.data.source, parsed.data.ttlSeconds));
+    }
+    remoteValidate(parsed.data.source, parsed.data.ttlSeconds)
+      .then((report) => ok(res, report))
+      .catch((err) => failBackend(res, err));
   });
 
   // The published opcode registry (D3). Wing fetches this at boot and in CI and
@@ -1210,12 +1265,21 @@ export function registerAgentRoutes(app: Express) {
   // logged warning only, because those handlers are merely unreachable.
   // Ordering rule for adding a capability: Wing ships the handler FIRST, KEAP
   // enables the opcode SECOND.
+  //
+  // P-5: proxied under organ mode for the same reason the registry exists at
+  // all — a consumer must gate against the registry that will actually
+  // typecheck its programs, not against a second copy that merely lives closer.
   app.get('/agent/v1/validate/opcodes', agentAuth('ro'), (_req, res) => {
-    ok(res, {
-      contract: CORTEX_CONTRACT_VERSION,
-      registryHash: cortexRegistryHash(),
-      opcodes: listOpcodes(),
-    });
+    if (cortexBackend() === 'local') {
+      return ok(res, {
+        contract: CORTEX_CONTRACT_VERSION,
+        registryHash: cortexRegistryHash(),
+        opcodes: listOpcodes(),
+      });
+    }
+    remoteOpcodes()
+      .then((listing) => ok(res, listing))
+      .catch((err) => failBackend(res, err));
   });
 }
 
