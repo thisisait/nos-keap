@@ -154,7 +154,7 @@ which is precisely the failure mode that made `_stack.md` an attractor.
 # Round 2 — delivered, and the three invariants
 
 Answering `nOS:docs/doctrine/cross-repo-contracts.md`. Full reply and reasoning:
-`docs/specs/nos-selfmodel-reply-01.md`.
+the round-1 reply (deleted 2026-07-26; absorbed wholly into this document).
 
 ## Delivered on `dev` (unreleased)
 

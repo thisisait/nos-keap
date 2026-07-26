@@ -228,24 +228,10 @@ Net: the two failure modes that actually fired (07-24's partial mount, and a bad
 pin building the old checkout) are closed. Items 3 and 4 — the ones that make a
 rollback trustworthy and an ingest refuse skew — are open.
 
-### 6.2 The KEAP-side offer, still open
-
-Item 4 needs a stamp inside the mounted tree, because the mount shadows
-`/app/knowledge` completely and the image's `package.json` is the only unshadowed
-version fact. The shape that fits this repo's existing discipline is a generated
-artifact plus a `--check` gate, exactly like `spine-render.mjs`:
-
-- `knowledge/release.json` — generated from `package.json`, CI-gated to match
-  (which requires adding `package.json` to the `knowledge` workflow's `paths:`
-  filter, or a release bump can desync it without CI noticing);
-- `knowledge/version-check.mjs` — run as `docker exec` before `ingest.mjs`,
-  comparing the mounted `release.json` against the image's `package.json`, exit
-  non-zero on skew.
-
-Unbuilt as of v1.29.0. It is a real cost — one more generated file to keep in
-step at every release — against a failure that is currently low-probability and
-silent. Say the word and it lands; it is written down here so the trade-off is
-made deliberately rather than forgotten.
+Items 3 and 4 are tracked as nOS
+`docs/hidden_fees/12-keap-image-tag-is-not-a-version.md`, including the KEAP-side
+offer (a generated `knowledge/release.json` + a `version-check.mjs` run before
+`ingest.mjs`) and what it costs.
 
 1. **Assert the checkout is at the pin, before building.**
    After the `git` task (`roles/pazny.keap/tasks/main.yml:63`), fail loudly if

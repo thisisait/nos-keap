@@ -6,7 +6,8 @@
 > live ontology → **AST or typed errors**. Zero side effects, zero writes, no LLM
 > in the container.
 > **Authorities:** the nOS plan `docs/plans/nos-cortex-lang.md` (frozen P0) and
-> this repo's `docs/specs/nos-cortex-lang-review-02.md` (which is the source of
+> the round-2 language review (deleted 2026-07-26; git history — its decisions are
+> in code now, and it is vendored at `nOS files/anatomy/cortex/docs/specs/`), which is the source of
 > the plan's §4–§6). Where this spec departs from the plan it says so, in a box,
 > with the reason.
 
@@ -111,7 +112,7 @@ over `tax:` are also safe (§4.4).
 - **`ent:`** has **no backing at all**. `object_type_definitions`
   (`server/migrations.ts:83`) is created by migration 001 and touched by **zero
   lines of code** in the repo — no reader, no writer, no accessor. The review
-  (`nos-cortex-lang-review-02.md:43`) named it as *"the plausible backing"*; that
+  (the round-2 review) named it as *"the plausible backing"*; that
   was a naming recommendation to the nOS side, not a statement that it has rows.
   The only live typing surface is `db.objectTypes()` (`server/db.ts:1076`) =
   `SELECT DISTINCT type FROM knowledge_objects`, which is an *observed* enum with

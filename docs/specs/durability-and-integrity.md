@@ -115,36 +115,11 @@ in the knowledge workflow because `app.yml` carries `paths-ignore: knowledge/**`
 
 ## 4. Measured, not yet acted on: the vector index
 
-> **Re-measured 2026-07-26, and the case has strengthened.** Live `keap.db` is
-> **565 MB**, of which `embeddings_vec_idx_shadow` is **538 732 480 B = 513.8 MB**
-> over 3355 embeddings. The figure has not moved in two days, so it is the
-> steady state and not a transient of one embed pass. The tuned variant below
-> would return **~449 MB**.
->
-> **Two things that were true when this was written are no longer true.**
->
-> 1. *"The recall cost is unmeasured"* was the stated blocker. It is now
->    measurable: the recall gate reached instrument grade in v1.28.0 (261/261
->    cases measurable against the live estate, honest denominator, regression
->    baseline). The sequencing below can be executed as written — nothing is
->    waiting on tooling any more. A labels-free ANN harness
->    (`scripts/ann-recall.mjs`) additionally put every candidate at 100 %
->    recall@10 at this corpus size, which is a reason to expect the gate to hold,
->    not a substitute for running it.
-> 2. *"Do not retune, the store is moving"* was my recommendation on 2026-07-25,
->    and it was conditional on C2. **C2 has no date.** A deferral whose
->    precondition is unscheduled is not a deferral, it is a decision to keep
->    paying — and 449 MB per unscheduled quarter is a real price.
->
-> There are now **two indexes on one estate with different parameters**: the
-> cortex organ ships tuned (`compress_neighbors=float8`, `max_neighbors=20`,
-> `cortex-store.ts`) and KEAP ships the default. That asymmetry is defensible
-> only while the organ holds no vectors — which is true today (0 embeddings) and
-> stops being true at C2. Whichever way it is resolved, the two should not
-> silently disagree.
->
-> **Owed:** run the gate, change the DDL behind a migration, re-run, accept only
-> if it holds. Unclaimed as of v1.29.0.
+> **Open, and now tracked as a fee** — nOS `docs/hidden_fees/09-untuned-vector-index.md`.
+> Re-measured 2026-07-26: 538 732 480 B (513.8 MB) of a 565 MB database, unchanged
+> in two days. The deferral's two premises have both expired — the recall cost is
+> measurable since v1.28.0, and "the store is moving" was conditional on C2, which
+> has no date.
 
 `keap.db` is **561 MB with a 116 MB WAL** for a corpus of 3356 embeddings.
 `dbstat` attributes **514.6 MB of it to `embeddings_vec_idx_shadow`** — roughly

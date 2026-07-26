@@ -2,7 +2,8 @@
 
 Status: **decision**, taken 2026-07-25 under an operator directive to consider
 moving all of KEAP except the SoT data and the UI into nOS as the core cortex.
-Supersedes the scope half of `cortex-backend-boundary-reply.md` §3, which drew
+Supersedes the scope half of an earlier boundary reply (deleted 2026-07-26; git
+history), which drew
 the line at cortex-vs-product without weighing the organ integrations.
 
 ## The directive changes the answer, and here is why
