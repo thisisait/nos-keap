@@ -44,3 +44,4 @@ playwright-report/
 e2e/screenshots/
 e2e/.fsroot
 e2e/.userfiles
+e2e/.data-cutover
