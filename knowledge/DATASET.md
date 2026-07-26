@@ -10,93 +10,103 @@ Measured 2026-07-26 against this tree. Every number here is reproducible with
 ## In one paragraph
 
 A curated, bilingual (English + Czech) taxonomy of general human knowledge —
-**2 040 concept nodes across 12 top-level domains, six depth levels, and 4 492
+**2 393 concept nodes across 12 top-level domains, six depth levels, and 4 643
 cross-references** — plus a controlled vocabulary of 16 relation verbs for typed,
 moderated edges on top. It is a *navigational scaffold*: a shape for organising
 knowledge and hanging real material on, not an encyclopaedia and not an
 authority.
 
-**Coverage is very uneven, and that is the first thing to know.** Two domains —
-natural and formal sciences — hold 57 % of the nodes. The other ten are the
-skeleton with nothing grown on it. See *Domains* below before assuming twelve
-domains means twelve domains' worth of content.
+**Every named branch now has content.** As of 2026-07-26 all 95 first-level
+branches have children; the figure was 55 empty that morning. Depth is still very
+uneven — see *Domains* — but nothing is a bare label any more.
 
 ## Composition
 
 | | count |
 | --- | --- |
 | top-level domains | 12 |
-| nodes | **2 040** (790 spine + 1 250 extensions) |
+| nodes | **2 393** (790 spine + 1 603 extensions) |
 | depth levels | 0–5 |
-| cross-references | 4 492 |
+| cross-references | 4 643, of which **209 are hand-curated cross-domain edges** |
 | relation verbs (controlled) | 16 |
 | typed moderated edges | **0** — see *Two relation layers* |
-| files | 107 canonical + 12 spine + 1 ontology partition set |
-| English descriptions | 2 040 / 2 040 (100 %) |
-| Czech descriptions | 1 899 / 2 040 (**93 %**) |
+| first-level branches with no children | **0** (was 55) |
+| English descriptions | 2 393 / 2 393 (100 %) |
+| Czech descriptions | 2 245 / 2 393 (**94 %**) |
 
-Nodes per level: 12 · 95 · 297 · 724 · 897 · 15. The mass sits at level 4, which
-is where a concept becomes specific enough to attach material to.
+Nodes per level: 12 · 95 · 527 · 847 · 897 · 15.
 
 ### Domains — and the coverage you actually get
 
-**Read this table before planning anything against this data.** Two of the twelve
-domains hold **57 % of all nodes**; the other ten are the spine only, with no
-curated extensions at all.
+**Read this before planning anything against this data.** Coverage is complete in
+breadth and very uneven in depth. Two domains hold **51 %** of all nodes; that is
+down from 67 % but it is still the dominant fact about this corpus.
 
-| id | domain | spine | extensions | total | state |
-| --- | --- | --- | --- | --- | --- |
-| 01 | Natural sciences | 70 | **741** | **811** | grown |
-| 02 | Formal sciences | 135 | **219** | **354** | grown |
-| 03 | Applied sciences | 211 | 0 | 211 | scaffold |
-| 07 | Practical skills | 81 | 0 | 81 | scaffold |
-| 08 | Survival & emergency | 76 | 0 | 76 | scaffold |
-| 05 | Humanities | 71 | **56** | **127** | partly grown |
-| 06 | Arts | 56 | 0 | 56 | scaffold |
-| 04 | Social sciences | 41 | **234** | **275** | partly grown |
-| 10 | Cultural preservation | 16 | 0 | 16 | stub |
-| 09 | Reference documentation | 11 | 0 | 11 | stub |
-| 11 | Digital preservation | 11 | 0 | 11 | stub |
-| 12 | Post-disaster rebuilding | 11 | 0 | 11 | stub |
+| id | domain | spine | extensions | total |
+| --- | --- | --- | --- | --- |
+| 01 | Natural sciences | 70 | 741 | **811** |
+| 02 | Formal sciences | 135 | 270 | **405** |
+| 04 | Social sciences | 41 | 275 | **316** |
+| 03 | Applied sciences | 211 | 48 | **259** |
+| 05 | Humanities | 71 | 111 | **182** |
+| 07 | Practical skills | 81 | 9 | 90 |
+| 08 | Survival & emergency | 76 | 12 | 88 |
+| 09 | Reference documentation | 11 | 63 | 74 |
+| 06 | Arts | 56 | 5 | 61 |
+| 10 | Cultural preservation | 16 | 37 | 53 |
+| 11 | Digital preservation | 11 | 16 | 27 |
+| 12 | Post-disaster rebuilding | 11 | 16 | 27 |
 
-*grown* = the import pipeline ran here · *partly grown* = some branches have
-depth, most do not · *scaffold* = named structure, no depth below it · *stub* =
-L1 branches only.
+**What that means in practice.** Physics, chemistry, biology and mathematics are
+detailed to four and five levels — hundreds of nodes each, from the original
+import pipeline. Everything else is a correct two-or-three-level structure: the
+subfields of a discipline are named and described, but you will not find the
+individual concepts inside them. A query about *thermodynamic potentials* lands
+on a node; a query about *the Coase theorem* lands on Law and Economics but not
+on the theorem.
 
-**Grown by hand on 2026-07-26**, in four batches: Law (17 subfields on the
-public/private and domestic/international divisions rather than any one
-jurisdiction), the eight bare Economics branches along JEL field lines,
-Geography, Linguistics, Literature, Political science and Sociology — the
-secondary-school subjects that were missing. 290 nodes, all bilingual, plus **58
-curated cross-domain edges**: geography into the Earth sciences, syntax and
-semantics into logic and computer science, civics into law and economics.
+`_provenance/` shows why: derivation artifacts exist for math, chemistry,
+biology, physics and the cross-domain graph — domains 01 and 02, and nothing
+else. The pipeline that grew the taxonomy in depth was only ever pointed at the
+natural and formal sciences. The rest was written by hand on 2026-07-26.
 
-Social sciences went from last place to third and the two-domain concentration
-fell from 67 % to 57 %. The childless-branch count fell from 55 to 49 — which is
-the honest measure of what remains.
+### How the rest was grown
 
-This lines up exactly with `_provenance/`: derivation artifacts exist for math,
-chemistry, biology, physics and the cross-domain graph — **domains 01 and 02, and
-nothing else.** The pipeline that grew the taxonomy was only ever pointed at the
-natural and formal sciences.
+Eight batches in four waves, all bilingual, all `ext` nodes leaving the seed
+spine untouched:
 
-**49 of the 95 L1 branches (52 %) have no children at all.** The worst affected:
+- **Connective concepts** — information theory, systems theory, measurement and
+  metrology, philosophy of science, knowledge organisation. These went first
+  because everything else links into them.
+- **Missing disciplines** — public health and epidemiology, sports science,
+  veterinary science, accounting, management, communication and rhetoric. Six
+  fields the corpus did not contain at all.
+- **Empty core branches** — anthropology, education, demography, archaeology,
+  religious and cultural studies, classics, gender and ethnic studies,
+  architecture, telecommunications, biotechnology, nanotechnology.
+- **The preservation domains** — reference works, dictionaries, manuals, maps,
+  tables, protocols, schematics, patents, archives; folklore, custom, foodways,
+  song, ritual and craft; compression, encryption, backup and recovery;
+  tool-making, field chemistry, basic medicine and community organisation.
 
-| domain | childless L1s | examples |
-| --- | --- | --- |
-| Reference documentation | 10 / 10 | all of them |
-| Cultural preservation | 9 / 10 | Folklore, Traditions, Traditional recipes, Songs |
-| Social sciences | 4 / 10 | Anthropology, Education, Demography, Archaeology |
-| Humanities | 6 / 10 | Religious studies, Cultural studies, Classics, Media studies |
-| Applied sciences | 4 / 10 | Architecture, Telecommunications, Biotechnology, Nanotechnology |
-| Digital preservation | 4 / 5 | Compression, Encryption, Backup, Data recovery |
-| Post-disaster rebuilding | 4 / 5 | Tool making, Essential chemistry, Basic medicine |
+Placement note: none of these got a new first-level branch. All twelve domains
+already use their L1 slots, the seed spine is deliberately stable, and `ext`
+nodes are the designed mechanism for growth beyond it. Where the fit is
+imperfect — accounting and management under Economics, sports science under
+Medicine — the node says so in its own description rather than pretending.
 
-Only Natural sciences has none.
+### The 209 curated edges
 
-Domains 08–12 are deliberate additions: the taxonomy was grown for an offline,
-knowledge-preservation context, so it carries branches most general taxonomies do
-not. That they are stubs is a matter of effort, not intent.
+Until this point the corpus had **no hand-made links between domains**. All 4 434
+existing relations are within-domain artefacts of how each was grown, which meant
+twelve taxonomies rather than one.
+
+The new edges are marked `source: curated-xref` and connect, among others:
+geomorphology to geology and hazards to seismology; syntax and semantics to
+formal languages and logic; civics to law and economics; entropy to statistical
+mechanics and to compression; systems theory to physiology, ecology and control
+engineering; measurement to the philosophy of science; knowledge organisation to
+lexical semantics and databases.
 
 ## Structure
 
@@ -157,16 +167,15 @@ relations; a test corpus for retrieval systems.
   sourced encyclopaedia entries. There are no citations. Treat a description as a
   *disambiguating gloss* — enough to tell two sibling concepts apart — not as a
   fact to act on.
-- **Complete or balanced.** Two domains hold 57 % of the nodes and seven have no
-  curated depth at all; 52 % of L1 branches are childless. In practice this is a
-  **detailed physics/chemistry/biology and mathematics taxonomy with a
-  twelve-domain skeleton around it** — not a general one. If your subject is not
-  a natural or formal science, expect to find the branch named and empty.
+- **Uniformly deep.** Breadth is complete — every branch has content — but two
+  domains still hold 51 % of the nodes. Outside the natural and formal sciences
+  you get a correct structure of named subfields, not the concepts inside them.
+  Check the depth of your area before assuming coverage.
 - **A basis for training without correcting for that skew.** An embedding space
-  fitted to this corpus as it stands learns the shape of physics and mathematics
-  and treats the other ten domains as sparse noise. Rebalance, reweight, or grow
-  the corpus first — do not discover this in the loss curve.
-- **Uniformly bilingual.** 8 % of nodes have no Czech description.
+  fitted to this corpus as it stands over-represents physics and mathematics by
+  roughly an order of magnitude relative to every other domain. Reweight or grow
+  first — do not discover this in the loss curve.
+- **Uniformly bilingual.** 6 % of nodes have no Czech description.
 - **A semantic graph.** The moderated typed layer is empty.
 
 ## Weights — planned, not present
