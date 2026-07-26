@@ -1,5 +1,9 @@
 # knowledge/ — the git source of truth for the KEAP taxonomy delta
 
+> **What the data is** — coverage, provenance, limitations, licensing — is
+> `DATASET.md` beside this file. This file is the **mechanism**: how it is
+> ingested, dumped, validated and kept round-trip faithful.
+
 The live KEAP graph = a **static seed spine** (`src/game/data/taxonomy.ts`, the
 hardcoded L0-2 structure) + a **curated delta** on top (grown nodes, description
 overrides, briefs, typed relations). This folder is the git SoT for that delta:

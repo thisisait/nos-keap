@@ -4,6 +4,26 @@
 
 KEAP provides an intuitive, game-like interface for exploring, organizing, and preserving knowledge stored in IIAB installations. Part of the TaxonomyCollection project, KEAP transforms data hoarding into an engaging quest-like experience.
 
+---
+
+> ### Looking for the data?
+>
+> **[`knowledge/DATASET.md`](knowledge/DATASET.md)** — a curated bilingual
+> taxonomy of general knowledge: 1 750 concept nodes across 12 domains, 4 434
+> cross-references, plus a controlled vocabulary for typed relations. Plain JSON,
+> readable without any of this application. That card states coverage,
+> provenance, limitations and the unresolved licensing question.
+>
+> **Where this repo is going.** The application half — explorer UI, server,
+> DataTables — is moving into the [nOS](https://github.com/thisisait/nOS) estate
+> as a native host service, and KEAP becomes a **data and weights repository**:
+> the publishable taxonomy, its ontology, and trained embedding weights versioned
+> alongside them. The plan, its staging and its measured basis are in nOS
+> `docs/plans/cortex-self-core.md`. Everything below still describes the
+> application as it runs today.
+
+---
+
 ## 🎯 Project Overview
 
 KEAP serves as a knowledge hub that:
