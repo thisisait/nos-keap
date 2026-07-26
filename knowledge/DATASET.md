@@ -16,6 +16,11 @@ moderated edges on top. It is a *navigational scaffold*: a shape for organising
 knowledge and hanging real material on, not an encyclopaedia and not an
 authority.
 
+**Coverage is very uneven, and that is the first thing to know.** Two domains —
+natural and formal sciences — hold 67 % of the nodes. The other ten are the
+skeleton with nothing grown on it. See *Domains* below before assuming twelve
+domains means twelve domains' worth of content.
+
 ## Composition
 
 | | count |
@@ -33,26 +38,53 @@ authority.
 Nodes per level: 12 · 95 · 255 · 476 · 897 · 15. The mass sits at level 4, which
 is where a concept becomes specific enough to attach material to.
 
-### Domains
+### Domains — and the coverage you actually get
 
-| id | domain | spine nodes |
+**Read this table before planning anything against this data.** Two of the twelve
+domains hold **67 % of all nodes**; the other ten are the spine only, with no
+curated extensions at all.
+
+| id | domain | spine | extensions | total | state |
+| --- | --- | --- | --- | --- | --- |
+| 01 | Natural sciences | 70 | **741** | **811** | grown |
+| 02 | Formal sciences | 135 | **219** | **354** | grown |
+| 03 | Applied sciences | 211 | 0 | 211 | scaffold |
+| 07 | Practical skills | 81 | 0 | 81 | scaffold |
+| 08 | Survival & emergency | 76 | 0 | 76 | scaffold |
+| 05 | Humanities | 71 | 0 | 71 | scaffold |
+| 06 | Arts | 56 | 0 | 56 | scaffold |
+| 04 | Social sciences | 41 | 0 | 41 | scaffold |
+| 10 | Cultural preservation | 16 | 0 | 16 | stub |
+| 09 | Reference documentation | 11 | 0 | 11 | stub |
+| 11 | Digital preservation | 11 | 0 | 11 | stub |
+| 12 | Post-disaster rebuilding | 11 | 0 | 11 | stub |
+
+*grown* = the import pipeline ran here · *scaffold* = named structure, no depth
+below it · *stub* = L1 branches only.
+
+This lines up exactly with `_provenance/`: derivation artifacts exist for math,
+chemistry, biology, physics and the cross-domain graph — **domains 01 and 02, and
+nothing else.** The pipeline that grew the taxonomy was only ever pointed at the
+natural and formal sciences.
+
+**55 of the 95 L1 branches (58 %) have no children at all.** The worst affected:
+
+| domain | childless L1s | examples |
 | --- | --- | --- |
-| 01 | Natural sciences | 70 |
-| 02 | Formal sciences | 135 |
-| 03 | Applied sciences | 211 |
-| 04 | Social sciences | 41 |
-| 05 | Humanities | 71 |
-| 06 | Arts | 56 |
-| 07 | Practical skills | 81 |
-| 08 | Survival & emergency | 76 |
-| 09 | Reference documentation | 11 |
-| 10 | Cultural preservation | 16 |
-| 11 | Digital preservation | 11 |
-| 12 | Post-disaster rebuilding | 11 |
+| Reference documentation | 10 / 10 | all of them |
+| Cultural preservation | 9 / 10 | Folklore, Traditions, Traditional recipes, Songs |
+| Social sciences | 8 / 10 | Sociology, Anthropology, Political science, **Law** |
+| Humanities | 8 / 10 | Linguistics, Literature, Religious studies, Classics |
+| Applied sciences | 4 / 10 | Architecture, Telecommunications, Biotechnology, Nanotechnology |
+| Digital preservation | 4 / 5 | Compression, Encryption, Backup, Data recovery |
+| Post-disaster rebuilding | 4 / 5 | Tool making, Essential chemistry, Basic medicine |
 
-Domains 08–12 are deliberate: the taxonomy was grown for an offline,
-knowledge-preservation context, so it carries branches most general taxonomies
-do not.
+Only Natural sciences has none. Social sciences reaches depth in exactly two
+branches — Psychology and Economics — and Humanities in History and Philosophy.
+
+Domains 08–12 are deliberate additions: the taxonomy was grown for an offline,
+knowledge-preservation context, so it carries branches most general taxonomies do
+not. That they are stubs is a matter of effort, not intent.
 
 ## Structure
 
@@ -113,9 +145,15 @@ relations; a test corpus for retrieval systems.
   sourced encyclopaedia entries. There are no citations. Treat a description as a
   *disambiguating gloss* — enough to tell two sibling concepts apart — not as a
   fact to act on.
-- **Complete or balanced.** Applied sciences has 211 spine nodes and social
-  sciences 41. That reflects how the domains were grown, not their relative
-  importance.
+- **Complete or balanced.** Two domains hold 67 % of the nodes and ten have no
+  curated depth at all; 58 % of L1 branches are childless. In practice this is a
+  **detailed physics/chemistry/biology and mathematics taxonomy with a
+  twelve-domain skeleton around it** — not a general one. If your subject is not
+  a natural or formal science, expect to find the branch named and empty.
+- **A basis for training without correcting for that skew.** An embedding space
+  fitted to this corpus as it stands learns the shape of physics and mathematics
+  and treats the other ten domains as sparse noise. Rebalance, reweight, or grow
+  the corpus first — do not discover this in the loss curve.
 - **Uniformly bilingual.** 8 % of nodes have no Czech description.
 - **A semantic graph.** The moderated typed layer is empty.
 
