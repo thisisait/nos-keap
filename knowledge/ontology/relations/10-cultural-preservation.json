@@ -1,0 +1,18 @@
+{
+ "version": 1,
+ "partition": "10-cultural-preservation",
+ "relations": [
+  {
+   "from": "10.07.02",
+   "fromKind": "node",
+   "to": "02.01.04.49",
+   "toKind": "node",
+   "type": "exemplifies",
+   "source": "manual",
+   "status": "confirmed",
+   "confidence": 0.81,
+   "justification": "Traditional board games are the empirical corpus that early game theory abstracted from.",
+   "createdAt": 1785000000
+  }
+ ]
+}

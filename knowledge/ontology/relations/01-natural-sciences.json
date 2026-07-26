@@ -1,0 +1,54 @@
+{
+ "version": 1,
+ "partition": "01-natural-sciences",
+ "relations": [
+  {
+   "from": "01.01",
+   "fromKind": "node",
+   "to": "01.02",
+   "toKind": "node",
+   "type": "prerequisite-for",
+   "source": "manual",
+   "status": "confirmed",
+   "confidence": 0.88,
+   "justification": "Chemical bonding is quantum mechanics applied to electrons; the periodic law is a physical result.",
+   "createdAt": 1785000000
+  },
+  {
+   "from": "01.02",
+   "fromKind": "node",
+   "to": "01.03",
+   "toKind": "node",
+   "type": "prerequisite-for",
+   "source": "manual",
+   "status": "confirmed",
+   "confidence": 0.91,
+   "justification": "Biochemistry is the substrate of modern biology; molecular mechanism is stated in chemical terms.",
+   "createdAt": 1785000000
+  },
+  {
+   "from": "01.03.11.10",
+   "fromKind": "node",
+   "to": "02.05.02.01",
+   "toKind": "node",
+   "type": "exemplifies",
+   "source": "manual",
+   "status": "confirmed",
+   "confidence": 0.89,
+   "justification": "Immune regulation is a worked example of negative feedback with a threshold and an effector arm.",
+   "createdAt": 1785000000
+  },
+  {
+   "from": "01.04.02",
+   "fromKind": "node",
+   "to": "04.08.01.02",
+   "toKind": "node",
+   "type": "causes",
+   "source": "manual",
+   "status": "confirmed",
+   "confidence": 0.85,
+   "justification": "Atmospheric circulation is what produces the regional climate pattern geography describes.",
+   "createdAt": 1785000000
+  }
+ ]
+}

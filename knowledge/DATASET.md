@@ -29,7 +29,7 @@ uneven — see *Domains* — but nothing is a bare label any more.
 | depth levels | 0–5 |
 | cross-references | 4 643, of which **209 are hand-curated cross-domain edges** |
 | relation verbs (controlled) | 16 |
-| typed moderated edges | **0** — see *Two relation layers* |
+| typed moderated edges | **109** across 16 verbs — see *Two relation layers* |
 | first-level branches with no children | **0** (was 55) |
 | English descriptions | 2 393 / 2 393 (100 %) |
 | Czech descriptions | 2 245 / 2 393 (**94 %**) |
@@ -130,13 +130,51 @@ This trips people up, so it is stated plainly:
 | layer | table | edges | vocabulary |
 | --- | --- | --- | --- |
 | **concept cross-references** | `concept_relations` | 4 434 | `references` (2 203), `related-concept` (730), `shared-structure` (725), `shared-math` (540), `conjecture` (103), `limit` (62), `duality` (58), `conflict` (13) |
-| **typed moderated graph (R3)** | `relations` | **0** | the 16 controlled verbs in `ontology/relation-types.json` |
+| **typed moderated graph (R3)** | `relations` | **109** | the 16 controlled verbs in `ontology/relation-types.json` |
 
 The first came out of the import pipeline and is versioned inside
 `canonical/*.json`. The second is the moderated layer — every edge carries a
-human verdict (`proposed` / `confirmed` / `rejected`) and provenance — and is
-**currently empty**: the verb registry is seeded, no edges have been confirmed.
-A consumer wanting semantic edges today has the first layer only.
+human verdict (`proposed` / `confirmed` / `rejected`), a confidence and a written
+justification.
+
+**What is in the R3 layer, and why those edges.** The live classifier proposes
+candidates from vector proximity, so the only relation it can honestly produce is
+**similarity**: symmetric, undirected, "these two texts are near each other". Nine
+of the sixteen verbs are asymmetric and semantic — `prerequisite-for`, `requires`,
+`depends-on`, `derived-from`, `specializes`, `generalizes`, `causes`,
+`supersedes`, `duality` — and no distributional method will ever produce them
+correctly. *Calculus is a prerequisite for differential equations* is not a fact
+about text proximity.
+
+So the hand-curated layer concentrates on exactly what the machine cannot reach:
+
+| verb | edges | what it carries |
+| --- | --- | --- |
+| `prerequisite-for` | 21 | learning order across the whole corpus |
+| `requires` | 14 | concept-level rules — the conditional layer, see below |
+| `analogous-to` | 12 | the same structure in unrelated domains |
+| `depends-on` / `derived-from` | 20 | field-level dependency and descent |
+| `specializes` / `generalizes` | 11 | subsumption **across** branches, which one hierarchy cannot express |
+| `causes` | 7 | genuine causal claims, kept sparse |
+| `exemplifies` | 6 | instance-of across branches |
+| `contradicts` / `refutes` | 5 | the disagreements that make a field legible as a debate |
+| `duality` / `defines` / `supersedes` / `supports` | 10 | formal correspondences and displacement |
+| `related-concept` | 3 | deliberately sparse: this is the one verb the classifier *can* produce |
+
+`confidence` is calibrated rather than enthusiastic: ≥ 0.95 is definitional or
+universally taught, ~0.85 is standard with known exceptions, ~0.75 is defensible
+and contestable. Every edge carries a justification stating the ground.
+
+**Conditionality.** The `requires` edges are the conditional layer as far as
+today's model reaches: *a backup requires restore-testing*, *a cross-border
+transfer requires a lawful processing basis*, *a patent requires enabling
+disclosure*. Because the taxonomy holds concepts rather than individuals, such an
+edge is automatically a **rule** rather than a claim about anyone.
+
+What it cannot yet say is a condition attached to a **specific edge** rather than
+to a concept — *this* edge holds only if *that* one does. That needs edges to
+become addressable endpoints (R4 reification) and is not built; the design and the
+four things it breaks are in `docs/specs/conditional-relations.md`.
 
 The two vocabularies overlap on `duality` and `related-concept` and are otherwise
 disjoint. Unifying them is unscheduled.
@@ -176,7 +214,7 @@ relations; a test corpus for retrieval systems.
   roughly an order of magnitude relative to every other domain. Reweight or grow
   first — do not discover this in the loss curve.
 - **Uniformly bilingual.** 6 % of nodes have no Czech description.
-- **A semantic graph.** The moderated typed layer is empty.
+- **A dense semantic graph.** The moderated typed layer holds 109 edges across 2 393 nodes. It is a deliberate spine of high-value assertions, not coverage.
 
 ## Weights — planned, not present
 

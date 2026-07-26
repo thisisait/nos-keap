@@ -1,0 +1,114 @@
+{
+ "version": 1,
+ "partition": "09-reference-documentation",
+ "relations": [
+  {
+   "from": "09.01.02.02",
+   "fromKind": "node",
+   "to": "02.01",
+   "toKind": "node",
+   "type": "generalizes",
+   "source": "manual",
+   "status": "confirmed",
+   "confidence": 0.71,
+   "justification": "Formal ontologies generalise the classification impulse that mathematics applies to its own objects, though the machinery differs.",
+   "createdAt": 1785000000
+  },
+  {
+   "from": "09.01.02.06",
+   "fromKind": "node",
+   "to": "02.02.05",
+   "toKind": "node",
+   "type": "depends-on",
+   "source": "manual",
+   "status": "confirmed",
+   "confidence": 0.84,
+   "justification": "Retrieval systems are built on indexing structures that database theory supplies.",
+   "createdAt": 1785000000
+  },
+  {
+   "from": "09.05.01.01",
+   "fromKind": "node",
+   "to": "09.05.01.02",
+   "toKind": "node",
+   "type": "defines",
+   "source": "manual",
+   "status": "confirmed",
+   "confidence": 0.93,
+   "justification": "The base units are what the fixed constants define; the constant values are chosen precisely to fix them.",
+   "createdAt": 1785000000
+  },
+  {
+   "from": "09.05.01.02",
+   "fromKind": "node",
+   "to": "09.05.04.01",
+   "toKind": "node",
+   "type": "supersedes",
+   "source": "manual",
+   "status": "confirmed",
+   "confidence": 0.95,
+   "justification": "Definition by fixed physical constants superseded definition by artefact: a prototype could drift and a constant cannot.",
+   "createdAt": 1785000000
+  },
+  {
+   "from": "09.05.01",
+   "fromKind": "node",
+   "to": "09.05.03",
+   "toKind": "node",
+   "type": "prerequisite-for",
+   "source": "manual",
+   "status": "confirmed",
+   "confidence": 0.91,
+   "justification": "Uncertainty is stated in units; a measurement cannot be qualified before it is expressed.",
+   "createdAt": 1785000000
+  },
+  {
+   "from": "09.05.02.02",
+   "fromKind": "node",
+   "to": "02.05.03.05",
+   "toKind": "node",
+   "type": "analogous-to",
+   "source": "manual",
+   "status": "confirmed",
+   "confidence": 0.87,
+   "justification": "Dimensionless groups and scale-invariant laws are the same insight: behaviour depends on ratios rather than absolute size.",
+   "createdAt": 1785000000
+  },
+  {
+   "from": "09.05.03",
+   "fromKind": "node",
+   "to": "05.02.06.05",
+   "toKind": "node",
+   "type": "prerequisite-for",
+   "source": "manual",
+   "status": "confirmed",
+   "confidence": 0.86,
+   "justification": "Reproducibility claims depend on knowing what counts as agreement, which is an uncertainty question before it is a methodological one.",
+   "createdAt": 1785000000
+  },
+  {
+   "from": "09.05.04.01",
+   "fromKind": "node",
+   "to": "09.05.04.02",
+   "toKind": "node",
+   "type": "requires",
+   "source": "manual",
+   "status": "confirmed",
+   "confidence": 0.93,
+   "justification": "Traceability is a chain to a maintained reference; without the standards bodies the chain terminates in nothing.",
+   "createdAt": 1785000000
+  },
+  {
+   "from": "09.05",
+   "fromKind": "node",
+   "to": "01.01",
+   "toKind": "node",
+   "type": "prerequisite-for",
+   "source": "manual",
+   "status": "confirmed",
+   "confidence": 0.87,
+   "justification": "Experimental physics is measurement; units, calibration and uncertainty precede any physical claim.",
+   "createdAt": 1785000000
+  }
+ ]
+}

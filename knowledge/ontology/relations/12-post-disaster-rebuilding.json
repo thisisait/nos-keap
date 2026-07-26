@@ -1,0 +1,18 @@
+{
+ "version": 1,
+ "partition": "12-post-disaster-rebuilding",
+ "relations": [
+  {
+   "from": "12.04.01",
+   "fromKind": "node",
+   "to": "12.03.01",
+   "toKind": "node",
+   "type": "requires",
+   "source": "manual",
+   "status": "confirmed",
+   "confidence": 0.85,
+   "justification": "Antiseptic preparation depends on the water-treatment chemistry that makes clean water available in the first place.",
+   "createdAt": 1785000000
+  }
+ ]
+}

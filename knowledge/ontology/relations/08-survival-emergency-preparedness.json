@@ -1,0 +1,30 @@
+{
+ "version": 1,
+ "partition": "08-survival-emergency-preparedness",
+ "relations": [
+  {
+   "from": "08.09.02",
+   "fromKind": "node",
+   "to": "09.07.02",
+   "toKind": "node",
+   "type": "requires",
+   "source": "manual",
+   "status": "confirmed",
+   "confidence": 0.87,
+   "justification": "A preparedness plan becomes usable through rehearsed checklists; an unexercised plan is a document, not a capability.",
+   "createdAt": 1785000000
+  },
+  {
+   "from": "08.10.01",
+   "fromKind": "node",
+   "to": "04.01.01",
+   "toKind": "node",
+   "type": "exemplifies",
+   "source": "manual",
+   "status": "confirmed",
+   "confidence": 0.86,
+   "justification": "The acute stress response is a worked case of cognitive load degrading judgement under time pressure.",
+   "createdAt": 1785000000
+  }
+ ]
+}

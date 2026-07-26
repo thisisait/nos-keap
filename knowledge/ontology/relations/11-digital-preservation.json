@@ -1,0 +1,30 @@
+{
+ "version": 1,
+ "partition": "11-digital-preservation",
+ "relations": [
+  {
+   "from": "11.03.04",
+   "fromKind": "node",
+   "to": "11.03.03",
+   "toKind": "node",
+   "type": "requires",
+   "source": "manual",
+   "status": "confirmed",
+   "confidence": 0.97,
+   "justification": "Long-term access to encrypted material is conditional on key survival; key loss is the commonest cause of permanent data loss.",
+   "createdAt": 1785000000
+  },
+  {
+   "from": "11.04.03",
+   "fromKind": "node",
+   "to": "11.04.01",
+   "toKind": "node",
+   "type": "requires",
+   "source": "manual",
+   "status": "confirmed",
+   "confidence": 0.98,
+   "justification": "A backup strategy that is never restore-tested is not a backup; verification is a constituent of the practice, not an optional addition.",
+   "createdAt": 1785000000
+  }
+ ]
+}
