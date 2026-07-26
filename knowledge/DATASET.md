@@ -29,7 +29,7 @@ uneven — see *Domains* — but nothing is a bare label any more.
 | depth levels | 0–5 |
 | cross-references | 4 643, of which **209 are hand-curated cross-domain edges** |
 | relation verbs (controlled) | 16 |
-| typed moderated edges | **109** across 16 verbs — see *Two relation layers* |
+| typed moderated edges | **417** across all 16 verbs — see *Two relation layers* |
 | first-level branches with no children | **0** (was 55) |
 | English descriptions | 2 393 / 2 393 (100 %) |
 | Czech descriptions | 2 245 / 2 393 (**94 %**) |
@@ -130,7 +130,7 @@ This trips people up, so it is stated plainly:
 | layer | table | edges | vocabulary |
 | --- | --- | --- | --- |
 | **concept cross-references** | `concept_relations` | 4 434 | `references` (2 203), `related-concept` (730), `shared-structure` (725), `shared-math` (540), `conjecture` (103), `limit` (62), `duality` (58), `conflict` (13) |
-| **typed moderated graph (R3)** | `relations` | **109** | the 16 controlled verbs in `ontology/relation-types.json` |
+| **typed moderated graph (R3)** | `relations` | **417** | the 16 controlled verbs in `ontology/relation-types.json` |
 
 The first came out of the import pipeline and is versioned inside
 `canonical/*.json`. The second is the moderated layer — every edge carries a
@@ -150,16 +150,29 @@ So the hand-curated layer concentrates on exactly what the machine cannot reach:
 
 | verb | edges | what it carries |
 | --- | --- | --- |
-| `prerequisite-for` | 21 | learning order across the whole corpus |
-| `requires` | 14 | concept-level rules — the conditional layer, see below |
-| `analogous-to` | 12 | the same structure in unrelated domains |
-| `depends-on` / `derived-from` | 20 | field-level dependency and descent |
-| `specializes` / `generalizes` | 11 | subsumption **across** branches, which one hierarchy cannot express |
-| `causes` | 7 | genuine causal claims, kept sparse |
-| `exemplifies` | 6 | instance-of across branches |
-| `contradicts` / `refutes` | 5 | the disagreements that make a field legible as a debate |
-| `duality` / `defines` / `supersedes` / `supports` | 10 | formal correspondences and displacement |
-| `related-concept` | 3 | deliberately sparse: this is the one verb the classifier *can* produce |
+| `prerequisite-for` | 132 | learning order — the single most useful thing here |
+| `requires` | 50 | concept-level rules — the conditional layer, see below |
+| `analogous-to` | 40 | the same structure in unrelated domains |
+| `depends-on` / `derived-from` | 62 | field-level dependency and descent |
+| `specializes` / `generalizes` | 34 | subsumption **across** branches, which one hierarchy cannot express |
+| `exemplifies` | 22 | instance-of across branches |
+| `causes` | 21 | genuine causal claims, kept sparse |
+| `contradicts` / `refutes` | 14 | the disagreements that make a field legible as a debate |
+| `duality` / `defines` / `supersedes` / `supports` | 36 | formal correspondences and displacement |
+| `related-concept` | 6 | deliberately sparse: this is the one verb the classifier *can* produce |
+
+**Two rules the layer follows.** No edge restates the tree — a `specializes`
+between a node and its own parent carries nothing the hierarchy does not already
+say, so every subsumption edge crosses a branch. And sibling order is treated as
+real information: a tree says A and B are both children of C but cannot say A
+must be understood before B, which is why `prerequisite-for` is the largest verb
+and why a curated layer beats a hierarchy for the question a learner actually
+asks.
+
+**Shape:** 417 edges touching 429 distinct nodes across all twelve domains;
+**166 of them (40 %) cross a top-level domain**. The most connected nodes are
+methodological rather than topical — mathematics, thermodynamics, microeconomics,
+econometrics — which is what a well-formed knowledge graph should look like.
 
 `confidence` is calibrated rather than enthusiastic: ≥ 0.95 is definitional or
 universally taught, ~0.85 is standard with known exceptions, ~0.75 is defensible
@@ -214,7 +227,7 @@ relations; a test corpus for retrieval systems.
   roughly an order of magnitude relative to every other domain. Reweight or grow
   first — do not discover this in the loss curve.
 - **Uniformly bilingual.** 6 % of nodes have no Czech description.
-- **A dense semantic graph.** The moderated typed layer holds 109 edges across 2 393 nodes. It is a deliberate spine of high-value assertions, not coverage.
+- **A dense semantic graph.** The moderated typed layer holds 417 edges touching 429 of 2 393 nodes. It is a deliberate spine of high-value assertions, not coverage — roughly one node in six is on it.
 
 ## Weights — planned, not present
 
