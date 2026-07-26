@@ -101,10 +101,17 @@ test.describe('files core', () => {
 
     // Toggle off — the bar goes away, the camera flies back out; on again —
     // the bar returns (round-trip from the new on-by-default state).
+    // Explicit timeouts, like the canvas assertion above: toggling the core
+    // re-forms a 3D layout whose cost scales with the node count, and the
+    // taxonomy grew from 1750 to 2393 nodes on 2026-07-26. This round-trip
+    // passed locally in 11.5 s and timed out on a CI runner at the default 5 s
+    // — a slower machine doing more work, not a regression. If it fails again
+    // after another corpus increase, raise the bound or measure the layout;
+    // do not remove the assertion.
     await coreButton.click();
-    await expect(page.getByRole('button', { name: 'Folders' })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Folders' })).toHaveCount(0, { timeout: 15_000 });
     await coreButton.click();
-    await expect(page.getByRole('button', { name: 'Folders' })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Folders' })).toBeVisible({ timeout: 15_000 });
   });
 
   test('cleanup: seeded objects removed', async ({ request }) => {
