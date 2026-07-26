@@ -10,14 +10,14 @@ Measured 2026-07-26 against this tree. Every number here is reproducible with
 ## In one paragraph
 
 A curated, bilingual (English + Czech) taxonomy of general human knowledge —
-**1 894 concept nodes across 12 top-level domains, six depth levels, and 4 434
+**2 040 concept nodes across 12 top-level domains, six depth levels, and 4 492
 cross-references** — plus a controlled vocabulary of 16 relation verbs for typed,
 moderated edges on top. It is a *navigational scaffold*: a shape for organising
 knowledge and hanging real material on, not an encyclopaedia and not an
 authority.
 
 **Coverage is very uneven, and that is the first thing to know.** Two domains —
-natural and formal sciences — hold 62 % of the nodes. The other ten are the
+natural and formal sciences — hold 57 % of the nodes. The other ten are the
 skeleton with nothing grown on it. See *Domains* below before assuming twelve
 domains means twelve domains' worth of content.
 
@@ -26,22 +26,22 @@ domains means twelve domains' worth of content.
 | | count |
 | --- | --- |
 | top-level domains | 12 |
-| nodes | **1 894** (790 spine + 1 104 extensions) |
+| nodes | **2 040** (790 spine + 1 250 extensions) |
 | depth levels | 0–5 |
-| cross-references | 4 434 |
+| cross-references | 4 492 |
 | relation verbs (controlled) | 16 |
 | typed moderated edges | **0** — see *Two relation layers* |
 | files | 107 canonical + 12 spine + 1 ontology partition set |
-| English descriptions | 1 894 / 1 894 (100 %) |
-| Czech descriptions | 1 753 / 1 894 (**93 %**) |
+| English descriptions | 2 040 / 2 040 (100 %) |
+| Czech descriptions | 1 899 / 2 040 (**93 %**) |
 
-Nodes per level: 12 · 95 · 272 · 603 · 897 · 15. The mass sits at level 4, which
+Nodes per level: 12 · 95 · 297 · 724 · 897 · 15. The mass sits at level 4, which
 is where a concept becomes specific enough to attach material to.
 
 ### Domains — and the coverage you actually get
 
 **Read this table before planning anything against this data.** Two of the twelve
-domains hold **62 % of all nodes**; the other ten are the spine only, with no
+domains hold **57 % of all nodes**; the other ten are the spine only, with no
 curated extensions at all.
 
 | id | domain | spine | extensions | total | state |
@@ -51,9 +51,9 @@ curated extensions at all.
 | 03 | Applied sciences | 211 | 0 | 211 | scaffold |
 | 07 | Practical skills | 81 | 0 | 81 | scaffold |
 | 08 | Survival & emergency | 76 | 0 | 76 | scaffold |
-| 05 | Humanities | 71 | 0 | 71 | scaffold |
+| 05 | Humanities | 71 | **56** | **127** | partly grown |
 | 06 | Arts | 56 | 0 | 56 | scaffold |
-| 04 | Social sciences | 41 | **144** | **185** | partly grown |
+| 04 | Social sciences | 41 | **234** | **275** | partly grown |
 | 10 | Cultural preservation | 16 | 0 | 16 | stub |
 | 09 | Reference documentation | 11 | 0 | 11 | stub |
 | 11 | Digital preservation | 11 | 0 | 11 | stub |
@@ -63,32 +63,36 @@ curated extensions at all.
 depth, most do not · *scaffold* = named structure, no depth below it · *stub* =
 L1 branches only.
 
-**Social sciences was grown by hand on 2026-07-26** — Law (17 subfields, 87
-third-level nodes, structured on the public/private and domestic/international
-divisions rather than any one jurisdiction) and the eight Economics branches that
-had no depth, along JEL field lines. That is 144 nodes and it moved the domain
-from last to fourth. It also shows the scale of what remains: the childless-branch
-count fell from 55 to 54.
+**Grown by hand on 2026-07-26**, in four batches: Law (17 subfields on the
+public/private and domestic/international divisions rather than any one
+jurisdiction), the eight bare Economics branches along JEL field lines,
+Geography, Linguistics, Literature, Political science and Sociology — the
+secondary-school subjects that were missing. 290 nodes, all bilingual, plus **58
+curated cross-domain edges**: geography into the Earth sciences, syntax and
+semantics into logic and computer science, civics into law and economics.
+
+Social sciences went from last place to third and the two-domain concentration
+fell from 67 % to 57 %. The childless-branch count fell from 55 to 49 — which is
+the honest measure of what remains.
 
 This lines up exactly with `_provenance/`: derivation artifacts exist for math,
 chemistry, biology, physics and the cross-domain graph — **domains 01 and 02, and
 nothing else.** The pipeline that grew the taxonomy was only ever pointed at the
 natural and formal sciences.
 
-**54 of the 95 L1 branches (57 %) have no children at all.** The worst affected:
+**49 of the 95 L1 branches (52 %) have no children at all.** The worst affected:
 
 | domain | childless L1s | examples |
 | --- | --- | --- |
 | Reference documentation | 10 / 10 | all of them |
 | Cultural preservation | 9 / 10 | Folklore, Traditions, Traditional recipes, Songs |
-| Social sciences | 7 / 10 | Sociology, Anthropology, Political science, Geography |
-| Humanities | 8 / 10 | Linguistics, Literature, Religious studies, Classics |
+| Social sciences | 4 / 10 | Anthropology, Education, Demography, Archaeology |
+| Humanities | 6 / 10 | Religious studies, Cultural studies, Classics, Media studies |
 | Applied sciences | 4 / 10 | Architecture, Telecommunications, Biotechnology, Nanotechnology |
 | Digital preservation | 4 / 5 | Compression, Encryption, Backup, Data recovery |
 | Post-disaster rebuilding | 4 / 5 | Tool making, Essential chemistry, Basic medicine |
 
-Only Natural sciences has none. Social sciences reaches depth in three branches
-— Psychology, Economics and Law — and Humanities in History and Philosophy.
+Only Natural sciences has none.
 
 Domains 08–12 are deliberate additions: the taxonomy was grown for an offline,
 knowledge-preservation context, so it carries branches most general taxonomies do
@@ -153,8 +157,8 @@ relations; a test corpus for retrieval systems.
   sourced encyclopaedia entries. There are no citations. Treat a description as a
   *disambiguating gloss* — enough to tell two sibling concepts apart — not as a
   fact to act on.
-- **Complete or balanced.** Two domains hold 62 % of the nodes and nine have no
-  curated depth at all; 57 % of L1 branches are childless. In practice this is a
+- **Complete or balanced.** Two domains hold 57 % of the nodes and seven have no
+  curated depth at all; 52 % of L1 branches are childless. In practice this is a
   **detailed physics/chemistry/biology and mathematics taxonomy with a
   twelve-domain skeleton around it** — not a general one. If your subject is not
   a natural or formal science, expect to find the branch named and empty.
