@@ -884,8 +884,16 @@ export function registerAgentRoutes(app: Express) {
 
   // Read the review queue (the librarian's promotion intake). unpromoted=1
   // filters to datapoints no proposal/approval has touched yet.
+  // `offset` exists so a machine reader can enumerate the WHOLE queue. Without
+  // it the route is capped at MAX_LIMIT rows and a client comparing two stores
+  // can only ever see one page of each — which reads as "these corpora hold
+  // different captures" when they hold the same ones in a different write
+  // order. The ordering that makes paging sound is in db.getAllMetadataApi
+  // (`updated_at DESC, id`); an offset over a non-total order skips and repeats
+  // rows instead.
   app.get('/agent/v1/captures', agentAuth('ro'), (req, res) => {
     const limit = Math.min(Number(req.query.limit) || 20, MAX_LIMIT);
+    const offset = Math.max(Number(req.query.offset) || 0, 0);
     const source = req.query.source ? String(req.query.source) : undefined;
     let items = db.getAllMetadataApi('', true);
     if (source) items = items.filter((c) => c.source === source);
@@ -895,7 +903,8 @@ export function registerAgentRoutes(app: Express) {
     }
     ok(res, {
       total: items.length,
-      items: items.slice(0, limit).map((c) => ({
+      offset,
+      items: items.slice(offset, offset + limit).map((c) => ({
         id: c.id,
         title: c.title,
         description: trim(c.description),
