@@ -32,6 +32,7 @@ export const columnKindSchema = z.enum([
   'vector', // number[] of fixed dim
   'taxonomyRef', // node id — anchors the ROW into the universe
   'objectRef', // knowledge_object id
+  'rowRef', // row id in ANOTHER table — the structural join (see below)
   'user', // KEAP user id (attribution columns)
 ]);
 export type ColumnKind = z.infer<typeof columnKindSchema>;
@@ -56,12 +57,64 @@ export const columnDefSchema = z.object({
   dim: z.number().int().positive().max(4096).optional(),
   /** measure display/aggregation hint, e.g. "kg", "CZK" */
   unit: z.string().max(24).optional(),
+
+  // ── rowRef: the structural join ────────────────────────────────────────────
+  // `taxonomyRef` and `objectRef` anchor a row into the universe; NEITHER points
+  // at another ROW, so before this kind existed an invoice could not reference
+  // its customer and DataTables was an entity registry with no edges.
+  //
+  // The stored value is the target's row id as a plain string — NOT a
+  // {table,row} pair. The target table is declared ONCE here, so a per-row
+  // target could disagree with the schema, and a join whose target varies by row
+  // is not a join.
+  //
+  // CARDINALITY IS EXPRESSED BY PLACEMENT, not by a new kind:
+  //   1:N  put the rowRef on the MANY side (invoice.customer -> party)
+  //   N:N  a junction table with TWO rowRef columns
+  // There is deliberately no array-of-refs kind: an N:N edge almost always
+  // carries its own attributes (role, share, validity), an array cell has
+  // nowhere to put them, `AggregateQuery` cannot group by an array without an
+  // unnest operator this contract does not have, and row history is per row so
+  // membership changes would degrade to a JSON blob diff.
+
+  /** rowRef: id of the table this column points into. REQUIRED for kind 'rowRef'. */
+  refTable: z.string().min(1).max(128).optional(),
+  /** rowRef: column key IN THE TARGET used as the human label (picker + chip). */
+  refDisplay: z.string().max(64).optional(),
+  /**
+   * rowRef: what happens to referencing rows when the target row is deleted.
+   * 'restrict' is the default on purpose — an orphaned invoice line is a data
+   * defect, not a tidy-up. Enforcement is the store's job; this declares intent.
+   */
+  onDelete: z.enum(['restrict', 'setNull', 'cascade']).default('restrict'),
 });
 export type ColumnDef = z.infer<typeof columnDefSchema>;
 
-export const tableSchemaSchema = z.object({
-  columns: z.array(columnDefSchema).min(1).max(120),
-});
+export const tableSchemaSchema = z
+  .object({
+    columns: z.array(columnDefSchema).min(1).max(120),
+  })
+  .superRefine((val, ctx) => {
+    val.columns.forEach((c, i) => {
+      // A rowRef with no target is not a weak join, it is an unresolvable one:
+      // nothing downstream (picker, expand, back-reference index, graph edge)
+      // can act on it, and it would be stored as an opaque string forever.
+      if (c.kind === 'rowRef' && !c.refTable) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `column '${c.key}' is a rowRef and must declare refTable`,
+          path: ['columns', i, 'refTable'],
+        });
+      }
+      if (c.kind !== 'rowRef' && c.refTable !== undefined) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `column '${c.key}' declares refTable but its kind is '${c.kind}', not 'rowRef'`,
+          path: ['columns', i, 'refTable'],
+        });
+      }
+    });
+  });
 export type TableSchema = z.infer<typeof tableSchemaSchema>;
 
 // ── Values ────────────────────────────────────────────────────────────────────
@@ -125,6 +178,15 @@ export function validateRowValues(
       case 'user':
         if (typeof v !== 'string') errors.push(`${col.key}: expected id string`);
         break;
+      case 'rowRef':
+        // Shape only. Whether the target row EXISTS — and whether the writer is
+        // allowed to know that — is decided by the store, which can see the
+        // other table. Answering existence here would turn a write into an
+        // enumeration oracle for a table the caller may not read.
+        if (typeof v !== 'string' || !v.trim()) {
+          errors.push(`${col.key}: expected a row id string`);
+        }
+        break;
     }
   }
   return errors;
@@ -146,6 +208,14 @@ export const listRowsQuerySchema = z.object({
   sort: z.object({ column: z.string(), dir: z.enum(['asc', 'desc']) }).optional(),
   cursor: z.string().optional(),
   limit: z.number().int().positive().max(500).default(50),
+  /**
+   * rowRef column keys to resolve into the target row's values. ONE LEVEL ONLY
+   * and capped at 4 — an unbounded expansion over a self-referencing table
+   * (a party owning a party) walks the cycle until something gives, and the
+   * caller cannot see the depth it is asking for. Cycles are allowed and useful;
+   * it is the expansion that must be bounded, not the schema.
+   */
+  expand: z.array(z.string()).max(4).default([]),
 });
 export type ListRowsQuery = z.infer<typeof listRowsQuerySchema>;
 
@@ -172,6 +242,15 @@ export interface TableCapabilities {
   vectorColumns: boolean;
   objectVersioning: boolean;
   events: boolean;
+  /**
+   * Can this driver resolve `rowRef` — expand on read, and answer "what points
+   * at this row". Declared rather than assumed, per the contract's existing
+   * pillar: the UI renders a picker and a back-reference panel only where the
+   * chosen storage can actually serve them. A cross-driver reference (a libsql
+   * table pointing into a postgres one) is NOT integrity-enforced by anybody,
+   * so a driver may accept rowRef columns and still answer false here.
+   */
+  joins: boolean;
 }
 
 export const tableDriverSchema = z.enum(['libsql', 'rustfs', 'postgres', 'grist']);
@@ -238,8 +317,12 @@ export const graphMetaSchema = z.object({
   edges: z
     .array(
       z.object({
-        column: z.string(), // an objectRef | taxonomyRef column
-        toKind: z.enum(['node', 'object']), // how to resolve the target ref
+        column: z.string(), // an objectRef | taxonomyRef | rowRef column
+        // 'row' resolves the cell against ANOTHER TABLE's row. It ships with the
+        // rowRef column kind on purpose: a join that exists in the store but has
+        // no edge kind is invisible in /explore, which is the same gap one layer
+        // down that rowRef itself closes.
+        toKind: z.enum(['node', 'object', 'row']),
         type: kebabSlugSchema.optional(), // edge label / relation verb
         label: z.string().max(120).optional(), // display label override
       }),
@@ -308,7 +391,8 @@ export const createTableRequestSchema = z
       requireColumn(e.column, ['graph', 'edges', i, 'column']);
       const col = byKey.get(e.column);
       if (!col) return;
-      const wantKind = e.toKind === 'object' ? 'objectRef' : 'taxonomyRef';
+      const wantKind =
+        e.toKind === 'object' ? 'objectRef' : e.toKind === 'row' ? 'rowRef' : 'taxonomyRef';
       if (col.kind !== wantKind) {
         ctx.addIssue({
           code: z.ZodIssueCode.custom,

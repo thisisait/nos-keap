@@ -200,6 +200,11 @@ export const rustfsStore: TableStore = {
     vectorColumns: true,
     objectVersioning: true,
     events: false, // bucket notifications are a future nOS-side hookup
+    // rowRef resolution (expand on read + the back-reference index) is NOT
+    // implemented yet. Declared false so the UI does not render a picker and a
+    // "what points here" panel that the store cannot serve — capabilities are a
+    // promise, and a premature true is a promise the operator sees broken.
+    joins: false,
   },
 
   available: () => Boolean(ENDPOINT && ACCESS_KEY && SECRET_KEY),

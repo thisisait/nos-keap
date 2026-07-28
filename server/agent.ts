@@ -714,7 +714,7 @@ export function registerAgentRoutes(app: Express) {
     const t = getTable(req.params.slug);
     if (!t) return fail(res, 404, 'unknown table');
     try {
-      const { rows } = await storeFor(t.driver).listRows(t.id, { filter: [], limit: 500 });
+      const { rows } = await storeFor(t.driver).listRows(t.id, { filter: [], limit: 500, expand: [] });
       // FLAT values — the seeder reads a top-level `slug` off each row.
       ok(res, { rows: rows.map((r) => r.values) });
     } catch (e) {

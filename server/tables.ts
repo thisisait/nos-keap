@@ -307,6 +307,11 @@ const libsqlStore: TableStore = {
     vectorColumns: true, // stored + validated; ANN over row vectors is future work
     objectVersioning: false,
     events: true, // append-only history IS the event log (consumers poll it)
+    // rowRef resolution (expand on read + the back-reference index) is NOT
+    // implemented yet. Declared false so the UI does not render a picker and a
+    // "what points here" panel that the store cannot serve — capabilities are a
+    // promise, and a premature true is a promise the operator sees broken.
+    joins: false,
   },
 
   async createTable(ownerId, req) {
