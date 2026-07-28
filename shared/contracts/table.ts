@@ -183,9 +183,14 @@ export function validateRowValues(
         // allowed to know that — is decided by the store, which can see the
         // other table. Answering existence here would turn a write into an
         // enumeration oracle for a table the caller may not read.
-        if (typeof v !== 'string' || !v.trim()) {
-          errors.push(`${col.key}: expected a row id string`);
-        }
+        //
+        // An EMPTY string is accepted, and means "no reference". A cleared form
+        // field arrives as "", and a first draft that rejected it left an
+        // optional reference with no way to unset it — the store had to be
+        // patched with an explicit null by every client, while `text` in the
+        // same row accepted "" happily. The mirror already treats blank as an
+        // absent edge, so nothing dangles.
+        if (typeof v !== 'string') errors.push(`${col.key}: expected a row id string`);
         break;
     }
   }

@@ -20,6 +20,7 @@
  * other datapoint. The card is derived state: this module owns the sync.
  */
 import crypto from 'node:crypto';
+import type Database from 'libsql';
 import * as db from './db';
 import { markCorpusDirty } from './search';
 import { extractRefs } from './objects';
@@ -286,6 +287,88 @@ function mapRow(r: TableRowDbRow): TableRow {
   };
 }
 
+// ── rowRef back-reference mirror (migration 007-row-refs) ────────────────────
+//
+// ONE write path. Every mutation of a row's rowRef cells goes through
+// syncRowRefs, called INSIDE the row's own transaction, so the mirror can never
+// be half-applied against `data`. rebuildRowRefs() is the repair, not the
+// routine — if it ever has to fix something, a write path bypassed this.
+
+/** rowRef columns of a schema, as [columnKey, targetTable] pairs. */
+function rowRefColumns(schema: TableSchema): Array<[string, string]> {
+  return schema.columns
+    .filter((c) => c.kind === 'rowRef' && c.refTable)
+    .map((c) => [c.key, c.refTable as string]);
+}
+
+/** Rewrite one row's mirror entries. Call inside the row's transaction. */
+function syncRowRefs(
+  d: Database.Database,
+  tableId: string,
+  rowId: string,
+  schema: TableSchema,
+  values: Record<string, unknown>,
+): void {
+  d.prepare('DELETE FROM table_row_refs WHERE from_table = ? AND from_row = ?').run(tableId, rowId);
+  const ins = d.prepare(
+    `INSERT INTO table_row_refs (from_table, from_row, column_key, to_table, to_row)
+     VALUES (?, ?, ?, ?, ?)`,
+  );
+  for (const [key, target] of rowRefColumns(schema)) {
+    const v = values[key];
+    // A cleared reference is an ABSENT edge, not an edge to "". Storing empties
+    // would make "who points at me" answer with rows that point at nothing.
+    if (typeof v === 'string' && v.trim()) ins.run(tableId, rowId, key, target, v);
+  }
+}
+
+/** Rows that reference (tableId, rowId). The query the mirror exists for. */
+export function referencesTo(
+  tableId: string,
+  rowId: string,
+): Array<{ fromTable: string; fromRow: string; columnKey: string }> {
+  return (
+    db
+      .getDb()
+      .prepare(
+        `SELECT from_table AS fromTable, from_row AS fromRow, column_key AS columnKey
+         FROM table_row_refs WHERE to_table = ? AND to_row = ?
+         ORDER BY from_table, from_row, column_key`,
+      )
+      .all(tableId, rowId) as Array<{ fromTable: string; fromRow: string; columnKey: string }>
+  );
+}
+
+/**
+ * Rebuild the whole mirror from `table_rows`. A repair tool and the fixture the
+ * drift test compares against — NOT something to call at boot: it is O(rows),
+ * and running it routinely would hide exactly the bug it detects.
+ */
+export function rebuildRowRefs(): number {
+  const d = db.getDb();
+  let n = 0;
+  const tx = d.transaction(() => {
+    d.prepare('DELETE FROM table_row_refs').run();
+    const tables = d.prepare('SELECT id, schema_json FROM data_tables').all() as Array<{
+      id: string;
+      schema_json: string;
+    }>;
+    for (const t of tables) {
+      const schema = JSON.parse(t.schema_json) as TableSchema;
+      if (rowRefColumns(schema).length === 0) continue;
+      const rows = d
+        .prepare('SELECT row_id, data FROM table_rows WHERE table_id = ?')
+        .all(t.id) as Array<{ row_id: string; data: string }>;
+      for (const r of rows) {
+        syncRowRefs(d, t.id, r.row_id, schema, JSON.parse(r.data));
+        n += 1;
+      }
+    }
+  });
+  tx();
+  return n;
+}
+
 export function refreshRowCount(tableId: string): number {
   const d = db.getDb();
   const c = (d.prepare('SELECT COUNT(*) AS c FROM table_rows WHERE table_id = ?').get(tableId) as { c: number }).c;
@@ -332,6 +415,10 @@ const libsqlStore: TableStore = {
     const tx = d.transaction(() => {
       d.prepare('DELETE FROM table_rows WHERE table_id = ?').run(id);
       d.prepare('DELETE FROM table_row_history WHERE table_id = ?').run(id);
+      // Both directions: the table's outgoing edges AND the edges other tables
+      // aimed at it. Leaving the incoming half would keep onDelete refusing
+      // deletes on behalf of rows that no longer exist.
+      d.prepare('DELETE FROM table_row_refs WHERE from_table = ? OR to_table = ?').run(id, id);
       d.prepare('DELETE FROM data_tables WHERE id = ?').run(id);
     });
     tx();
@@ -387,6 +474,11 @@ const libsqlStore: TableStore = {
       d.prepare(
         'INSERT INTO table_row_history (table_id, row_id, op, data, actor) VALUES (?, ?, ?, ?, ?)',
       ).run(id, rid, existing ? 'update' : 'insert', JSON.stringify(merged), actor);
+      // Mirror the row's rowRef cells. INSIDE this transaction on purpose: a
+      // mirror written after commit can be missed by a crash, and a stale edge
+      // is worse than none — it makes onDelete refuse a delete for a reference
+      // that is not there.
+      syncRowRefs(d, id, rid, t.schema, merged);
     });
     tx();
     const rowCount = refreshRowCount(id);
@@ -401,11 +493,31 @@ const libsqlStore: TableStore = {
     const t = getTable(id);
     if (!t) throw new Error('unknown table');
     const d = db.getDb();
+    // onDelete enforcement. 'restrict' is the contract default, so this refuses
+    // by default rather than silently orphaning an invoice line. The message
+    // names ONE referrer, not all of them: an actor allowed to delete this row
+    // is not thereby allowed to enumerate every table that points at it.
+    const blocking = referencesTo(id, rowId).filter((r) => {
+      const from = getTable(r.fromTable);
+      const col = from?.schema.columns.find((c) => c.key === r.columnKey);
+      return (col?.onDelete ?? 'restrict') === 'restrict';
+    });
+    if (blocking.length) {
+      throw new Error(
+        `row is referenced by ${blocking.length} row(s), first: ` +
+          `${blocking[0].fromTable}.${blocking[0].columnKey}`,
+      );
+    }
     const tx = d.transaction(() => {
       d.prepare('DELETE FROM table_rows WHERE table_id = ? AND row_id = ?').run(id, rowId);
       d.prepare(
         'INSERT INTO table_row_history (table_id, row_id, op, data, actor) VALUES (?, ?, ?, NULL, ?)',
       ).run(id, rowId, 'delete', actor);
+      // The deleted row's OWN outgoing edges go with it. Edges pointing AT it
+      // were just proven to be non-restricting, and are left for their owning
+      // rows to clear — deleting another table's mirror rows here would silently
+      // rewrite data this actor may not even be able to read.
+      d.prepare('DELETE FROM table_row_refs WHERE from_table = ? AND from_row = ?').run(id, rowId);
     });
     tx();
     const rowCount = refreshRowCount(id);
