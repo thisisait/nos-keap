@@ -79,9 +79,16 @@ describe('rowRef — row values are checked for SHAPE ONLY', () => {
     expect(validateRowValues(schema, { customer: 'party-42' })).toEqual([]);
   });
 
-  it('rejects a non-string and an empty string', () => {
+  it('rejects a non-string', () => {
     expect(validateRowValues(schema, { customer: 42 })).toHaveLength(1);
-    expect(validateRowValues(schema, { customer: '   ' })).toHaveLength(1);
+  });
+
+  it('ACCEPTS an empty string — that is how a reference is cleared', () => {
+    // A cleared form field arrives as "". Rejecting it left an optional
+    // reference with no way to unset it, while `text` in the same row accepted
+    // "" happily. The back-reference mirror stores no edge for a blank cell,
+    // so nothing dangles. Found by server/row-refs.test.ts before any UI existed.
+    expect(validateRowValues(schema, { customer: '' })).toEqual([]);
   });
 
   it('does not resolve the target — that is the store\'s call, not the contract\'s', () => {

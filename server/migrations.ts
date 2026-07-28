@@ -299,6 +299,50 @@ const MIGRATIONS: Migration[] = [
       );
     `,
   },
+  {
+    // The back-reference index for `rowRef` (shared/contracts/table.ts).
+    //
+    // "Which rows point AT this one" is the query behind three separate
+    // features: the UI back-reference panel, `onDelete: 'restrict'`, and the
+    // graph's row->row edge enumeration. Against `table_rows` alone it is a full
+    // scan, because rows are keyed (table_id, row_id) with the cells inside a
+    // JSON blob.
+    //
+    // A narrow MIRROR is used instead of indexing the blob. The alternative —
+    // an expression index per (table, rowRef column), e.g.
+    //   CREATE INDEX .. ON table_rows(json_extract(data,'$.customer'))
+    //                     WHERE table_id='invoice'
+    // — needs runtime DDL every time a user adds a column (and DDL cannot be
+    // parameterised, so index naming would lean entirely on the slug regex),
+    // grows one index per reference, and is only used by the planner when the
+    // query repeats the expression byte-for-byte. The mirror needs no DDL after
+    // this migration, answers every table through ONE index, and — because it
+    // lives here rather than beside the rows — serves drivers whose rows are not
+    // in SQL at all (rustfs).
+    //
+    // Its one real risk is drift from `data`. Mitigated by a single write path
+    // inside the row's own transaction (server/tables.ts) plus rebuildRowRefs()
+    // and a test that mutates rows and asserts the mirror still matches.
+    //
+    // Deliberately NOT a foreign key: the target may live in another driver, and
+    // a hard FK would make a cross-driver reference unwritable rather than
+    // merely unenforced.
+    id: '007-row-refs',
+    sql: `
+      CREATE TABLE IF NOT EXISTS table_row_refs (
+        from_table TEXT NOT NULL,
+        from_row   TEXT NOT NULL,
+        column_key TEXT NOT NULL,
+        to_table   TEXT NOT NULL,
+        to_row     TEXT NOT NULL,
+        PRIMARY KEY (from_table, from_row, column_key)
+      );
+      -- The whole point: "who points at me". The PK already covers the
+      -- from-side, so no second index is created for it.
+      CREATE INDEX IF NOT EXISTS table_row_refs_to_idx
+        ON table_row_refs(to_table, to_row);
+    `,
+  },
 ];
 
 export function runMigrations(db: Database.Database): void {
