@@ -231,6 +231,134 @@ export function syncCard(
   markCorpusDirty();
 }
 
+// ── Row sync: each row as its own knowledge_object (S2⁶ Stage 2, D3) ─────────
+//
+// D3 in docs/specs/table-graph-metadata-spec.md ratified MATERIALISED over
+// computed-on-read: a row projected into the graph is a real knowledge_object,
+// so everything downstream is free. `allSources()` already enumerates
+// db.getObjects under kind 'object' (no new EmbeddingKind), hybridSearch
+// rebuilds FTS from the same list, and /explore renders getVisibleObjects,
+// which already applies the tier ladder. graph.ts needs no table-specific code.
+//
+// WHY THIS MATTERS, concretely: before this, the cortex held ONE object per
+// table and nothing about its rows. An operator capturing ideas into a
+// DataTable — the intended face → cortex → agent loop — could not have those
+// rows found by search, embedding or an agent; the only way in was opening
+// SQLite directly. That is the workflow this function exists to make real.
+
+/** Ratified cap. A table above it is REJECTED at enable time rather than
+ *  silently truncated — a partially-projected table is worse than an
+ *  unprojected one, because it looks complete. */
+export const ROW_OBJECT_CAP = 500;
+
+export function rowObjectId(tableId: string, rowId: string, idValue?: unknown): string {
+  const suffix =
+    typeof idValue === 'string' || typeof idValue === 'number' ? String(idValue) : rowId;
+  return `table-${tableId}:row-${suffix}`;
+}
+
+/** Compact one row into a body the embedder and FTS can use. Column LABELS,
+ *  not keys — the body is read by humans and by a router answering questions,
+ *  and `title_or_link` is worse than `Title or link` for both. */
+function rowBody(t: Omit<TableInfo, 'capabilities'>, values: Record<string, unknown>, anchor?: string): string {
+  const lines = t.schema.columns
+    .map((c) => {
+      const v = values[c.key];
+      if (v === undefined || v === null || v === '') return null;
+      const text = typeof v === 'object' ? JSON.stringify(v) : String(v);
+      return `${c.label}: ${text}`;
+    })
+    .filter(Boolean) as string[];
+  const anchorBody = anchor ? `[[${anchor}]]` : '';
+  return [anchorBody, lines.join('\n')].filter(Boolean).join('\n\n');
+}
+
+/**
+ * Project a table's rows as individual knowledge_objects when its graph block
+ * declares `mode: 'rows'`. Idempotent: re-syncing rewrites the current rows and
+ * deletes objects for rows that no longer exist, so a delete or a flip back to
+ * `mode: 'card'` cleans up after itself instead of leaving orphans in the
+ * corpus (which the nightly diff would then report forever).
+ */
+export function syncRows(
+  t: Omit<TableInfo, 'capabilities'>,
+  graph?: GraphMeta,
+  rows?: TableRow[],
+): void {
+  const existingCard = db.getObject(`table-${t.id}`);
+  const graphBlock = graph ?? (existingCard?.frontmatter?.graph as GraphMeta | undefined);
+  const prefix = `table-${t.id}:row-`;
+
+  // Everything we previously materialised for this table.
+  const priorIds = new Set(
+    db
+      .getObjects(t.ownerId, true)
+      .filter((o) => o.id.startsWith(prefix))
+      .map((o) => o.id),
+  );
+
+  const node = graphBlock?.mode === 'rows' ? graphBlock.node : undefined;
+  if (!node) {
+    // Not projecting (or no longer projecting) — retract whatever is there.
+    for (const id of priorIds) db.deleteObject(id);
+    if (priorIds.size) markCorpusDirty();
+    return;
+  }
+
+  const all = rows ?? readAllRows(t.id);
+  const kept = new Set<string>();
+  for (const r of all.slice(0, ROW_OBJECT_CAP)) {
+    const id = rowObjectId(t.id, r.id, node.idColumn ? r.values[node.idColumn] : undefined);
+    const label = node.labelColumn ? r.values[node.labelColumn] : undefined;
+    const anchorRaw = node.anchorColumn ? r.values[node.anchorColumn] : undefined;
+    const anchor = typeof anchorRaw === 'string' && anchorRaw ? anchorRaw : undefined;
+    const body = rowBody(t, r.values, anchor);
+    const resource = `keaptable:${t.id}#${r.id}`;
+    kept.add(id);
+    db.saveObject(t.ownerId, {
+      id,
+      type: node.kind || 'record',
+      // A row with an empty label column still gets an object — silently
+      // dropping it would make the corpus disagree with the table, and the
+      // nightly diff would be right to complain.
+      title: label ? String(label) : `${t.title} row ${r.id.slice(0, 8)}`,
+      resource,
+      frontmatter: { table: t.id, row: r.id },
+      body,
+      links: extractRefs(body, resource),
+      // Inherited, never widened: a row can never be more visible than the
+      // table it belongs to.
+      visibility: t.visibility,
+    });
+  }
+
+  for (const id of priorIds) if (!kept.has(id)) db.deleteObject(id);
+  markCorpusDirty();
+}
+
+/** Every row of a table, unpaged — only ever called for projection, which is
+ *  bounded by ROW_OBJECT_CAP at enable time. */
+function readAllRows(tableId: string): TableRow[] {
+  return (
+    db
+      .getDb()
+      .prepare('SELECT * FROM table_rows WHERE table_id = ? ORDER BY created_at')
+      .all(tableId) as TableRowDbRow[]
+  ).map(mapRow);
+}
+
+/** Enable-time guard for `mode: 'rows'`. Throws rather than truncating. */
+export function assertRowProjectionAllowed(rowCount: number, graph?: GraphMeta): void {
+  if (graph?.mode !== 'rows') return;
+  if (rowCount > ROW_OBJECT_CAP) {
+    throw new Error(
+      `table has ${rowCount} rows; row projection is capped at ${ROW_OBJECT_CAP}. ` +
+        `Raise ROW_OBJECT_CAP deliberately or keep mode: 'card' — a partially ` +
+        `projected table looks complete and is not.`,
+    );
+  }
+}
+
 // ── libsql driver ─────────────────────────────────────────────────────────────
 
 const FILTER_SQL: Record<RowFilter['op'], string> = {
@@ -318,7 +446,9 @@ const libsqlStore: TableStore = {
       )
       .run(id, ownerId, req.title, req.description ?? null, JSON.stringify(req.schema), req.visibility);
     const t = getTable(id)!;
+    assertRowProjectionAllowed(t.rowCount, req.graph);
     syncCard(t, req.anchors, req.graph);
+    syncRows(t, req.graph);
     return t;
   },
 
@@ -386,6 +516,7 @@ const libsqlStore: TableStore = {
     tx();
     const rowCount = refreshRowCount(id);
     syncCard({ ...t, rowCount });
+    syncRows({ ...t, rowCount });
     const saved = d
       .prepare('SELECT * FROM table_rows WHERE table_id = ? AND row_id = ?')
       .get(id, rid) as TableRowDbRow;
@@ -405,6 +536,7 @@ const libsqlStore: TableStore = {
     tx();
     const rowCount = refreshRowCount(id);
     syncCard({ ...t, rowCount });
+    syncRows({ ...t, rowCount });
   },
 
   async rowHistory(id, rowId, limit) {

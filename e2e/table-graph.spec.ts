@@ -178,12 +178,17 @@ test.describe('S2⁶ table graph metadata + visibility ladder', () => {
     expect(c!.glyph).toBe('table');
   });
 
-  test("mode:'rows' renders card-only in Stage 1 — no per-row node objects", async ({ request }) => {
+  test("mode:'rows' materialises one object per row (Stage 2, D3)", async ({ request }) => {
+    // This test used to assert the OPPOSITE — "Stage 1 must not materialise
+    // rows" — and inverting it is the point: D3 ratified materialised-over-
+    // computed, and until syncRows() landed the cortex held one object per
+    // TABLE and nothing about its rows. An operator capturing notes into a
+    // DataTable could not have them found by search, embedding or an agent.
     const objs = await graphObjects(request);
-    expect(hasCard(objs, 's26-rows')).toBe(true); // the card itself is present
-    // Stage 2 would materialise `table-s26-rows:row-<id>` objects; Stage 1 must not.
-    expect(objs.some((o) => o.id.startsWith('table-s26-rows:row'))).toBe(false);
-    // And the card keeps the default look (no card override was declared).
+    expect(hasCard(objs, 's26-rows')).toBe(true); // the card is still there
+    const rows = objs.filter((o) => o.id.startsWith('table-s26-rows:row'));
+    expect(rows.length).toBeGreaterThan(0);
+    // The card keeps the default look (no card override was declared).
     const c = card(objs, 's26-rows')!;
     expect(c.form).toBe('asteroid');
     expect(c.hue).toBe(180);
