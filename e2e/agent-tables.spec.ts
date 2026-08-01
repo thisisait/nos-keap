@@ -128,6 +128,58 @@ test.describe('agent tables surface', () => {
     expect(rows.filter((r) => r.slug === 'files')).toHaveLength(1);
   });
 
+  test('re-create RECONCILES the columns — a changed definition reaches the DB', async ({ request }) => {
+    // The defect this pins: the seeder gates its create on a 404, and the agent
+    // route used to early-return "already exists" on anything else. So a column
+    // added — or given an L1 concept — in state/keap-tables/*.table.yml landed
+    // in git, passed every offline gate, and never touched a converged install.
+    // The table's schema was immutable for its whole lifetime.
+    const evolved = {
+      ...DEF,
+      columns: [
+        { key: 'slug', label: 'Slug', kind: 'text', concept: 'identity.slug' },
+        { key: 'name', label: 'Name', kind: 'text', concept: 'identity.name' },
+        { key: 'order', label: 'Order', kind: 'number', concept: 'ui.sort' },
+        { key: 'icon', label: 'Icon', kind: 'text', concept: 'ui.icon' },
+      ],
+    };
+    const r = await request.post('/agent/v1/tables', { headers: RW, data: evolved });
+    expect(r.ok()).toBeTruthy();
+
+    const p = await request.get(`/agent/v1/tables/${SLUG}`, { headers: RO });
+    const cols = (await p.json()).data.schema.columns as Array<Record<string, unknown>>;
+    expect(cols.map((c) => c.key)).toContain('icon');
+    expect(cols.find((c) => c.key === 'order')?.concept).toBe('ui.sort');
+  });
+
+  test('reconcile REFUSES a destructive redefinition instead of applying half of it', async ({ request }) => {
+    // Rows already hold values for these columns; a silent drop or re-kind
+    // would strand or reinterpret them. 409, and nothing written.
+    const destructive = {
+      ...DEF,
+      columns: [
+        { key: 'slug', label: 'Slug', kind: 'text' },
+        { key: 'name', label: 'Name', kind: 'text' },
+        { key: 'order', label: 'Order', kind: 'text' }, // number → text
+      ],
+    };
+    const r = await request.post('/agent/v1/tables', { headers: RW, data: destructive });
+    expect(r.status()).toBe(409);
+
+    const p = await request.get(`/agent/v1/tables/${SLUG}`, { headers: RO });
+    const cols = (await p.json()).data.schema.columns as Array<Record<string, unknown>>;
+    expect(cols.find((c) => c.key === 'order')?.kind).toBe('number');
+    expect(cols.map((c) => c.key)).toContain('icon'); // the dropped one survived
+  });
+
+  test('an unknown field concept is refused — the vocabulary is closed', async ({ request }) => {
+    const r = await request.post('/agent/v1/tables', {
+      headers: RW,
+      data: { ...DEF, slug: 'concept-typo', columns: [{ key: 'a', label: 'A', kind: 'text', concept: 'identity.nmae' }] },
+    });
+    expect(r.status()).toBe(400);
+  });
+
   test('invalid slug is rejected', async ({ request }) => {
     const bad = await request.post('/agent/v1/tables', {
       headers: RW,

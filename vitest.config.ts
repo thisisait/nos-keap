@@ -25,7 +25,19 @@ import { defineConfig } from 'vitest/config';
  */
 export default defineConfig({
   test: {
-    include: ['server/**/*.test.ts', 'knowledge/**/*.test.mjs', 'scripts/**/*.test.mjs'],
+    // `shared/**` joined the list with the L1 field-concept vocabulary: that
+    // file is a GATE (a closed set with a membership check), not a type
+    // declaration, and it is vendored into the nOS repo — so its tests have to
+    // run somewhere. Adding the glob rather than parking the test under
+    // server/ keeps it next to what it guards; a test that lives outside every
+    // include glob passes by never running, which is the failure mode this
+    // whole layer exists to remove.
+    include: [
+      'server/**/*.test.ts',
+      'shared/**/*.test.ts',
+      'knowledge/**/*.test.mjs',
+      'scripts/**/*.test.mjs',
+    ],
     environment: 'node',
   },
 });

@@ -36,6 +36,7 @@ import {
   canReadTable,
   canWriteTable,
   updateTableVisibility,
+  updateTableSchema,
   storeFor,
   listDrivers,
   assertRowId,
@@ -43,10 +44,12 @@ import {
 import { tierRank, canCreateTables } from './rbac';
 import {
   createTableRequestSchema,
+  updateTableSchemaSchema,
   updateTableVisibilitySchema,
   listRowsQuerySchema,
   aggregateQuerySchema,
 } from '../shared/contracts/table';
+import { FIELD_CONCEPTS } from '../shared/contracts/field-concepts';
 
 const ok = (res: Response, data?: unknown) => res.json({ success: true, data });
 const fail = (res: Response, status: number, error: string) =>
@@ -479,6 +482,11 @@ export function registerApiRoutes(app: Express) {
   // Storage picker: which drivers this deployment offers (register BEFORE :id).
   app.get('/api/tables/drivers', (_req, res) => ok(res, listDrivers()));
 
+  // The L1 vocabulary — what a column may declare it MEANS. Read-only and
+  // git-owned; a picker or an agent enumerates it here instead of guessing.
+  // Same BEFORE-:id rule as /drivers, or the literal is read as a table id.
+  app.get('/api/tables/field-concepts', (_req, res) => ok(res, FIELD_CONCEPTS));
+
   app.post('/api/tables', async (req, res) => {
     // Guests (tier 4) are read-only — they may not create/own data tables.
     if (!canCreateTables(tierRank(req.user.groups))) {
@@ -500,15 +508,30 @@ export function registerApiRoutes(app: Express) {
     ok(res, t);
   });
 
-  // Change a table's share scope (owner/admin). The only way to move a table
-  // between private / tier-scopes / shared after creation.
+  // Change a table's DECLARATION (owner/admin): its share scope, its column
+  // schema, or both. Schema reconcile is additive-and-relabel only — see
+  // updateTableSchema for why dropping a column or changing a kind is refused.
   app.patch('/api/tables/:id', (req, res) => {
     const t = tableForWrite(req, res);
     if (!t) return;
-    const parsed = updateTableVisibilitySchema.safeParse(req.body ?? {});
-    if (!parsed.success) return fail(res, 400, parsed.error.issues[0]?.message ?? 'invalid visibility');
-    updateTableVisibility(t.id, parsed.data.visibility);
-    ok(res, { ...t, visibility: parsed.data.visibility });
+    const parsed = updateTableSchemaSchema.safeParse(req.body ?? {});
+    if (!parsed.success) return fail(res, 400, parsed.error.issues[0]?.message ?? 'invalid table update');
+    const { visibility, schema } = parsed.data;
+    if (!visibility && !schema) return fail(res, 400, 'nothing to update: send visibility, schema, or both');
+    try {
+      // Visibility FIRST: the schema reconcile re-syncs the card and the
+      // projected row objects, and those inherit the table's visibility. Doing
+      // it the other way round would leave the corpus on the old scope.
+      let next: typeof t = t;
+      if (visibility) {
+        updateTableVisibility(t.id, visibility);
+        next = { ...next, visibility };
+      }
+      if (schema) next = { ...next, ...updateTableSchema(next, schema) };
+      ok(res, next);
+    } catch (e) {
+      fail(res, 400, e instanceof Error ? e.message : 'update failed');
+    }
   });
 
   app.delete('/api/tables/:id', async (req, res) => {

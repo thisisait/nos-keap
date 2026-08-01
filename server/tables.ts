@@ -143,6 +143,62 @@ export function canWriteTable(t: TableInfo, actor: TableActor): boolean {
   return actor.isAdmin || t.ownerId === actor.id;
 }
 
+/**
+ * Reconcile a table's COLUMN SCHEMA — the write path `data_tables.schema_json`
+ * did not have.
+ *
+ * Until this existed there was exactly one writer of `schema_json` (the INSERT
+ * in `createTable`) and no UPDATE of it anywhere, so a table's columns were
+ * immutable for its whole lifetime: the only way to change them was DELETE +
+ * recreate, which `dropTable` implements by deleting `table_rows` AND
+ * `table_row_history`. That is why declaring a new per-column fact (an L1
+ * concept, and later an L2 vector slot) could not reach a converged install at
+ * all — the declaration would land in git, the offline gate would go green, and
+ * the database would keep the old schema with nothing red anywhere.
+ *
+ * RECONCILE, NOT REPLACE. The rules exist because rows already hold values:
+ *   - a column may be ADDED (rows simply have no value for it yet);
+ *   - `label`, `role`, `unit`, `required`, `options` and `concept` may CHANGE —
+ *     none of them invalidates a stored value, and declaring meaning onto an
+ *     existing column is the whole point of the exercise;
+ *   - `kind` may NOT change, and a column may NOT be DROPPED: both would strand
+ *     or silently reinterpret data already in `table_rows`. A caller that means
+ *     it drops the table.
+ *
+ * Re-syncs the card and the projected row objects, because both render column
+ * metadata — a reconcile that left the corpus describing the old columns would
+ * be the same silent half-application this function exists to remove.
+ */
+export function updateTableSchema(
+  t: Omit<TableInfo, 'capabilities'>,
+  next: TableSchema,
+): Omit<TableInfo, 'capabilities'> {
+  const prior = new Map(t.schema.columns.map((c) => [c.key, c]));
+  const nextKeys = new Set(next.columns.map((c) => c.key));
+  const errors: string[] = [];
+
+  for (const [key, col] of prior) {
+    if (!nextKeys.has(key)) {
+      errors.push(`column ${key} would be dropped; rows still hold its values — drop the table instead`);
+      continue;
+    }
+    const n = next.columns.find((c) => c.key === key)!;
+    if (n.kind !== col.kind) {
+      errors.push(`column ${key} would change kind ${col.kind} → ${n.kind}; stored values would be reinterpreted`);
+    }
+  }
+  if (errors.length) throw new Error(`schema reconcile refused: ${errors.join('; ')}`);
+
+  db.getDb()
+    .prepare("UPDATE data_tables SET schema_json = ?, updated_at = strftime('%s','now') WHERE id = ?")
+    .run(JSON.stringify(next), t.id);
+
+  const updated = { ...t, schema: next };
+  syncCard(updated);
+  syncRows(updated);
+  return updated;
+}
+
 /** Persist a visibility change (owner/admin only — enforced at the route). */
 export function updateTableVisibility(id: string, visibility: TableVisibility): void {
   db.getDb()
@@ -218,7 +274,10 @@ export function syncCard(
     resource: `keaptable:${t.id}`,
     frontmatter: {
       storage: { driver: t.driver },
-      columns: t.schema.columns.map(({ key, label, kind, role, unit }) => ({ key, label, kind, role, unit })),
+      // `concept` rides along so the card — which IS the corpus's description
+      // of the table — carries what each column means, not just how it is
+      // stored. An agent reading the card can then map columns across tables.
+      columns: t.schema.columns.map(({ key, label, kind, role, unit, concept }) => ({ key, label, kind, role, unit, concept })),
       rowCount: t.rowCount,
       // Absent (card-only, no override) → key omitted entirely, so an existing
       // table with no graph block stays byte-identical to today's frontmatter.
@@ -257,16 +316,26 @@ export function rowObjectId(tableId: string, rowId: string, idValue?: unknown): 
   return `table-${tableId}:row-${suffix}`;
 }
 
-/** Compact one row into a body the embedder and FTS can use. Column LABELS,
- *  not keys — the body is read by humans and by a router answering questions,
- *  and `title_or_link` is worse than `Title or link` for both. */
+/**
+ * Compact one row into a body the embedder and FTS can use. Column LABELS, not
+ * keys — the body is read by humans and by a router answering questions, and
+ * `title_or_link` is worse than `Title or link` for both.
+ *
+ * A declared L1 concept is emitted as `Label [concept]: value`. Be honest about
+ * what that buys: the body is embedded as ONE vector and truncated before it is,
+ * so a shared bracket token among thousands of characters does not make the
+ * embedding concept-aware — that needs L2's per-concept slots. What it does buy
+ * is the LEXICAL leg: `lifecycle.status` is a literal FTS/BM25 term, so "which
+ * rows anywhere carry a lifecycle status" becomes answerable across tables that
+ * spell the label five different ways.
+ */
 function rowBody(t: Omit<TableInfo, 'capabilities'>, values: Record<string, unknown>, anchor?: string): string {
   const lines = t.schema.columns
     .map((c) => {
       const v = values[c.key];
       if (v === undefined || v === null || v === '') return null;
       const text = typeof v === 'object' ? JSON.stringify(v) : String(v);
-      return `${c.label}: ${text}`;
+      return c.concept ? `${c.label} [${c.concept}]: ${text}` : `${c.label}: ${text}`;
     })
     .filter(Boolean) as string[];
   const anchorBody = anchor ? `[[${anchor}]]` : '';

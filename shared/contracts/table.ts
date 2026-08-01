@@ -18,6 +18,7 @@
  * Shared between server drivers, the web UI grid, and the extension.
  */
 import { z } from 'zod';
+import { checkConceptBinding, fieldConceptSchema } from './field-concepts';
 
 // ── Columns ───────────────────────────────────────────────────────────────────
 
@@ -56,12 +57,54 @@ export const columnDefSchema = z.object({
   dim: z.number().int().positive().max(4096).optional(),
   /** measure display/aggregation hint, e.g. "kg", "CZK" */
   unit: z.string().max(24).optional(),
+  /**
+   * L1 field concept — WHAT this column means, from the closed vocabulary in
+   * field-concepts.ts. Optional so every table that exists today stays valid
+   * byte-for-byte; when present it is gated on membership here and on
+   * concept↔kind compatibility in `validateColumnConcepts` below.
+   */
+  concept: fieldConceptSchema.optional(),
 });
 export type ColumnDef = z.infer<typeof columnDefSchema>;
 
-export const tableSchemaSchema = z.object({
-  columns: z.array(columnDefSchema).min(1).max(120),
-});
+/**
+ * Concept↔kind compatibility, plus the one-concept-per-table rule.
+ *
+ * A concept names a meaning, and a meaning is singular within a collection: two
+ * columns both claiming `lifecycle.status` makes "the status of this row"
+ * ambiguous for every consumer that queries by concept, which is the entire
+ * reason concepts exist. Different tables reusing the same concept is the point
+ * and stays legal.
+ *
+ * Returns error strings; empty array = valid.
+ */
+export function validateColumnConcepts(
+  // Optional key/kind because zod hands superRefine the pre-default INPUT
+  // shape, where every field with a `.default()` reads as optional.
+  columns: Array<{ key?: string; kind?: string; concept?: string }>,
+): string[] {
+  const errors: string[] = [];
+  const seen = new Map<string, string>();
+  for (const c of columns) {
+    if (!c.concept) continue;
+    const bindErr = checkConceptBinding(c.concept, c.kind ?? '');
+    if (bindErr) errors.push(`${c.key}: ${bindErr}`);
+    const prior = seen.get(c.concept);
+    if (prior) errors.push(`${c.key}: concept ${c.concept} is already declared by column ${prior}`);
+    else seen.set(c.concept, c.key ?? '(unnamed)');
+  }
+  return errors;
+}
+
+export const tableSchemaSchema = z
+  .object({
+    columns: z.array(columnDefSchema).min(1).max(120),
+  })
+  .superRefine((val, ctx) => {
+    for (const message of validateColumnConcepts(val.columns)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, message, path: ['columns'] });
+    }
+  });
 export type TableSchema = z.infer<typeof tableSchemaSchema>;
 
 // ── Values ────────────────────────────────────────────────────────────────────
@@ -325,6 +368,18 @@ export const updateTableVisibilitySchema = z.object({
   visibility: tableVisibilitySchema,
 });
 export type UpdateTableVisibility = z.infer<typeof updateTableVisibilitySchema>;
+
+/**
+ * PATCH /api/tables/:id with a `schema` — reconcile the column schema of a
+ * table that already exists. Both fields optional and independent, so the
+ * endpoint stays the single "change this table's declaration" surface rather
+ * than growing a second one; a body with neither is rejected at the route.
+ */
+export const updateTableSchemaSchema = z.object({
+  visibility: tableVisibilitySchema.optional(),
+  schema: tableSchemaSchema.optional(),
+});
+export type UpdateTableSchema = z.infer<typeof updateTableSchemaSchema>;
 
 export interface TableInfo {
   id: string;

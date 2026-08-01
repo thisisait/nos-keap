@@ -32,8 +32,8 @@ import { allNodes } from './taxonomy';
 import { normalizeAndSaveCapture, parseEnvelope } from './intake';
 import { syncAllFs, syncMapping, fsSyncStatus, USER_FILES_DIR } from './fs-sync';
 import { scheduleTopicRecluster, clusterTopics } from './topics';
-import { getTable, listTables, storeFor } from './tables';
-import { createTableRequestSchema } from '../shared/contracts/table';
+import { getTable, listTables, storeFor, updateTableSchema } from './tables';
+import { createTableRequestSchema, tableSchemaSchema } from '../shared/contracts/table';
 import { cortexValidateRequestSchema } from '../shared/contracts/cortex';
 import { CORTEX_CONTRACT_VERSION, cortexRegistryHash, listOpcodes } from './cortex-opcodes';
 import { cortexOntologyVersion } from './cortex-ontology-version';
@@ -682,10 +682,23 @@ export function registerAgentRoutes(app: Express) {
     const b = (req.body ?? {}) as Record<string, unknown>;
     const slug = String(b.slug ?? '');
     if (!validSlug(slug)) return fail(res, 400, 'slug must match ^[a-z0-9][a-z0-9._-]{0,127}$ (no "..")');
-    // Idempotent create: the slug IS the id, so a re-seed returns the existing
-    // table (200) instead of colliding on the primary key.
+    // Idempotent create: the slug IS the id, so a re-seed does not collide on
+    // the primary key. It RECONCILES rather than early-returning — a plain
+    // "already exists, 200" is what made a converged install unreachable by any
+    // change to a table definition: the nOS seeder gates its create on a 404,
+    // so a column added (or given an L1 concept) in state/keap-tables/*.yml
+    // landed in git, went green offline, and never touched the database.
+    // Reconcile is additive-and-relabel only; see tables.ts updateTableSchema.
     const existing = getTable(slug);
-    if (existing) return ok(res, existing);
+    if (existing) {
+      const cols = tableSchemaSchema.safeParse({ columns: b.columns });
+      if (!cols.success) return fail(res, 400, cols.error.issues[0]?.message ?? 'invalid columns');
+      try {
+        return ok(res, { ...existing, ...updateTableSchema(existing, cols.data) });
+      } catch (e) {
+        return fail(res, 409, e instanceof Error ? e.message : 'schema reconcile failed');
+      }
+    }
     // Map the seeder's shape (slug + columns) onto CreateTableRequest (schema
     // wraps columns); id is injected AFTER validation since the schema brands
     // it uuid-only and the slug is deliberately human-readable.
