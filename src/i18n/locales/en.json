@@ -467,7 +467,8 @@
       "order": {
         "fs": "Folders",
         "taxonomy": "Taxonomy",
-        "topic": "Topics"
+        "topic": "Topics",
+        "type": "By type"
       }
     },
     "toggle": {

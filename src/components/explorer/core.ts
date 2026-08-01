@@ -32,12 +32,15 @@
  */
 import type { GraphObject } from '@/hooks/useExplorerData';
 
-export type CoreOrder = 'fs' | 'taxonomy' | 'topic';
+export type CoreOrder = 'fs' | 'taxonomy' | 'topic' | 'type';
 
 export const CORE_MAX = 420; // keep well inside the ring's clear zone (~1000)
 const FS_LEVEL_RADIUS = [0, 230, 105, 50, 28]; // shells per folder depth
 const TAX_RING = 280; // by-taxonomy cluster ring radius
 const TOPIC_RING = 280; // topic constellation ring (TAX_RING band)
+const TYPE_RING = 280;  // by-type cluster ring — same band, so switching order
+                        // moves bodies WITHIN a known shell rather than across
+                        // the scene (spatial memory, decision #10's reasoning).
 const TOPIC_MIN_SEP = 0.35; // min rad between topic hubs — chain-spread (decision #10)
 // Standalone mapping constellations sit on their own ring: outside the core
 // (CORE_MAX 420), inside the taxonomy clear zone (~1000). Worst subtree
@@ -100,6 +103,12 @@ export interface CoreFolder {
   mapping?: string;
   /** Set on topic hubs (`topic:<id>`) — carries the cluster id (topic order). */
   topic?: string;
+  /** Set on TYPE hubs (`type:<assetType>`) — carries the asset type and the
+   *  hue its members already render in (asset-types.ts). Without this the
+   *  caller would have to re-derive a hue for the hub and the cluster would
+   *  read as a different thing from the bodies inside it. */
+  assetType?: string;
+  hue?: number;
 }
 
 export interface CoreLayout {
@@ -477,6 +486,91 @@ function topicLayout(
   return { folders, positions, fsLinks };
 }
 
+/**
+ * By-TYPE core: one hub per asset type, members on a fib sphere around it.
+ *
+ * WHY THIS ORDER EXISTS. The other three group by PROVENANCE — where a thing
+ * came from (`fs`), what it is about (`taxonomy`, `topic`). None of them answer
+ * "what have I got", which is the question the core view is actually opened to
+ * ask. Before this, `core` relocated all 322 objects into one undifferentiated
+ * ball and drew a tether per object back across the whole scene; the result was
+ * a cable bundle, not a picture.
+ *
+ * Hubs sit on TYPE_RING at an angle frozen by a hash of the type NAME, not by
+ * its index — so adding a new asset type never rotates the existing ones out
+ * from under the operator's spatial memory. Same reason topicHubPositions
+ * freezes θ at birth.
+ *
+ * The hub carries its members' own hue (asset-types.ts), so a cluster and the
+ * bodies inside it read as one thing.
+ */
+function typeLayout(objects: GraphObject[]): TreeOut {
+  const positions = new Map<string, [number, number, number]>();
+  const folders: CoreFolder[] = [];
+  const fsLinks: Array<{ source: string; target: string }> = [];
+
+  const byType = new Map<string, GraphObject[]>();
+  for (const o of objects) {
+    const t = o.assetType || o.type || 'unknown';
+    const g = byType.get(t);
+    if (g) g.push(o);
+    else byType.set(t, [o]);
+  }
+
+  // Deterministic order for the tie-break below; θ itself is hash-frozen.
+  const types = [...byType.keys()].sort();
+
+  // Hash-frozen θ with a minimum separation sweep, so two types whose hashes
+  // land close together do not overlap into one visual blob.
+  const taken: number[] = [];
+  const thetaOf = (t: string): number => {
+    let th = hash01(`type:${t}`) * Math.PI * 2;
+    for (let guard = 0; guard < 64; guard += 1) {
+      const clash = taken.some((u) => {
+        const d = Math.abs(((th - u + Math.PI) % (Math.PI * 2)) - Math.PI);
+        return d < TOPIC_MIN_SEP;
+      });
+      if (!clash) break;
+      th = (th + TOPIC_MIN_SEP) % (Math.PI * 2);
+    }
+    taken.push(th);
+    return th;
+  };
+
+  for (const t of types) {
+    const members = byType.get(t)!;
+    if (members.length === 0) continue;
+    const th = thetaOf(t);
+    // Tilt from a second hash so the ring is a shell, not a flat disc — the
+    // clusters would otherwise occlude each other from most camera angles.
+    const tilt = (hash01(`tilt:${t}`) - 0.5) * 0.9;
+    const at: [number, number, number] = [
+      TYPE_RING * Math.cos(th) * Math.cos(tilt),
+      TYPE_RING * Math.sin(tilt),
+      TYPE_RING * Math.sin(th) * Math.cos(tilt),
+    ];
+    positions.set(`type:${t}`, at);
+    folders.push({
+      id: `type:${t}`,
+      name: t,
+      path: `~type/${t}`,
+      depth: 0,
+      count: members.length,
+      assetType: t,
+      hue: members[0].hue,
+    });
+    const sorted = [...members].sort((a, b) => a.id.localeCompare(b.id));
+    const r = Math.min(200, 24 + 10 * Math.sqrt(sorted.length));
+    sorted.forEach((o, i) => {
+      const d = fibDir(i, sorted.length, `${t}:${o.id}`);
+      positions.set(`obj:${o.id}`, [at[0] + d[0] * r, at[1] + d[1] * r, at[2] + d[2] * r]);
+      fsLinks.push({ source: `type:${t}`, target: `obj:${o.id}` });
+    });
+  }
+
+  return { folders, positions, fsLinks };
+}
+
 export function computeCore(
   objects: GraphObject[],
   order: CoreOrder,
@@ -500,6 +594,35 @@ export function computeCore(
     const rays: Array<{ source: string; target: string }> = [];
     for (const o of objects) {
       for (const a of new Set(o.anchors)) rays.push({ source: `obj:${o.id}`, target: a });
+    }
+    return { ...base, rays, mrays: [] };
+  }
+
+  if (order === 'type') {
+    // Rays follow the same collapse rule as topic/mapping hubs: per-object
+    // below AGGREGATE_RAYS_AT, hub→distinct-anchor above it. That threshold is
+    // the whole reason this order is readable — 322 per-object tethers across
+    // the scene is the cable bundle this order was added to replace.
+    const base = typeLayout(objects);
+    const byType = new Map<string, GraphObject[]>();
+    for (const o of objects) {
+      const t = o.assetType || o.type || 'unknown';
+      const g = byType.get(t);
+      if (g) g.push(o);
+      else byType.set(t, [o]);
+    }
+    const rays: Array<{ source: string; target: string }> = [];
+    for (const [t, members] of byType) {
+      const anchored = members.filter((o) => o.anchors.length > 0);
+      if (anchored.length > AGGREGATE_RAYS_AT) {
+        const targets = new Set<string>();
+        for (const o of anchored) for (const a of o.anchors) targets.add(a);
+        for (const a of targets) rays.push({ source: `type:${t}`, target: a });
+      } else {
+        for (const o of anchored) {
+          for (const a of new Set(o.anchors)) rays.push({ source: `obj:${o.id}`, target: a });
+        }
+      }
     }
     return { ...base, rays, mrays: [] };
   }

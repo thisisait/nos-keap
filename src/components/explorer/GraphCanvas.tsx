@@ -1144,18 +1144,28 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
   // (body-cloud mean), extent (bbox half-diagonal), count, and a circular-mean
   // dominant hue. Observer view only, and never in 'full' detail (the owner
   // asked to see everything raw then). One O(bodies) pass.
+  //
+  // GROUPING KEY, and this is why core view used to have no envelopes at all:
+  // the observer view groups by ANCHOR, and in core view the bodies no longer
+  // sit near their anchors — they are relocated to their hub — so an
+  // anchor-keyed centroid would land in empty space between clusters. The old
+  // `coreView` early-return was therefore a correct guard for the WRONG key,
+  // not a decision that core view should be structureless. With the by-type
+  // order the right key exists: group by the hub the body was placed under.
   const clusters = useMemo(() => {
-    if (coreView || forceDetail) return [] as Array<{ cx: number; cy: number; cz: number; extent: number; count: number; hue: number }>;
+    if (forceDetail) return [] as Array<{ cx: number; cy: number; cz: number; extent: number; count: number; hue: number }>;
     type Agg = { n: number; sx: number; sy: number; sz: number; hx: number; hy: number;
       minx: number; maxx: number; miny: number; maxy: number; minz: number; maxz: number };
     const acc = new Map<string, Agg>();
     for (const nd of nodes) {
-      if (!nd.object || nd.fx == null || nd.fy == null || nd.fz == null || !nd.anchor) continue;
-      let a = acc.get(nd.anchor);
+      if (!nd.object || nd.fx == null || nd.fy == null || nd.fz == null) continue;
+      const key = coreView ? nd.dataType : nd.anchor;
+      if (!key) continue;
+      let a = acc.get(key);
       if (!a) {
         a = { n: 0, sx: 0, sy: 0, sz: 0, hx: 0, hy: 0,
           minx: Infinity, maxx: -Infinity, miny: Infinity, maxy: -Infinity, minz: Infinity, maxz: -Infinity };
-        acc.set(nd.anchor, a);
+        acc.set(key, a);
       }
       a.n++;
       a.sx += nd.fx; a.sy += nd.fy; a.sz += nd.fz;

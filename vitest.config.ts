@@ -35,6 +35,11 @@ export default defineConfig({
     include: [
       'server/**/*.test.ts',
       'shared/**/*.test.ts',
+      // `src/**` joined with the explore core-layout tests: core.ts is a PURE
+      // function (objects in, positions out), so its spatial-memory and
+      // ray-collapse guarantees are unit-testable without a browser — and they
+      // are exactly the properties a screenshot cannot check.
+      'src/**/*.test.ts',
       'knowledge/**/*.test.mjs',
       'scripts/**/*.test.mjs',
     ],

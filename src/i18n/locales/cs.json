@@ -467,7 +467,8 @@
       "order": {
         "fs": "Složky",
         "taxonomy": "Taxonomie",
-        "topic": "Témata"
+        "topic": "Témata",
+        "type": "Podle typu"
       }
     },
     "toggle": {

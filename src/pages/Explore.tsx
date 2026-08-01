@@ -377,7 +377,7 @@ export default function Explore() {
           // Only the CENTRAL core root is "Root" — standalone mapping hubs and
           // topic hubs are depth 0 too, but carry their own label (without the
           // `!f.topic` guard every topic hub would be renamed "Files").
-          name: f.depth === 0 && !f.mapping && !f.topic ? t('explore.core.root') : f.name,
+          name: f.depth === 0 && !f.mapping && !f.topic && !f.assetType ? t('explore.core.root') : f.name,
           kind: 'folder',
           level: 98,
           childCount: f.count,
@@ -385,8 +385,10 @@ export default function Explore() {
           folder: true,
           mtime: newestOf(f.id),
           ...(ds?.repo ? { repo: true, bytes: ds.bytes, exts: ds.exts } : {}),
-          // Topic hubs render violet (semantic space); folder hubs stay blue.
-          categoryHue: f.topic ? 265 : 215,
+          // TYPE hubs take the hue of the bodies they hold (asset-types.ts), so a
+          // cluster and its members read as one thing; topic hubs render violet
+          // (semantic space); folder hubs stay blue.
+          categoryHue: f.hue ?? (f.topic ? 265 : 215),
           fx: p[0],
           fy: p[1],
           fz: p[2],
@@ -936,7 +938,7 @@ export default function Explore() {
           {!isLoading && core.on && (
             <div className="absolute bottom-14 left-3 z-10 flex max-w-[calc(100vw-1.5rem)] flex-wrap items-center gap-1.5 rounded-lg border border-slate-500/25 bg-slate-950/85 px-2 py-1.5 text-xs text-slate-300">
               <span className="opacity-60">{t('explore.core.toggle')}</span>
-              {(['fs', 'taxonomy', 'topic'] as const).map((o) => (
+              {(['fs', 'taxonomy', 'topic', 'type'] as const).map((o) => (
                 <button
                   key={o}
                   disabled={o === 'topic' && !topicsReady}
