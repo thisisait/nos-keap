@@ -37,6 +37,7 @@ import {
   canWriteTable,
   updateTableVisibility,
   updateTableSchema,
+  syncCard,
   storeFor,
   listDrivers,
   assertRowId,
@@ -45,6 +46,7 @@ import { tierRank, canCreateTables } from './rbac';
 import {
   createTableRequestSchema,
   updateTableSchemaSchema,
+  validateViewMeta,
   updateTableVisibilitySchema,
   listRowsQuerySchema,
   aggregateQuerySchema,
@@ -516,8 +518,9 @@ export function registerApiRoutes(app: Express) {
     if (!t) return;
     const parsed = updateTableSchemaSchema.safeParse(req.body ?? {});
     if (!parsed.success) return fail(res, 400, parsed.error.issues[0]?.message ?? 'invalid table update');
-    const { visibility, schema } = parsed.data;
-    if (!visibility && !schema) return fail(res, 400, 'nothing to update: send visibility, schema, or both');
+    const { visibility, schema, view } = parsed.data;
+    if (!visibility && !schema && !view)
+      return fail(res, 400, 'nothing to update: send visibility, schema, view, or any combination');
     try {
       // Visibility FIRST: the schema reconcile re-syncs the card and the
       // projected row objects, and those inherit the table's visibility. Doing
@@ -528,7 +531,15 @@ export function registerApiRoutes(app: Express) {
         next = { ...next, visibility };
       }
       if (schema) next = { ...next, ...updateTableSchema(next, schema) };
-      ok(res, next);
+      if (view) {
+        // Validated against the LIVE columns, not the request's — a caller may
+        // change the style without resending the schema, and a view block whose
+        // titleColumn no longer exists renders an untitled list forever.
+        const errs = validateViewMeta(view, next.schema.columns);
+        if (errs.length) return fail(res, 400, errs[0]);
+        syncCard(next, [], undefined, view);
+      }
+      ok(res, { ...next, view });
     } catch (e) {
       fail(res, 400, e instanceof Error ? e.message : 'update failed');
     }

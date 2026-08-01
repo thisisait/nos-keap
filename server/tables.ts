@@ -43,6 +43,7 @@ import {
   type RowFilter,
   type CreateTableRequest,
   type GraphMeta,
+  type ViewMeta,
   validateRowValues,
 } from '../shared/contracts/table';
 
@@ -247,6 +248,7 @@ export function syncCard(
   t: Omit<TableInfo, 'capabilities'>,
   anchors: string[] = [],
   graph?: GraphMeta,
+  view?: ViewMeta,
 ): void {
   // Re-syncs (row-count bumps) must not lose the anchors the card already
   // has — merge them in from the existing card's extracted links.
@@ -266,6 +268,11 @@ export function syncCard(
   // otherwise every row write would wipe the table's declared render metadata.
   const priorGraph = existing?.frontmatter?.graph as GraphMeta | undefined;
   const graphBlock = graph ?? priorGraph;
+  // Same preserve-across-re-sync rule as the graph block: a row write calls
+  // syncCard with NO view arg, so falling back to the card's own copy is what
+  // stops every upsert from wiping the table's declared render style.
+  const priorView = existing?.frontmatter?.view as ViewMeta | undefined;
+  const viewBlock = view ?? priorView;
   db.saveObject(t.ownerId, {
     id: `table-${t.id}`,
     type: 'table',
@@ -282,6 +289,9 @@ export function syncCard(
       // Absent (card-only, no override) → key omitted entirely, so an existing
       // table with no graph block stays byte-identical to today's frontmatter.
       ...(graphBlock ? { graph: graphBlock } : {}),
+      // Absent (no declared style) → key omitted entirely, so a table that
+      // never asked for one stays byte-identical to today's frontmatter.
+      ...(viewBlock ? { view: viewBlock } : {}),
     },
     body,
     links: extractRefs(body, `keaptable:${t.id}`),
@@ -516,7 +526,7 @@ const libsqlStore: TableStore = {
       .run(id, ownerId, req.title, req.description ?? null, JSON.stringify(req.schema), req.visibility);
     const t = getTable(id)!;
     assertRowProjectionAllowed(t.rowCount, req.graph);
-    syncCard(t, req.anchors, req.graph);
+    syncCard(t, req.anchors, req.graph, req.view);
     syncRows(t, req.graph);
     return t;
   },

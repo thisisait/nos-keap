@@ -292,6 +292,75 @@ export const graphMetaSchema = z.object({
 });
 export type GraphMeta = z.infer<typeof graphMetaSchema>;
 
+// ── Render metadata (face DataTable surfaces) ────────────────────────────────
+// A table declares HOW it wants to be rendered. ABSENT → the grid, byte-identical
+// to today. Stored verbatim in the card `frontmatter.view` by syncCard, read by
+// the nOS face BFF.
+//
+// WHY IT LIVES ON THE TABLE and not in the face: the answer to "is this a
+// spreadsheet or an article list" is a property of the DATA, not of one client.
+// A grid with `white-space: nowrap` is unusable for a table whose `research`
+// column holds three paragraphs — and that is knowable from the table, once,
+// rather than re-decided by every surface that renders it.
+
+export const tableViewStyleSchema = z.enum(['grid', 'blog', 'timeline', 'tiles']);
+export type TableViewStyle = z.infer<typeof tableViewStyleSchema>;
+
+export const viewMetaSchema = z.object({
+  style: tableViewStyleSchema.default('grid'),
+  /** Row heading. Defaults to the first text column at render time. */
+  titleColumn: z.string().optional(),
+  /** The long-form cell: rendered as a paragraph block, never a table cell. */
+  bodyColumn: z.string().optional(),
+  /** Chronological ordering + the timeline gutter label. */
+  dateColumn: z.string().optional(),
+  /** Tile artwork — a `file` column, or text holding a URL/icon name. */
+  mediaColumn: z.string().optional(),
+  /** Small facts shown beside the heading (status, tags, owner …). */
+  metaColumns: z.array(z.string()).max(4).default([]),
+});
+export type ViewMeta = z.infer<typeof viewMetaSchema>;
+
+/**
+ * Validate a view block against the schema it will render. Returns error
+ * strings; empty = valid.
+ *
+ * Each style has ONE column it cannot work without, and a missing one is an
+ * authoring error rather than something to paper over at render time: a
+ * timeline with no date column is a list in arbitrary order wearing a
+ * timeline's clothes, which is worse than the grid it replaced.
+ */
+export function validateViewMeta(
+  view: { style?: string; titleColumn?: string; bodyColumn?: string; dateColumn?: string; mediaColumn?: string; metaColumns?: string[] },
+  columns: Array<{ key?: string; kind?: string }>,
+): string[] {
+  const errors: string[] = [];
+  const byKey = new Map(columns.filter((c) => c.key).map((c) => [c.key as string, c]));
+  const need = (col: string | undefined, field: string) => {
+    if (col === undefined) return;
+    if (!byKey.has(col)) errors.push(`view.${field} references unknown column: ${col}`);
+  };
+  need(view.titleColumn, 'titleColumn');
+  need(view.bodyColumn, 'bodyColumn');
+  need(view.dateColumn, 'dateColumn');
+  need(view.mediaColumn, 'mediaColumn');
+  (view.metaColumns ?? []).forEach((c, i) => need(c, `metaColumns[${i}]`));
+
+  if (view.style === 'blog' && !view.bodyColumn) {
+    errors.push("view.style 'blog' requires bodyColumn — the long-form cell is the whole point of the style");
+  }
+  if (view.style === 'timeline' && !view.dateColumn) {
+    errors.push("view.style 'timeline' requires dateColumn — without it the order is arbitrary");
+  }
+  if (view.dateColumn) {
+    const k = byKey.get(view.dateColumn)?.kind;
+    if (k && k !== 'date' && k !== 'number' && k !== 'text') {
+      errors.push(`view.dateColumn must be a date/number/text column, got ${k}`);
+    }
+  }
+  return errors;
+}
+
 export const createTableRequestSchema = z
   .object({
     id: z.string().uuid().optional(),
@@ -304,8 +373,15 @@ export const createTableRequestSchema = z
     visibility: tableVisibilitySchema.default('private'),
     /** graph-render metadata (S2⁶) — absent = card-only, byte-identical */
     graph: graphMetaSchema.optional(),
+    /** render metadata (face surfaces) — absent = the grid, byte-identical */
+    view: viewMetaSchema.optional(),
   })
   .superRefine((val, ctx) => {
+    if (val.view) {
+      for (const message of validateViewMeta(val.view, val.schema.columns)) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, message, path: ['view'] });
+      }
+    }
     const g = val.graph;
     if (!g) return;
     const byKey = new Map(val.schema.columns.map((c) => [c.key, c]));
@@ -378,6 +454,10 @@ export type UpdateTableVisibility = z.infer<typeof updateTableVisibilitySchema>;
 export const updateTableSchemaSchema = z.object({
   visibility: tableVisibilitySchema.optional(),
   schema: tableSchemaSchema.optional(),
+  /** Change how the table renders without touching its columns. Validated
+   *  against the LIVE schema at the route, since the columns may not be in
+   *  this request at all. */
+  view: viewMetaSchema.optional(),
 });
 export type UpdateTableSchema = z.infer<typeof updateTableSchemaSchema>;
 

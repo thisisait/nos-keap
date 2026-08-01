@@ -675,7 +675,13 @@ export function registerAgentRoutes(app: Express) {
   app.get('/agent/v1/tables/:slug', agentAuth('ro'), (req, res) => {
     const t = getTable(req.params.slug);
     if (!t) return fail(res, 404, 'unknown table');
-    ok(res, t);
+    // The view block lives in the card frontmatter (like graph), not in
+    // data_tables — so it has to be lifted here or the face BFF cannot see it
+    // and the declaration reaches nothing. Absent → key omitted, and every
+    // existing consumer is byte-identical.
+    const card = db.getObject(`table-${t.id}`);
+    const view = card?.frontmatter?.view;
+    ok(res, view ? { ...t, view } : t);
   });
 
   app.post('/agent/v1/tables', agentAuth('rw'), async (req, res) => {
