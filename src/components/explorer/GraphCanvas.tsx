@@ -79,8 +79,15 @@ const HUGE_FIELD = 5000; // objects
 // "solar system" materialises on approach WITHOUT a click, and dense stars
 // never flood the wide view. Tunables: raise SHOW to reveal later (sparser
 // overview), lower it to reveal sooner. rendered radius = √(nodeVal)·nodeRelSize.
-const ORBITAL_LOD_SHOW = 0.01; // ~visible when radius/dist exceeds this
-const ORBITAL_LOD_HIDE = 0.007; // ~hidden when it drops below this
+//
+// RETUNED 2026-08-01 on operator feedback: at 0.01/0.007 a body only resolved
+// once the camera was almost on top of it, so approaching a star showed nothing
+// until the last moment and then everything at once. 2.5x lower means a body
+// clears SHOW from 2.5x farther out — the system materialises during the
+// approach rather than at the end of it. The SHOW:HIDE ratio is unchanged (0.7),
+// so the anti-flicker hysteresis is exactly as wide, proportionally, as before.
+const ORBITAL_LOD_SHOW = 0.004; // ~visible when radius/dist exceeds this
+const ORBITAL_LOD_HIDE = 0.0028; // ~hidden when it drops below this
 
 // PERF/B2a — above this many observer-view bodies, the per-body Mesh draw calls
 // (buildAssetMesh) are the bound, so the bodies collapse into per-form
@@ -112,9 +119,17 @@ const IMPOSTOR_GONE_APP = 0.008; // ≥ this → bodies legible, nebula gone
 // most MAX at once, largest-on-screen first. Covers everything the S2 budgets
 // left permanently unlabeled (deep taxonomy stars, over-budget cubes/folders,
 // observer bodies) — the "zoom in and the names appear" tier of the LOD arc.
-const PROX_LABEL_SHOW = 0.035;
-const PROX_LABEL_KEEP = 0.024;
-const PROX_LABEL_MAX = 48;
+//
+// RETUNED 2026-08-01, same reason and the same 2.5x as the body LOD above — a
+// name that only appears after the body has is a second cliff, and it left small
+// non-file bodies effectively anonymous (fs cubes carry their own permanent
+// plate, which is why files looked labelled and nothing else did). MAX rises
+// with the range but not proportionally: every plate is one canvas + one
+// CanvasTexture, and the largest-on-screen-first ordering means the extra slots
+// go to what the operator is actually looking at.
+const PROX_LABEL_SHOW = 0.014;
+const PROX_LABEL_KEEP = 0.0096;
+const PROX_LABEL_MAX = 72;
 
 export interface CanvasNode {
   id: string;
@@ -1012,6 +1027,72 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
   }, [focusId, graphData, mode]);
 
   const handleClick = useCallback((node: GraphNode) => onNodeClick(node.id), [onNodeClick]);
+
+  // HOVER PLATE — a name for whatever the cursor is on, unconditionally.
+  //
+  // Every other label tier is a BUDGET: star/folder/anchor plates cull past a
+  // cap, and the proximity tier needs the body to be big enough on screen. So a
+  // small body in a dense field could be un-nameable at any zoom that still
+  // showed its neighbours, and the only fallback was the HTML tooltip. This one
+  // answers a direct question — "what is that?" — so it obeys nothing: no cap,
+  // no apparent-size gate, one plate at a time.
+  //
+  // It lives in the scene next to the proximity plates and uses the identical
+  // styling, so hovering does not make a node look like a different KIND of
+  // thing; only slightly brighter, because it is the one you asked about.
+  const hoverRef = useRef<{ id: string; sprite: THREE.Sprite } | null>(null);
+  const handleHover = useCallback((node: GraphNode | null) => {
+    const ref = fgRef.current;
+    if (!ref) return;
+    let scene: THREE.Scene;
+    try {
+      scene = ref.scene();
+    } catch {
+      return; // renderer not ready
+    }
+    const cur = hoverRef.current;
+    const n = node as CanvasNode | null;
+    if (cur && cur.id === n?.id) return; // same node — nothing to redraw
+    if (cur) {
+      scene.remove(cur.sprite);
+      (cur.sprite.material.map as THREE.Texture | null)?.dispose?.();
+      cur.sprite.material.dispose();
+      hoverRef.current = null;
+    }
+    if (!n || n.fx == null || n.fy == null || n.fz == null) return;
+    const sprite = new SpriteText(n.name);
+    sprite.color = '#ffffff';
+    sprite.textHeight = n.object ? 2.4 : 3.2;
+    sprite.fontSize = 110;
+    sprite.fontWeight = '600';
+    sprite.backgroundColor = 'rgba(8,12,22,0.94)';
+    sprite.padding = 1.8;
+    sprite.borderRadius = 1.5;
+    sprite.borderWidth = 0.5;
+    sprite.borderColor = 'rgba(125,211,252,0.75)'; // sky-300: "this is the one"
+    const label = sprite as unknown as THREE.Sprite;
+    const r = Math.sqrt(Math.max(nodeSize(n), 0.01)) * 2.4;
+    label.position.set(n.fx, n.fy - (r + 4), n.fz);
+    label.material.depthWrite = false;
+    label.renderOrder = 999; // never occluded by the body it names
+    noRaycast(label);
+    scene.add(label);
+    hoverRef.current = { id: n.id, sprite: label };
+  }, []);
+
+  // Drop the plate on unmount — a hover that outlives the canvas leaks a
+  // texture and paints a name over whatever replaces it.
+  useEffect(
+    () => () => {
+      const cur = hoverRef.current;
+      if (!cur) return;
+      cur.sprite.parent?.remove(cur.sprite);
+      (cur.sprite.material.map as THREE.Texture | null)?.dispose?.();
+      cur.sprite.material.dispose();
+      hoverRef.current = null;
+    },
+    [],
+  );
 
   // Per-frame update in ship mode: physics, animation, camera, trail.
   const updateFrame = useCallback(
@@ -1974,6 +2055,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
               : 0
       }
       onNodeClick={handleClick}
+      onNodeHover={handleHover}
       backgroundColor="rgba(0,0,0,0)"
       width={width}
       height={height}
