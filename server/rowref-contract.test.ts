@@ -140,3 +140,36 @@ describe('expand is bounded', () => {
     expect(listRowsQuerySchema.safeParse({ expand: five }).success).toBe(false);
   });
 });
+
+// ── the vocabulary half of the join ─────────────────────────────────────────
+//
+// A rowRef that no CONCEPT can bind is a join the estate cannot query by
+// meaning. Measured while rebasing onto v1.39.0, which introduced concepts:
+// all 47 declared explicit `kinds` lists and NOT ONE included `rowRef` — so the
+// structural join was the single column kind invisible to every concept-aware
+// consumer. `graph.parent` was the sharpest instance: its own description read
+// "a slug today because there is no rowRef kind", naming the exact condition
+// that had since become true.
+describe('rowRef is addressable by concept', () => {
+  it('graph.parent binds a rowRef, which is what it always wanted', () => {
+    const r = tableSchemaSchema.safeParse({
+      columns: [{ key: 'parent', label: 'Parent', kind: 'rowRef', refTable: 'node', concept: 'graph.parent' }],
+    });
+    expect(r.success, JSON.stringify(r.error?.issues)).toBe(true);
+  });
+
+  it('keeps refusing a concept whose kinds genuinely exclude rowRef', () => {
+    // Widening must not become "anything binds anything".
+    const r = tableSchemaSchema.safeParse({
+      columns: [{ key: 'anchor', label: 'Anchor', kind: 'rowRef', refTable: 'node', concept: 'graph.anchor' }],
+    });
+    expect(r.success).toBe(false);
+  });
+
+  it('still refuses a rowRef with no refTable, concept or not', () => {
+    const r = tableSchemaSchema.safeParse({
+      columns: [{ key: 'p', label: 'P', kind: 'rowRef', concept: 'graph.parent' }],
+    });
+    expect(r.success).toBe(false);
+  });
+});

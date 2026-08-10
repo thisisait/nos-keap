@@ -119,10 +119,10 @@ export const FIELD_CONCEPTS: FieldConcept[] = [
 
   // ── graph ───────────────────────────────────────────────────────────────
   { id: 'graph.anchor', label: 'Taxonomy anchor', kinds: ['taxonomyRef'], description: 'The taxonomy node this row hangs from in the universe.' },
-  { id: 'graph.depends_on', label: 'Depends on', kinds: ['json', 'objectRef'], description: 'Things this row requires in order to function.' },
-  { id: 'graph.uses', label: 'Uses', kinds: ['json', 'objectRef'], description: 'Components or organs this row consumes without strictly requiring.' },
-  { id: 'graph.parent', label: 'Parent row', kinds: ['text', 'objectRef'], description: 'The row this one nests under, making a table self-nesting. A slug today because there is no rowRef kind; an objectRef once rows are graph objects.' },
-  { id: 'graph.stores', label: 'Data stores', kinds: ['json', 'objectRef'], description: 'Persistent stores this row reads from or writes to.' },
+  { id: 'graph.depends_on', label: 'Depends on', kinds: ['json', 'objectRef', 'rowRef'], description: 'Things this row requires in order to function. A rowRef is the typed form; json is the pre-relations one.' },
+  { id: 'graph.uses', label: 'Uses', kinds: ['json', 'objectRef', 'rowRef'], description: 'Components or organs this row consumes without strictly requiring.' },
+  { id: 'graph.parent', label: 'Parent row', kinds: ['text', 'objectRef', 'rowRef'], description: 'The row this one nests under, making a table self-nesting. `rowRef` is the referential form and the one to use — this concept previously read "a slug today because there is no rowRef kind", and that kind now exists. `text` stays legal so every table written before it keeps validating.' },
+  { id: 'graph.stores', label: 'Data stores', kinds: ['json', 'objectRef', 'rowRef'], description: 'Persistent stores this row reads from or writes to.' },
 
 
   // ── time ────────────────────────────────────────────────────────────────
