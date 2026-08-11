@@ -743,8 +743,24 @@ export function registerAgentRoutes(app: Express) {
         .filter(Boolean)
         .slice(0, 4);
       const { rows } = await storeFor(t.driver).listRows(t.id, { filter: [], limit: 500, expand });
-      // FLAT values — the seeder reads a top-level `slug` off each row.
-      ok(res, { rows: rows.map((r) => r.values) });
+      // FLAT values — the seeder reads a top-level `slug` off each row — plus the
+      // row's own id.
+      //
+      // MEASURED 2026-08-11, immediately after shipping /referrers below. That
+      // route is keyed by rowId and this listing was the only way an agent could
+      // meet a row, so between them an agent could enumerate rows forever and
+      // never learn an id to ask about. The exception was a row carrying a
+      // `slug`, which doubles as its id (see the POST handler) — so the feature
+      // worked for seeded rows and was invisible for every other one.
+      //
+      // That is the same shape as the note under /referrers: a capability
+      // present in the store and reachable from nowhere. Shipping the route
+      // without this line moved the wall by one hop instead of removing it.
+      //
+      // `__id` follows the convention rowRef already set with `<col>__display`,
+      // and it is spread LAST on purpose: a column literally named `__id` must
+      // not shadow the row's real identity.
+      ok(res, { rows: rows.map((r) => ({ ...r.values, __id: r.id })) });
     } catch (e) {
       fail(res, 400, e instanceof Error ? e.message : 'query failed');
     }
@@ -777,7 +793,9 @@ export function registerAgentRoutes(app: Express) {
     const rowSlug = typeof values.slug === 'string' && validSlug(values.slug) ? values.slug : undefined;
     try {
       const row = await storeFor(t.driver).upsertRow(t.id, rowSlug, values, `agent:${req.agentName}`);
-      ok(res, row.values);
+      // `__id` for the same reason as the listing above: without it, an agent
+      // that has just CREATED a row still cannot ask what points at it.
+      ok(res, { ...row.values, __id: row.id });
     } catch (e) {
       fail(res, 400, e instanceof Error ? e.message : 'row upsert failed');
     }
