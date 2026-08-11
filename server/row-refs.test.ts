@@ -285,3 +285,37 @@ describe('expand resolves a rowRef to its display value', () => {
     expect(tables.storeFor('libsql').capabilities.joins).toBe(true);
   });
 });
+
+// ─── the question the mirror exists for, finally askable ───────────────────
+//
+// `referencesTo()` shipped with migration 007 and was reachable from NOWHERE —
+// not the agent API, not the human one. It backed `onDelete: 'restrict'`
+// internally and nothing else, so the two features its own docstring names (the
+// back-reference panel, the graph's row→row edges) had no way to ask. Measured
+// 2026-08-11 by curling for a referrers route and getting the forward-auth
+// catch-all's 401, which is what an absent route looks like on that API.
+describe('referencesTo answers, and distinguishes empty from absent', () => {
+  it('lists every referrer with the column that points', async () => {
+    await tables.storeFor('libsql').upsertRow('bill', 'b-ref1', { number: 'R1', customer: 'bill-cust' }, OWNER);
+    await tables.storeFor('libsql').upsertRow('bill', 'b-ref2', { number: 'R2', customer: 'bill-cust' }, OWNER);
+    const refs = tables.referencesTo('party', 'bill-cust');
+    expect(refs).toEqual(
+      expect.arrayContaining([
+        { fromTable: 'bill', fromRow: 'b-ref1', columnKey: 'customer' },
+        { fromTable: 'bill', fromRow: 'b-ref2', columnKey: 'customer' },
+      ]),
+    );
+  });
+
+  it('returns EMPTY for a row nobody points at — not an error', async () => {
+    await tables.storeFor('libsql').upsertRow('party', 'lonely', { legal_name: 'Nobody Ltd.' }, OWNER);
+    expect(tables.referencesTo('party', 'lonely')).toEqual([]);
+  });
+
+  it('returns EMPTY for a row that does not exist, and that is deliberate', () => {
+    // "Nothing points at me" and "I am not there" are different answers. The
+    // route must not 404 here: a caller asking whether a delete is safe would
+    // read the 404 as a refusal to answer rather than as "safe".
+    expect(tables.referencesTo('party', 'never-existed')).toEqual([]);
+  });
+});

@@ -32,7 +32,7 @@ import { allNodes } from './taxonomy';
 import { normalizeAndSaveCapture, parseEnvelope } from './intake';
 import { syncAllFs, syncMapping, fsSyncStatus, USER_FILES_DIR } from './fs-sync';
 import { scheduleTopicRecluster, clusterTopics } from './topics';
-import { getTable, listTables, storeFor, updateTableSchema } from './tables';
+import { getTable, listTables, referencesTo, storeFor, updateTableSchema } from './tables';
 import { createTableRequestSchema, tableSchemaSchema } from '../shared/contracts/table';
 import { cortexValidateRequestSchema } from '../shared/contracts/cortex';
 import { CORTEX_CONTRACT_VERSION, cortexRegistryHash, listOpcodes } from './cortex-opcodes';
@@ -748,6 +748,24 @@ export function registerAgentRoutes(app: Express) {
     } catch (e) {
       fail(res, 400, e instanceof Error ? e.message : 'query failed');
     }
+  });
+
+  // "Which rows point AT this one" — the question the whole mirror exists for.
+  //
+  // `referencesTo()` shipped with migration 007 and was reachable from NOWHERE:
+  // not this API, not the human one. It backed `onDelete: 'restrict'` internally
+  // and nothing else, so the back-reference panel and the graph's row→row edge
+  // enumeration — the two features the mirror's own docstring names — had no
+  // way to ask. Measured 2026-08-11 by curling for it and getting a 401 from the
+  // forward-auth catch-all, which is what an absent route looks like here.
+  app.get('/agent/v1/tables/:slug/rows/:rowId/referrers', agentAuth('ro'), (req, res) => {
+    const t = getTable(req.params.slug);
+    if (!t) return fail(res, 404, 'unknown table');
+    // NOT gated on the row existing. "Nothing points at me" and "I am not
+    // there" are different answers, and a 404 here would conflate them for a
+    // caller checking whether a delete is safe.
+    const referrers = referencesTo(t.id, req.params.rowId);
+    ok(res, { table: t.id, row: req.params.rowId, count: referrers.length, referrers });
   });
 
   app.post('/agent/v1/tables/:slug/rows', agentAuth('rw'), async (req, res) => {
