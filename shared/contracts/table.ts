@@ -529,12 +529,6 @@ export const createTableRequestSchema = z
   });
 export type CreateTableRequest = z.infer<typeof createTableRequestSchema>;
 
-/** PATCH /api/tables/:id — move a table between share scopes after creation. */
-export const updateTableVisibilitySchema = z.object({
-  visibility: tableVisibilitySchema,
-});
-export type UpdateTableVisibility = z.infer<typeof updateTableVisibilitySchema>;
-
 /**
  * PATCH /api/tables/:id with a `schema` — reconcile the column schema of a
  * table that already exists. Both fields optional and independent, so the

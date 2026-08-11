@@ -47,7 +47,6 @@ import {
   createTableRequestSchema,
   updateTableSchemaSchema,
   validateViewMeta,
-  updateTableVisibilitySchema,
   listRowsQuerySchema,
   aggregateQuerySchema,
 } from '../shared/contracts/table';
