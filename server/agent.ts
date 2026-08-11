@@ -733,7 +733,16 @@ export function registerAgentRoutes(app: Express) {
     const t = getTable(req.params.slug);
     if (!t) return fail(res, 404, 'unknown table');
     try {
-      const { rows } = await storeFor(t.driver).listRows(t.id, { filter: [], limit: 500, expand: [] });
+      // `expand` is honoured here now. It was hard-coded to [] while the
+      // contract advertised it (listRowsQuerySchema, max 4), so a caller asking
+      // for ?expand=customer got the raw id back and no error — inert at BOTH
+      // ends. Capped at the contract's 4 so a URL cannot fan out the query.
+      const expand = String(req.query.expand ?? '')
+        .split(',')
+        .map((x) => x.trim())
+        .filter(Boolean)
+        .slice(0, 4);
+      const { rows } = await storeFor(t.driver).listRows(t.id, { filter: [], limit: 500, expand });
       // FLAT values — the seeder reads a top-level `slug` off each row.
       ok(res, { rows: rows.map((r) => r.values) });
     } catch (e) {

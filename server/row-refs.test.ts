@@ -172,3 +172,116 @@ describe('rebuild is a repair, and says so by matching', () => {
     expect(tables.referencesTo('party', 'globex')).toEqual([]);
   });
 });
+
+// ─── referential integrity on WRITE ────────────────────────────────────────
+//
+// MEASURED LIVE 2026-08-11, on the running estate, minutes after rowRef first
+// reached it: a row carrying `customer: "ghost"` was ACCEPTED and stored. The
+// integrity was ASYMMETRIC — `onDelete: 'restrict'` refuses to delete a row
+// somebody points at, and nothing stopped anyone pointing at nothing. Every
+// test above passed throughout, because they test what was written and nobody
+// had written this.
+//
+// OWN FIXTURES, and the reason is worth the sentence: the suite above ends by
+// DROPPING `invoice` and DELETING `party/acme`. A block appended here that
+// leaned on either would fail on ordering rather than on behaviour — which is
+// how the first draft of this block failed, twice, the second time caught by
+// the very existence check it was written to prove.
+describe('a rowRef may not point at nothing', () => {
+  beforeAll(async () => {
+    await tables.storeFor('libsql').createTable(OWNER, {
+      id: 'bill',
+      title: 'Bill',
+      driver: 'libsql',
+      schema: {
+        columns: [
+          { key: 'number', label: 'Number', kind: 'text', role: 'attribute', required: false, onDelete: 'restrict' },
+          { key: 'customer', label: 'Customer', kind: 'rowRef', role: 'dimension', required: false, refTable: 'party', refDisplay: 'legal_name', onDelete: 'restrict' },
+        ],
+      },
+      anchors: [],
+      visibility: 'private',
+    });
+    await tables.storeFor('libsql').upsertRow('party', 'bill-cust', { legal_name: 'Billed Co.' }, OWNER);
+  });
+
+  it('refuses a reference to a row that does not exist', async () => {
+    await expect(
+      tables.storeFor('libsql').upsertRow('bill', 'b-ghost', { number: 'X', customer: 'ghost' }, OWNER),
+    ).rejects.toThrow(/references party\.ghost, which does not exist/);
+  });
+
+  it('refuses a reference into a table that does not exist', async () => {
+    await tables.storeFor('libsql').createTable(OWNER, {
+      id: 'orphan-ref',
+      title: 'Orphan ref',
+      driver: 'libsql',
+      schema: {
+        columns: [
+          { key: 'name', label: 'Name', kind: 'text', role: 'attribute', required: false, onDelete: 'restrict' },
+          { key: 'target', label: 'Target', kind: 'rowRef', role: 'dimension', required: false, refTable: 'no-such-table', onDelete: 'restrict' },
+        ],
+      },
+      anchors: [],
+      visibility: 'private',
+    });
+    await expect(
+      tables.storeFor('libsql').upsertRow('orphan-ref', 'r1', { name: 'x', target: 'anything' }, OWNER),
+    ).rejects.toThrow(/points at table 'no-such-table', which does not exist/);
+  });
+
+  it('leaves NOTHING behind when it refuses — not the row, not the mirror', async () => {
+    const before = mirror();
+    await expect(
+      tables.storeFor('libsql').upsertRow('bill', 'b-ghost2', { number: 'Y', customer: 'nope' }, OWNER),
+    ).rejects.toThrow();
+    const { rows } = await tables.storeFor('libsql').listRows('bill', { filter: [], limit: 100, expand: [] });
+    expect(rows.map((r) => r.id)).not.toContain('b-ghost2');
+    expect(mirror(), 'a refused write left a mirror edge').toEqual(before);
+  });
+
+  it('still accepts an absent or cleared reference — those are not claims', async () => {
+    await tables.storeFor('libsql').upsertRow('bill', 'b-none', { number: 'Z' }, OWNER);
+    await tables.storeFor('libsql').upsertRow('bill', 'b-none', { customer: '' }, OWNER);
+  });
+});
+
+// ─── expand on read ────────────────────────────────────────────────────────
+//
+// `expand` sat in the contract (listRowsQuerySchema, max 4) doing nothing for
+// two weeks. Measured live the same day: `?expand=customer` returned the raw
+// slug. It was inert at BOTH ends — the store never resolved it, and the agent
+// route passed a hard-coded `expand: []`, so the parameter never even arrived.
+describe('expand resolves a rowRef to its display value', () => {
+  it('adds <col>__display and leaves the raw id in place', async () => {
+    await tables.storeFor('libsql').upsertRow('bill', 'b-exp', { number: 'E1', customer: 'bill-cust' }, OWNER);
+    const { rows } = await tables
+      .storeFor('libsql')
+      .listRows('bill', { filter: [], limit: 100, expand: ['customer'] });
+    const row = rows.find((r) => r.id === 'b-exp');
+    // The id must survive: it is what a WRITE round-trips, and replacing it
+    // would make an expanded read un-saveable.
+    expect(row?.values.customer).toBe('bill-cust');
+    expect(row?.values.customer__display).toBe('Billed Co.');
+  });
+
+  it('changes nothing when expand is not asked for', async () => {
+    const { rows } = await tables
+      .storeFor('libsql')
+      .listRows('bill', { filter: [], limit: 100, expand: [] });
+    expect(rows.find((r) => r.id === 'b-exp')?.values.customer__display).toBeUndefined();
+  });
+
+  it('refuses a typo rather than reporting "no label"', async () => {
+    await expect(
+      tables.storeFor('libsql').listRows('bill', { filter: [], limit: 10, expand: ['custmoer'] }),
+    ).rejects.toThrow(/unknown expand column: custmoer/);
+    await expect(
+      tables.storeFor('libsql').listRows('bill', { filter: [], limit: 10, expand: ['number'] }),
+    ).rejects.toThrow(/is not a rowRef and cannot be expanded/);
+  });
+
+  it('declares the capability now that it serves it', () => {
+    expect(tables.storeFor('libsql').capabilities.joins).toBe(true);
+  });
+});

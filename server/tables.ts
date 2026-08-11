@@ -529,6 +529,127 @@ function syncRowRefs(
   }
 }
 
+/**
+ * Refuse a rowRef that points at a row which does not exist.
+ *
+ * MEASURED LIVE 2026-08-11, on the estate, minutes after rowRef first shipped:
+ * a row carrying `customer: "ghost"` was accepted and stored. The integrity was
+ * ASYMMETRIC — `onDelete: restrict` refuses to delete a row somebody points at,
+ * while nothing stopped anyone pointing at nothing. 24 unit tests missed it
+ * because they test what was written, and nobody had written this.
+ *
+ * Called INSIDE the row transaction, before the mirror is rewritten, so a
+ * refusal leaves neither `data` nor `table_row_refs` touched.
+ *
+ * THE COST, stated rather than discovered later: this makes load ORDER matter.
+ * Importing invoices before parties now fails per row instead of silently
+ * building a graph of dangling edges. That is the same trade `restrict` already
+ * made on the delete side, and the alternative is a join table whose edges may
+ * point nowhere — which is not a join.
+ */
+function assertRowRefTargetsExist(
+  d: Database.Database,
+  schema: TableSchema,
+  values: Record<string, unknown>,
+): void {
+  for (const [key, target] of rowRefColumns(schema)) {
+    const v = values[key];
+    // Absent or cleared is legal — the column simply has no edge. Only a
+    // NON-EMPTY value is a claim that something is there.
+    if (typeof v !== 'string' || !v.trim()) continue;
+
+    const table = d
+      .prepare('SELECT 1 FROM data_tables WHERE id = ?')
+      .get(target) as unknown;
+    if (!table) {
+      throw new Error(
+        `column '${key}' points at table '${target}', which does not exist`,
+      );
+    }
+    const row = d
+      .prepare('SELECT 1 FROM table_rows WHERE table_id = ? AND row_id = ?')
+      .get(target, v.trim()) as unknown;
+    if (!row) {
+      throw new Error(
+        `column '${key}' references ${target}.${v.trim()}, which does not exist`,
+      );
+    }
+  }
+}
+
+/**
+ * Resolve `expand`ed rowRef columns to their target's display value.
+ *
+ * ADDITIVE, never destructive: the raw id stays in `<key>` and the label lands
+ * in `<key>__display`. A caller that expands gets something to render; every
+ * caller that does not is byte-identical, which matters because the agent row
+ * API is documented as FLAT and the seeder reads a top-level `slug` off it.
+ *
+ * `expand` existed in the contract (listRowsQuerySchema, max 4) and did nothing
+ * for two weeks — measured live 2026-08-11: `?expand=customer` returned the raw
+ * slug. The store never resolved it AND the agent route passed a hard-coded
+ * `expand: []`, so the parameter was inert twice over. `capabilities.joins`
+ * being declared `false` is what kept that honest rather than broken.
+ *
+ * One query per (targetTable, ids) rather than per row: a 500-row page with one
+ * rowRef column is 1 extra query, not 500.
+ */
+function expandRowRefs(schema: TableSchema, rows: TableRow[], expand: string[]): void {
+  if (!expand.length || !rows.length) return;
+  const byKey = new Map(schema.columns.map((c) => [c.key, c]));
+
+  for (const key of expand) {
+    const col = byKey.get(key);
+    // Silently skipping an unknown or non-rowRef key would make a typo look
+    // like "the target had no label". Refuse instead — the caller asked for
+    // something this table cannot give.
+    if (!col) throw new Error(`unknown expand column: ${key}`);
+    if (col.kind !== 'rowRef' || !col.refTable) {
+      throw new Error(`column '${key}' is not a rowRef and cannot be expanded`);
+    }
+
+    const ids = [
+      ...new Set(
+        rows
+          .map((r) => r.values[key])
+          .filter((v): v is string => typeof v === 'string' && v.trim().length > 0),
+      ),
+    ];
+    if (!ids.length) continue;
+
+    const placeholders = ids.map(() => '?').join(',');
+    const found = db
+      .getDb()
+      .prepare(
+        `SELECT row_id, data FROM table_rows
+         WHERE table_id = ? AND row_id IN (${placeholders})`,
+      )
+      .all(col.refTable, ...ids) as Array<{ row_id: string; data: string }>;
+
+    const display = new Map<string, string>();
+    for (const f of found) {
+      let label = f.row_id;
+      if (col.refDisplay) {
+        try {
+          const v = (JSON.parse(f.data) as Record<string, unknown>)[col.refDisplay];
+          if (typeof v === 'string' && v.trim()) label = v;
+        } catch {
+          /* a row whose data will not parse keeps its id as the label */
+        }
+      }
+      display.set(f.row_id, label);
+    }
+
+    for (const r of rows) {
+      const v = r.values[key];
+      if (typeof v !== 'string' || !v.trim()) continue;
+      // A reference whose target vanished keeps the id and says so, rather than
+      // rendering as an empty cell that looks like "no customer".
+      r.values[`${key}__display`] = display.get(v) ?? `${v} (missing)`;
+    }
+  }
+}
+
 /** Rows that reference (tableId, rowId). The query the mirror exists for. */
 export function referencesTo(
   tableId: string,
@@ -601,7 +722,7 @@ const libsqlStore: TableStore = {
     // implemented yet. Declared false so the UI does not render a picker and a
     // "what points here" panel that the store cannot serve — capabilities are a
     // promise, and a premature true is a promise the operator sees broken.
-    joins: false,
+    joins: true, // expand on read + the back-reference index both serve now
   },
 
   async createTable(ownerId, req) {
@@ -651,6 +772,7 @@ const libsqlStore: TableStore = {
       .prepare(`SELECT * FROM table_rows WHERE table_id = ? ${sql} ${order} LIMIT ? OFFSET ?`)
       .all(id, ...params, q.limit + 1, offset) as TableRowDbRow[];
     const page = rows.slice(0, q.limit).map(mapRow);
+    expandRowRefs(t.schema, page, q.expand ?? []);
     return {
       rows: page,
       nextCursor: rows.length > q.limit ? String(offset + q.limit) : undefined,
@@ -672,6 +794,10 @@ const libsqlStore: TableStore = {
       const merged = existing ? { ...JSON.parse(existing.data), ...values } : values;
       const errors = validateRowValues(t.schema, merged);
       if (errors.length) throw new Error(`invalid row: ${errors.join('; ')}`);
+      // Shape first, then EXISTENCE. validateRowValues lives in the shared
+      // contract and has no database, so it can say a rowRef is a string and
+      // never that the string names anything.
+      assertRowRefTargetsExist(d, t.schema, merged);
       d.prepare(
         `INSERT INTO table_rows (table_id, row_id, data, updated_by)
          VALUES (?, ?, ?, ?)
