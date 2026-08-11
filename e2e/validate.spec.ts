@@ -268,7 +268,7 @@ test.describe('cortex validate', () => {
       contracts: Record<string, number>;
       ontology: { version: string; verbs: number };
     };
-    expect(health.contracts.cortex).toBe(1);
+    expect(health.contracts.cortex).toBe(2);
     // Pinned by e2e/selfmodel.spec.ts and by the nOS cross-repo wet gate: a new
     // contract is an ADDED key, never a bump of this one.
     expect(health.contracts.selfmodel).toBe(1);
