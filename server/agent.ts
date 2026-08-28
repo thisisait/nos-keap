@@ -33,7 +33,13 @@ import { normalizeAndSaveCapture, parseEnvelope } from './intake';
 import { syncAllFs, syncMapping, fsSyncStatus, USER_FILES_DIR } from './fs-sync';
 import { scheduleTopicRecluster, clusterTopics } from './topics';
 import { getTable, listTables, referencesTo, storeFor, updateTableSchema } from './tables';
-import { createTableRequestSchema, tableSchemaSchema } from '../shared/contracts/table';
+import {
+  createTableRequestSchema,
+  tableSchemaSchema,
+  viewMetaSchema,
+  validateViewMeta,
+  type ViewMeta,
+} from '../shared/contracts/table';
 import { cortexValidateRequestSchema } from '../shared/contracts/cortex';
 import { CORTEX_CONTRACT_VERSION, cortexRegistryHash, listOpcodes } from './cortex-opcodes';
 import { cortexOntologyVersion } from './cortex-ontology-version';
@@ -699,8 +705,21 @@ export function registerAgentRoutes(app: Express) {
     if (existing) {
       const cols = tableSchemaSchema.safeParse({ columns: b.columns });
       if (!cols.success) return fail(res, 400, cols.error.issues[0]?.message ?? 'invalid columns');
+      // A re-declared view block rides the reconcile too, validated against the
+      // columns being reconciled TO — not the ones on disk, which are about to
+      // change. Absent → the card keeps its prior block (syncCard's fallback).
+      let view: ViewMeta | undefined;
+      if (b.view !== undefined) {
+        const parsedView = viewMetaSchema.safeParse(b.view);
+        if (!parsedView.success) {
+          return fail(res, 400, parsedView.error.issues[0]?.message ?? 'invalid view');
+        }
+        const viewErrors = validateViewMeta(parsedView.data, cols.data.columns);
+        if (viewErrors.length) return fail(res, 400, viewErrors[0]);
+        view = parsedView.data;
+      }
       try {
-        return ok(res, { ...existing, ...updateTableSchema(existing, cols.data) });
+        return ok(res, { ...existing, ...updateTableSchema(existing, cols.data, view) });
       } catch (e) {
         return fail(res, 409, e instanceof Error ? e.message : 'schema reconcile failed');
       }
@@ -719,6 +738,14 @@ export function registerAgentRoutes(app: Express) {
       // a table's card look / row projection. Validated by the schema (absent →
       // card-only). Without this line the block is silently dropped.
       graph: b.graph,
+      // Render metadata (style / facets / highlights / offer). Same line, same
+      // reason as `graph` directly above, and it was MISSING until 2026-08-28:
+      // `syncCard` has accepted a view block since the day it was added and
+      // `createTable` forwards it, so the only gap was this mapping — a `view:`
+      // in state/keap-tables/*.table.yml validated in git, went green in every
+      // offline gate, and reached no converged install. Zod strips what it does
+      // not know, so it failed as SILENCE rather than as an error.
+      view: b.view,
     });
     if (!parsed.success) return fail(res, 400, parsed.error.issues[0]?.message ?? 'invalid table');
     try {

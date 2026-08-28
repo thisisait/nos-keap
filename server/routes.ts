@@ -506,7 +506,18 @@ export function registerApiRoutes(app: Express) {
   app.get('/api/tables/:id', (req, res) => {
     const t = getTable(req.params.id);
     if (!t || !canReadTable(t, req.user)) return fail(res, 404, 'unknown table');
-    ok(res, t);
+    // The view block lives in the card frontmatter, not in data_tables — so it
+    // has to be lifted here, exactly as /agent/v1/tables/:slug does.
+    //
+    // WITHOUT THIS, `view` WAS WRITE-ONLY THROUGH THIS DOOR: the PATCH below
+    // accepts and validates a view block, and this GET — the only way a caller
+    // reads the table back — omitted it. So the only available confirmation
+    // that a style had been applied was the PATCH's own 200, which is a success
+    // marker written by the code that attempted the work: the shape this estate
+    // keeps paying for. A reader must be able to see what a writer claims.
+    // Absent → key omitted, and every existing consumer is byte-identical.
+    const view = db.getObject(`table-${t.id}`)?.frontmatter?.view;
+    ok(res, view ? { ...t, view } : t);
   });
 
   // Change a table's DECLARATION (owner/admin): its share scope, its column

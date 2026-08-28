@@ -174,6 +174,19 @@ export function canWriteTable(t: TableInfo, actor: TableActor): boolean {
 export function updateTableSchema(
   t: Omit<TableInfo, 'capabilities'>,
   next: TableSchema,
+  /**
+   * The re-declared view block, if the caller sent one.
+   *
+   * WITHOUT THIS ARGUMENT THE RECONCILE PATH WAS WRITE-ONCE FOR `view`, and
+   * that is the path every real table takes: `syncCard` falls back to the
+   * card's prior block when called with none (so a row write does not wipe the
+   * style), which is right for a row write and wrong for a re-seed — the
+   * definition file is the source of truth, and a `view:` edited in it landed
+   * in git, passed validation, and reached nothing on any table that already
+   * existed. Exactly the defect the reconcile path was built to end for
+   * columns, one field over. Absent → prior block preserved, as before.
+   */
+  view?: ViewMeta,
 ): Omit<TableInfo, 'capabilities'> {
   const prior = new Map(t.schema.columns.map((c) => [c.key, c]));
   const nextKeys = new Set(next.columns.map((c) => c.key));
@@ -196,7 +209,7 @@ export function updateTableSchema(
     .run(JSON.stringify(next), t.id);
 
   const updated = { ...t, schema: next };
-  syncCard(updated);
+  syncCard(updated, [], undefined, view);
   syncRows(updated);
   return updated;
 }

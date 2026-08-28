@@ -76,6 +76,86 @@ describe('validateViewMeta', () => {
   });
 });
 
+/**
+ * facets / highlights / offer — the generative-UI keys.
+ *
+ * The column check matters MORE for these than for `titleColumn`, because these
+ * are the keys a model is expected to fill. A facet naming a column that does
+ * not exist renders an empty dropdown; a highlight predicate naming one selects
+ * zero rows and labels the emptiness with the author's confident words.
+ */
+describe('validateViewMeta — the generative keys', () => {
+  const GOOD = {
+    style: 'timeline',
+    dateColumn: 'created',
+    facets: ['status', 'title'],
+    highlights: [{ label: 'done', when: [{ column: 'status', op: 'eq', value: 'done' }] }],
+    offer: { label: 'x', action: 'focus-highlight', when: [{ column: 'status', op: 'eq', value: 'new' }] },
+  };
+
+  it('accepts a block whose every column exists', () => {
+    expect(validateViewMeta(GOOD, COLUMNS)).toEqual([]);
+  });
+
+  it('refuses a facet over a column that does not exist', () => {
+    expect(validateViewMeta({ ...GOOD, facets: ['ghost'] }, COLUMNS)[0]).toMatch(/facets\[0\].*unknown column: ghost/);
+  });
+
+  it('refuses a highlight predicate over a column that does not exist', () => {
+    const e = validateViewMeta(
+      { ...GOOD, highlights: [{ label: 'x', when: [{ column: 'ghost' }] }] },
+      COLUMNS,
+    );
+    expect(e[0]).toMatch(/highlights\[0\]\.when\[0\]\.column/);
+  });
+
+  it('refuses an offer predicate over a column that does not exist', () => {
+    expect(
+      validateViewMeta({ ...GOOD, offer: { ...GOOD.offer, when: [{ column: 'ghost' }] } }, COLUMNS)[0],
+    ).toMatch(/offer\.when\[0\]\.column/);
+  });
+
+  it('refuses a facet over a column whose values are unbounded', () => {
+    // A facet over a `date` or `json` column is not a filter, it is one option
+    // per row wearing a filter's clothes.
+    expect(validateViewMeta({ ...GOOD, facets: ['created'] }, COLUMNS)[0]).toMatch(/low-cardinality/);
+  });
+
+  it('does NOT validate the offer action — the catalog is the renderer\'s, not the store\'s', () => {
+    // KEAP cannot know which actions a given client implements; the client
+    // refuses an id it has no arm for. Pinning the list here would mean
+    // declaring a capability on behalf of a runtime this store cannot see.
+    expect(validateViewMeta({ ...GOOD, offer: { ...GOOD.offer, action: 'whatever' } }, COLUMNS)).toEqual([]);
+  });
+
+  it('a re-declared view lands on a table that ALREADY EXISTS', async () => {
+    // The reconcile path is the one every real table takes, and it was
+    // write-once for `view` until 2026-08-28: syncCard's preserve-prior rule
+    // (right for a row write) also swallowed a re-seed, so a `view:` edited in
+    // state/keap-tables/*.table.yml reached nothing and nothing went red.
+    await tables.storeFor('libsql').createTable(OWNER, {
+      id: 't-redeclare',
+      title: 'Redeclare',
+      driver: 'libsql',
+      schema: { columns: COLUMNS },
+      anchors: [],
+      visibility: 'private',
+      view: { style: 'grid' },
+    } as never);
+    const t = tables.getTable('t-redeclare')!;
+    tables.updateTableSchema(t, { columns: t.schema.columns } as never, {
+      style: 'timeline',
+      dateColumn: 'created',
+      facets: ['status'],
+      metaColumns: [],
+    } as never);
+    expect(db.getObject('table-t-redeclare')!.frontmatter?.view).toMatchObject({
+      style: 'timeline',
+      facets: ['status'],
+    });
+  });
+});
+
 describe('view block persistence', () => {
   it('rides the create request into the card frontmatter', async () => {
     await tables.storeFor('libsql').createTable(OWNER, {
@@ -105,6 +185,20 @@ describe('view block persistence', () => {
       columns: [...t.schema.columns, { key: 'note', label: 'Note', kind: 'text', role: 'attribute' }],
     } as never);
     expect(db.getObject('table-t-view')!.frontmatter?.view).toMatchObject({ style: 'blog' });
+  });
+
+  it('is READABLE back — a write nobody can verify is a claim, not a fact', async () => {
+    // `GET /api/tables/:id` omitted `view` while `PATCH` accepted one, so the
+    // only confirmation a style had landed was the PATCH's own 200 — a success
+    // marker written by the code that attempted the work. This pins the lift
+    // at the store level (the route composes `getTable` with the card, and the
+    // card is where the block actually lives).
+    const t = tables.getTable('t-view')!;
+    const card = db.getObject(`table-${t.id}`);
+    expect(card?.frontmatter?.view).toMatchObject({ style: 'blog' });
+    // The table row itself carries none of it — which is exactly why the route
+    // has to reach for the card rather than returning `t` alone.
+    expect(t).not.toHaveProperty('view');
   });
 
   it('a table that never asked for a style has no view key at all', async () => {

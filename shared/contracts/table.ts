@@ -395,6 +395,36 @@ export type GraphMeta = z.infer<typeof graphMetaSchema>;
 export const tableViewStyleSchema = z.enum(['grid', 'blog', 'timeline', 'tiles']);
 export type TableViewStyle = z.infer<typeof tableViewStyleSchema>;
 
+/**
+ * A named class of rows worth jumping to, and a suggestion attached to one.
+ *
+ * The predicate shape is `rowFilterSchema` — the SAME vocabulary a query uses,
+ * reused rather than re-spelled, so "status eq shipped" means one thing in this
+ * repo. A second spelling of a comparison is how two answers to one question
+ * start.
+ *
+ * `offer.action` is an ID FROM THE RENDERING CLIENT'S OWN CATALOG, never a
+ * command, URL or handler, and KEAP deliberately does NOT validate its
+ * membership: the catalog is per-runtime code (the face has one, a native
+ * renderer would have its own), and a store that pinned the list would be
+ * declaring a capability on behalf of a client it cannot see. The client
+ * refuses an id it does not implement — fail-closed at the only place that
+ * knows.
+ */
+export const rowPredicateSchema = rowFilterSchema;
+
+export const highlightSpecSchema = z.object({
+  label: z.string().min(1).max(48),
+  when: z.array(rowPredicateSchema).min(1).max(4),
+});
+
+export const offerSpecSchema = z.object({
+  label: z.string().min(1).max(120),
+  action: z.string().min(1).max(48),
+  /** REQUIRED, unlike a highlight's — an offer that is always on is a button. */
+  when: z.array(rowPredicateSchema).min(1).max(4),
+});
+
 export const viewMetaSchema = z.object({
   style: tableViewStyleSchema.default('grid'),
   /** Row heading. Defaults to the first text column at render time. */
@@ -407,6 +437,23 @@ export const viewMetaSchema = z.object({
   mediaColumn: z.string().optional(),
   /** Small facts shown beside the heading (status, tags, owner …). */
   metaColumns: z.array(z.string()).max(4).default([]),
+  /**
+   * The generative-UI seam (2026-08-28). All three name COLUMN KEYS, COMPARISON
+   * OPS AND LABELS — nothing about chips, tabs, pixels or DOM — which is what
+   * lets one declaration serve the Svelte face today and a native renderer
+   * later, both reading it from `GET /agent/v1/tables/:slug`.
+   *
+   * They are filled by an author today and may be filled by a model tomorrow.
+   * That is exactly why the columns they name are validated HERE, at author
+   * time, on top of whatever narrowing the client does at render time: a block
+   * is written once and rendered on every surface, so the check that catches a
+   * name belongs where the name is written.
+   */
+  /** ≤2 column keys, outer→inner filter levels. A renderer affording only one
+   *  honours `facets[0]`; "two levels" is the length, not a nested structure. */
+  facets: z.array(z.string()).max(2).optional(),
+  highlights: z.array(highlightSpecSchema).max(4).optional(),
+  offer: offerSpecSchema.optional(),
 });
 export type ViewMeta = z.infer<typeof viewMetaSchema>;
 
@@ -420,7 +467,17 @@ export type ViewMeta = z.infer<typeof viewMetaSchema>;
  * timeline's clothes, which is worse than the grid it replaced.
  */
 export function validateViewMeta(
-  view: { style?: string; titleColumn?: string; bodyColumn?: string; dateColumn?: string; mediaColumn?: string; metaColumns?: string[] },
+  view: {
+    style?: string;
+    titleColumn?: string;
+    bodyColumn?: string;
+    dateColumn?: string;
+    mediaColumn?: string;
+    metaColumns?: string[];
+    facets?: string[];
+    highlights?: Array<{ label?: string; when?: Array<{ column?: string }> }>;
+    offer?: { label?: string; action?: string; when?: Array<{ column?: string }> };
+  },
   columns: Array<{ key?: string; kind?: string }>,
 ): string[] {
   const errors: string[] = [];
@@ -434,6 +491,23 @@ export function validateViewMeta(
   need(view.dateColumn, 'dateColumn');
   need(view.mediaColumn, 'mediaColumn');
   (view.metaColumns ?? []).forEach((c, i) => need(c, `metaColumns[${i}]`));
+  (view.facets ?? []).forEach((c, i) => need(c, `facets[${i}]`));
+  (view.highlights ?? []).forEach((h, i) =>
+    (h.when ?? []).forEach((p, j) => need(p.column, `highlights[${i}].when[${j}].column`)),
+  );
+  (view.offer?.when ?? []).forEach((p, j) => need(p.column, `offer.when[${j}].column`));
+
+  // A facet over a free-text or long-form column is not a filter, it is a list
+  // of every distinct value in the table. The kinds below are the ones that
+  // hold a bounded vocabulary; `text` is permitted because the roadmap's
+  // `track` is one and a `select` was not available when it was authored.
+  const FACETABLE = ['select', 'text', 'boolean', 'user', 'taxonomyRef'];
+  (view.facets ?? []).forEach((c, i) => {
+    const k = byKey.get(c)?.kind;
+    if (k && !FACETABLE.includes(k)) {
+      errors.push(`view.facets[${i}] must name a low-cardinality column, got ${k}`);
+    }
+  });
 
   if (view.style === 'blog' && !view.bodyColumn) {
     errors.push("view.style 'blog' requires bodyColumn — the long-form cell is the whole point of the style");
