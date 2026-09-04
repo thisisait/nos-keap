@@ -832,6 +832,62 @@ export function registerAgentRoutes(app: Express) {
     }
   });
 
+  // One row by its __id — the tail of search -> get -> patch. The store has no
+  // getRow (that would bind every driver), and the row cap is 500, so a scoped
+  // scan is cheap and driver-agnostic.
+  // ponytail: O(rows) find, <= ROW_OBJECT_CAP; add a store getRow if a driver
+  // ever holds an unbounded table.
+  app.get('/agent/v1/tables/:slug/rows/:rowId', agentAuth('ro'), async (req, res) => {
+    const t = getTable(req.params.slug);
+    if (!t) return fail(res, 404, 'unknown table');
+    try {
+      const { rows } = await storeFor(t.driver).listRows(t.id, { filter: [], limit: 500 });
+      const row = rows.find((r) => r.id === req.params.rowId);
+      if (!row) return fail(res, 404, 'unknown row');
+      ok(res, { ...row.values, __id: row.id });
+    } catch (e) {
+      fail(res, 400, e instanceof Error ? e.message : 'query failed');
+    }
+  });
+
+  // Find rows by MEANING. A resolver, not a discovery list: it answers "which
+  // rows mean this" and MUST be able to answer NONE. The floor is a real cosine
+  // distance (DEFAULT_MAX_DISTANCE, shared with relations), never hybridSearch's
+  // RRF score — that is rank-based (~0.016 for everything), so a threshold on it
+  // fires always or never (cortex-resolve.ts refuses it on the same grounds).
+  // Rows enter the corpus as kind 'object' via syncRows only when the table
+  // PROJECTS them (graph.mode='rows'); an un-projected table has no row-objects,
+  // so empty-because-unprojected is reported apart from empty-because-no-match.
+  app.get('/agent/v1/tables/:slug/search', agentAuth('ro'), async (req, res) => {
+    const t = getTable(req.params.slug);
+    if (!t) return fail(res, 404, 'unknown table');
+    const q = String(req.query.q ?? '').trim();
+    if (!q) return fail(res, 400, 'q required');
+    const limit = Math.min(Number(req.query.limit) || 20, MAX_LIMIT);
+    const card = db.getObject(`table-${t.id}`);
+    const graph = card?.frontmatter?.graph as { mode?: string } | undefined;
+    if (graph?.mode !== 'rows') {
+      return ok(res, { query: q, projected: false, threshold: DEFAULT_MAX_DISTANCE, results: [] });
+    }
+    const vec = await embedText(q);
+    if (!vec) return fail(res, 503, 'vector layer unavailable: no live embedder');
+    const prefix = `table-${t.id}:row-`;
+    const results = db
+      .vectorNeighborsOf(JSON.stringify(vec), 'related', ['object'], limit * 4)
+      .filter((n) => n.refId.startsWith(prefix) && n.distance <= DEFAULT_MAX_DISTANCE)
+      .slice(0, limit)
+      .map((n) => {
+        const o = db.getObject(n.refId);
+        const rowId = o?.frontmatter?.row;
+        // A neighbour whose object was retracted between the ANN read and here
+        // is dropped, not returned as a row the caller cannot then fetch.
+        if (typeof rowId !== 'string') return null;
+        return { __id: rowId, title: o.title, score: Number((1 - n.distance).toFixed(4)) };
+      })
+      .filter(Boolean);
+    ok(res, { query: q, projected: true, threshold: DEFAULT_MAX_DISTANCE, results });
+  });
+
   // ── Filesystem sync (server/fs-sync.ts) — the doctrine-tree mirror ─────────
   // A host job that just wrote into tenants/<t>/users/<uid>/ kicks this so the
   // files appear as objects immediately (boot + interval cover the rest).
