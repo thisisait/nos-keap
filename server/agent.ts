@@ -22,7 +22,7 @@ import type { Express, Request, Response, NextFunction } from 'express';
 import * as db from './db';
 import { getNode, getAncestors, taxonomyNodeCount, nodeLevel, type FlatNode } from './taxonomy';
 import { resolveContentRef, listContentServices } from './content-links';
-import { pendingEmbeddings, EMBED_MODEL, EMBED_DIM } from './embeddings';
+import { embedText, pendingEmbeddings, EMBED_MODEL, EMBED_DIM } from './embeddings';
 import { extractRefs } from './objects';
 import { hybridSearch, markCorpusDirty } from './search';
 import { runLint, lastLintReport } from './lint';
@@ -841,7 +841,7 @@ export function registerAgentRoutes(app: Express) {
     const t = getTable(req.params.slug);
     if (!t) return fail(res, 404, 'unknown table');
     try {
-      const { rows } = await storeFor(t.driver).listRows(t.id, { filter: [], limit: 500 });
+      const { rows } = await storeFor(t.driver).listRows(t.id, { filter: [], limit: 500, expand: [] });
       const row = rows.find((r) => r.id === req.params.rowId);
       if (!row) return fail(res, 404, 'unknown row');
       ok(res, { ...row.values, __id: row.id });
@@ -881,7 +881,7 @@ export function registerAgentRoutes(app: Express) {
         const rowId = o?.frontmatter?.row;
         // A neighbour whose object was retracted between the ANN read and here
         // is dropped, not returned as a row the caller cannot then fetch.
-        if (typeof rowId !== 'string') return null;
+        if (!o || typeof rowId !== 'string') return null;
         return { __id: rowId, title: o.title, score: Number((1 - n.distance).toFixed(4)) };
       })
       .filter(Boolean);
