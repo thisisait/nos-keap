@@ -926,3 +926,70 @@ const libsqlStore: TableStore = {
     });
   },
 };
+
+// ── Row claims — a cooperative lease for parallel agents ───────────────────────
+// One row = one claim. A second agent claiming a HELD row is refused so it backs
+// off; that refusal IS the parallel-safety invariant. The lease is ADVISORY — it
+// gates a second CLAIM, not the write door — so a re-seed or the human editor is
+// never blocked by an agent's forgotten lease. A claim past its TTL is stealable,
+// so a crashed holder self-heals without a background reaper.
+// ponytail: advisory; gate upsertRow on the holder the day enforcement is needed.
+// Ephemeral table (CREATE IF NOT EXISTS, like corpus_fts) — a lease is not
+// durable knowledge, so it earns no migration.
+
+let rowClaimsReady = false;
+function ensureRowClaims(): void {
+  if (rowClaimsReady) return;
+  db.getDb().exec(
+    `CREATE TABLE IF NOT EXISTS row_claims (
+       table_id TEXT NOT NULL,
+       row_id TEXT NOT NULL,
+       holder TEXT NOT NULL,
+       expires_at INTEGER NOT NULL,
+       PRIMARY KEY (table_id, row_id)
+     )`,
+  );
+  rowClaimsReady = true;
+}
+
+export interface ClaimResult {
+  ok: boolean;
+  holder: string;
+  expiresAt: number;
+}
+
+/** Take (or renew) a lease on a row. Refused ONLY when a DIFFERENT holder's
+ *  lease is still live; an expired lease, or the caller's own, is overwritten. */
+export function claimRow(
+  tableId: string,
+  rowId: string,
+  holder: string,
+  now: number,
+  ttlMs: number,
+): ClaimResult {
+  ensureRowClaims();
+  const d = db.getDb();
+  const existing = d
+    .prepare('SELECT holder, expires_at AS expiresAt FROM row_claims WHERE table_id = ? AND row_id = ?')
+    .get(tableId, rowId) as { holder: string; expiresAt: number } | undefined;
+  if (existing && existing.expiresAt > now && existing.holder !== holder) {
+    return { ok: false, holder: existing.holder, expiresAt: existing.expiresAt };
+  }
+  const expiresAt = now + ttlMs;
+  d.prepare(
+    `INSERT INTO row_claims (table_id, row_id, holder, expires_at) VALUES (?, ?, ?, ?)
+     ON CONFLICT(table_id, row_id) DO UPDATE SET holder = excluded.holder, expires_at = excluded.expires_at`,
+  ).run(tableId, rowId, holder, expiresAt);
+  return { ok: true, holder, expiresAt };
+}
+
+/** Drop the caller's lease. Returns false when the caller did NOT hold it
+ *  (expired, stolen, or never taken) — never throws. */
+export function releaseRow(tableId: string, rowId: string, holder: string): boolean {
+  ensureRowClaims();
+  const info = db
+    .getDb()
+    .prepare('DELETE FROM row_claims WHERE table_id = ? AND row_id = ? AND holder = ?')
+    .run(tableId, rowId, holder);
+  return Number(info.changes) > 0;
+}

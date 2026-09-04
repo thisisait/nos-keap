@@ -32,7 +32,7 @@ import { allNodes } from './taxonomy';
 import { normalizeAndSaveCapture, parseEnvelope } from './intake';
 import { syncAllFs, syncMapping, fsSyncStatus, USER_FILES_DIR } from './fs-sync';
 import { scheduleTopicRecluster, clusterTopics } from './topics';
-import { getTable, listTables, referencesTo, storeFor, updateTableSchema } from './tables';
+import { claimRow, getTable, listTables, referencesTo, releaseRow, storeFor, updateTableSchema } from './tables';
 import {
   createTableRequestSchema,
   tableSchemaSchema,
@@ -886,6 +886,29 @@ export function registerAgentRoutes(app: Express) {
       })
       .filter(Boolean);
     ok(res, { query: q, projected: true, threshold: DEFAULT_MAX_DISTANCE, results });
+  });
+
+  // Cooperative row lease: claim before editing so two agents do not both write
+  // one row. A second claim on a HELD row is refused (409) so the loser backs
+  // off. Advisory — gates the claim, not the write; TTL-stealable so a crashed
+  // holder self-heals (KEAP_ROW_CLAIM_TTL_SEC, default 900).
+  app.post('/agent/v1/tables/:slug/rows/:rowId/claim', agentAuth('rw'), (req, res) => {
+    const t = getTable(req.params.slug);
+    if (!t) return fail(res, 404, 'unknown table');
+    const holder = `agent:${req.agentName}`;
+    const ttlMs = Number(process.env.KEAP_ROW_CLAIM_TTL_SEC || 900) * 1000;
+    const c = claimRow(t.id, req.params.rowId, holder, Date.now(), ttlMs);
+    if (!c.ok) {
+      return fail(res, 409, `row held by ${c.holder} until ${new Date(c.expiresAt).toISOString()}`);
+    }
+    ok(res, { table: t.id, row: req.params.rowId, holder, expiresAt: c.expiresAt });
+  });
+
+  app.post('/agent/v1/tables/:slug/rows/:rowId/release', agentAuth('rw'), (req, res) => {
+    const t = getTable(req.params.slug);
+    if (!t) return fail(res, 404, 'unknown table');
+    const released = releaseRow(t.id, req.params.rowId, `agent:${req.agentName}`);
+    ok(res, { table: t.id, row: req.params.rowId, released });
   });
 
   // ── Filesystem sync (server/fs-sync.ts) — the doctrine-tree mirror ─────────
