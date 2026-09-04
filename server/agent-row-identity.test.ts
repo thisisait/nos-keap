@@ -73,3 +73,34 @@ describe('the agent surface can name the rows it returns', () => {
     expect(src).toContain("/agent/v1/tables/:slug/rows/:rowId/referrers");
   });
 });
+
+// A row the agent can NAME (above) it must also be able to WRITE BACK.
+//
+// The POST is upsert-shaped: the store's upsertRow PATCHes an existing row id
+// and inserts otherwise. But the door only ever derived the id from `values.slug`,
+// so a slug-less table was write-once from the agent surface — the GET handed
+// back an __id the POST then discarded, and an edit re-INSERTED a duplicate.
+// The fix routes the caller's __id (the very key the listing returns) to the row
+// id, and peels it off the stored values so identity is never a data column.
+// Same source-law rationale as above: the handler is one expression, and the
+// store's merge/insert behaviour is already covered by row-refs.test.ts.
+describe('the agent surface can write back the row it named', () => {
+  it('the write routes the caller __id to the row id, not only the slug', () => {
+    const body = handlerBody("app.post('/agent/v1/tables/:slug/rows'");
+    expect(
+      /__id[^=]*=\s*values/.test(body),
+      'the POST no longer reads __id off the body — a slug-less table re-INSERTS ' +
+        'on every edit because the GET hands back an __id the write throws away',
+    ).toBe(true);
+  });
+
+  it('__id is peeled off before the values are stored', () => {
+    const body = handlerBody("app.post('/agent/v1/tables/:slug/rows'");
+    const call = body.match(/upsertRow\(t\.id,\s*\w+,\s*(\w+),/);
+    expect(
+      call && call[1] !== 'values',
+      'upsertRow is handed the raw `values` (with __id) — the row identity would ' +
+        'be persisted as a column named __id',
+    ).toBe(true);
+  });
+});

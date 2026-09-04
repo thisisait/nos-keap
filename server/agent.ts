@@ -815,11 +815,15 @@ export function registerAgentRoutes(app: Express) {
     const t = getTable(req.params.slug);
     if (!t) return fail(res, 404, 'unknown table');
     const values = (req.body ?? {}) as Record<string, unknown>;
-    // A row's own `slug` (when present + safe) doubles as the row id, so a
-    // re-seed PATCHes the same row instead of inserting a duplicate.
-    const rowSlug = typeof values.slug === 'string' && validSlug(values.slug) ? values.slug : undefined;
+    // Identity is the caller's `__id` (the key this door RETURNS) when present,
+    // else the row's own `slug`. Without it a slug-less table was write-once:
+    // the GET handed back an __id the POST threw away, re-INSERTING on edit.
+    // `__id` names the row; it is peeled off, never stored as a column.
+    const { __id: bodyId, ...data } = values;
+    const rowSlug = typeof data.slug === 'string' && validSlug(data.slug) ? data.slug : undefined;
+    const rowId = typeof bodyId === 'string' && bodyId ? bodyId : rowSlug;
     try {
-      const row = await storeFor(t.driver).upsertRow(t.id, rowSlug, values, `agent:${req.agentName}`);
+      const row = await storeFor(t.driver).upsertRow(t.id, rowId, data, `agent:${req.agentName}`);
       // `__id` for the same reason as the listing above: without it, an agent
       // that has just CREATED a row still cannot ask what points at it.
       ok(res, { ...row.values, __id: row.id });
