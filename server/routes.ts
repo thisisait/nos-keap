@@ -441,17 +441,39 @@ export function registerApiRoutes(app: Express) {
     if (existing && existing.userId !== req.user.id && !req.user.isAdmin) {
       return fail(res, 403, 'not your object');
     }
+    // UPDATE = merge, CREATE = the request (same law as the agent twin in
+    // agent.ts). saveObject replaces every column, so an absent field here was
+    // a deletion: Admin → Objects saving a typo fix used to flip a shared card
+    // private and null its frontmatter, because the editor's Draft never
+    // carried either. Absent field → keep; empty string → clear.
+    const body = b.body !== undefined ? (b.body ? String(b.body) : undefined) : existing?.body;
+    const resource =
+      b.resource !== undefined ? (b.resource ? String(b.resource) : undefined) : existing?.resource;
     const object = {
       id,
       type: String(b.type),
       title: String(b.title),
-      description: b.description ? String(b.description) : undefined,
-      resource: b.resource ? String(b.resource) : undefined,
-      tags: Array.isArray(b.tags) ? b.tags.map(String) : undefined,
-      frontmatter: b.frontmatter && typeof b.frontmatter === 'object' ? b.frontmatter : undefined,
-      body: b.body ? String(b.body) : undefined,
-      links: extractRefs(b.body ? String(b.body) : undefined, b.resource ? String(b.resource) : undefined),
-      visibility: b.visibility === 'shared' ? 'shared' : 'private',
+      description:
+        b.description !== undefined
+          ? b.description
+            ? String(b.description)
+            : undefined
+          : existing?.description,
+      resource,
+      tags: Array.isArray(b.tags) ? b.tags.map(String) : existing?.tags,
+      frontmatter:
+        b.frontmatter && typeof b.frontmatter === 'object' ? b.frontmatter : existing?.frontmatter,
+      body,
+      links:
+        b.body !== undefined || b.resource !== undefined
+          ? extractRefs(body, resource)
+          : (existing?.links ?? extractRefs(body, resource)),
+      visibility:
+        b.visibility === 'shared'
+          ? ('shared' as const)
+          : b.visibility === 'private'
+            ? ('private' as const)
+            : (existing?.visibility ?? 'private'),
     };
     // Edits keep the original owner (admin fixing a card must not steal it).
     db.saveObject(existing?.userId ?? req.user.id, object);

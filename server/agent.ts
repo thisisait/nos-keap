@@ -1038,19 +1038,41 @@ export function registerAgentRoutes(app: Express) {
     if (!b.type || !b.title) return fail(res, 400, 'type and title required');
     const id = String(b.id ?? crypto.randomUUID());
     const existing = db.getObject(id);
-    const body = b.body ? String(b.body) : undefined;
-    const resource = b.resource ? String(b.resource) : undefined;
+    // UPDATE = merge, CREATE = the request. saveObject replaces every column,
+    // so a field this handler leaves undefined is a field it just DELETED —
+    // an agent touching a title used to flip the card private, null its
+    // frontmatter (fs provenance, table view blocks) and drop curated links
+    // for every other viewer. Absent field → keep; empty string → clear.
+    const body = b.body !== undefined ? (b.body ? String(b.body) : undefined) : existing?.body;
+    const resource =
+      b.resource !== undefined ? (b.resource ? String(b.resource) : undefined) : existing?.resource;
     db.saveObject(existing?.userId ?? `agent:${req.agentName}`, {
       id,
       type: String(b.type),
       title: String(b.title),
-      description: b.description ? String(b.description) : undefined,
+      description:
+        b.description !== undefined
+          ? b.description
+            ? String(b.description)
+            : undefined
+          : existing?.description,
       resource,
-      tags: Array.isArray(b.tags) ? b.tags.map(String) : undefined,
-      frontmatter: b.frontmatter && typeof b.frontmatter === 'object' ? b.frontmatter : undefined,
+      tags: Array.isArray(b.tags) ? b.tags.map(String) : existing?.tags,
+      frontmatter:
+        b.frontmatter && typeof b.frontmatter === 'object' ? b.frontmatter : existing?.frontmatter,
       body,
-      links: extractRefs(body, resource),
-      visibility: 'private',
+      // Recompute refs only when the text they come from changed; otherwise a
+      // touch-up would replace curated links (fs-sync merges some in) with [].
+      links:
+        b.body !== undefined || b.resource !== undefined
+          ? extractRefs(body, resource)
+          : (existing?.links ?? extractRefs(body, resource)),
+      visibility:
+        b.visibility === 'shared'
+          ? 'shared'
+          : b.visibility === 'private'
+            ? 'private'
+            : (existing?.visibility ?? 'private'),
     });
     markCorpusDirty();
     ok(res, { id, submittedBy: `agent:${req.agentName}` });
