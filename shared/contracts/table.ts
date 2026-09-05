@@ -392,7 +392,12 @@ export type GraphMeta = z.infer<typeof graphMetaSchema>;
 // column holds three paragraphs — and that is knowable from the table, once,
 // rather than re-decided by every surface that renders it.
 
-export const tableViewStyleSchema = z.enum(['grid', 'blog', 'timeline', 'tiles']);
+// `chat` (2026-09-01): one row is one EXCHANGE — what was asked, what came
+// back. Added for nOS's caddy-sessions table, whose rows are turns; the face
+// renders it and this enum was what refused it, so the view block sat authored
+// half-way for a day. The style adds no capability: it names two existing
+// columns, exactly as `blog` and `timeline` do.
+export const tableViewStyleSchema = z.enum(['grid', 'blog', 'timeline', 'tiles', 'chat']);
 export type TableViewStyle = z.infer<typeof tableViewStyleSchema>;
 
 /**
@@ -435,6 +440,9 @@ export const viewMetaSchema = z.object({
   dateColumn: z.string().optional(),
   /** Tile artwork — a `file` column, or text holding a URL/icon name. */
   mediaColumn: z.string().optional(),
+  /** `chat` only: the column holding what was ASKED. `bodyColumn` holds the
+   *  answer, so one row renders as a two-part exchange rather than a cell. */
+  askColumn: z.string().optional(),
   /** Small facts shown beside the heading (status, tags, owner …). */
   metaColumns: z.array(z.string()).max(4).default([]),
   /**
@@ -473,6 +481,7 @@ export function validateViewMeta(
     bodyColumn?: string;
     dateColumn?: string;
     mediaColumn?: string;
+    askColumn?: string;
     metaColumns?: string[];
     facets?: string[];
     highlights?: Array<{ label?: string; when?: Array<{ column?: string }> }>;
@@ -490,6 +499,7 @@ export function validateViewMeta(
   need(view.bodyColumn, 'bodyColumn');
   need(view.dateColumn, 'dateColumn');
   need(view.mediaColumn, 'mediaColumn');
+  need(view.askColumn, 'askColumn');
   (view.metaColumns ?? []).forEach((c, i) => need(c, `metaColumns[${i}]`));
   (view.facets ?? []).forEach((c, i) => need(c, `facets[${i}]`));
   (view.highlights ?? []).forEach((h, i) =>
@@ -511,6 +521,11 @@ export function validateViewMeta(
 
   if (view.style === 'blog' && !view.bodyColumn) {
     errors.push("view.style 'blog' requires bodyColumn — the long-form cell is the whole point of the style");
+  }
+  if (view.style === 'chat' && (!view.askColumn || !view.bodyColumn)) {
+    errors.push(
+      "view.style 'chat' requires askColumn and bodyColumn — an exchange with only one half is a grid row",
+    );
   }
   if (view.style === 'timeline' && !view.dateColumn) {
     errors.push("view.style 'timeline' requires dateColumn — without it the order is arbitrary");

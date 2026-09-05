@@ -47,6 +47,26 @@ describe('validateViewMeta', () => {
     expect(validateViewMeta({ style: 'blog', titleColumn: 'title', bodyColumn: 'research' }, COLUMNS)).toEqual([]);
   });
 
+  it('accepts a chat view naming both halves of the exchange', () => {
+    expect(
+      validateViewMeta({ style: 'chat', askColumn: 'title', bodyColumn: 'research' }, COLUMNS),
+    ).toEqual([]);
+  });
+
+  it('REFUSES a chat with only one half — an exchange needs both', () => {
+    // The style shipped 2026-09-01 for nOS caddy-sessions, where a row is a
+    // turn. With only `bodyColumn` the renderer has an answer and no question,
+    // which is a grid row that has learned to look like a conversation.
+    expect(validateViewMeta({ style: 'chat', bodyColumn: 'research' }, COLUMNS)).toHaveLength(1);
+    expect(validateViewMeta({ style: 'chat', askColumn: 'title' }, COLUMNS)).toHaveLength(1);
+  });
+
+  it('REFUSES an askColumn naming a column that does not exist', () => {
+    expect(
+      validateViewMeta({ style: 'chat', askColumn: 'nope', bodyColumn: 'research' }, COLUMNS)[0],
+    ).toContain('askColumn');
+  });
+
   it('REFUSES a blog with no body column — the long-form cell IS the style', () => {
     const e = validateViewMeta({ style: 'blog', titleColumn: 'title' }, COLUMNS);
     expect(e).toHaveLength(1);
