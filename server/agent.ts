@@ -881,7 +881,7 @@ export function registerAgentRoutes(app: Express) {
     if (!vec) return fail(res, 503, 'vector layer unavailable: no live embedder');
     const prefix = `table-${t.id}:row-`;
     const results = db
-      .vectorNeighborsOf(JSON.stringify(vec), 'related', ['object'], limit * 4)
+      .vectorNeighborsOf(JSON.stringify(vec), 'related', ['object'], limit * 4, undefined, EMBED_MODEL)
       .filter((n) => n.refId.startsWith(prefix) && n.distance <= DEFAULT_MAX_DISTANCE)
       .slice(0, limit)
       .map((n) => {

@@ -524,8 +524,13 @@ export function topicsStale(): boolean {
   if (stored.length === 0) return true; // vectors exist but never clustered
   if (resolved.reset) return true; // a margin-crossing model migration is due
   const { count } = db.objectVectorStats(resolved.model);
-  const assigned = db.topicStats().assigned;
-  return count !== assigned; // vectors added/removed since the last run
+  // Compare against assignments that still HAVE an incumbent-model vector —
+  // never the raw assignment count, which includes the carry-forward rows a
+  // run deliberately writes (see runOnce) and so reads stale forever once one
+  // exists. What this deliberately ignores: an assignment whose object was
+  // deleted entirely — the next real recluster (content changes debounce one)
+  // sweeps those.
+  return count !== db.assignedWithVectors(resolved.model); // vectors added/removed since the last run
 }
 
 /** Boot hook (decision #4): scheduled from INSIDE app.listen so it can never

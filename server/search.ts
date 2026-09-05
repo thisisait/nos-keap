@@ -17,7 +17,7 @@
  * At personal-corpus scale (~1–10k rows) a full rebuild is a few ms.
  */
 import * as db from './db';
-import { allSources, embedText } from './embeddings';
+import { allSources, embedText, EMBED_MODEL } from './embeddings';
 import { getNode } from './taxonomy';
 import { anchorNodeIds, type ObjectRef } from './objects';
 
@@ -100,7 +100,9 @@ export async function hybridSearch(
   const vec = await embedText(query);
   if (vec) {
     const hits = db
-      .vectorNeighborsOf(JSON.stringify(vec), 'related', kinds, LEG_FETCH)
+      // The query vector is EMBED_MODEL's — compare only against rows of the
+      // same model (a mixed-model table is a sanctioned sidekick state).
+      .vectorNeighborsOf(JSON.stringify(vec), 'related', kinds, LEG_FETCH, undefined, EMBED_MODEL)
       .filter((hit) => visibleTo(hit, viewer));
     if (hits.length) {
       vectorOk = true;

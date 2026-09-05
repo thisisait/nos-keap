@@ -101,7 +101,13 @@ export function pendingEmbeddings(limit: number): { pending: PendingItem[]; tota
     const stored = db.getEmbeddingHashes(kind);
     for (const s of sources) {
       if (s.kind !== kind) continue;
-      if (stored.get(s.refId) !== s.contentHash) pending.push(s);
+      // Stale on content change OR model change: this endpoint advertises
+      // EMBED_MODEL to its consumer, so a row written under another model is
+      // a row the advertised embedder still owes — without the model half a
+      // KEAP_EMBED_MODEL flip re-embeds nothing and search/relations/lint
+      // silently compare against a frozen old-model space.
+      const row = stored.get(s.refId);
+      if (row?.hash !== s.contentHash || row.model !== EMBED_MODEL) pending.push(s);
     }
   }
   return { pending: pending.slice(0, limit), total: pending.length, pruned };

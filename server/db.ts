@@ -1522,14 +1522,19 @@ export function embeddingStats(): { total: number; byKind: Record<string, number
   return { total, byKind, model: m?.model ?? null };
 }
 
-/** ref_id → content_hash for one kind — drives the pending/stale diff. */
-export function getEmbeddingHashes(kind: EmbeddingKind): Map<string, string> {
+/** ref_id → {content_hash, model} for one kind — drives the pending/stale
+ *  diff. The model rides along because a row whose hash matches but whose
+ *  vector was written under a DIFFERENT model is stale all the same: after a
+ *  KEAP_EMBED_MODEL flip the hash-only diff reported 0 pending forever and
+ *  every distance ran over a frozen old-model space. */
+export function getEmbeddingHashes(kind: EmbeddingKind): Map<string, { hash: string; model: string }> {
   if (!vectorsOk) return new Map();
-  const rows = getDb().prepare('SELECT ref_id, content_hash FROM embeddings WHERE kind = ?').all(kind) as Array<{
+  const rows = getDb().prepare('SELECT ref_id, content_hash, model FROM embeddings WHERE kind = ?').all(kind) as Array<{
     ref_id: string;
     content_hash: string;
+    model: string;
   }>;
-  return new Map(rows.map((r) => [r.ref_id, r.content_hash]));
+  return new Map(rows.map((r) => [r.ref_id, { hash: r.content_hash, model: r.model }]));
 }
 
 // ── Semantic-lens derived features ────────────────────────────────────────────
@@ -1707,23 +1712,31 @@ export function vectorNeighbors(
   if (!vectorsOk) return null;
   const d = getDb();
   const anchor = d
-    .prepare('SELECT vector_extract(vector) AS v FROM embeddings WHERE kind = ? AND ref_id = ?')
-    .get(anchorKind, anchorRefId) as { v: string | null } | undefined;
+    .prepare('SELECT vector_extract(vector) AS v, model FROM embeddings WHERE kind = ? AND ref_id = ?')
+    .get(anchorKind, anchorRefId) as { v: string | null; model: string } | undefined;
   if (!anchor?.v) return null;
-  return vectorNeighborsOf(anchor.v, mode, kinds, limit, { kind: anchorKind, refId: anchorRefId });
+  // Compare within the anchor's own vector space — a cosine distance across
+  // two models is noise, and reads as "nothing near" (distance ≈ anywhere).
+  return vectorNeighborsOf(anchor.v, mode, kinds, limit, { kind: anchorKind, refId: anchorRefId }, anchor.model);
 }
 
-/** Same as vectorNeighbors but anchored on a raw query vector (live embed). */
+/** Same as vectorNeighbors but anchored on a raw query vector (live embed).
+ *  Pass `model` (the model that produced the query vector) so mixed-model
+ *  tables — the sanctioned sidekick state topics.ts defends against — never
+ *  leak cross-space distances into the result. */
 export function vectorNeighborsOf(
   vectorJson: string,
   mode: 'related' | 'unrelated',
   kinds: EmbeddingKind[],
   limit: number,
   exclude?: { kind: string; refId: string },
+  model?: string,
 ): NeighborHit[] {
   if (!vectorsOk) return [];
   const d = getDb();
   const kindFilter = kinds.length ? `AND e.kind IN (${kinds.map(() => '?').join(',')})` : '';
+  const modelFilter = model ? 'AND e.model = ?' : '';
+  const modelArgs = model ? [model] : [];
   if (mode === 'related') {
     // Over-fetch from the ANN index, then kind-filter + self-exclude in SQL.
     const rows = d
@@ -1732,10 +1745,10 @@ export function vectorNeighborsOf(
                 vector_distance_cos(e.vector, vector32(?)) AS distance
          FROM vector_top_k('embeddings_vec_idx', vector32(?), ?) AS v
          JOIN embeddings e ON e.rowid = v.id
-         WHERE 1=1 ${kindFilter}
+         WHERE 1=1 ${kindFilter} ${modelFilter}
          ORDER BY distance ASC`,
       )
-      .all(vectorJson, vectorJson, Math.min(limit * 4 + 1, 256), ...kinds) as NeighborHit[];
+      .all(vectorJson, vectorJson, Math.min(limit * 4 + 1, 256), ...kinds, ...modelArgs) as NeighborHit[];
     return rows
       .filter((r) => !(exclude && r.kind === exclude.kind && r.refId === exclude.refId))
       .slice(0, limit);
@@ -1745,11 +1758,11 @@ export function vectorNeighborsOf(
       `SELECT e.kind, e.ref_id AS refId,
               vector_distance_cos(e.vector, vector32(?)) AS distance
        FROM embeddings e
-       WHERE 1=1 ${kindFilter}
+       WHERE 1=1 ${kindFilter} ${modelFilter}
        ORDER BY distance DESC
        LIMIT ?`,
     )
-    .all(vectorJson, ...kinds, limit + 1) as NeighborHit[];
+    .all(vectorJson, ...kinds, ...modelArgs, limit + 1) as NeighborHit[];
   return rows
     .filter((r) => !(exclude && r.kind === exclude.kind && r.refId === exclude.refId))
     .slice(0, limit);
@@ -1982,6 +1995,29 @@ export function topicStats(): { available: boolean; k: number; assigned: number;
   }
 }
 
+/** Assignments whose object still has a vector under the given model — the
+ *  staleness comparator's left side. topicStats().assigned counts EVERY
+ *  assignment row, including the carry-forward rows runOnce deliberately
+ *  writes for objects whose vector left the incumbent set (topics.ts:309);
+ *  comparing THAT against the model-scoped vector count made topicsStale()
+ *  permanently true the moment one carried row existed — an un-caused
+ *  recluster on every boot, forever. */
+export function assignedWithVectors(model: string): number {
+  try {
+    return (
+      getDb()
+        .prepare(
+          `SELECT COUNT(*) AS c FROM topic_assignments ta
+           WHERE EXISTS (SELECT 1 FROM embeddings e
+                         WHERE e.kind = 'object' AND e.ref_id = ta.object_id AND e.model = ?)`,
+        )
+        .get(model) as { c: number }
+    ).c;
+  } catch {
+    return 0;
+  }
+}
+
 /** Most recent topic_runs row (params_json parsed) — the agent status endpoint's
  *  "last run summary". null before the first run or without the tables. */
 export function lastTopicRun(): {
@@ -2169,6 +2205,7 @@ export function nearPairs(
        FROM embeddings a
        JOIN embeddings b ON a.rowid < b.rowid
        WHERE a.kind IN (${kindList}) AND b.kind IN (${kindList})
+         AND a.model = b.model
          AND vector_distance_cos(a.vector, b.vector) < ?
        ORDER BY distance ASC
        LIMIT ?`,
@@ -2850,6 +2887,7 @@ export function nearCrossKindPairs(
        JOIN embeddings b ON a.rowid < b.rowid
        WHERE a.kind IN (${kindList}) AND b.kind IN (${kindList})
          AND a.kind <> b.kind
+         AND a.model = b.model
          AND vector_distance_cos(a.vector, b.vector) < ?
          ${sinceClause}
          AND NOT EXISTS (
