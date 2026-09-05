@@ -1993,6 +1993,100 @@ const OPENAPI_SPEC = {
           'The published Cortex opcode registry + its hash. Wing compares this against its handler map at boot and in CI.',
       },
     },
+    '/agent/v1/openapi.json': { get: { summary: 'This contract', security: [] } },
+    // ── Tables (R2′..v1.43): registry, rows, meaning-search, cooperative lease ─
+    '/agent/v1/tables': {
+      get: { summary: 'List data tables (id, slug, title, driver, schema, row_count)' },
+      post: {
+        summary:
+          'Create a table, or RECONCILE an existing one by slug (idempotent seed; 409 on a destructive schema change — dropped column / kind change)',
+      },
+    },
+    '/agent/v1/tables/{slug}': {
+      get: {
+        summary: 'One table: schema, capabilities, row count',
+        parameters: [{ name: 'slug', in: 'path', required: true, schema: { type: 'string' } }],
+      },
+    },
+    '/agent/v1/tables/{slug}/rows': {
+      get: {
+        summary:
+          'List rows (filter/sort/cursor/limit, expand resolves rowRef display values). Every row carries __id — the key the write and the sibling row routes are addressed by.',
+        parameters: [{ name: 'slug', in: 'path', required: true, schema: { type: 'string' } }],
+      },
+      post: {
+        summary:
+          'Upsert one row. Identity: body __id (PATCH-merge an existing row) else the row slug else a minted UUID; __id is peeled off, never stored as a column. Ids match [A-Za-z0-9_-]{1,128}.',
+        parameters: [{ name: 'slug', in: 'path', required: true, schema: { type: 'string' } }],
+      },
+    },
+    '/agent/v1/tables/{slug}/rows/{rowId}': {
+      get: {
+        summary: 'One row by __id — the tail of search → get → patch',
+        parameters: [
+          { name: 'slug', in: 'path', required: true, schema: { type: 'string' } },
+          { name: 'rowId', in: 'path', required: true, schema: { type: 'string' } },
+        ],
+      },
+    },
+    '/agent/v1/tables/{slug}/rows/{rowId}/referrers': {
+      get: {
+        summary: 'Which rows point AT this one (rowRef back-references) — the is-delete-safe probe',
+        parameters: [
+          { name: 'slug', in: 'path', required: true, schema: { type: 'string' } },
+          { name: 'rowId', in: 'path', required: true, schema: { type: 'string' } },
+        ],
+      },
+    },
+    '/agent/v1/tables/{slug}/search': {
+      get: {
+        summary:
+          'Find rows by MEANING — a resolver over the projected row-objects, floored on a real cosine distance; can (and should) return NONE. projected:false marks a table that does not project rows.',
+        parameters: [
+          { name: 'slug', in: 'path', required: true, schema: { type: 'string' } },
+          { name: 'q', in: 'query', required: true, schema: { type: 'string' } },
+          { name: 'limit', in: 'query', schema: { type: 'integer', maximum: 50, default: 20 } },
+        ],
+      },
+    },
+    '/agent/v1/tables/{slug}/rows/{rowId}/claim': {
+      post: {
+        summary:
+          'Cooperative row lease for parallel agents: one row = one claim; a held row 409s so the loser backs off. Advisory (never blocks the write door), TTL-stealable (crashed holder self-heals).',
+        parameters: [
+          { name: 'slug', in: 'path', required: true, schema: { type: 'string' } },
+          { name: 'rowId', in: 'path', required: true, schema: { type: 'string' } },
+        ],
+      },
+    },
+    '/agent/v1/tables/{slug}/rows/{rowId}/release': {
+      post: {
+        summary: 'Release a held row lease (no-op unless the caller is the holder)',
+        parameters: [
+          { name: 'slug', in: 'path', required: true, schema: { type: 'string' } },
+          { name: 'rowId', in: 'path', required: true, schema: { type: 'string' } },
+        ],
+      },
+    },
+    // ── Curator (the frontier loop: anchor → frontier → start → visit → finish) ─
+    '/agent/v1/curator/anchor': { get: { summary: 'The curator’s standing brief: doctrine + policy for a curation run' } },
+    '/agent/v1/curator/frontier': {
+      get: {
+        summary: 'Ranked least-recently-visited taxonomy frontier (staleness-driven work queue)',
+        parameters: [{ name: 'limit', in: 'query', schema: { type: 'integer' } }],
+      },
+    },
+    '/agent/v1/curator/run/start': { post: { summary: 'Open a curation run (returns runId for visits)' } },
+    '/agent/v1/curator/run/finish': { post: { summary: 'Close a curation run with its summary' } },
+    '/agent/v1/curator/visit': { post: { summary: 'Record one node visit (content hash → staleness signal) within a run' } },
+    // ── Derived features (host-side semantic-lens jobs) ─
+    '/agent/v1/features/vectors': {
+      get: { summary: 'All taxonomy embeddings as {id, vector} — input for host-side axis projection' },
+    },
+    '/agent/v1/features': { post: { summary: 'Write back derived per-node scalar features (semantic-lens axes)' } },
+    '/agent/v1/metadata': {
+      post: { summary: 'Curated per-node metadata write (schema_type etc.) — the node_metadata channel' },
+    },
   },
   components: {
     securitySchemes: { bearerAuth: { type: 'http', scheme: 'bearer' } },
