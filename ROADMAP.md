@@ -1,8 +1,8 @@
 # KEAP Roadmap — the Knowledge Universe on nOS
 
 *Revised 2026-07-11 by the owner's direction. Supersedes the phase list in
-`rework/COMPLETION_PROPOSAL.md` §5 (which remains valid as the record of Phases 0′–4′).
-Research grounding: `rework/KNOWLEDGE_SUBSTRATE_RESEARCH.md` (Rounds 1+2).*
+`docs/history/rework/COMPLETION_PROPOSAL.md` §5 (which remains valid as the record of Phases 0′–4′).
+Research grounding: `docs/history/rework/KNOWLEDGE_SUBSTRATE_RESEARCH.md` (Rounds 1+2).*
 
 ## North Star
 
@@ -445,7 +445,7 @@ Dependencies, not dates. Each milestone ends in something demoable.
 - **S3 OKF bundle export/import.** Scheduled inside M6 but strategically ahead of
   it: the bundle is the sharing unit (Phase S), the Track T "star chart", AND the
   interop story with Google's tooling/openknowledge CLI — while the format is
-  young (see `rework/KNOWLEDGE_SUBSTRATE_RESEARCH.md` R1). Implementation is
+  young (see `docs/history/rework/KNOWLEDGE_SUBSTRATE_RESEARCH.md` R1). Implementation is
   small: `knowledge_objects` ↔ `type/…/slug.md` with YAML frontmatter is already
   1:1, and the unified intake envelope fields (source, modality, tags,
   capturedAt) map onto frontmatter cleanly. Pull it forward into whichever

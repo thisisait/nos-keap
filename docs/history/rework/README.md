@@ -1,3 +1,5 @@
+> **Historical (frozen 2026-07).** This directory is the v0→v1 rework blueprint, kept as the record of Phases 0′–4′. Its status lines predate everything from the /agent/v1 surface onward — for the living picture see ROADMAP.md.
+
 # Rework blueprint — nOS as base platform (replacing IIAB)
 
 This directory is a **decision-ready blueprint** for rebuilding KEAP (Knowledge Explorer and
