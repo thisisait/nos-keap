@@ -401,7 +401,13 @@ export function syncRows(
   const all = rows ?? readAllRows(t.id);
   const kept = new Set<string>();
   for (const r of all.slice(0, ROW_OBJECT_CAP)) {
-    const id = rowObjectId(t.id, r.id, node.idColumn ? r.values[node.idColumn] : undefined);
+    // Nothing enforces idColumn uniqueness across rows, and two rows mapping
+    // to one object id would silently drop the later row from the corpus (the
+    // exact partially-projected-but-looks-complete state ROW_OBJECT_CAP's
+    // enable-time refusal exists to prevent). On collision the later row falls
+    // back to its r.id-keyed identity — present, just not idColumn-addressed.
+    let id = rowObjectId(t.id, r.id, node.idColumn ? r.values[node.idColumn] : undefined);
+    if (kept.has(id)) id = rowObjectId(t.id, r.id, undefined);
     const label = node.labelColumn ? r.values[node.labelColumn] : undefined;
     const anchorRaw = node.anchorColumn ? r.values[node.anchorColumn] : undefined;
     const anchor = typeof anchorRaw === 'string' && anchorRaw ? anchorRaw : undefined;
@@ -805,8 +811,13 @@ const libsqlStore: TableStore = {
         .get(id, rid) as { data: string } | undefined;
       // Upsert semantics: PATCH an existing row (merge keys), insert otherwise.
       // Validation runs on the MERGED result — a patch of one cell must not
-      // trip over required columns it didn't touch.
-      const merged = existing ? { ...JSON.parse(existing.data), ...values } : values;
+      // trip over required columns it didn't touch. A null value DELETES the
+      // cell (the only spread-able "clear" that survives JSON.stringify), so
+      // required-column checks see it as truly absent.
+      const merged: Record<string, unknown> = existing
+        ? { ...JSON.parse(existing.data), ...values }
+        : { ...values };
+      for (const k of Object.keys(merged)) if (merged[k] === null) delete merged[k];
       const errors = validateRowValues(t.schema, merged);
       if (errors.length) throw new Error(`invalid row: ${errors.join('; ')}`);
       // Shape first, then EXISTENCE. validateRowValues lives in the shared

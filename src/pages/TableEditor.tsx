@@ -28,7 +28,10 @@ import { tablesApi } from '@/services/api/tables';
 import type { ColumnDef as SchemaColumn, TableRow } from '../../shared/contracts/table';
 
 function parseCell(col: SchemaColumn, raw: string): unknown {
-  if (raw === '') return undefined;
+  // null, not undefined: undefined vanishes in JSON.stringify, so the PATCH
+  // body arrived as {} and a cleared cell silently reverted on refetch. null
+  // survives the wire and the server merge treats it as "delete this cell".
+  if (raw === '') return null;
   switch (col.kind) {
     case 'number':
     case 'date':
@@ -69,7 +72,7 @@ function EditableCell({
       <select
         className="h-8 w-full rounded border border-transparent bg-transparent text-sm hover:border-input"
         value={String(value ?? '')}
-        onChange={(e) => onSave(e.target.value || undefined)}
+        onChange={(e) => onSave(e.target.value || null)}
       >
         <option value="" />
         {(col.options ?? []).map((o) => (

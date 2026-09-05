@@ -278,7 +278,9 @@ export const rustfsStore: TableStore = {
     // an unchecked `..`/`%` id writes outside this table's key space.
     const rid = rowId ? assertRowId(rowId) : crypto.randomUUID();
     const existing = await getRow(id, rid);
-    const merged = existing ? { ...existing.values, ...values } : values;
+    // Same null-deletes-the-cell law as the libsql driver's merge.
+    const merged: Record<string, unknown> = existing ? { ...existing.values, ...values } : { ...values };
+    for (const k of Object.keys(merged)) if (merged[k] === null) delete merged[k];
     const errors = validateRowValues(t.schema, merged);
     if (errors.length) throw new Error(`invalid row: ${errors.join('; ')}`);
     const now = Math.floor(Date.now() / 1000);
