@@ -13,11 +13,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Link2, Check, X, Palette } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { relationsApi, type AdminRelation, type AdminRelationType } from '@/services/api/relations';
 
 export function RelationsPanel() {
   const { t } = useTranslation();
   const qc = useQueryClient();
+  const { toast } = useToast();
+  // Surface server refusals — the vocab gate deliberately 409s a confirm
+  // whose verb is still PROPOSED ("confirm the vocabulary first"), and a
+  // silent mutation error left the operator clicking a dead button.
+  const fail = (e: Error) =>
+    toast({ title: t('common.error'), description: e.message, variant: 'destructive' });
 
   const { data, isLoading } = useQuery({
     queryKey: ['admin-relations'],
@@ -33,6 +40,7 @@ export function RelationsPanel() {
     mutationFn: (v: { id: string; status: 'confirmed' | 'rejected' }) =>
       relationsApi.decide(v.id, v.status),
     onSuccess: invalidate,
+    onError: fail,
   });
 
   const typeMut = useMutation({
@@ -41,6 +49,7 @@ export function RelationsPanel() {
       else await relationsApi.rejectType(v.type);
     },
     onSuccess: invalidate,
+    onError: fail,
   });
 
   const relations = (data?.relations ?? []).filter((r) => r.status === 'proposed');

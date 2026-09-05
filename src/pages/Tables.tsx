@@ -122,6 +122,8 @@ export default function Tables() {
       queryClient.invalidateQueries({ queryKey: ['tables'] });
       toast({ title: t('common.success'), description: t('tables.deleted') });
     },
+    onError: (e) =>
+      toast({ title: t('common.error'), description: e.message, variant: 'destructive' }),
   });
 
   const share = useMutation({

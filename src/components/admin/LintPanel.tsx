@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Stethoscope, Play } from 'lucide-react';
 import { apiFetch } from '@/services/api/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface LintFinding {
   id: string;
@@ -37,6 +38,9 @@ const SEV_VARIANT: Record<string, 'destructive' | 'default' | 'secondary' | 'out
 export function LintPanel() {
   const { t } = useTranslation();
   const qc = useQueryClient();
+  const { toast } = useToast();
+  const fail = (e: Error) =>
+    toast({ title: t('common.error'), description: e.message, variant: 'destructive' });
 
   const { data: report, isLoading } = useQuery({
     queryKey: ['lint'],
@@ -46,12 +50,14 @@ export function LintPanel() {
   const run = useMutation({
     mutationFn: () => apiFetch<LintReport>('/api/lint/run', { method: 'POST' }),
     onSuccess: (data) => qc.setQueryData(['lint'], data),
+    onError: fail,
   });
 
   const verdict = useMutation({
     mutationFn: (v: { findingId: string; verdict: string }) =>
       apiFetch('/api/lint/verdict', { method: 'POST', body: JSON.stringify(v) }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['lint'] }),
+    onError: fail,
   });
 
   return (

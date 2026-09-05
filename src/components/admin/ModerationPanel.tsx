@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Gavel, Check, X } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 import { apiFetch } from '@/services/api/client';
 
 // kind=object: {type,title,body,…}; kind=node: {parentId,name,description};
@@ -51,6 +52,12 @@ interface PromotionList {
 export function ModerationPanel() {
   const { t } = useTranslation();
   const qc = useQueryClient();
+  const { toast } = useToast();
+  // Server refusals (already-decided proposal, conflicting slug, …) must reach
+  // the operator — a silently failed decide leaves the row in the queue with
+  // no hint why.
+  const fail = (e: Error) =>
+    toast({ title: t('common.error'), description: e.message, variant: 'destructive' });
 
   const { data, isLoading } = useQuery({
     queryKey: ['promotions'],
@@ -64,6 +71,7 @@ export function ModerationPanel() {
         body: JSON.stringify({ decision: v.decision }),
       }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['promotions'] }),
+    onError: fail,
   });
 
   // K1 batch relief: taxonomy-describe lands hundreds of desc proposals at
@@ -75,6 +83,7 @@ export function ModerationPanel() {
         body: JSON.stringify(v),
       }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['promotions'] }),
+    onError: fail,
   });
 
   const open = (data?.items ?? []).filter((p) => p.status === 'proposed');

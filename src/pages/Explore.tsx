@@ -97,7 +97,7 @@ export default function Explore() {
   // the old `core=<order>` links keep meaning exactly what they said.
   const [core, setCore] = useState<{ on: boolean; order: CoreOrder }>(() => {
     const c = initialParams.get('core');
-    const orders: CoreOrder[] = ['fs', 'taxonomy', 'topic'];
+    const orders: CoreOrder[] = ['fs', 'taxonomy', 'topic', 'type'];
     if (c === '0') return { on: false, order: 'fs' };
     return { on: true, order: c && orders.includes(c as CoreOrder) ? (c as CoreOrder) : 'fs' };
   });
@@ -774,7 +774,18 @@ export default function Explore() {
         }
         const o = objectById.get(r.otherRef);
         if (o) {
-          setDrawer({ id: o.id, name: o.title, kind: 'object', dataType: o.type, isStar: false });
+          // The obj:-prefixed shape every other object drawer uses (openTarget
+          // above) — DetailPanel derives its link lists and the Focus button
+          // from the prefix + isStar + nodeId, so a bare id opened a degraded
+          // panel that dead-ended the relation chase at the first hop.
+          setDrawer({
+            id: `obj:${o.id}`,
+            name: o.title,
+            kind: 'object',
+            dataType: o.type,
+            isStar: true,
+            nodeId: `obj:${o.id}`,
+          });
         }
       }}
       focusName={focusId ? nodeById.get(focusId)?.name ?? null : null}
