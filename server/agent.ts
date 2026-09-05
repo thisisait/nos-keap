@@ -513,6 +513,15 @@ export function registerAgentRoutes(app: Express) {
   app.get('/agent/v1/relations', agentAuth('ro'), (req, res) => {
     const status = req.query.status ? String(req.query.status) : undefined;
     const source = req.query.source ? String(req.query.source) : undefined;
+    // Refuse unknown filters instead of WHERE status='all' → [] — an empty
+    // list must always mean "no relations", never "you typoed the filter".
+    // (The admin route treats status=all as no-filter; here omit the param.)
+    if (status && !['proposed', 'confirmed', 'rejected'].includes(status)) {
+      return fail(res, 400, `unknown status '${status}' — use proposed|confirmed|rejected, or omit for all`);
+    }
+    if (source && !['toe', 'derived', 'manual'].includes(source)) {
+      return fail(res, 400, `unknown source '${source}' — use toe|derived|manual, or omit for all`);
+    }
     const limit = Math.min(Number(req.query.limit) || 200, 200);
     const rows = db
       .listRelations({
@@ -1102,7 +1111,11 @@ export function registerAgentRoutes(app: Express) {
     let items = db.getAllMetadataApi('', true);
     if (source) items = items.filter((c) => c.source === source);
     if (req.query.unpromoted === '1') {
-      const proposedCaptures = new Set(db.listPromotions().map((p) => p.captureId));
+      // openPromotions, NEVER the LIMIT-200 listPromotions: this exclusion set
+      // must see every open row (db.ts openPromotions doc — the blind-guard
+      // window migration 003 cleaned up after). Same fix as the describe/brief
+      // pending endpoints; this call site was the one left behind.
+      const proposedCaptures = new Set(db.openPromotions().map((p) => p.captureId));
       items = items.filter((c) => !c.metadata?.promotedTo && !proposedCaptures.has(c.id));
     }
     ok(res, {
