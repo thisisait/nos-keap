@@ -722,6 +722,125 @@ export function registerAgentRoutes(app: Express) {
   //      top-level `slug` column. /api/tables wraps rows as {id, values} — this
   //      surface unwraps. Owner is a fixed system id; visibility governs reads.
   // Slug charset per the nOS face contract (dots/underscores, up to 128 chars).
+  // ── Track D — the LLM context injector (ontology-anchoring.md §4, v1/tier S)
+  // One deterministic, budget-bounded assembly over the SAME retrieval path the
+  // recall gate measures — gate green ⇒ injector trustworthy. Rules-first:
+  // confirmed typed edges touching the focus ship before prose; evidence fills
+  // the remaining budget. Every item is citable or absent (stable ids: node id,
+  // obj:<id>, capture:<id>, relation id) — no anonymous snippets. Proposed
+  // edges are EXCLUDED unless includeProposed: the injector must never launder
+  // a classifier guess into "the corpus says". R4 condition chains join the
+  // `rules` block when the meta layer lands; depth='full' is reserved for it.
+  app.post('/agent/v1/context', agentAuth('ro'), async (req, res) => {
+    const q = String(req.body?.query ?? '').trim();
+    if (!q) return fail(res, 400, 'query required');
+    const depth = req.body?.depth === 'facts' ? 'facts' : 'rules';
+    const budgetTokens = Math.min(Math.max(Number(req.body?.budget_tokens) || 4000, 500), 16000);
+    const includeProposed = req.body?.includeProposed === true;
+    const est = (s: string | null | undefined) => Math.ceil((s?.length ?? 0) / 4);
+
+    const { hits } = await hybridSearch(q, ['taxonomy', 'object', 'capture', 'note'], 24);
+    const focus: Array<Record<string, unknown>> = [];
+    const evidenceHits: typeof hits = [];
+    for (const h of hits) {
+      if (h.kind === 'taxonomy') {
+        const n = getNode(h.refId);
+        if (n) focus.push({ id: n.id, name: n.name, path: n.path || undefined, score: Number(h.score.toFixed(5)) });
+      } else {
+        evidenceHits.push(h);
+      }
+    }
+
+    let spent = focus.reduce((a, f) => a + est(`${f.id} ${f.name} ${f.path ?? ''}`), 0);
+    const verbs = new Map(db.listRelationTypes().map((t) => [t.type, t.label]));
+    const rules: Array<Record<string, unknown>> = [];
+    let droppedRules = 0;
+    if (depth !== 'facts') {
+      const refs = new Set<string>([
+        ...focus.map((f) => String(f.id)),
+        ...evidenceHits.map((h) => h.refId),
+      ]);
+      const touching = db
+        .listRelations(includeProposed ? undefined : { status: 'confirmed' })
+        .filter(
+          (r) =>
+            (r.status === 'confirmed' || (includeProposed && r.status === 'proposed')) &&
+            (refs.has(r.fromRef) || refs.has(r.toRef)),
+        );
+      for (const r of touching) {
+        const line = {
+          id: r.id,
+          from: r.fromKind === 'object' ? `obj:${r.fromRef}` : r.fromRef,
+          verb: verbs.get(r.type) ?? r.type,
+          type: r.type,
+          to: r.toKind === 'object' ? `obj:${r.toRef}` : r.toRef,
+          confidence: r.confidence,
+          status: r.status,
+          provenance: { source: r.source, model: r.model ?? undefined },
+        };
+        const cost = est(JSON.stringify(line));
+        if (spent + cost > budgetTokens) {
+          droppedRules += 1;
+          continue;
+        }
+        spent += cost;
+        rules.push(line);
+      }
+    }
+
+    const evidence: Array<Record<string, unknown>> = [];
+    let droppedEvidence = 0;
+    for (const h of evidenceHits) {
+      let item: Record<string, unknown> | null = null;
+      if (h.kind === 'object') {
+        const o = db.getObject(h.refId);
+        if (o) {
+          item = {
+            id: `obj:${o.id}`,
+            kind: 'object',
+            title: o.title,
+            excerpt: (o.description ?? o.body ?? '').slice(0, 600) || undefined,
+            score: Number(h.score.toFixed(5)),
+            provenance: { resource: o.resource ?? undefined, visibility: o.visibility },
+          };
+        }
+      } else if (h.kind === 'capture') {
+        const c = db.getMetadataApi(h.refId);
+        if (c) {
+          item = {
+            id: `capture:${c.id}`,
+            kind: 'capture',
+            title: c.title,
+            excerpt: (c.description ?? '').slice(0, 600) || undefined,
+            score: Number(h.score.toFixed(5)),
+            provenance: { url: c.url ?? undefined, source: c.source ?? undefined },
+          };
+        }
+      }
+      if (!item) continue;
+      const cost = est(JSON.stringify(item));
+      if (spent + cost > budgetTokens) {
+        droppedEvidence += 1;
+        continue;
+      }
+      spent += cost;
+      evidence.push(item);
+    }
+
+    ok(res, {
+      query: q,
+      depth,
+      focus,
+      rules,
+      evidence,
+      budget: {
+        requested: budgetTokens,
+        spent,
+        dropped: { rules: droppedRules, evidence: droppedEvidence },
+      },
+    });
+  });
+
   // The leading [a-z0-9] forbids a '.'/'-' start, so the slug can never BE '..'
   // or '/', and the explicit '..' guard below blocks a dot-run anywhere — so a
   // slug used as a table id can never traverse the RustFS key path.
@@ -2040,6 +2159,12 @@ const OPENAPI_SPEC = {
       },
     },
     '/agent/v1/openapi.json': { get: { summary: 'This contract', security: [] } },
+    '/agent/v1/context': {
+      post: {
+        summary:
+          'The LLM context injector (Track D v1, tier S): one budget-bounded assembly — focus (taxonomy hits with paths), rules (CONFIRMED typed edges touching the focus; proposed only under includeProposed), evidence (recall-ranked cards). Every item citable by stable id. Body: { query, budget_tokens?, depth?: facts|rules, includeProposed? }.',
+      },
+    },
     // ── Tables (R2′..v1.43): registry, rows, meaning-search, cooperative lease ─
     '/agent/v1/tables': {
       get: { summary: 'List data tables (id, slug, title, driver, schema, row_count)' },
