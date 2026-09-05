@@ -129,6 +129,23 @@ async function main() {
     res.sendFile(path.join(STATIC_DIR, 'index.html'));
   });
 
+  // Error floor. Express 4's default error page is HTML-with-stack and only
+  // catches SYNC throws — an async handler's rejection is an unhandledRejection,
+  // which Node >= 15 turns into a process CRASH by default. The middleware
+  // keeps sync throws inside the JSON envelope; the process hook keeps a
+  // missed async rejection (the class routes.ts's per-route try/catch exists
+  // for) from taking the whole server down — logged loudly, never swallowed
+  // silently. Four params: that arity IS how Express recognizes error middleware.
+  app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+    console.error('[keap] unhandled route error:', err);
+    if (!res.headersSent) {
+      res.status(500).json({ success: false, error: err instanceof Error ? err.message : 'internal error' });
+    }
+  });
+  process.on('unhandledRejection', (reason) => {
+    console.error('[keap] unhandledRejection (request likely left hanging):', reason);
+  });
+
   app.listen(PORT, () => {
     console.log(`[keap] listening on :${PORT} — static from ${STATIC_DIR}`);
     // Doctrine-tree mirror (class-3 per-user files → knowledge objects) —

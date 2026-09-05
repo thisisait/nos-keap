@@ -652,10 +652,17 @@ export function registerApiRoutes(app: Express) {
     const t = getTable(req.params.id);
     if (!t || !canReadTable(t, req.user)) return fail(res, 404, 'unknown table');
     if (!t.capabilities.rowHistory) return fail(res, 400, 'driver has no row history');
-    ok(
-      res,
-      await storeFor(t.driver).rowHistory(t.id, assertRowId(req.params.rowId), Math.min(Number(req.query.limit) || 50, 200)),
-    );
+    // try/catch like every sibling: an async rejection here (assertRowId on a
+    // dotted id, a driver error) is otherwise an unhandledRejection and the
+    // request hangs — Express 4 never sees it.
+    try {
+      ok(
+        res,
+        await storeFor(t.driver).rowHistory(t.id, assertRowId(req.params.rowId), Math.min(Number(req.query.limit) || 50, 200)),
+      );
+    } catch (e) {
+      fail(res, 400, e instanceof Error ? e.message : 'history failed');
+    }
   });
 
   // The OLAP slice: GROUP BY dimensions × aggregated measures.

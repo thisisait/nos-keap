@@ -386,7 +386,15 @@ export function registerAgentRoutes(app: Express) {
   app.post('/agent/v1/topics/rebuild', agentAuth('rw'), async (req, res) => {
     if (!db.vectorSearchAvailable()) return fail(res, 503, 'vector layer unavailable');
     const reset = Boolean(req.body?.reset);
-    if (req.query.wait === '1') return ok(res, await clusterTopics({ reset }));
+    if (req.query.wait === '1') {
+      // The 202 branch below catches; this await must too, or a failed run
+      // hangs the waiting caller as an unhandledRejection.
+      try {
+        return ok(res, await clusterTopics({ reset }));
+      } catch (err) {
+        return fail(res, 500, err instanceof Error ? err.message : 'clustering failed');
+      }
+    }
     void clusterTopics({ reset }).catch((err) => console.warn('[topics] rebuild failed:', err));
     res.status(202).json({ success: true, data: { scheduled: true } });
   });
