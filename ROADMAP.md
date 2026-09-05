@@ -4,6 +4,22 @@
 `docs/history/rework/COMPLETION_PROPOSAL.md` §5 (which remains valid as the record of Phases 0′–4′).
 Research grounding: `docs/history/rework/KNOWLEDGE_SUBSTRATE_RESEARCH.md` (Rounds 1+2).*
 
+## Stav — audit 2026-09-05 (v1.43.0)
+
+The prose below is the July plan; this ledger is what the code says now. Two
+tracks the July text predates entirely: the **cortex language stack**
+(`server/cortex-*.ts` — validate/opcodes/resolve/backends, contract v2) and the
+**"specs are leaving" pivot** (`docs/specs/README.md`: runtime moves to the nOS
+organ per nOS `docs/plans/cortex-self-core.md`, KEAP ends as data + weights;
+staged in nOS `docs/plans/cortex-specs-ledger.md`). Roadmap items below remain
+live until their stage moves them out.
+
+| Stav | Položky |
+|---|---|
+| **done** | S2⁵ view blocks · S2⁶ st.1+2 (incl. syncRows) · S2⁷ agent graph · S3 OKF · S4 RRF · K1 describe/brief (+curator loop) · K6 recall harness · U1 layout bake · U2″ Phase A+B · U3 flight half · C1 extension · C3 review queue · Track T · Track R3 (relations st.1+2+fill) |
+| **partial** | K2 lint (deterministic half; LLM half missing) · K5 ontology-extend (machinery yes, density producer — see `scripts/ontology-extend.mjs`) · U3 persistence (ship position/bookmarks) · Track C2 schema.org lift |
+| **missing** | K3 content-link scanner · R1 create-in-service · R2 Grist/postgres drivers · S5 schema cards · S6 DuckDB sidecar · U4 gameplay · Track D context injector (R4 stage 1 shipped v1.43.0 as its prerequisite) |
+
 ## North Star
 
 **One self-hosted universe of everything you know, queryable by you and your agents,
@@ -130,9 +146,11 @@ nOS-side counterparts flagged **[nOS]**).
   passthrough. (c) the **card visual override** — `graph.card.{form,hue,glyph}` layers over
   the `assetDescriptor` default in `graph.ts` (fallback = today's asteroid/hue-180,
   byte-identical when absent). `graph.mode` is plumbed through but `mode:'rows'` renders
-  CARD-ONLY in Stage 1. **Stage 2 (next):** `syncRows` materialises each projected row as a
+  CARD-ONLY in Stage 1. **Stage 2 (shipped ~v1.36):** `syncRows` materialises each projected row as a
   first-class `knowledge_object` (D3) with `ROW_OBJECT_CAP` opt-in, anchor/olink refs, and
   content_hash embed dedup — rows become searchable/embeddable/R3-linkable.
+  *(Stage 2 shipped ~v1.36 — `syncRows` + `table-sync-rows.test.ts`; rowRef
+  joins v1.40, view blocks v1.41, row claims/search v1.43.)*
 - **S2⁷ — native agent graph endpoint** *(shipped 2026-07-20, Track R3 stage 2)*:
   `GET /agent/v1/graph` (agentAuth `ro`) → `{nodes, edges, types, meta}` over the bearer —
   taxonomy (bare id) + objects (`object:<id>`) as nodes, CONFIRMED typed relations with full
@@ -141,10 +159,12 @@ nOS-side counterparts flagged **[nOS]**).
   `/agent/v1/objects`); dangling edges dropped via the both-endpoints-resolve guard. The nOS
   face Explore app can now render the universe NATIVELY instead of iframing `/explore`, and
   it is the LLM-consumable substrate for the typed graph.
-- **S3 — OKF bundle export/import** (zip of markdown+frontmatter; dedup by id+hash).
-  Interop with Google tooling & openknowledge CLI; the future sharing unit (Phase S).
-- **S4 — RRF hybrid search**: FTS5(BM25) ⊕ vectors ⊕ one-hop taxonomy/link neighbors,
-  Reciprocal Rank Fusion (k=60) — replaces the current FTS→vector fallback in both
+- **S3 — OKF bundle export/import** *(shipped — `server/okf.ts`, export/import.okf routes)*:
+  zip of markdown+frontmatter; dedup by id+hash. Interop with Google tooling &
+  openknowledge CLI; the future sharing unit (Phase S).
+- **S4 — RRF hybrid search** *(shipped — `server/search.ts`, the live retrieval path per
+  `docs/specs/recall-gate.md`)*: FTS5(BM25) ⊕ vectors ⊕ one-hop taxonomy/link neighbors,
+  Reciprocal Rank Fusion (k=60) — replaced the FTS→vector fallback in both
   `/api` and `/agent/v1`.
 - **S5 — schema cards & saved queries**: `query` and `table` object types get first-class
   treatment — DESCRIBE-generated frontmatter (columns, descriptions, sample values, join
@@ -211,7 +231,7 @@ nOS-side counterparts flagged **[nOS]**).
   on the glass") plus a few active T0 constellations + T1–T3 stars, clickable only at the
   aggregate. As the camera zooms in (fewer nodes in field-of-view) it swaps down scale by
   scale until, up close, it's fully active as today. Distance thresholds use hysteresis so
-  edges don't flicker. **Phase A** *(next)* = the prerequisite so the CLOSE view survives
+  edges don't flicker. **Phase A** *(shipped — InstancedMesh + ray aggregation + label LOD + sim freeze; Phase B impostors shipped too, hysteresis fade in GraphCanvas)* = the prerequisite so the CLOSE view survives
   density: InstancedMesh for cubes/stars (per-instance colour), extend ray-aggregation to
   the users-tree + `~untopiced` buckets, distance/count label LOD (stars + hub labels, not
   just the ≤400 cube cap), freeze the force sim for pinned nodes — measured before/after on
