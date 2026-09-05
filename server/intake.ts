@@ -173,7 +173,11 @@ export function registerIngestRoutes(app: Express) {
     // Attribution comes from the ENVELOPE (token tier is shared per class,
     // devices self-identify) — never from identity headers on this surface.
     const attribution = `${envelope.source.kind}:${envelope.source.name}`;
-    const { id } = normalizeAndSaveCapture(envelope, attribution);
-    res.status(201).json({ success: true, data: { id, queued: true, attribution } });
+    try {
+      const { id } = normalizeAndSaveCapture(envelope, attribution);
+      res.status(201).json({ success: true, data: { id, queued: true, attribution } });
+    } catch (err) {
+      fail(res, 403, (err as Error).message);
+    }
   });
 }

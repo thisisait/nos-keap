@@ -693,6 +693,15 @@ export function saveMetadataApi(
   metadata: Omit<ApiTaxonomyMetadata, 'createdAt' | 'updatedAt' | 'source' | 'modality'>,
   intake?: { source: string; modality: string },
 ): void {
+  // The upsert below is keyed on id alone, so without this check any caller
+  // who knows another user's capture id rewrites that capture in place — and
+  // the capture token is explicitly the extractable low-trust tier (tokens.ts)
+  // that must never touch other users' data. Same-owner re-sends stay
+  // idempotent (that is what the ON CONFLICT is for).
+  const owner = getDb()
+    .prepare('SELECT user_id FROM api_taxonomy_metadata WHERE id = ?')
+    .get(metadata.id) as { user_id: string } | undefined;
+  if (owner && owner.user_id !== userId) throw new Error('capture belongs to another user');
   getDb()
     .prepare(
       `INSERT INTO api_taxonomy_metadata (id, user_id, title, description, url, domain, metadata, source, modality, created_at, updated_at)

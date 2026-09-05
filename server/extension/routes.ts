@@ -212,7 +212,12 @@ export function registerExtensionRoutes(app: Express) {
       tags: input.tags,
       metadata: input.metadata,
     };
-    const saved = normalizeAndSaveCapture(capture, ext.user.id);
+    let saved;
+    try {
+      saved = normalizeAndSaveCapture(capture, ext.user.id);
+    } catch (e) {
+      return fail(res, 403, e instanceof Error ? e.message : 'capture rejected');
+    }
     markCorpusDirty();
     audit(ext, 'capture.created', 'capture', saved.id, { modality: capture.modality });
     ok(res, { ...saved, queued: true }, 201);

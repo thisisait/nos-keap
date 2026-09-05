@@ -1403,9 +1403,13 @@ export function registerAgentRoutes(app: Express) {
       return fail(res, 400, (err as Error).message);
     }
     envelope.source = { kind: 'agent', name: req.agentName ?? 'unknown' };
-    const { id } = normalizeAndSaveCapture(envelope, `agent:${req.agentName}`);
-    markCorpusDirty();
-    ok(res, { id, submittedBy: `agent:${req.agentName}` });
+    try {
+      const { id } = normalizeAndSaveCapture(envelope, `agent:${req.agentName}`);
+      markCorpusDirty();
+      ok(res, { id, submittedBy: `agent:${req.agentName}` });
+    } catch (err) {
+      fail(res, 403, (err as Error).message);
+    }
   });
 
   // ── Cortex: typecheck a pipeline program ──────────────────────────────────

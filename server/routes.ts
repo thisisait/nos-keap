@@ -175,7 +175,11 @@ export function registerApiRoutes(app: Express) {
           ? { taxonomyId: b.taxonomyId, icon: b.icon, links: b.links, translations: b.translations }
           : undefined),
     };
-    normalizeAndSaveCapture(capture, req.user.id);
+    try {
+      normalizeAndSaveCapture(capture, req.user.id);
+    } catch (e) {
+      return fail(res, 403, e instanceof Error ? e.message : 'capture rejected');
+    }
     markCorpusDirty();
     ok(res, capture);
   });
