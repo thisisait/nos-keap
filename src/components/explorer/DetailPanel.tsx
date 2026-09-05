@@ -386,7 +386,10 @@ export default function DetailPanel({ target, nodeById, objects, objectLinks, on
           )}
 
           <div className="flex flex-wrap gap-2">
-            {(target.url ?? node?.url) && (
+            {/* Same law as BriefBody above: capture URLs arrive from the
+                least-trusted intake surfaces and React does not neutralize
+                javascript: hrefs — only http(s) earns an anchor. */}
+            {/^https?:\/\//i.test(target.url ?? node?.url ?? '') && (
               <Button asChild size="sm" className="h-7 text-xs">
                 <a href={target.url ?? node?.url} target="_blank" rel="noreferrer">
                   <ExternalLink className="mr-1 h-3 w-3" />
