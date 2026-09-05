@@ -27,6 +27,7 @@
  *     single-tenant dev fallback only exists when that flag is absent
  *     (local `npm run dev` / tests).
  */
+import crypto from 'node:crypto';
 import type { Request, Response, NextFunction } from 'express';
 import { canonicalUid } from './uid';
 
@@ -60,6 +61,23 @@ const LOCAL_DEV_USER: KeapUser = {
 };
 
 export function identityMiddleware(req: Request, res: Response, next: NextFunction) {
+  // The X-Authentik-* headers above are plain request headers — any host
+  // process that can reach the loopback port can forge them and mint an admin.
+  // KEAP_PROXY_SHARED_SECRET closes that: when set, only the forward-auth
+  // proxy hop (which nOS provisions with the same per-deploy secret, injected
+  // as x-keap-proxy-secret alongside the X-Authentik-* set) can speak to the
+  // human /api surface at all — the identity headers are checked only AFTER
+  // the caller proved it is the proxy. Unset keeps today's behavior so the
+  // KEAP release and the nOS wiring can land independently.
+  const proxySecret = process.env.KEAP_PROXY_SHARED_SECRET;
+  if (proxySecret) {
+    const given = header(req, 'x-keap-proxy-secret');
+    if (!given || !timingSafeEq(given, proxySecret)) {
+      return res
+        .status(401)
+        .json({ success: false, error: 'unauthenticated: request did not come through the proxy' });
+    }
+  }
   const username = header(req, 'x-authentik-username');
   if (!username) {
     if (TRUSTED_PROXY) {
@@ -92,6 +110,12 @@ export function identityMiddleware(req: Request, res: Response, next: NextFuncti
     isAdmin: groups.some((g) => ADMIN_GROUPS.has(g)),
   };
   next();
+}
+
+function timingSafeEq(a: string, b: string): boolean {
+  const ab = Buffer.from(a);
+  const bb = Buffer.from(b);
+  return ab.length === bb.length && crypto.timingSafeEqual(ab, bb);
 }
 
 function header(req: Request, name: string): string | null {
