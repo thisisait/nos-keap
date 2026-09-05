@@ -327,9 +327,28 @@ const VECTOR_SCHEMA = [
      updated_at INTEGER DEFAULT (strftime('%s','now')),
      PRIMARY KEY (kind, ref_id)
    )`,
+  // Tuned per docs/specs/durability-and-integrity.md §4: the DEFAULT DiskANN
+  // index measured 514.6 MB for 3356 vectors (~153 KB/vector); float8 neighbor
+  // compression + max_neighbors=20 reproduces at 65.6 MB with an 8× faster
+  // insert pass. ACCEPTANCE IS THE RECALL GATE, not the size column: after the
+  // first boot on this DDL (which rebuilds the index), run `npm run gate:recall`
+  // against the live corpus and compare to the pre-upgrade baseline.
   `CREATE INDEX IF NOT EXISTS embeddings_vec_idx
-     ON embeddings(libsql_vector_idx(vector))`,
+     ON embeddings(libsql_vector_idx(vector, 'compress_neighbors=float8', 'max_neighbors=20'))`,
 ];
+
+/** One-time in-place rebuild: an index created under the old default DDL is
+ *  dropped so VECTOR_SCHEMA recreates it tuned. Detected from sqlite_master —
+ *  CREATE IF NOT EXISTS would silently keep the untuned one forever. */
+function retuneVectorIndex(d: Database.Database): void {
+  const idx = d
+    .prepare("SELECT sql FROM sqlite_master WHERE type = 'index' AND name = 'embeddings_vec_idx'")
+    .get() as { sql: string } | undefined;
+  if (idx && !idx.sql.includes('compress_neighbors')) {
+    console.log('[db] rebuilding embeddings_vec_idx with tuned parameters (one-time, ~seconds)');
+    d.exec('DROP INDEX embeddings_vec_idx');
+  }
+}
 
 export async function initDb(): Promise<void> {
   if (db) return;
@@ -342,6 +361,7 @@ export async function initDb(): Promise<void> {
   // functions (e.g. a stock-SQLite build), semantic features stay off and the
   // FTS/tree surfaces keep working — same pattern as the agent-token 503s.
   try {
+    retuneVectorIndex(db);
     for (const stmt of VECTOR_SCHEMA) db.exec(stmt);
     vectorsOk = true;
   } catch (err) {
@@ -2581,6 +2601,9 @@ export interface RelationTypeRow {
   color: string | null;
   description: string | null;
   status: 'seed' | 'proposed' | 'confirmed';
+  // R4 stage 1: entity verbs relate knowledge items; meta verbs relate
+  // statements (edges). Only entity verbs are ever OFFERED to the classifier.
+  scope: 'entity' | 'meta';
 }
 
 interface RelationDbRow {
@@ -2678,18 +2701,18 @@ export function seedRelationTypes(): void {
 export function listRelationTypes(): RelationTypeRow[] {
   return (
     getDb()
-      .prepare('SELECT type, label, color, description, status FROM relation_types ORDER BY type')
-      .all() as Array<{ type: string; label: string; color: string | null; description: string | null; status: string }>
-  ).map((r) => ({ ...r, status: r.status as RelationTypeRow['status'] }));
+      .prepare('SELECT type, label, color, description, status, scope FROM relation_types ORDER BY type')
+      .all() as Array<{ type: string; label: string; color: string | null; description: string | null; status: string; scope: string }>
+  ).map((r) => ({ ...r, status: r.status as RelationTypeRow['status'], scope: r.scope as RelationTypeRow['scope'] }));
 }
 
 export function getRelationType(type: string): RelationTypeRow | null {
   const r = getDb()
-    .prepare('SELECT type, label, color, description, status FROM relation_types WHERE type = ?')
+    .prepare('SELECT type, label, color, description, status, scope FROM relation_types WHERE type = ?')
     .get(type) as
-    | { type: string; label: string; color: string | null; description: string | null; status: string }
+    | { type: string; label: string; color: string | null; description: string | null; status: string; scope: string }
     | undefined;
-  return r ? { ...r, status: r.status as RelationTypeRow['status'] } : null;
+  return r ? { ...r, status: r.status as RelationTypeRow['status'], scope: r.scope as RelationTypeRow['scope'] } : null;
 }
 
 /** Grow the vocabulary under moderation: an unknown proposed type lands as

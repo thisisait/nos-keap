@@ -343,6 +343,19 @@ const MIGRATIONS: Migration[] = [
         ON table_row_refs(to_table, to_row);
     `,
   },
+  {
+    // R4 stage 1 (docs/specs/conditional-relations.md "Suggested staging" #1):
+    // the vocabulary splits in two — entity verbs relate knowledge items,
+    // meta verbs (a future 'conditioned-on') relate STATEMENTS. Mixing them in
+    // one flat registry would offer the R3 classifier a meta-verb for an
+    // entity pair it can never apply correctly, so the split lands before any
+    // meta verb exists. Every current verb relates entities — hence the
+    // default; the candidates endpoint filters on it.
+    id: '008-relation-scope',
+    sql: `
+      ALTER TABLE relation_types ADD COLUMN scope TEXT NOT NULL DEFAULT 'entity';
+    `,
+  },
 ];
 
 export function runMigrations(db: Database.Database): void {

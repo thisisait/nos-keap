@@ -502,7 +502,15 @@ export function registerAgentRoutes(app: Express) {
     // lists, renders and moderates everywhere else; it is only never SUGGESTED.
     const vocab = db
       .listRelationTypes()
-      .filter((t) => (t.status === 'seed' || t.status === 'confirmed') && !MECHANICAL_VERBS.has(t.type))
+      .filter(
+        (t) =>
+          (t.status === 'seed' || t.status === 'confirmed') &&
+          !MECHANICAL_VERBS.has(t.type) &&
+          // R4 stage 1: candidate pairs are ENTITY pairs, so only entity verbs
+          // are offered — a meta verb (relating statements, not items) can
+          // never be applied to one correctly.
+          t.scope === 'entity',
+      )
       .map((t) => ({ type: t.type, label: t.label, description: t.description ?? undefined }));
     ok(res, { model: db.embeddingStats().model, pairs, vocab });
   });
