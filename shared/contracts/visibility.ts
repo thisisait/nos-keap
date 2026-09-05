@@ -54,6 +54,33 @@
  * `agent:<x-keap-agent>` after bearer validation (COOPERATIVE — the same
  * trust the row lease already extends); phase 2 swaps in per-agent bearers
  * (nOS CredentialResolver) with no change to any shape in this file.
+ *
+ * THREE SETTLEMENTS (review round 2, 2026-09-05):
+ * 1. UID BOUNDARY INVARIANT: every NON-EMPTY canonicalUid/slugifyUid output
+ *    is a valid principal name — the slug transform's alphabet ([a-z0-9-]),
+ *    edge-dash trim and 64-cap are exactly PRINCIPAL_NAME's grammar (pinned
+ *    by visibility-contract.test.ts against server/uid.ts). The one hole is
+ *    the pathological EMPTY slug (username+email+uid all slugify to '') —
+ *    that identity is broken upstream of sharing (it cannot own fs rows
+ *    either); enforcement refuses an empty principal rather than this
+ *    grammar bending to admit it.
+ * 2. ABSENT OWNER = SYSTEM-OWNED: no principal holds the owner role; the
+ *    table is governed by visibility + tier (+ explicit shares) alone. The
+ *    user door ALWAYS stamps owner on create; only code-declared/system
+ *    tables may be ownerless. A user table can never "lose" its owner into
+ *    tier-writability — owner is set at birth and immutable through both
+ *    doors.
+ * 3. PRECEDENCE — grades narrow, grants union:
+ *    - visibility GRADES compose most-restrictive-wins: a row may be MORE
+ *      private than its table (__visibility=private on a tier-users table),
+ *      never more open — a grade can only ever narrow tier exposure.
+ *    - shared_with ACLs compose by UNION (table grants ∪ row grants), and an
+ *      explicit grant MAY cross the table's grade wall — "share one row of
+ *      my private table with user X" is the founding use case, and a grant
+ *      names a principal deliberately, which is exactly what a tier grade
+ *      cannot do. A row-level grant implies the grantee sees the table's
+ *      EXISTENCE and only their granted rows in listings (absence-safe for
+ *      everything else). Write implies read throughout.
  */
 import { z } from 'zod';
 

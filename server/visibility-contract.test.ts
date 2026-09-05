@@ -9,6 +9,7 @@ import {
   visibilityGradeSchema,
 } from '../shared/contracts/visibility';
 import { TABLE_VISIBILITIES } from './rbac';
+import { canonicalUid, slugifyUid } from './uid';
 
 /**
  * dtt-share-model contract gates (shape only — enforcement ships separately).
@@ -49,6 +50,33 @@ describe('principal grammar', () => {
     'user:', // empty name
     `agent:${'a'.repeat(65)}`, // over the uid cap
   ])('rejects %s', (p) => expect(principalSchema.safeParse(p).success).toBe(false));
+});
+
+describe('the uid boundary invariant (settlement #1)', () => {
+  // Every NON-EMPTY slug the identity layer can mint must be a legal
+  // principal name — otherwise a user exists who cannot own the table they
+  // just created. The nasty vectors cover each transform step: diacritics,
+  // case, symbol runs, edge dashes, the 64-cap, and multi-signal fallback.
+  it.each([
+    'Pázny',
+    'ALL-CAPS_user',
+    '  spaced  name  ',
+    'émile@--weird--',
+    'x'.repeat(200),
+    '-leading-and-trailing-',
+    'a',
+    '日本語ユーザー latin1',
+  ])('slugifyUid(%j) output parses as user:<slug>', (raw) => {
+    const slug = slugifyUid(raw);
+    if (!slug) return; // the empty hole is refused at enforcement, not here
+    expect(principalSchema.safeParse(`user:${slug}`).success, `slug ${JSON.stringify(slug)}`).toBe(true);
+  });
+
+  it('the fallback chain (username → email local-part → uid) stays inside the grammar', () => {
+    const slug = canonicalUid('***', 'Weird.Náme+tag@example.com', null);
+    expect(slug).not.toBe('');
+    expect(principalSchema.safeParse(`user:${slug}`).success).toBe(true);
+  });
 });
 
 describe('shared_with', () => {
