@@ -47,6 +47,7 @@ import {
   type ViewMeta,
   validateRowValues,
 } from '../shared/contracts/table';
+import type { Principal, RowSharing, RowSharingPatch } from '../shared/contracts/visibility';
 
 /** All methods are async — network-backed drivers (rustfs/postgres/grist)
  *  need it, the libsql driver just resolves synchronously. */
@@ -63,6 +64,10 @@ export interface TableStore {
     rowId: string | undefined,
     values: Record<string, unknown>,
     actor: string,
+    /** dtt-share-model: stamp = owner principal for a NEW row (immutable
+     *  thereafter); patch = authorized visibility/grant changes. The ROUTE
+     *  authorizes; the driver only stores. */
+    sharing?: { stamp?: Principal; patch?: RowSharingPatch },
   ): Promise<TableRow>;
   deleteRow(id: string, rowId: string, actor: string): Promise<void>;
   rowHistory(id: string, rowId: string, limit: number): Promise<unknown[]>;
@@ -88,7 +93,7 @@ export interface DataTableDbRow {
 /** Param stays `unknown` (not the row interface) because callers hand over
  *  driver `.get()` results directly — the cast to the row shape lives here. */
 export function mapTable(row: unknown): Omit<TableInfo, 'capabilities'> {
-  const r = row as DataTableDbRow;
+  const r = row as DataTableDbRow & { shared_with?: string | null };
   return {
     id: r.id,
     title: r.title,
@@ -97,6 +102,7 @@ export function mapTable(row: unknown): Omit<TableInfo, 'capabilities'> {
     schema: JSON.parse(r.schema_json),
     ownerId: r.user_id,
     visibility: r.visibility,
+    sharedWith: r.shared_with ? JSON.parse(r.shared_with) : [],
     rowCount: r.row_count,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
@@ -116,15 +122,20 @@ export function listTables(actor: TableActor): TableInfo[] {
     const rows = d.prepare('SELECT * FROM data_tables ORDER BY updated_at DESC').all();
     return (rows as DataTableDbRow[]).map((r) => withCapabilities(mapTable(r)));
   }
-  // Own tables OR any visibility scope the caller's tier is allowed to read
-  // ('shared' is always in the list, so the IN() is never empty).
+  // Own tables, any tier-readable scope ('shared' is always in the list, so
+  // the IN() is never empty), an explicit table grant, or a ROW grant (a row
+  // grant implies the grantee sees the table's existence — settlement #3).
   const vis = readableVisibilities(tierRank(actor.groups));
   const placeholders = vis.map(() => '?').join(',');
+  const principal = `user:${actor.id}`;
   const rows = d
     .prepare(
-      `SELECT * FROM data_tables WHERE user_id = ? OR visibility IN (${placeholders}) ORDER BY updated_at DESC`,
+      `SELECT * FROM data_tables
+       WHERE user_id = ? OR visibility IN (${placeholders}) OR shared_with LIKE ?
+          OR EXISTS (SELECT 1 FROM table_rows tr WHERE tr.table_id = data_tables.id AND tr.sharing LIKE ?)
+       ORDER BY updated_at DESC`,
     )
-    .all(actor.id, ...vis);
+    .all(actor.id, ...vis, `%"${principal}"%`, `%"${principal}"%`);
   return (rows as DataTableDbRow[]).map((r) => withCapabilities(mapTable(r)));
 }
 
@@ -219,6 +230,36 @@ export function updateTableVisibility(id: string, visibility: TableVisibility): 
   db.getDb()
     .prepare("UPDATE data_tables SET visibility = ?, updated_at = strftime('%s','now') WHERE id = ?")
     .run(visibility, id);
+}
+
+/** Replace the table's explicit ACL (owner/admin only — routes enforce). */
+export function updateTableSharing(id: string, sharedWith: TableInfo['sharedWith']): void {
+  db.getDb()
+    .prepare("UPDATE data_tables SET shared_with = ?, updated_at = strftime('%s','now') WHERE id = ?")
+    .run(JSON.stringify(sharedWith), id);
+}
+
+/** Does ANY row of this table grant the principal? A row grant implies the
+ *  grantee sees the table's EXISTENCE (settlement #3) — this is that check.
+ *  ponytail: LIKE over the sharing JSON — principals are exact quoted strings
+ *  in a column only this module writes, so the match is precise; a real index
+ *  arrives if row-sharing ever outgrows personal scale. */
+export function hasRowGrantFor(tableId: string, principal: Principal): boolean {
+  return Boolean(
+    db
+      .getDb()
+      .prepare("SELECT 1 FROM table_rows WHERE table_id = ? AND sharing LIKE ? LIMIT 1")
+      .get(tableId, `%"${principal}"%`),
+  );
+}
+
+/** Tables whose ROWS grant the principal, for the listing (same LIKE law). */
+export function tablesWithRowGrantsFor(principal: Principal): Set<string> {
+  const rows = db
+    .getDb()
+    .prepare("SELECT DISTINCT table_id FROM table_rows WHERE sharing LIKE ?")
+    .all(`%"${principal}"%`) as Array<{ table_id: string }>;
+  return new Set(rows.map((r) => r.table_id));
 }
 
 /**
@@ -401,6 +442,12 @@ export function syncRows(
   const all = rows ?? readAllRows(t.id);
   const kept = new Set<string>();
   for (const r of all.slice(0, ROW_OBJECT_CAP)) {
+    // Most-restrictive-wins applied to projection: a row that NARROWED its
+    // visibility below the table's is not materialised into the corpus — the
+    // knowledge graph is broad-visibility, and a narrowed row leaking through
+    // search/embeddings would undo the narrowing. An owner stamp or a grant
+    // is not a narrowing and projects normally.
+    if (r.sharing?.visibility) continue;
     // Nothing enforces idColumn uniqueness across rows, and two rows mapping
     // to one object id would silently drop the later row from the corpus (the
     // exact partially-projected-but-looks-complete state ROW_OBJECT_CAP's
@@ -503,13 +550,35 @@ interface TableRowDbRow {
   updated_by: string;
 }
 
-function mapRow(r: TableRowDbRow): TableRow {
+function mapRow(r: TableRowDbRow & { sharing?: string | null }): TableRow {
   return {
     id: r.row_id,
     values: JSON.parse(r.data),
     createdAt: r.created_at,
     updatedAt: r.updated_at,
     updatedBy: r.updated_by,
+    ...(r.sharing ? { sharing: JSON.parse(r.sharing) as RowSharing } : {}),
+  };
+}
+
+/** Apply a row-sharing patch over the stored triple (dtt-share-model).
+ *  Owner is immutable — stamped at insert, never patched; null clears a
+ *  field, undefined leaves it (the values-merge law applied to meta). */
+export function mergeRowSharing(
+  existing: RowSharing | undefined,
+  stamp: { owner?: Principal } | undefined,
+  patch: RowSharingPatch | undefined,
+): RowSharing | undefined {
+  const owner = existing?.owner ?? stamp?.owner;
+  const visibility =
+    patch && 'visibility' in patch ? (patch.visibility ?? undefined) : existing?.visibility;
+  const sharedWith =
+    patch && 'sharedWith' in patch ? (patch.sharedWith ?? undefined) : existing?.sharedWith;
+  if (!owner && !visibility && !(sharedWith && sharedWith.length)) return undefined;
+  return {
+    ...(owner ? { owner } : {}),
+    ...(visibility ? { visibility } : {}),
+    ...(sharedWith && sharedWith.length ? { sharedWith } : {}),
   };
 }
 
@@ -748,10 +817,10 @@ const libsqlStore: TableStore = {
     const id = req.id ?? crypto.randomUUID();
     db.getDb()
       .prepare(
-        `INSERT INTO data_tables (id, user_id, title, description, driver, schema_json, visibility)
-         VALUES (?, ?, ?, ?, 'libsql', ?, ?)`,
+        `INSERT INTO data_tables (id, user_id, title, description, driver, schema_json, visibility, shared_with)
+         VALUES (?, ?, ?, ?, 'libsql', ?, ?, ?)`,
       )
-      .run(id, ownerId, req.title, req.description ?? null, JSON.stringify(req.schema), req.visibility);
+      .run(id, ownerId, req.title, req.description ?? null, JSON.stringify(req.schema), req.visibility, JSON.stringify(req.sharedWith ?? []));
     const t = getTable(id)!;
     assertRowProjectionAllowed(t.rowCount, req.graph);
     syncCard(t, req.anchors, req.graph, req.view);
@@ -798,7 +867,7 @@ const libsqlStore: TableStore = {
     };
   },
 
-  async upsertRow(id, rowId, values, actor) {
+  async upsertRow(id, rowId, values, actor, rowSharing) {
     const t = getTable(id);
     if (!t) throw new Error('unknown table');
     // The drivers own the SAFE_ROW_ID invariant now — the agent door's __id
@@ -807,8 +876,13 @@ const libsqlStore: TableStore = {
     const d = db.getDb();
     const tx = d.transaction(() => {
       const existing = d
-        .prepare('SELECT data FROM table_rows WHERE table_id = ? AND row_id = ?')
-        .get(id, rid) as { data: string } | undefined;
+        .prepare('SELECT data, sharing FROM table_rows WHERE table_id = ? AND row_id = ?')
+        .get(id, rid) as { data: string; sharing: string | null } | undefined;
+      const sharing = mergeRowSharing(
+        existing?.sharing ? (JSON.parse(existing.sharing) as RowSharing) : undefined,
+        existing ? undefined : { owner: rowSharing?.stamp },
+        rowSharing?.patch,
+      );
       // Upsert semantics: PATCH an existing row (merge keys), insert otherwise.
       // Validation runs on the MERGED result — a patch of one cell must not
       // trip over required columns it didn't touch. A null value DELETES the
@@ -825,13 +899,14 @@ const libsqlStore: TableStore = {
       // never that the string names anything.
       assertRowRefTargetsExist(d, t.schema, merged);
       d.prepare(
-        `INSERT INTO table_rows (table_id, row_id, data, updated_by)
-         VALUES (?, ?, ?, ?)
+        `INSERT INTO table_rows (table_id, row_id, data, updated_by, sharing)
+         VALUES (?, ?, ?, ?, ?)
          ON CONFLICT(table_id, row_id) DO UPDATE SET
            data = excluded.data,
            updated_at = strftime('%s','now'),
-           updated_by = excluded.updated_by`,
-      ).run(id, rid, JSON.stringify(merged), actor);
+           updated_by = excluded.updated_by,
+           sharing = excluded.sharing`,
+      ).run(id, rid, JSON.stringify(merged), actor, sharing ? JSON.stringify(sharing) : null);
       d.prepare(
         'INSERT INTO table_row_history (table_id, row_id, op, data, actor) VALUES (?, ?, ?, ?, ?)',
       ).run(id, rid, existing ? 'update' : 'insert', JSON.stringify(merged), actor);
@@ -924,8 +999,14 @@ const libsqlStore: TableStore = {
     const rows = db
       .getDb()
       .prepare(
+        // NARROWED rows never aggregate, FOR ANYONE: an aggregate is a broad
+        // lens, and a row that narrowed its visibility below the table's
+        // would leak through a SUM. Keyed on the narrowing grade only — an
+        // owner stamp or a grant does not restrict, it attributes/widens.
         `SELECT ${[...dims, ...measures].join(', ')}
-         FROM table_rows WHERE table_id = ? ${sql} ${groupBy} LIMIT ?`,
+         FROM table_rows WHERE table_id = ?
+           AND (sharing IS NULL OR json_extract(sharing, '$.visibility') IS NULL)
+         ${sql} ${groupBy} LIMIT ?`,
       )
       .all(id, ...params, q.limit) as Array<Record<string, unknown>>;
     // Rename mN back to "<fn>_<column>" for readable payloads.

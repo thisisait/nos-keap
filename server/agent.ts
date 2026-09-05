@@ -32,7 +32,8 @@ import { allNodes } from './taxonomy';
 import { normalizeAndSaveCapture, parseEnvelope } from './intake';
 import { syncAllFs, syncMapping, fsSyncStatus, USER_FILES_DIR } from './fs-sync';
 import { scheduleTopicRecluster, clusterTopics } from './topics';
-import { claimRow, getTable, listTables, referencesTo, releaseRow, storeFor, updateTableSchema } from './tables';
+import { claimRow, getTable, listTables, referencesTo, releaseRow, storeFor, updateTableSchema, updateTableSharing } from './tables';
+import { extractRowSharing, sharedWithSchema, type Principal } from '../shared/contracts/visibility';
 import {
   createTableRequestSchema,
   tableSchemaSchema,
@@ -896,6 +897,14 @@ export function registerAgentRoutes(app: Express) {
         view = parsedView.data;
       }
       try {
+        // Sharing rides the reconcile like view does: the definition file is
+        // the source of truth for a code-declared table's ACL.
+        if (b.sharedWith !== undefined) {
+          const sw = sharedWithSchema.safeParse(b.sharedWith);
+          if (!sw.success) return fail(res, 400, sw.error.issues[0]?.message ?? 'invalid sharedWith');
+          updateTableSharing(existing.id, sw.data);
+          existing.sharedWith = sw.data;
+        }
         return ok(res, { ...existing, ...updateTableSchema(existing, cols.data, view) });
       } catch (e) {
         return fail(res, 409, e instanceof Error ? e.message : 'schema reconcile failed');
@@ -923,6 +932,9 @@ export function registerAgentRoutes(app: Express) {
       // offline gate, and reached no converged install. Zod strips what it does
       // not know, so it failed as SILENCE rather than as an error.
       view: b.view,
+      // dtt-share-model: the §14.3 code-declared access compiles down to this
+      // ACL — same forward-it-or-it-silently-drops law as graph/view above.
+      sharedWith: b.sharedWith,
     });
     if (!parsed.success) return fail(res, 400, parsed.error.issues[0]?.message ?? 'invalid table');
     try {
@@ -964,7 +976,7 @@ export function registerAgentRoutes(app: Express) {
       // `__id` follows the convention rowRef already set with `<col>__display`,
       // and it is spread LAST on purpose: a column literally named `__id` must
       // not shadow the row's real identity.
-      ok(res, { rows: rows.map((r) => ({ ...r.values, __id: r.id })) });
+      ok(res, { rows: rows.map((r) => ({ ...r.values, __id: r.id, ...(r.sharing ? { __sharing: r.sharing } : {}) })) });
     } catch (e) {
       fail(res, 400, e instanceof Error ? e.message : 'query failed');
     }
@@ -996,11 +1008,18 @@ export function registerAgentRoutes(app: Express) {
     // else the row's own `slug`. Without it a slug-less table was write-once:
     // the GET handed back an __id the POST threw away, re-INSERTING on edit.
     // `__id` names the row; it is peeled off, never stored as a column.
-    const { __id: bodyId, ...data } = values;
+    const { __id: bodyId, ...rawData } = values;
+    // Same peel law for the sharing meta keys (phase 1: this door STORES and
+    // STAMPS but does not refuse — see visibility.ts phase note).
+    const { values: data, patch, error: shareErr } = extractRowSharing(rawData);
+    if (shareErr) return fail(res, 400, shareErr);
     const rowSlug = typeof data.slug === 'string' && validSlug(data.slug) ? data.slug : undefined;
     const rowId = typeof bodyId === 'string' && bodyId ? bodyId : rowSlug;
     try {
-      const row = await storeFor(t.driver).upsertRow(t.id, rowId, data, `agent:${req.agentName}`);
+      const row = await storeFor(t.driver).upsertRow(t.id, rowId, data, `agent:${req.agentName}`, {
+        stamp: `agent:${req.agentName}` as Principal,
+        patch,
+      });
       // `__id` for the same reason as the listing above: without it, an agent
       // that has just CREATED a row still cannot ask what points at it.
       ok(res, { ...row.values, __id: row.id });
@@ -1021,7 +1040,7 @@ export function registerAgentRoutes(app: Express) {
       const { rows } = await storeFor(t.driver).listRows(t.id, { filter: [], limit: 500, expand: [] });
       const row = rows.find((r) => r.id === req.params.rowId);
       if (!row) return fail(res, 404, 'unknown row');
-      ok(res, { ...row.values, __id: row.id });
+      ok(res, { ...row.values, __id: row.id, ...(row.sharing ? { __sharing: row.sharing } : {}) });
     } catch (e) {
       fail(res, 400, e instanceof Error ? e.message : 'query failed');
     }

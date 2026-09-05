@@ -61,7 +61,9 @@ describe('the agent surface can name the rows it returns', () => {
     // declare a column called `__id`, and data must never be able to rename the
     // row it lives in.
     const body = handlerBody("app.get('/agent/v1/tables/:slug/rows'");
-    const spread = body.match(/\{\s*\.\.\.r\.values,\s*__id:\s*r\.id\s*\}/);
+    // `, ...` after __id is fine (the __sharing meta rides behind it) — the
+    // law is only that __id comes AFTER the values spread.
+    const spread = body.match(/\{\s*\.\.\.r\.values,\s*__id:\s*r\.id[,\s}]/);
     expect(
       spread,
       'the identity key is no longer spread after the values, so a column named ' +

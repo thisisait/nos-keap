@@ -56,6 +56,7 @@ async function makeTable(id: string) {
     schema: { columns: BASE_COLUMNS } as never,
     anchors: [],
     visibility: 'private',
+    sharedWith: [],
   } as never);
 }
 

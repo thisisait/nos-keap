@@ -55,6 +55,7 @@ function makeTable(id: string, rowCount = 0) {
     schema: SCHEMA as never,
     ownerId: OWNER,
     visibility: 'private' as const,
+    sharedWith: [],
     rowCount,
     createdAt: 0,
     updatedAt: 0,

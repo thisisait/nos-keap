@@ -356,6 +356,18 @@ const MIGRATIONS: Migration[] = [
       ALTER TABLE relation_types ADD COLUMN scope TEXT NOT NULL DEFAULT 'entity';
     `,
   },
+  {
+    // dtt-share-model enforcement: the explicit ACL beside the tier grade
+    // (data_tables.shared_with, JSON ShareEntry[]) and the per-row sharing
+    // triple (table_rows.sharing, JSON RowSharing — owner stamped at insert,
+    // NULL = row governed entirely by its table). Contract:
+    // shared/contracts/visibility.ts.
+    id: '009-sharing',
+    sql: `
+      ALTER TABLE data_tables ADD COLUMN shared_with TEXT NOT NULL DEFAULT '[]';
+      ALTER TABLE table_rows ADD COLUMN sharing TEXT;
+    `,
+  },
 ];
 
 export function runMigrations(db: Database.Database): void {

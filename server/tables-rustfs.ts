@@ -26,6 +26,7 @@ import {
   assertRowId,
   getTable,
   mapTable,
+  mergeRowSharing,
   syncCard,
 } from './tables';
 import {
@@ -124,6 +125,7 @@ interface StoredRow {
   createdAt: number;
   updatedAt: number;
   updatedBy: string;
+  sharing?: import('../shared/contracts/visibility').RowSharing;
 }
 
 async function getRow(tableId: string, rowId: string): Promise<StoredRow | null> {
@@ -147,7 +149,7 @@ async function fetchRows(tableId: string, keys: string[]): Promise<TableRow[]> {
         return r ? { id: rowIdOfKey(k), ...r } : null;
       }),
     );
-    for (const r of chunk) if (r) out.push({ id: r.id, values: r.values, createdAt: r.createdAt, updatedAt: r.updatedAt, updatedBy: r.updatedBy });
+    for (const r of chunk) if (r) out.push({ id: r.id, values: r.values, createdAt: r.createdAt, updatedAt: r.updatedAt, updatedBy: r.updatedBy, ...(r.sharing ? { sharing: r.sharing } : {}) });
   }
   return out;
 }
@@ -270,7 +272,7 @@ export const rustfsStore: TableStore = {
     };
   },
 
-  async upsertRow(id, rowId, values, actor) {
+  async upsertRow(id, rowId, values, actor, rowSharing) {
     const t = getTable(id);
     if (!t) throw new Error('unknown table');
     await ensureBucket();
@@ -284,11 +286,17 @@ export const rustfsStore: TableStore = {
     const errors = validateRowValues(t.schema, merged);
     if (errors.length) throw new Error(`invalid row: ${errors.join('; ')}`);
     const now = Math.floor(Date.now() / 1000);
+    const sharing = mergeRowSharing(
+      existing?.sharing,
+      existing ? undefined : { owner: rowSharing?.stamp },
+      rowSharing?.patch,
+    );
     const stored: StoredRow = {
       values: merged,
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
       updatedBy: actor,
+      ...(sharing ? { sharing } : {}),
     };
     const put = await s3('PUT', `tables/${id}/rows/${rid}.json`, '', JSON.stringify(stored));
     if (!put.ok) throw new Error(`rustfs write failed (${put.status})`);
@@ -343,7 +351,10 @@ export const rustfsStore: TableStore = {
       if (m.fn !== 'count' && col.kind !== 'number' && col.kind !== 'date')
         throw new Error(`${m.fn}(${m.column}) needs a numeric column`);
     }
-    const all = (await scanRows(id, AGG_CAP)).filter((r) => q.filter.every((f) => matches(r.values, f)));
+    // Same law as the libsql driver: NARROWED rows never aggregate.
+    const all = (await scanRows(id, AGG_CAP)).filter(
+      (r) => !r.sharing?.visibility && q.filter.every((f) => matches(r.values, f)),
+    );
     const groups = new Map<string, TableRow[]>();
     for (const r of all) {
       const k = q.dimensions.map((dcol) => String(r.values[dcol] ?? '')).join('\u0000');

@@ -69,6 +69,7 @@ beforeAll(async () => {
     schema: { columns: [{ key: 'legal_name', label: 'Legal name', kind: 'text', role: 'attribute', required: true, onDelete: 'restrict' }] },
     anchors: [],
     visibility: 'private',
+    sharedWith: [],
   });
   await tables.storeFor('libsql').createTable(OWNER, {
     id: 'invoice',
@@ -82,6 +83,7 @@ beforeAll(async () => {
     },
     anchors: [],
     visibility: 'private',
+    sharedWith: [],
   });
   await tables.storeFor('libsql').upsertRow('party', 'acme', { legal_name: 'ACME s.r.o.' }, OWNER);
   await tables.storeFor('libsql').upsertRow('party', 'globex', { legal_name: 'Globex a.s.' }, OWNER);
@@ -201,6 +203,7 @@ describe('a rowRef may not point at nothing', () => {
       },
       anchors: [],
       visibility: 'private',
+      sharedWith: [],
     });
     await tables.storeFor('libsql').upsertRow('party', 'bill-cust', { legal_name: 'Billed Co.' }, OWNER);
   });
@@ -224,6 +227,7 @@ describe('a rowRef may not point at nothing', () => {
       },
       anchors: [],
       visibility: 'private',
+      sharedWith: [],
     });
     await expect(
       tables.storeFor('libsql').upsertRow('orphan-ref', 'r1', { name: 'x', target: 'anything' }, OWNER),

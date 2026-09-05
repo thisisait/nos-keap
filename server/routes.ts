@@ -36,13 +36,25 @@ import {
   canReadTable,
   canWriteTable,
   updateTableVisibility,
+  updateTableSharing,
+  hasRowGrantFor,
   updateTableSchema,
   syncCard,
   storeFor,
   listDrivers,
   assertRowId,
 } from './tables';
-import { tierRank, canCreateTables } from './rbac';
+import {
+  tierRank,
+  canCreateTables,
+  canReadTableAs,
+  canWriteTableAs,
+  canReadRowAs,
+  canWriteRowAs,
+  canShareRowAs,
+  type ShareCaller,
+} from './rbac';
+import { extractRowSharing, type Principal } from '../shared/contracts/visibility';
 import {
   createTableRequestSchema,
   updateTableSchemaSchema,
@@ -489,19 +501,44 @@ export function registerApiRoutes(app: Express) {
     ok(res);
   });
 
-  // Data tables (Track R2′) — TableStore behind shared/contracts/table.ts.
-  // Reads: owner, admin, or visibility=shared. Writes: owner or admin.
-  const tableForWrite = (req: Request, res: Response) => {
+  // Data tables (Track R2′ + dtt-share-model) — TableStore behind
+  // shared/contracts/table.ts. Reads: owner, admin, tier grade, explicit
+  // grant, or a row grant (which implies table EXISTENCE and only the granted
+  // rows). Row writes: owner, admin, or a WRITE grant (table ∪ row). Table
+  // DECLARATION changes (schema/visibility/sharing/drop) stay owner/admin —
+  // a write grantee edits rows, never the shares.
+  const callerOf = (req: Request): ShareCaller => ({
+    principal: `user:${req.user.id}` as Principal,
+    id: req.user.id,
+    isAdmin: req.user.isAdmin,
+    groups: req.user.groups,
+  });
+  // Absence-safe read guard: unreadable = 404, never a 403 that leaks existence.
+  const tableForRead = (req: Request, res: Response) => {
     const t = getTable(req.params.id);
-    if (!t || !canReadTable(t, req.user)) {
+    if (!t || !(canReadTableAs(t, callerOf(req)) || hasRowGrantFor(t.id, callerOf(req).principal))) {
       fail(res, 404, 'unknown table');
       return null;
     }
+    return t;
+  };
+  // Declaration changes (PATCH/drop): read leg is grant-aware (a grantee gets
+  // an honest 403, not a leaking 404-vs-403 oracle), write leg stays
+  // owner/admin — a write grantee edits rows, never the declaration.
+  const tableForWrite = (req: Request, res: Response) => {
+    const t = tableForRead(req, res);
+    if (!t) return null;
     if (!canWriteTable(t, req.user)) {
       fail(res, 403, 'not your table');
       return null;
     }
     return t;
+  };
+  /** Fetch one row's stored sharing (driver-agnostic scan, <= 500 rows —
+   *  the same law the agent get-row route uses). */
+  const rowByld = async (t: NonNullable<ReturnType<typeof tableForRead>>, rowId: string) => {
+    const { rows } = await storeFor(t.driver).listRows(t.id, { filter: [], limit: 500, expand: [] });
+    return rows.find((r) => r.id === rowId);
   };
 
   app.get('/api/tables', (req, res) => ok(res, listTables(req.user)));
@@ -530,8 +567,8 @@ export function registerApiRoutes(app: Express) {
   });
 
   app.get('/api/tables/:id', (req, res) => {
-    const t = getTable(req.params.id);
-    if (!t || !canReadTable(t, req.user)) return fail(res, 404, 'unknown table');
+    const t = tableForRead(req, res);
+    if (!t) return;
     // The view block lives in the card frontmatter, not in data_tables — so it
     // has to be lifted here, exactly as /agent/v1/tables/:slug does.
     //
@@ -554,9 +591,9 @@ export function registerApiRoutes(app: Express) {
     if (!t) return;
     const parsed = updateTableSchemaSchema.safeParse(req.body ?? {});
     if (!parsed.success) return fail(res, 400, parsed.error.issues[0]?.message ?? 'invalid table update');
-    const { visibility, schema, view } = parsed.data;
-    if (!visibility && !schema && !view)
-      return fail(res, 400, 'nothing to update: send visibility, schema, view, or any combination');
+    const { visibility, schema, view, sharedWith } = parsed.data;
+    if (!visibility && !schema && !view && !sharedWith)
+      return fail(res, 400, 'nothing to update: send visibility, sharedWith, schema, view, or any combination');
     try {
       // Visibility FIRST: the schema reconcile re-syncs the card and the
       // projected row objects, and those inherit the table's visibility. Doing
@@ -565,6 +602,10 @@ export function registerApiRoutes(app: Express) {
       if (visibility) {
         updateTableVisibility(t.id, visibility);
         next = { ...next, visibility };
+      }
+      if (sharedWith) {
+        updateTableSharing(t.id, sharedWith);
+        next = { ...next, sharedWith };
       }
       if (schema) next = { ...next, ...updateTableSchema(next, schema) };
       if (view) {
@@ -593,8 +634,8 @@ export function registerApiRoutes(app: Express) {
   });
 
   app.get('/api/tables/:id/rows', async (req, res) => {
-    const t = getTable(req.params.id);
-    if (!t || !canReadTable(t, req.user)) return fail(res, 404, 'unknown table');
+    const t = tableForRead(req, res);
+    if (!t) return;
     let parsedFilter: unknown = [];
     try {
       parsedFilter = req.query.filter ? JSON.parse(String(req.query.filter)) : [];
@@ -611,26 +652,45 @@ export function registerApiRoutes(app: Express) {
     });
     if (!parsed.success) return fail(res, 400, parsed.error.issues[0]?.message ?? 'invalid query');
     try {
-      ok(res, await storeFor(t.driver).listRows(t.id, parsed.data));
+      // Per-row visibility: absence-safe — a row the caller cannot read is
+      // simply not in the page (a row-only grantee sees exactly their rows).
+      const c = callerOf(req);
+      const page = await storeFor(t.driver).listRows(t.id, parsed.data);
+      ok(res, { ...page, rows: page.rows.filter((r) => canReadRowAs(t, r.sharing, c)) });
     } catch (e) {
       fail(res, 400, e instanceof Error ? e.message : 'query failed');
     }
   });
 
   app.post('/api/tables/:id/rows', async (req, res) => {
-    const t = tableForWrite(req, res);
-    if (!t) return;
-    const values = req.body?.values;
-    if (!values || typeof values !== 'object') return fail(res, 400, 'values object required');
+    const t = getTable(req.params.id);
+    const c = req.user && callerOf(req);
+    if (!t || !c || !(canReadTableAs(t, c) || hasRowGrantFor(t.id, c.principal))) {
+      return fail(res, 404, 'unknown table');
+    }
+    const rawValues = req.body?.values;
+    if (!rawValues || typeof rawValues !== 'object') return fail(res, 400, 'values object required');
+    // Reserved __ meta keys peel off here (the __id law applied to sharing).
+    const { values, patch, error } = extractRowSharing(rawValues as Record<string, unknown>);
+    if (error) return fail(res, 400, error);
     try {
+      const rid = req.body.id ? assertRowId(String(req.body.id)) : undefined;
+      const existing = rid ? await rowByld(t, rid) : undefined;
+      if (existing) {
+        if (!canWriteRowAs(t, existing.sharing, c)) return fail(res, 403, 'no write access to this row');
+        if (patch && !canShareRowAs(t, existing.sharing, c)) {
+          return fail(res, 403, 'only the row or table owner may change row sharing');
+        }
+      } else if (!canWriteTableAs(t, c)) {
+        // Creating rows needs table-level write; a per-row grant grants that row.
+        return fail(res, 403, 'no write access to this table');
+      }
       ok(
         res,
-        await storeFor(t.driver).upsertRow(
-          t.id,
-          req.body.id ? assertRowId(String(req.body.id)) : undefined,
-          values,
-          req.user.id,
-        ),
+        await storeFor(t.driver).upsertRow(t.id, rid, values, req.user.id, {
+          stamp: c.principal,
+          patch,
+        }),
       );
     } catch (e) {
       fail(res, 400, e instanceof Error ? e.message : 'write failed');
@@ -638,10 +698,14 @@ export function registerApiRoutes(app: Express) {
   });
 
   app.delete('/api/tables/:id/rows/:rowId', async (req, res) => {
-    const t = tableForWrite(req, res);
+    const t = tableForRead(req, res);
     if (!t) return;
     try {
-      await storeFor(t.driver).deleteRow(t.id, assertRowId(req.params.rowId), req.user.id);
+      const c = callerOf(req);
+      const existing = await rowByld(t, assertRowId(req.params.rowId));
+      if (!existing || !canReadRowAs(t, existing.sharing, c)) return fail(res, 404, 'unknown row');
+      if (!canWriteRowAs(t, existing.sharing, c)) return fail(res, 403, 'no write access to this row');
+      await storeFor(t.driver).deleteRow(t.id, existing.id, req.user.id);
       ok(res);
     } catch (e) {
       fail(res, 400, e instanceof Error ? e.message : 'delete failed');
@@ -649,17 +713,17 @@ export function registerApiRoutes(app: Express) {
   });
 
   app.get('/api/tables/:id/rows/:rowId/history', async (req, res) => {
-    const t = getTable(req.params.id);
-    if (!t || !canReadTable(t, req.user)) return fail(res, 404, 'unknown table');
+    const t = tableForRead(req, res);
+    if (!t) return;
     if (!t.capabilities.rowHistory) return fail(res, 400, 'driver has no row history');
     // try/catch like every sibling: an async rejection here (assertRowId on a
     // dotted id, a driver error) is otherwise an unhandledRejection and the
     // request hangs — Express 4 never sees it.
     try {
-      ok(
-        res,
-        await storeFor(t.driver).rowHistory(t.id, assertRowId(req.params.rowId), Math.min(Number(req.query.limit) || 50, 200)),
-      );
+      const rid = assertRowId(req.params.rowId);
+      const row = await rowByld(t, rid);
+      if (row && !canReadRowAs(t, row.sharing, callerOf(req))) return fail(res, 404, 'unknown row');
+      ok(res, await storeFor(t.driver).rowHistory(t.id, rid, Math.min(Number(req.query.limit) || 50, 200)));
     } catch (e) {
       fail(res, 400, e instanceof Error ? e.message : 'history failed');
     }
@@ -667,8 +731,8 @@ export function registerApiRoutes(app: Express) {
 
   // The OLAP slice: GROUP BY dimensions × aggregated measures.
   app.post('/api/tables/:id/aggregate', async (req, res) => {
-    const t = getTable(req.params.id);
-    if (!t || !canReadTable(t, req.user)) return fail(res, 404, 'unknown table');
+    const t = tableForRead(req, res);
+    if (!t) return;
     if (!t.capabilities.aggregate) return fail(res, 400, 'driver cannot aggregate');
     const parsed = aggregateQuerySchema.safeParse(req.body ?? {});
     if (!parsed.success) return fail(res, 400, parsed.error.issues[0]?.message ?? 'invalid aggregate query');

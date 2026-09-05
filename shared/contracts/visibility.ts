@@ -110,17 +110,20 @@ export const VISIBILITY_MIN_RANK: Record<VisibilityGrade, number> = {
   shared: 99,
 };
 
-/** The subset the TABLE surface accepts TODAY. `system` joins when its
- *  enforcement (principal-namespace read check in both doors) lands — a grade
- *  the doors would store but not enforce is a promise the operator sees
- *  broken, so acceptance follows enforcement, never precedes it. */
-export const tableVisibilitySchema = z.enum([
-  'private',
-  'tier-managers',
-  'tier-users',
-  'tier-guests',
-  'shared',
-]);
+/** The grades the TABLE surface accepts. `system` joined when its enforcement
+ *  landed (acceptance follows enforcement): on the HUMAN door it reads as
+ *  rank-0 — owner/admin only, never tier-granted; the agent door serves it
+ *  under phase-1 estate trust (see the phase note below).
+ *
+ *  PHASE-1 ENFORCEMENT BOUNDARY (2026-09-05): the HUMAN door enforces the
+ *  full model (table + row, grades + grants) — it has real identity
+ *  (forward-auth + proxy secret). The AGENT door is PLUMBING WITHOUT
+ *  SUBTRACTION: it stamps row owners, stores and returns sharing metadata,
+ *  and accepts sharedWith on create/reconcile (the §14.3 declarations
+ *  compile down to it), but does not yet refuse reads — the nOS face BFF
+ *  serves user tables through it and consumers filter per their known
+ *  principal. Agent-side refusal arrives with phase-2 per-agent bearers. */
+export const tableVisibilitySchema = visibilityGradeSchema;
 export type TableVisibilityContract = z.infer<typeof tableVisibilitySchema>;
 
 // ── Principals ───────────────────────────────────────────────────────────────
@@ -172,3 +175,43 @@ export const sharingSchema = z.object({
   sharedWith: sharedWithSchema.default([]),
 });
 export type Sharing = z.infer<typeof sharingSchema>;
+
+// ── Row-level sharing (the reserved __ meta keys) ────────────────────────────
+
+/** What a row STORES. `owner` is stamped from the creating principal at
+ *  insert and immutable thereafter (settlement #2 applied to rows). */
+export interface RowSharing {
+  owner?: Principal;
+  visibility?: VisibilityGrade;
+  sharedWith?: ShareEntry[];
+}
+
+/** What a row-write may CHANGE: visibility and grants — never owner. null
+ *  clears the field (undefined = leave as stored, mirroring the values-merge
+ *  law where null deletes a cell). */
+export const rowSharingPatchSchema = z.object({
+  visibility: visibilityGradeSchema.nullable().optional(),
+  sharedWith: sharedWithSchema.nullable().optional(),
+});
+export type RowSharingPatch = z.infer<typeof rowSharingPatchSchema>;
+
+/** Peel the reserved `__` meta keys off a row-values payload — identity and
+ *  access are never data columns (the `__id` law). Returns the cleaned
+ *  values, the parsed patch (undefined when no meta key was sent), and any
+ *  parse error message. `__owner` is REFUSED outright: owner is stamped at
+ *  birth, not written. */
+export function extractRowSharing(values: Record<string, unknown>): {
+  values: Record<string, unknown>;
+  patch?: RowSharingPatch;
+  error?: string;
+} {
+  const { __owner, __visibility, __shared_with, ...rest } = values;
+  if (__owner !== undefined) return { values: rest, error: '__owner is stamped at row creation and immutable' };
+  if (__visibility === undefined && __shared_with === undefined) return { values: rest };
+  const parsed = rowSharingPatchSchema.safeParse({
+    ...(__visibility !== undefined ? { visibility: __visibility } : {}),
+    ...(__shared_with !== undefined ? { sharedWith: __shared_with } : {}),
+  });
+  if (!parsed.success) return { values: rest, error: parsed.error.issues[0]?.message ?? 'invalid row sharing' };
+  return { values: rest, patch: parsed.data };
+}

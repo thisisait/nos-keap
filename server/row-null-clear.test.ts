@@ -34,6 +34,7 @@ beforeAll(async () => {
     },
     anchors: [],
     visibility: 'private',
+    sharedWith: [],
   });
   await tables.storeFor('libsql').upsertRow('jobs', 'j1', { name: 'print', note: 'rush' }, OWNER);
 });

@@ -39,6 +39,7 @@ beforeAll(async () => {
     },
     anchors: [],
     visibility: 'private',
+    sharedWith: [],
   });
 });
 

@@ -19,7 +19,7 @@
  */
 import { z } from 'zod';
 import { checkConceptBinding, fieldConceptSchema } from './field-concepts';
-import { tableVisibilitySchema } from './visibility';
+import { tableVisibilitySchema, sharedWithSchema, type ShareEntry, type RowSharing } from './visibility';
 
 // ── Columns ───────────────────────────────────────────────────────────────────
 
@@ -543,6 +543,9 @@ export const createTableRequestSchema = z
     /** taxonomy anchors — where the table's card hangs in the universe */
     anchors: z.array(z.string()).max(8).default([]),
     visibility: tableVisibilitySchema.default('private'),
+    /** explicit ACL beside the tier grade (dtt-share-model; §14.3 code-
+     *  declared access compiles down to this) */
+    sharedWith: sharedWithSchema.default([]),
     /** graph-render metadata (S2⁶) — absent = card-only, byte-identical */
     graph: graphMetaSchema.optional(),
     /** render metadata (face surfaces) — absent = the grid, byte-identical */
@@ -620,6 +623,9 @@ export type CreateTableRequest = z.infer<typeof createTableRequestSchema>;
  */
 export const updateTableSchemaSchema = z.object({
   visibility: tableVisibilitySchema.optional(),
+  /** Replace the table's explicit ACL — owner/admin only (a write GRANTEE
+   *  edits rows, never the shares). */
+  sharedWith: sharedWithSchema.optional(),
   schema: tableSchemaSchema.optional(),
   /** Change how the table renders without touching its columns. Validated
    *  against the LIVE schema at the route, since the columns may not be in
@@ -637,6 +643,8 @@ export interface TableInfo {
   capabilities: TableCapabilities;
   ownerId: string;
   visibility: string;
+  /** Explicit ACL beside the tier grade (dtt-share-model). */
+  sharedWith: ShareEntry[];
   rowCount: number;
   createdAt: number;
   updatedAt: number;
@@ -648,4 +656,6 @@ export interface TableRow {
   createdAt: number;
   updatedAt: number;
   updatedBy: string;
+  /** Row-level sharing triple; absent = governed entirely by the table. */
+  sharing?: RowSharing;
 }

@@ -26,11 +26,12 @@ describe('one visibility ladder', () => {
     }
   });
 
-  it("'system' exists in the ladder but is NOT accepted by the table surface yet", () => {
-    // A grade the doors would store but not enforce is a promise the operator
-    // sees broken — acceptance follows enforcement.
+  it("'system' is accepted now that its enforcement landed, and is never tier-granted", () => {
+    // Acceptance follows enforcement: the human door reads system as rank-0
+    // (owner/admin only — share-enforcement.test.ts proves it behaviourally),
+    // the agent door serves it under phase-1 estate trust.
     expect(visibilityGradeSchema.safeParse('system').success).toBe(true);
-    expect(tableVisibilitySchema.safeParse('system' as never).success).toBe(false);
+    expect(tableVisibilitySchema.safeParse('system').success).toBe(true);
     expect(VISIBILITY_MIN_RANK.system, 'system must never be tier-granted').toBe(0);
   });
 });
