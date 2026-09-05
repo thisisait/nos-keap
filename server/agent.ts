@@ -379,8 +379,41 @@ export function registerAgentRoutes(app: Express) {
   // ── Topics mode (server/topics.ts) — the semantic-cluster control plane ────
   // Status carries the mode summary + last run; rebuild mirrors the admin twin
   // and /agent/v1/fs/sync's default-202 / ?wait=1 semantics (the e2e hook).
-  app.get('/agent/v1/topics', agentAuth('ro'), (_req, res) => {
-    ok(res, { stats: db.topicStats(), lastRun: db.lastTopicRun() });
+  app.get('/agent/v1/topics', agentAuth('ro'), (req, res) => {
+    const base = { stats: db.topicStats(), lastRun: db.lastTopicRun() };
+    if (req.query.clusters !== '1') return ok(res, base);
+    // ?clusters=1 (+?members=1): the DENSITY view — cluster labels, c-TF-IDF
+    // terms and member counts (plus sample member titles) — for the host-side
+    // K5 star-formation producer (scripts/ontology-extend.mjs): a dense nebula
+    // is a taxonomy-node proposal waiting to be written. RO, bounded.
+    const wantMembers = req.query.members === '1';
+    const byTopic = new Map<string, string[]>();
+    if (wantMembers) {
+      for (const [objectId, topicId] of db.getTopicAssignments()) {
+        const list = byTopic.get(topicId) ?? [];
+        if (list.length < 12) list.push(objectId);
+        byTopic.set(topicId, list);
+      }
+    }
+    const titles = wantMembers
+      ? new Map(db.getObjects('', true).map((o) => [o.id, o.title]))
+      : new Map<string, string>();
+    const clusters = db.listTopicClusters().map((c) => ({
+      id: c.id,
+      label: c.label,
+      labelAuto: c.labelAuto,
+      terms: c.terms,
+      memberCount: c.memberCount,
+      ...(wantMembers
+        ? {
+            members: (byTopic.get(c.id) ?? []).map((id) => ({
+              id,
+              title: titles.get(id) ?? null,
+            })),
+          }
+        : {}),
+    }));
+    ok(res, { ...base, clusters });
   });
 
   app.post('/agent/v1/topics/rebuild', agentAuth('rw'), async (req, res) => {
@@ -1870,7 +1903,12 @@ const OPENAPI_SPEC = {
     },
     '/agent/v1/topics': {
       get: {
-        summary: 'Topics-mode status: cluster count, assigned objects, last-run summary (semantic clustering)',
+        summary:
+          'Topics-mode status: cluster count, assigned objects, last-run summary. ?clusters=1 adds the density view (labels, c-TF-IDF terms, member counts); +?members=1 adds sample member titles — the K5 star-formation input.',
+        parameters: [
+          { name: 'clusters', in: 'query', schema: { type: 'string', enum: ['1'] } },
+          { name: 'members', in: 'query', schema: { type: 'string', enum: ['1'] } },
+        ],
       },
     },
     '/agent/v1/topics/rebuild': {
