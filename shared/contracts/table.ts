@@ -19,6 +19,7 @@
  */
 import { z } from 'zod';
 import { checkConceptBinding, fieldConceptSchema } from './field-concepts';
+import { tableVisibilitySchema } from './visibility';
 
 // ── Columns ───────────────────────────────────────────────────────────────────
 
@@ -305,17 +306,10 @@ export interface TableCapabilities {
 export const tableDriverSchema = z.enum(['libsql', 'rustfs', 'postgres', 'grist']);
 export type TableDriver = z.infer<typeof tableDriverSchema>;
 
-// Share scope, mapped onto the nOS Authentik tiers (see server/rbac.ts):
-// private = owner+admin only; tier-* = that tier and every tier above it;
-// shared = every authenticated user in the tenant.
-export const tableVisibilitySchema = z.enum([
-  'private',
-  'tier-managers',
-  'tier-users',
-  'tier-guests',
-  'shared',
-]);
-export type TableVisibilityContract = z.infer<typeof tableVisibilitySchema>;
+// Share scope — re-exported from the ONE ladder source (dtt-share-model).
+// See shared/contracts/visibility.ts for the full grade ladder, principals
+// and the shared_with ACL shapes; server/rbac.ts enforces the same ranks.
+export { tableVisibilitySchema, type TableVisibilityContract } from './visibility';
 
 // ── Graph-render metadata (S2⁶) ──────────────────────────────────────────────
 // A table declares how it projects into the /explore universe. ABSENT → today's

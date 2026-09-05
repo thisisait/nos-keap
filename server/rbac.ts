@@ -13,21 +13,15 @@
  * (least privilege).
  */
 
-/** The scope a table is shared at. Widened from the old private|shared pair. */
-export type TableVisibility =
-  | 'private'
-  | 'tier-managers'
-  | 'tier-users'
-  | 'tier-guests'
-  | 'shared';
+/** The scope a table is shared at — the LADDER lives in
+ *  shared/contracts/visibility.ts (dtt-share-model: one source; caddy's
+ *  transcript visibility imports the same module). This module keeps only the
+ *  tier→rank resolution and the grant checks. */
+import { tableVisibilitySchema, VISIBILITY_MIN_RANK, type TableVisibilityContract } from '../shared/contracts/visibility';
 
-export const TABLE_VISIBILITIES: TableVisibility[] = [
-  'private',
-  'tier-managers',
-  'tier-users',
-  'tier-guests',
-  'shared',
-];
+export type TableVisibility = TableVisibilityContract;
+
+export const TABLE_VISIBILITIES: TableVisibility[] = tableVisibilitySchema.options;
 
 const TIER_GROUPS: Record<number, string[]> = {
   1: ['nos-providers', 'nos-admins'],
@@ -43,16 +37,6 @@ export function tierRank(groups: string[]): number {
   }
   return 4;
 }
-
-// Minimum caller rank a visibility grants READ to. 0 = owner/admin only
-// (never granted by tier); 99 = any authenticated caller.
-const VISIBILITY_MIN_RANK: Record<TableVisibility, number> = {
-  private: 0,
-  'tier-managers': 2,
-  'tier-users': 3,
-  'tier-guests': 4,
-  shared: 99,
-};
 
 /** Does a table's visibility grant READ to a caller of the given rank? */
 export function visibilityGrantsRead(visibility: string, rank: number): boolean {
