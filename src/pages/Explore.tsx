@@ -465,7 +465,7 @@ export default function Explore() {
         : nodeById.has(ref)
           ? ref
           : null;
-    const pairKey = (a: string, b: string) => [a, b].sort().join(' ');
+    const pairKey = (a: string, b: string) => [a, b].sort().join('\u0000');
     // Typed cross-type relations (Vazby) — confirmed (+ high-conf proposed under
     // ?relations=all) edges across every kind pair, coloured from the
     // relation_types registry, verb-labelled at the midpoint, width by

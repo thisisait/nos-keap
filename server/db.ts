@@ -2581,7 +2581,7 @@ function mapRelationRow(r: RelationDbRow): RelationRow {
 /** Stable id for a relation row — a hash of its idempotency key so the same
  *  edge always resolves to the same PK regardless of who writes it. */
 function relationId(fromRef: string, toRef: string, type: string): string {
-  return `r-${crypto.createHash('sha1').update(`${fromRef} ${toRef} ${type}`).digest('hex').slice(0, 16)}`;
+  return `r-${crypto.createHash('sha1').update(`${fromRef}\u0000${toRef}\u0000${type}`).digest('hex').slice(0, 16)}`;
 }
 
 /** ToE `explored` rating → a confidence scalar for the generalized store. */
