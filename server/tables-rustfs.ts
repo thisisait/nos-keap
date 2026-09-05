@@ -341,7 +341,7 @@ export const rustfsStore: TableStore = {
     const all = (await scanRows(id, AGG_CAP)).filter((r) => q.filter.every((f) => matches(r.values, f)));
     const groups = new Map<string, TableRow[]>();
     for (const r of all) {
-      const k = q.dimensions.map((dcol) => String(r.values[dcol] ?? '')).join(' ');
+      const k = q.dimensions.map((dcol) => String(r.values[dcol] ?? '')).join('\u0000');
       (groups.get(k) ?? groups.set(k, []).get(k)!).push(r);
     }
     const out: Array<Record<string, unknown>> = [];

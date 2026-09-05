@@ -1171,7 +1171,7 @@ export function registerAgentRoutes(app: Express) {
   // run/start + run/finish bracket a sweep; visit checkpoints each node so a
   // kill/OOM resumes from the max cursor. No taxonomy writes here — propose-only.
   const contentHashOf = (name: string, description: string | null | undefined) =>
-    crypto.createHash('sha1').update(`${name} ${description ?? ''}`).digest('hex').slice(0, 16);
+    crypto.createHash('sha1').update(`${name}\u0000${description ?? ''}`).digest('hex').slice(0, 16);
 
   // The anchor core (level 0-2) is the curator's FIXED reference frame — the
   // top ontology every votable-zone judgment must stay consistent with (plan
