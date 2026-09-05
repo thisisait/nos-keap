@@ -63,22 +63,51 @@ function key(h: LegHit): string {
   return `${h.kind}:${h.refId}`;
 }
 
-/** One-hop neighbours of a hit: tree edges for nodes, anchor links for objects. */
-function hop(h: LegHit): LegHit[] {
-  const out: LegHit[] = [];
+/** One-hop neighbours of a hit, split by DIRECTION: `down` = children and an
+ *  object's anchor nodes (specific or lateral), `up` = the taxonomy parent
+ *  (strictly more generic). The split exists because the graph leg's rank is
+ *  its RRF weight, and an UPWARD hop must never outrank a downward one. */
+function hop(h: LegHit): { down: LegHit[]; up: LegHit[] } {
+  const down: LegHit[] = [];
+  const up: LegHit[] = [];
   if (h.kind === 'taxonomy') {
     const n = getNode(h.refId);
-    if (!n) return out;
-    if (n.parentId) out.push({ kind: 'taxonomy', refId: n.parentId });
-    for (const c of n.childIds.slice(0, 5)) out.push({ kind: 'taxonomy', refId: c });
+    if (!n) return { down, up };
+    if (n.parentId) up.push({ kind: 'taxonomy', refId: n.parentId });
+    for (const c of n.childIds.slice(0, 5)) down.push({ kind: 'taxonomy', refId: c });
   } else if (h.kind === 'object') {
     const o = db.getObject(h.refId);
-    if (!o) return out;
+    if (!o) return { down, up };
     for (const a of anchorNodeIds((o.links ?? []) as ObjectRef[]).slice(0, 3)) {
-      out.push({ kind: 'taxonomy', refId: a });
+      down.push({ kind: 'taxonomy', refId: a });
     }
   }
-  return out;
+  return { down, up };
+}
+
+/** The graph leg, ranked: every downward/lateral hop from every seed BEFORE any
+ *  upward hop. The leg used to rank by bare iteration order with the parent
+ *  pushed FIRST per seed — so the #1 seed's parent took graph-rank 1 for
+ *  merely existing, and since a parent is reachable from every sibling seed
+ *  while hop() only ever emits taxonomy (a card can never receive graph help),
+ *  stack-level ancestors systematically outranked the specific answer by one
+ *  or two slots. That is the `_stack.md` failure class arising from inside the
+ *  ranker; the recall gate's forbid half is what caught it (2026-09-05:
+ *  "read time-series data", "which containers are logging"). Exported for the
+ *  gate test; not part of any public surface. */
+export function orderedHops(seeds: LegHit[]): LegHit[] {
+  const seen = new Set(seeds.map(key));
+  const out: LegHit[] = [];
+  const ups: LegHit[] = [];
+  const take = (list: LegHit[], n: LegHit) => {
+    if (seen.has(key(n))) return;
+    seen.add(key(n));
+    list.push(n);
+  };
+  const hopped = seeds.map(hop);
+  for (const { down } of hopped) for (const n of down) take(out, n);
+  for (const { up } of hopped) for (const n of up) take(ups, n);
+  return [...out, ...ups];
 }
 
 export async function hybridSearch(
@@ -115,15 +144,10 @@ export async function hybridSearch(
   // caller's kind filter.
   const hopSeeds = legLists.flatMap((l) => l.hits.slice(0, 5));
   const hopHits: LegHit[] = [];
-  const seen = new Set(hopSeeds.map(key));
-  for (const seed of hopSeeds) {
-    for (const n of hop(seed)) {
-      if (n.kind !== 'taxonomy' && !kinds.includes(n.kind)) continue;
-      if (!visibleTo(n, viewer)) continue;
-      if (seen.has(key(n))) continue;
-      seen.add(key(n));
-      hopHits.push(n);
-    }
+  for (const n of orderedHops(hopSeeds)) {
+    if (n.kind !== 'taxonomy' && !kinds.includes(n.kind)) continue;
+    if (!visibleTo(n, viewer)) continue;
+    hopHits.push(n);
   }
   if (hopHits.length) legLists.push({ name: 'graph', hits: hopHits });
 
