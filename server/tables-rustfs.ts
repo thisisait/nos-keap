@@ -23,6 +23,7 @@ import { AwsClient } from 'aws4fetch';
 import * as db from './db';
 import {
   type TableStore,
+  assertRowId,
   getTable,
   mapTable,
   syncCard,
@@ -273,7 +274,9 @@ export const rustfsStore: TableStore = {
     const t = getTable(id);
     if (!t) throw new Error('unknown table');
     await ensureBucket();
-    const rid = rowId ?? crypto.randomUUID();
+    // Driver-level guard: the id becomes an S3 object key parsed as a URL, so
+    // an unchecked `..`/`%` id writes outside this table's key space.
+    const rid = rowId ? assertRowId(rowId) : crypto.randomUUID();
     const existing = await getRow(id, rid);
     const merged = existing ? { ...existing.values, ...values } : values;
     const errors = validateRowValues(t.schema, merged);
@@ -295,7 +298,7 @@ export const rustfsStore: TableStore = {
   async deleteRow(id, rowId, _actor) {
     const t = getTable(id);
     if (!t) throw new Error('unknown table');
-    const res = await s3('DELETE', `tables/${id}/rows/${rowId}.json`);
+    const res = await s3('DELETE', `tables/${id}/rows/${assertRowId(rowId)}.json`);
     if (!res.ok && res.status !== 404) throw new Error(`rustfs delete failed (${res.status})`);
     syncCard(bumpRowCount(id, -1));
   },

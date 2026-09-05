@@ -795,7 +795,9 @@ const libsqlStore: TableStore = {
   async upsertRow(id, rowId, values, actor) {
     const t = getTable(id);
     if (!t) throw new Error('unknown table');
-    const rid = rowId ?? crypto.randomUUID();
+    // The drivers own the SAFE_ROW_ID invariant now — the agent door's __id
+    // proved that asking every route to remember assertRowId does not hold.
+    const rid = rowId ? assertRowId(rowId) : crypto.randomUUID();
     const d = db.getDb();
     const tx = d.transaction(() => {
       const existing = d
