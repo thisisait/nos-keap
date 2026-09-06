@@ -82,3 +82,27 @@ describe('the graph leg ranks downward hops before upward ones', () => {
     expect(ids).not.toContain(n.parentId);
   });
 });
+
+describe('S2 — navigation hubs demote, answers do not', () => {
+  // The class law over the REAL tree: levels 0-1 (roots and stack hubs) are
+  // the demotable navigation class; level 2+ nodes and every card kind keep
+  // their fused score. The live recall gate is the end-to-end proof (the
+  // forbid-half ancestors at rank 1, 2026-09-06).
+  it('classifies by level: 0-1 in, 2+ out, non-taxonomy never', () => {
+    const nodes = taxonomy.allNodes();
+    const byLevel = (lo: number, hi: number) =>
+      nodes.find((n) => {
+        const l = taxonomy.nodeLevel(n.id);
+        return l >= lo && l <= hi;
+      });
+    const root = byLevel(0, 0);
+    const hub = byLevel(1, 1);
+    const deep = byLevel(2, 99);
+    expect(root && hub && deep, 'dataset changed shape?').toBeTruthy();
+    expect(search.isNavHub({ kind: 'taxonomy', refId: root!.id })).toBe(true);
+    expect(search.isNavHub({ kind: 'taxonomy', refId: hub!.id })).toBe(true);
+    expect(search.isNavHub({ kind: 'taxonomy', refId: deep!.id })).toBe(false);
+    expect(search.isNavHub({ kind: 'object', refId: root!.id })).toBe(false);
+    expect(search.isNavHub({ kind: 'taxonomy', refId: 'no-such-node' })).toBe(false);
+  });
+});

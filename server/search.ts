@@ -18,11 +18,30 @@
  */
 import * as db from './db';
 import { allSources, embedText, EMBED_MODEL } from './embeddings';
-import { getNode } from './taxonomy';
+import { getNode, nodeLevel } from './taxonomy';
 import { anchorNodeIds, type ObjectRef } from './objects';
 
 const RRF_K = 60;
 const LEG_FETCH = 40; // per-leg over-fetch before fusion
+
+/** S2 — navigation-hub demotion. Levels 0-1 of any taxonomy tree (roots and
+ *  stack hubs — `nos`, `nos.observability`, the seed categories) exist to
+ *  navigate, not to answer: their texts are broad enough to score well on
+ *  EVERY leg for any query in their domain, so they crowd out the specific
+ *  node/card one rank below. S1 (hop order) fixed the graph leg's share of
+ *  that bias; this bounds the lexical+vector share the same gate caught next
+ *  ("push time-series data" et al., 2026-09-06 — forbid half, ancestor at
+ *  rank 1). A bounded factor, never an exclusion: a hub still wins when it is
+ *  the only strong answer (genuinely categorical queries).
+ *  ponytail: one flat factor; per-level curve only if the gate measures short. */
+const HUB_DEMOTE = 0.5;
+const HUB_MAX_LEVEL = 1;
+
+/** Exported for the gate test; not part of any public surface. */
+export function isNavHub(h: { kind: db.EmbeddingKind; refId: string }): boolean {
+  // getNode guard: nodeLevel(unknown) is 0, which would demote strays.
+  return h.kind === 'taxonomy' && !!getNode(h.refId) && nodeLevel(h.refId) <= HUB_MAX_LEVEL;
+}
 
 let corpusDirty = true;
 
@@ -164,6 +183,7 @@ export async function hybridSearch(
   }
 
   const hits = [...fused.values()]
+    .map((h) => (isNavHub(h) ? { ...h, score: h.score * HUB_DEMOTE } : h))
     .filter((h) => h.kind === 'taxonomy' ? kinds.includes('taxonomy') : true)
     .sort((a, b) => b.score - a.score)
     .slice(0, limit);
