@@ -154,13 +154,15 @@ exact 3 KEAP files this migration touches, at the same line numbers, under
 - `ontology/relations/04-social-sciences.json` (6 hits)
 - `ontology/relations/02-formal-sciences.json` (2 hits)
 
-This is the `nos-cortex-organ-port` workflow's port of the KEAP cortex
-organ. The spec designates the nOS repo as **read-only reference** for this
-inventory — no KEAP-side change can or should touch it. Flagging explicitly:
-this mirror will silently diverge/go stale the moment `04.04.json` changes
-here, since nothing re-syncs it automatically. Re-porting (via
-`nos-cortex-organ-port`) or otherwise flagging the drift is a decision for
-the operator / nOS side, out of scope for this KEAP branch.
+This is the cortex-organ port of the KEAP knowledge tree — a MANUAL copy
+from `~/keap/src` (there is no re-port workflow; `cortex-drift.py` is the
+drift detector, nOS agent 2026-09-06). The spec designates the nOS repo as
+**read-only reference** for this inventory — no KEAP-side change can or
+should touch it. Flagging explicitly: this mirror silently goes stale the
+moment `04.04.json` changes here, since nothing re-syncs it automatically.
+Re-porting = copying the 3 files from a v1.45.0 checkout at the pin bump —
+a decision and an act for the operator / nOS side, out of scope for this
+KEAP branch.
 
 ### Repo-wide scope confirmation
 
