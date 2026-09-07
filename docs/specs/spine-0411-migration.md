@@ -199,6 +199,15 @@ canonical file's `relations[]` points at `04.04.11*`/`04.04.12*` either
    `04.11`, and the 5 xref-appended files) at minimum, or run the full
    corpus big-reset the operator approved. Do not attempt to carry old
    `taxonomy` embeddings across the id rename.
+   **Durability lesson (found live, 2026-09-07):** a bulk
+   `DELETE FROM embeddings` desyncs the libsql vector index's shadow
+   tables — every subsequent insert 500s with `vector index(insert):
+   failed to insert shadow row`. After any bulk embeddings wipe, rebuild
+   the index before repopulating:
+   `DROP INDEX IF EXISTS embeddings_vec_idx;` then re-create it with the
+   tuned DDL from `server/db.ts` (`compress_neighbors=float8`,
+   `max_neighbors=20`). A restart alone does NOT fix it —
+   `retuneVectorIndex` only rebuilds when the stored DDL differs.
 5. **Recall gates** — re-run the recall/quality gates now that the vector
    index has changed; expect different results near the moved subtree and
    validate they still make sense (Accounting/Management content should now
