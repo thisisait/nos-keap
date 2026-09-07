@@ -160,9 +160,18 @@ drift detector, nOS agent 2026-09-06). The spec designates the nOS repo as
 **read-only reference** for this inventory — no KEAP-side change can or
 should touch it. Flagging explicitly: this mirror silently goes stale the
 moment `04.04.json` changes here, since nothing re-syncs it automatically.
-Re-porting = copying the 3 files from a v1.45.0 checkout at the pin bump —
-a decision and an act for the operator / nOS side, out of scope for this
-KEAP branch.
+Re-porting = copying the changed files from a v1.45.0 checkout at the pin
+bump — a decision and an act for the operator / nOS side, out of scope for
+this KEAP branch.
+
+**Port lesson (nOS agent, 2026-09-07): the 3-file list above is the
+RETIRED-ID inventory (the DELETE targets), not the release's full knowledge
+footprint.** v1.45.0 actually changed TEN knowledge data files (this
+domain's three plus 02.02, 04.05, 04.08, 06.05, 07.08, 10.04 and the three
+NEW pack files 04.11/07.11/07.12) — a mirror re-port keyed on the
+id-inventory silently misses new packs and xref-only edits. The reliable
+re-port signal is the full `knowledge/` tree diff between pins, or
+cortex-drift.py itself; never a migration doc's inventory list.
 
 ### Repo-wide scope confirmation
 
