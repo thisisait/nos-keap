@@ -111,6 +111,26 @@ describe('updateTableSchema', () => {
     expect(() => tables.updateTableSchema(t, { columns: next } as never)).toThrow(/would change kind/);
   });
 
+  it('select→text is the ONE safe widening: resolves, options stop constraining', async () => {
+    // Every stored enum value is already a valid text value — nothing strands.
+    // (nOS roadmap `track` case, 2026-09-09.)
+    const t = tables.getTable('t-declare')!;
+    const next = t.schema.columns.map((c) =>
+      c.key === 'status' ? { key: c.key, label: c.label, kind: 'text', role: c.role } : c,
+    );
+    const updated = tables.updateTableSchema(t, { columns: next } as never);
+    const status = updated.schema.columns.find((c) => c.key === 'status')!;
+    expect(status.kind).toBe('text');
+    expect(status.options).toBeUndefined();
+    // …and the door is one-way: text→select would strand values outside the enum
+    const back = updated.schema.columns.map((c) =>
+      c.key === 'status' ? { ...c, kind: 'select', options: ['on'] } : c,
+    );
+    expect(() =>
+      tables.updateTableSchema(tables.getTable('t-declare')!, { columns: back } as never),
+    ).toThrow(/would change kind/);
+  });
+
   it('reports EVERY violation at once, not just the first', async () => {
     const t = tables.getTable('t-declare')!;
     const next = t.schema.columns

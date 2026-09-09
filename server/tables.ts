@@ -209,7 +209,13 @@ export function updateTableSchema(
       continue;
     }
     const n = next.columns.find((c) => c.key === key)!;
-    if (n.kind !== col.kind) {
+    // select→text is the ONE safe kind widening: every stored enum value is
+    // already a valid text value (the options simply stop constraining new
+    // writes). The reverse — and every other pair — reinterprets or strands
+    // stored values and stays refused. Named reconcile class, requested by
+    // nOS 2026-09-09 (roadmap `track` grows unbounded track slugs).
+    const safeWidening = col.kind === 'select' && n.kind === 'text';
+    if (n.kind !== col.kind && !safeWidening) {
       errors.push(`column ${key} would change kind ${col.kind} → ${n.kind}; stored values would be reinterpreted`);
     }
   }
