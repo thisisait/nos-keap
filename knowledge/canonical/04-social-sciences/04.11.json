@@ -24,6 +24,72 @@
    "cs": "Založení a vedení podniku od prvotního nápadu po udržitelný provoz: rozpoznání příležitosti, obchodní modely a jejich ověření, počáteční volba právní formy a disciplína peněžních toků, která rozhoduje o přežití mladé firmy v prvních letech. Od řízení zavedené firmy se liší především v jednom: zdroje jsou natolik omezené, že většina rozhodnutí je fakticky nevratná."
   },
   {
+   "id": "04.11.01.01",
+   "level": 3,
+   "parentId": "04.11.01",
+   "name": "Business Model and Value Proposition",
+   "zone": "votable",
+   "ordinal": 0,
+   "kind": "ext",
+   "en": "The systematic description of how an enterprise creates, delivers and captures value: the customer segment it serves, the problem it solves, and the revenue mechanism that pays for solving it. A business model is testable before it is scaled — canvases and lean-startup experiments exist precisely because assumptions about what customers will pay for are usually wrong on the first attempt. Distinguishing a viable model from a merely interesting idea is the first discipline a founder must acquire, well before questions of legal form or financing arise.",
+   "cs": "Systematický popis toho, jak podnik vytváří, dodává a získává hodnotu: jaký segment zákazníků obsluhuje, jaký problém řeší a jaký výnosový mechanismus toto řešení platí. Obchodní model lze ověřit ještě před rozšířením — plátna byznys modelů a experimenty metody lean startup existují právě proto, že předpoklady o tom, za co budou zákazníci ochotni platit, bývají při prvním pokusu často mylné. Odlišit životaschopný model od pouze zajímavého nápadu je první disciplína, kterou si zakladatel musí osvojit, dříve než přijdou na řadu otázky právní formy či financování."
+  },
+  {
+   "id": "04.11.01.02",
+   "level": 3,
+   "parentId": "04.11.01",
+   "name": "Legal Form and Business Registration",
+   "zone": "votable",
+   "ordinal": 1,
+   "kind": "ext",
+   "en": "The initial choice between operating as a sole trader, a partnership or a limited company, and the registration steps that make the enterprise legally capable of trading, invoicing and hiring. The choice trades off simplicity and low cost against liability protection and access to capital, and it is rarely revisited casually once suppliers, contracts and tax registrations are built around it. In the Czech context this is the decision between a trade licence (živnost) — itself split into free, bound and craft trades with different qualification requirements — and incorporating an s.r.o., each carrying a different liability and administrative burden.",
+   "cs": "Počáteční volba mezi podnikáním jako fyzická osoba, ve sdružení, nebo jako kapitálová společnost, a registrační kroky, které podniku umožní legálně obchodovat, fakturovat a zaměstnávat. Volba je kompromisem mezi jednoduchostí a nízkými náklady na jedné straně a ochranou před ručením a přístupem ke kapitálu na straně druhé, a jen málokdy se lehkovážně mění poté, co jsou na ní postaveni dodavatelé, smlouvy a daňové registrace. V českém prostředí jde o volbu mezi živnostenským oprávněním — dále členěným na živnost volnou, vázanou a řemeslnou s odlišnými kvalifikačními požadavky — a založením s.r.o., přičemž každá varianta nese jinou míru ručení a administrativní zátěže."
+  },
+  {
+   "id": "04.11.01.03",
+   "level": 3,
+   "parentId": "04.11.01",
+   "name": "Startup Financing and Bootstrapping",
+   "zone": "votable",
+   "ordinal": 2,
+   "kind": "ext",
+   "en": "How a young enterprise funds itself before it generates reliable revenue: personal savings and bootstrapping, loans and guarantees, grants, and external equity from angels or venture funds. Each source imposes a different discipline — a bank wants collateral and a repayment schedule, an equity investor wants growth and eventually an exit — and mixing them without understanding the difference is a common cause of early conflict between founders and financiers. Because a small firm's cash reserves are thin, financing decisions in the first years are less about optimising cost of capital than about simply surviving the gap between spending and being paid.",
+   "cs": "Jak se mladý podnik financuje dříve, než začne generovat spolehlivé příjmy: vlastní úspory a bootstrapping, úvěry a záruky, dotace a externí kapitál od andělských investorů či fondů rizikového kapitálu. Každý zdroj ukládá jinou disciplínu — banka chce zajištění a splátkový kalendář, kapitálový investor chce růst a časem výstup — a jejich míchání bez pochopení rozdílu bývá častou příčinou raných sporů mezi zakladateli a financujícími. Protože má malá firma tenké hotovostní rezervy, rozhodování o financování v prvních letech méně řeší optimalizaci nákladu kapitálu a více prosté přežití mezery mezi vydáním peněz a jejich přijetím."
+  },
+  {
+   "id": "04.11.01.04",
+   "level": 3,
+   "parentId": "04.11.01",
+   "name": "Pricing and Unit Economics",
+   "zone": "votable",
+   "ordinal": 3,
+   "kind": "ext",
+   "en": "Whether a single unit of what the business sells earns more than it costs to produce and deliver, once every direct cost is counted honestly — materials, time, transaction fees, returns. Unit economics is the discipline that catches a business model that looks busy but loses money on every sale, a trap that revenue growth alone can disguise for a surprisingly long time. It sits upstream of broader pricing strategy: a founder who does not know the true cost of a unit cannot set a defensible price for it.",
+   "cs": "Zda jediná jednotka toho, co podnik prodává, vydělá víc, než stojí její výroba a dodání, jsou-li poctivě započítány všechny přímé náklady — materiál, čas, transakční poplatky, reklamace. Jednotková ekonomika je disciplína, která odhalí obchodní model, jenž vypadá rušně, ale na každém prodeji prodělává — past, kterou pouhý růst tržeb dokáže překvapivě dlouho maskovat. Stojí na počátku širší cenové strategie: kdo nezná skutečné náklady jednotky, nedokáže pro ni stanovit obhajitelnou cenu."
+  },
+  {
+   "id": "04.11.01.05",
+   "level": 3,
+   "parentId": "04.11.01",
+   "name": "Cooperative and Collective Enterprise",
+   "zone": "votable",
+   "ordinal": 4,
+   "kind": "ext",
+   "en": "A form of enterprise owned and controlled jointly by its members rather than by outside shareholders, where surplus is distributed according to use or contribution rather than capital invested. Cooperatives are common wherever independent small producers need shared infrastructure they could not afford alone — processing equipment, storage, a shared brand or a shared sales channel — while keeping each member's individual operation legally distinct. Governance is correspondingly different from a company: decisions typically follow one-member-one-vote rather than one-share-one-vote, which changes how conflict and investment are handled — a beekeeping cooperative sharing a honey extractor and bottling line among members who otherwise keep their own hives is a plain example.",
+   "cs": "Forma podnikání společně vlastněná a řízená jejími členy, nikoli vnějšími akcionáři, kde se přebytek rozděluje podle využití či přínosu, nikoli podle vloženého kapitálu. Družstva jsou běžná všude tam, kde nezávislí drobní producenti potřebují sdílenou infrastrukturu, kterou by si sami nemohli dovolit — zpracovatelské zařízení, sklad, společnou značku nebo společný odbytový kanál — a přitom si každý člen ponechává právně samostatný vlastní provoz. Řízení se tomu odpovídajícím způsobem liší od obchodní společnosti: rozhoduje se typicky podle zásady jeden člen, jeden hlas, nikoli podle podílu na kapitálu, což mění způsob řešení sporů a investic — příkladem je včelařské družstvo sdílející medomet a stáčírnu mezi členy, kteří jinak chovají včely samostatně."
+  },
+  {
+   "id": "04.11.01.06",
+   "level": 3,
+   "parentId": "04.11.01",
+   "name": "Growth and Scaling Decisions",
+   "zone": "votable",
+   "ordinal": 5,
+   "kind": "ext",
+   "en": "The choices that separate staying a small, owner-operated business from becoming a larger organisation: when to hire the first employee, when to formalise processes that used to live only in the founder's head, and when growth would consume more cash than it returns. Scaling too early strains a firm that has not yet found a repeatable, profitable model; scaling too late cedes a market to competitors who moved first. The decision is inseparable from the founder's own role — much of what scaling means in practice is the founder stepping back from doing the work personally to managing others who do it.",
+   "cs": "Rozhodnutí, která oddělují setrvání v podobě malého, vlastníkem vedeného podniku od přerůstání ve větší organizaci: kdy přijmout prvního zaměstnance, kdy formalizovat postupy, které dosud žily jen v hlavě zakladatele, a kdy by růst spotřeboval víc hotovosti, než kolik přinese. Příliš brzké škálování zatěžuje firmu, která ještě nenašla opakovatelný a ziskový model; příliš pozdní škálování přenechává trh konkurentům, kteří byli rychlejší. Rozhodnutí je neoddělitelné od role samotného zakladatele — velkou částí toho, co „škálování“ v praxi znamená, je jeho ústup od osobního vykonávání práce k řízení lidí, kteří ji dělají místo něj."
+  },
+  {
    "id": "04.11.02",
    "level": 2,
    "parentId": "04.11",
@@ -211,6 +277,83 @@
    "cs": "Jak organizace zjišťuje, co trh chce, sděluje svou nabídku a proměňuje zájem v transakci: segmentace a positioning, marketingový mix, značka a sdělení a prodejní proces od kontaktu po uzavření obchodu. Nejde jen o reklamu — cena, distribuce a produktová rozhodnutí jsou její součástí stejně jako propagace."
   },
   {
+   "id": "04.11.04.01",
+   "level": 3,
+   "parentId": "04.11.04",
+   "name": "Market Segmentation and Positioning",
+   "zone": "votable",
+   "ordinal": 0,
+   "kind": "ext",
+   "en": "Dividing a heterogeneous market into groups that respond differently to an offer, and choosing which group to serve and how the offer should be perceived relative to alternatives. Segmentation without a subsequent, deliberate positioning choice is merely description; the discipline earns its place only when it changes what is built, priced or said. A small firm's segmentation is usually narrower and more concrete than a textbook example — a specific neighbourhood, a specific age of learner driver, a specific size of business customer — because it cannot afford to serve everyone adequately.",
+   "cs": "Rozdělení různorodého trhu na skupiny, které na nabídku reagují odlišně, a volba, kterou skupinu obsluhovat a jak má být nabídka vnímána vůči alternativám. Segmentace bez následné, záměrné volby positioningu je pouhým popisem; disciplína si zaslouží své místo, jen když mění to, co se vyrábí, jak se cení nebo jak se o tom mluví. Segmentace malé firmy bývá užší a konkrétnější než učebnicový příklad — konkrétní čtvrť, konkrétní věková skupina žáků autoškoly, konkrétní velikost firemního zákazníka — protože si nemůže dovolit obsluhovat každého stejně dobře."
+  },
+  {
+   "id": "04.11.04.02",
+   "level": 3,
+   "parentId": "04.11.04",
+   "name": "Pricing Strategy",
+   "zone": "votable",
+   "ordinal": 1,
+   "kind": "ext",
+   "en": "Setting a price not merely to cover cost but to capture the value a customer places on the offer, using cues such as competitor prices, psychological thresholds, bundling and discrimination between customer segments. Pricing strategy sits downstream of unit economics — it assumes the floor below which a sale destroys value is already known — and upstream of sales, since the price quoted shapes who buys and how a negotiation proceeds. A firm that only ever prices to match competitors has, in effect, delegated the decision to them.",
+   "cs": "Stanovení ceny nejen tak, aby pokryla náklady, ale aby zachytila hodnotu, kterou zákazník nabídce přisuzuje, s využitím vodítek jako ceny konkurence, psychologické hranice, balíčkování a cenová diskriminace mezi segmenty zákazníků. Cenová strategie navazuje na jednotkovou ekonomiku — předpokládá, že spodní hranice, pod níž prodej ničí hodnotu, je už známa — a předchází prodeji samotnému, protože nabídnutá cena určuje, kdo koupí a jak bude vyjednávání probíhat. Firma, která cení pouze podle konkurence, tím rozhodování fakticky přenechala jí."
+  },
+  {
+   "id": "04.11.04.03",
+   "level": 3,
+   "parentId": "04.11.04",
+   "name": "Digital and Content Marketing",
+   "zone": "votable",
+   "ordinal": 2,
+   "kind": "ext",
+   "en": "Reaching and persuading customers through owned, earned and paid digital channels: a website or storefront, search visibility, social platforms, email, and content that answers a customer's questions before they ask a competitor. For a business without a physical high-street presence — an e-shop above all — digital marketing is not one channel among several but the primary way a customer discovers the business exists at all. Measurement is built into the channel in a way traditional advertising never had, which raises the expectation that spend is justified by tracked conversions rather than by reach alone.",
+   "cs": "Oslovování a přesvědčování zákazníků prostřednictvím vlastních, získaných a placených digitálních kanálů: webu nebo e-shopu, viditelnosti ve vyhledávání, sociálních sítí, e-mailu a obsahu, který zodpoví zákazníkovu otázku dřív, než ji položí konkurenci. Pro podnik bez fyzické provozovny v ulici — především pro e-shop — není digitální marketing jedním kanálem mezi mnoha, ale hlavním způsobem, jak se zákazník vůbec dozví o jeho existenci. Měřitelnost je do kanálu zabudována způsobem, jaký tradiční reklama nikdy neměla, což zvyšuje nárok na to, aby byl výdaj obhájen sledovanými konverzemi, nikoli jen dosahem."
+  },
+  {
+   "id": "04.11.04.04",
+   "level": 3,
+   "parentId": "04.11.04",
+   "name": "Sales Process and Customer Acquisition",
+   "zone": "votable",
+   "ordinal": 3,
+   "kind": "ext",
+   "en": "The repeatable sequence from first contact to closed transaction: generating a lead, qualifying interest, presenting an offer, handling objections, and converting interest into a signed agreement or a completed purchase. In a small firm the same person often plays every role in this sequence, which makes an explicit process worth having even when no formal sales team exists — it prevents the founder from relying on charisma alone and forgetting steps that a larger team would have specialised. The cost of acquiring one paying customer, set against what that customer is worth over time, is the number that ultimately tells a firm whether its acquisition channel is sustainable.",
+   "cs": "Opakovatelná posloupnost od prvního kontaktu k uzavřenému obchodu: vytvoření kontaktu, ověření zájmu, prezentace nabídky, zvládnutí námitek a proměna zájmu v podepsanou smlouvu nebo dokončený nákup. V malé firmě často hraje všechny role v této posloupnosti jeden člověk, což činí výslovný proces cenným i tam, kde neexistuje formální obchodní tým — brání zakladateli spoléhat jen na osobní charisma a zapomínat kroky, které by ve větším týmu byly specializované. Náklad na získání jednoho platícího zákazníka, poměřený s tím, kolik tento zákazník v čase přinese, je nakonec číslo, které firmě řekne, zda je její akviziční kanál udržitelný."
+  },
+  {
+   "id": "04.11.04.05",
+   "level": 3,
+   "parentId": "04.11.04",
+   "name": "Branding and Reputation Management",
+   "zone": "votable",
+   "ordinal": 4,
+   "kind": "ext",
+   "en": "The consistent identity a customer associates with a business — name, visual identity, tone, and the promise implied by all three — together with the deliberate management of what is said about the business where it cannot control the conversation directly, such as reviews and word of mouth. For a local service business, reputation is often the single largest determinant of new business, since a customer with no other information relies almost entirely on what previous customers reported. Damage to reputation is asymmetric with the effort to build it: one badly handled complaint travels further than many quietly satisfied customers.",
+   "cs": "Ucelená identita, kterou si zákazník s podnikem spojuje — název, vizuální styl, tón komunikace a slib, který ze všech tří vyplývá — spolu se záměrnou péčí o to, co se o podniku říká tam, kde jej nemůže přímo řídit, například v recenzích a ústním doporučování. U lokální službové živnosti bývá pověst často jediným největším faktorem nové zakázky, protože zákazník bez jiné informace se spoléhá téměř výhradně na to, co uvedli předchozí zákazníci. Poškození pověsti je vůči úsilí vynaloženému na její budování asymetrické: jedna špatně vyřízená stížnost se donese dál než mnoho tiše spokojených zákazníků."
+  },
+  {
+   "id": "04.11.04.06",
+   "level": 3,
+   "parentId": "04.11.04",
+   "name": "Customer Relationship Management and Retention",
+   "zone": "votable",
+   "ordinal": 5,
+   "kind": "ext",
+   "en": "Keeping a record of who a business's customers are, what they have bought, and when they are due to return, so that the relationship survives beyond a single transaction and beyond the memory of whoever served them. Retaining an existing customer is consistently cheaper than acquiring a new one, which is why even a very small operation gains from some minimal system — a spreadsheet, a booking calendar with history, a loyalty scheme — that turns a one-off buyer into a repeat one. The discipline is as relevant to a courier tracking regular business accounts as to an e-shop running a mailing list.",
+   "cs": "Vedení záznamu o tom, kdo jsou zákazníci podniku, co si koupili a kdy se mají vrátit, tak aby vztah přežil jednotlivou transakci i paměť toho, kdo je obsluhoval. Udržení stávajícího zákazníka je soustavně levnější než získání nového, a proto i velmi malý provoz získá z alespoň minimálního systému — tabulky, rezervačního kalendáře s historií, věrnostního programu — který promění jednorázového kupujícího v opakovaného. Disciplína je stejně relevantní pro kurýrní službu sledující pravidelné firemní účty jako pro e-shop provozující e-mailový seznam."
+  },
+  {
+   "id": "04.11.04.07",
+   "level": 3,
+   "parentId": "04.11.04",
+   "name": "Advertising Law and Consumer Protection in Marketing",
+   "zone": "votable",
+   "ordinal": 6,
+   "kind": "ext",
+   "en": "The legal limits on what a business may claim about its offer and how it may reach a customer: prohibitions on misleading and comparative advertising, disclosure requirements for sponsored content, and consent rules for direct marketing by email or phone. These constraints sit outside marketing theory proper but bind every marketing decision in practice, since a persuasive claim that misstates a material fact exposes the business to regulatory action regardless of how effective it was commercially. The rules bite hardest for an e-shop, where a product description, a discount claim, or an unsolicited marketing email can each independently trigger liability.",
+   "cs": "Právní meze toho, co může podnik o své nabídce tvrdit a jak smí zákazníka oslovit: zákazy klamavé a srovnávací reklamy, povinnost označit sponzorovaný obsah a pravidla souhlasu pro přímý marketing e-mailem či telefonem. Tato omezení stojí mimo marketingovou teorii samu, ale v praxi svazují každé marketingové rozhodnutí, protože přesvědčivé tvrzení zkreslující podstatnou skutečnost vystavuje podnik regulačnímu postihu bez ohledu na to, jak obchodně účinné bylo. Pravidla dopadají nejtvrději na e-shop, kde popis produktu, tvrzení o slevě i nevyžádaný marketingový e-mail mohou každý samostatně založit odpovědnost."
+  },
+  {
    "id": "04.11.05",
    "level": 2,
    "parentId": "04.11",
@@ -220,6 +363,83 @@
    "kind": "ext",
    "en": "The compliant, day-to-day practice of employing people: recruitment logistics and hiring decisions, employment contracts and onboarding, payroll and benefits administration, and handling grievances and disputes. The practical, largely rule-bound counterpart to Human Resource Management under Management and Organisation, and the point at which labour law becomes an organisation's daily obligation rather than a legal abstraction.",
    "cs": "Praxe zaměstnávání lidí v souladu s předpisy, den za dnem: logistika náboru a rozhodování o obsazení, pracovní smlouvy a nástup, mzdová agenda a benefity a řešení stížností a sporů. Praktický a do značné míry pravidly svázaný protějšek k Řízení lidských zdrojů v rámci Managementu a organizace — bod, v němž se pracovní právo stává každodenní povinností organizace, nikoli právní abstrakcí."
+  },
+  {
+   "id": "04.11.05.01",
+   "level": 3,
+   "parentId": "04.11.05",
+   "name": "Recruitment and Hiring Process",
+   "zone": "votable",
+   "ordinal": 0,
+   "kind": "ext",
+   "en": "The steps from identifying a staffing need to a signed offer: writing a job description, sourcing candidates, screening and interviewing, and making a selection decision that will hold up if later questioned. For a very small employer, a single bad hire is disproportionately costly relative to a large organisation, because there is no depth of team to absorb the mismatch while it is corrected. The process is where anti-discrimination obligations first attach in practice — a question that would be merely careless in casual conversation becomes a legal exposure once it is asked in an interview.",
+   "cs": "Kroky od zjištění personální potřeby k podepsané nabídce: sepsání popisu pracovního místa, vyhledání kandidátů, screening a pohovory a rozhodnutí o výběru, které obstojí, bude-li později zpochybněno. Pro velmi malého zaměstnavatele je jedno špatné obsazení neúměrně nákladnější než pro velkou organizaci, protože chybí hloubka týmu, která by nesoulad vstřebala, než se napraví. V tomto procesu se poprvé v praxi uplatňují protidiskriminační povinnosti — otázka, která by v běžném rozhovoru byla jen nešetrná, se položením při pohovoru stává právním rizikem."
+  },
+  {
+   "id": "04.11.05.02",
+   "level": 3,
+   "parentId": "04.11.05",
+   "name": "Employment Contracts and Onboarding",
+   "zone": "votable",
+   "ordinal": 1,
+   "kind": "ext",
+   "en": "The written agreement establishing the terms of an employment relationship — position, pay, working time, notice — and the practical steps that bring a new hire from signature to productive work: registration with authorities, safety induction, and access to the tools of the job. A contract that omits a mandatory term is not merely incomplete; the missing term is typically filled by the statutory default, which may not be what either party intended. Onboarding is where the legal relationship set out in the contract and the everyday working relationship first meet, and mismatches between the two surface fastest here.",
+   "cs": "Písemná smlouva zakládající podmínky pracovního poměru — pozici, mzdu, pracovní dobu, výpovědní lhůtu — a praktické kroky, které dovedou nového zaměstnance od podpisu k produktivní práci: registraci u úřadů, vstupní školení bezpečnosti práce a přístup k pracovním nástrojům. Smlouva postrádající povinnou náležitost není jen neúplná; chybějící náležitost obvykle doplní zákonná domněnka, která nemusí odpovídat záměru žádné ze stran. Nástup je místem, kde se právní vztah stanovený smlouvou poprvé setkává s každodenním pracovním vztahem, a rozpory mezi oběma se zde projeví nejrychleji."
+  },
+  {
+   "id": "04.11.05.03",
+   "level": 3,
+   "parentId": "04.11.05",
+   "name": "Payroll and Employee Benefits Administration",
+   "zone": "votable",
+   "ordinal": 2,
+   "kind": "ext",
+   "en": "The recurring cycle of calculating pay, withholding tax and social-insurance contributions, and remitting each to the correct authority on schedule, together with administering benefits such as meal allowances or leave beyond the statutory minimum. Payroll tolerates almost no error, since a mistake surfaces immediately in an employee's pay packet or in a missed filing deadline that attracts a penalty regardless of intent. For a Czech small employer this means monthly returns to the health-insurance company and the social security administration alongside income-tax withholding — an obligation that exists from the first employee, however small the payroll.",
+   "cs": "Opakující se cyklus výpočtu mzdy, sražení daně a odvodů na sociální a zdravotní pojištění a jejich včasného odvedení příslušnému úřadu, spolu se správou benefitů, jako jsou stravenky nebo dovolená nad zákonný minimální rozsah. Mzdová agenda snese jen minimum chyb, protože se omyl projeví okamžitě buď ve výplatě zaměstnance, nebo v zmeškaném termínu podání, za nějž hrozí sankce bez ohledu na úmysl. Pro českého malého zaměstnavatele to znamená měsíční přehledy zdravotní pojišťovně a správě sociálního zabezpečení vedle srážkové daně z příjmu — povinnost platnou od prvního zaměstnance, ať je mzdová agenda sebemenší."
+  },
+  {
+   "id": "04.11.05.04",
+   "level": 3,
+   "parentId": "04.11.05",
+   "name": "Working Time and Leave Administration",
+   "zone": "votable",
+   "ordinal": 3,
+   "kind": "ext",
+   "en": "Tracking hours actually worked against statutory limits, recording overtime and on-call time correctly, and administering annual leave, sick leave and other absence so that entitlement and pay match what the law requires. Administration here is largely mechanical once the underlying rules are understood, but the record itself matters: in a dispute, whoever kept contemporaneous records of time worked is in the stronger position. Shift-based and seasonal businesses — a courier fleet, a driving school with weekend lessons — face this more acutely than a fixed nine-to-five office.",
+   "cs": "Sledování skutečně odpracovaných hodin vůči zákonným limitům, správné zaznamenávání přesčasů a pracovní pohotovosti a administrace dovolené, nemoci a jiné nepřítomnosti tak, aby nárok i odměna odpovídaly zákonu. Administrace je zde do značné míry mechanická, jsou-li podkladová pravidla pochopena, ale samotný záznam má význam: ve sporu je ve výhodnějším postavení ten, kdo vedl průběžný záznam odpracované doby. Směnové a sezónní provozy — vozový park kurýrní služby, autoškola s víkendovými lekcemi — se s tím potýkají naléhavěji než pevná kancelářská osmihodinovka."
+  },
+  {
+   "id": "04.11.05.05",
+   "level": 3,
+   "parentId": "04.11.05",
+   "name": "Workplace Safety Compliance",
+   "zone": "votable",
+   "ordinal": 4,
+   "kind": "ext",
+   "en": "The employer's practical duty to identify hazards specific to the actual workplace, train staff to work safely around them, and keep the records — inspections, training logs, incident reports — that prove the duty was met. Compliance is judged by documented practice, not by good intentions: an employer who never wrote down a risk assessment cannot easily show one was performed. The specific hazards differ sharply by trade — a vehicle on the road for a driving instructor or courier, a hive and its stings for a beekeeper, repetitive strain for office work — but the underlying duty to assess and mitigate is the same across all of them.",
+   "cs": "Praktická povinnost zaměstnavatele identifikovat rizika specifická pro konkrétní pracoviště, proškolit zaměstnance, jak se jim bezpečně vyhýbat, a vést záznamy — o kontrolách, školeních, hlášených úrazech — které prokazují splnění povinnosti. Soulad se posuzuje podle zdokumentované praxe, nikoli podle dobrého úmyslu: zaměstnavatel, který nikdy nesepsal vyhodnocení rizik, je jen těžko prokáže. Konkrétní rizika se podle oboru výrazně liší — vozidlo na silnici u instruktora autoškoly či kurýra, úl a bodnutí u včelaře, jednostranná zátěž při kancelářské práci — ale povinnost rizika vyhodnotit a zmírnit je stejná napříč všemi."
+  },
+  {
+   "id": "04.11.05.06",
+   "level": 3,
+   "parentId": "04.11.05",
+   "name": "Grievance, Discipline and Termination",
+   "zone": "votable",
+   "ordinal": 5,
+   "kind": "ext",
+   "en": "The procedures for handling a complaint raised by an employee, for responding to underperformance or misconduct, and for ending an employment relationship in a way that survives challenge. Each stage carries a documentation requirement disproportionate to how it feels in the moment — a verbal warning that was never written down is, for legal purposes, a warning that never happened. Termination is the point at which the largest share of employment disputes arises, and the point at which a small employer's informal, personal way of managing people meets the formal, procedural standard the law expects of any employer regardless of size.",
+   "cs": "Postupy pro vyřízení stížnosti podané zaměstnancem, pro reakci na neplnění povinností či pochybení a pro ukončení pracovního poměru způsobem, který obstojí při zpochybnění. Každá fáze nese dokumentační povinnost neúměrnou tomu, jak působí v danou chvíli — ústní napomenutí, které nikdo nezapsal, je pro právní účely napomenutím, k němuž nedošlo. Ukončení pracovního poměru je bodem, kde vzniká největší podíl pracovněprávních sporů, a bodem, kde se neformální, osobní styl řízení lidí malého zaměstnavatele střetává s formálním, procesním standardem, jejž zákon očekává od každého zaměstnavatele bez ohledu na velikost."
+  },
+  {
+   "id": "04.11.05.07",
+   "level": 3,
+   "parentId": "04.11.05",
+   "name": "Contractor versus Employee Classification",
+   "zone": "votable",
+   "ordinal": 6,
+   "kind": "ext",
+   "en": "Whether a working relationship is, in substance, dependent employment or genuine self-employment — and why the label the parties chose in a contract does not settle the question, since authorities and courts look at actual control, integration and economic dependence instead. Misclassifying an employee as a contractor to avoid payroll taxes and labour protections is a well-known evasion, called švarcsystém in Czech practice, and carries back-payment and penalty exposure if uncovered. The question recurs wherever a business relies on nominally independent drivers or couriers who in practice work exclusively for it, under its schedule and its instructions.",
+   "cs": "Zda je pracovní vztah svou podstatou závislou prací, nebo skutečnou samostatnou výdělečnou činností — a proč označení, které strany zvolily ve smlouvě, tuto otázku samo nerozhoduje, protože úřady i soudy posuzují skutečnou míru řízení, začlenění a ekonomické závislosti. Účelové označení zaměstnance za OSVČ s cílem obejít odvody a pracovněprávní ochranu je v české praxi známé jako švarcsystém a při odhalení s sebou nese doměření odvodů i sankce. Otázka se opakovaně vrací všude tam, kde podnik spoléhá na formálně nezávislé řidiče či kurýry, kteří ve skutečnosti pracují výhradně pro něj, podle jeho rozvrhu a jeho pokynů."
   },
   {
    "id": "04.11.06",
@@ -233,6 +453,72 @@
    "cs": "Opakované a spolehlivé dodávání produktu či služby: zásobování a řízení zásob, kontrola kvality, plánování kapacit a procesy směřované k zákazníkovi — fronty, plánování termínů, náprava po selhání služby — které rozhodují o tom, zda dodávka odpovídá tomu, co bylo slíbeno. Platí stejně pro jednoosobní servisní živnost jako pro továrnu."
   },
   {
+   "id": "04.11.06.01",
+   "level": 3,
+   "parentId": "04.11.06",
+   "name": "Scheduling and Capacity Planning",
+   "zone": "votable",
+   "ordinal": 0,
+   "kind": "ext",
+   "en": "Matching available capacity — staff hours, vehicles, equipment, rooms — to demand that rarely arrives evenly, so that a business neither turns customers away when it could have served them nor pays for idle capacity when it could not. A driving school allocating instructors and cars to lesson slots, or a courier allocating drivers to routes, is solving the same underlying problem as a factory allocating machine time, only at a scale where a single miscalculated booking is felt immediately. Overbooking and underbooking are not opposite mistakes of equal weight — which one is more costly depends entirely on how perishable the capacity is.",
+   "cs": "Sladění dostupné kapacity — hodin personálu, vozidel, vybavení, místností — s poptávkou, která přichází jen zřídka rovnoměrně, tak aby podnik ani neodmítal zákazníky, které mohl obsloužit, ani neplatil za nevyužitou kapacitu, kterou obsloužit nemohl. Autoškola přidělující instruktory a vozy jednotlivým lekcím, nebo kurýrní služba přidělující řidiče trasám, řeší tentýž problém jako továrna přidělující strojní čas, jen v měřítku, kde se jedna špatně naplánovaná rezervace projeví okamžitě. Přebooking a podbooking nejsou opačné chyby stejné váhy — která z nich je nákladnější, závisí zcela na tom, jak pomíjivá je daná kapacita."
+  },
+  {
+   "id": "04.11.06.02",
+   "level": 3,
+   "parentId": "04.11.06",
+   "name": "Service Quality and Standard Operating Procedures",
+   "zone": "votable",
+   "ordinal": 1,
+   "kind": "ext",
+   "en": "Written, repeatable steps for doing a task the same acceptable way regardless of who performs it, and the standards against which delivered quality is checked. A standard procedure is what lets a business promise a consistent result even though the person delivering it varies from one occasion to the next — the same driving-lesson structure regardless of instructor, the same review step regardless of which text arrived for translation. Quality control catches deviation from the standard before the customer does, which is cheaper in reputation than catching it after.",
+   "cs": "Písemné, opakovatelné kroky k provedení úkolu stejně přijatelným způsobem bez ohledu na to, kdo jej vykonává, a standardy, vůči nimž se dodaná kvalita ověřuje. Standardní postup je to, co umožňuje podniku slíbit stálý výsledek, i když se osoba, která jej dodává, mění případ od případu — stejná struktura hodiny v autoškole bez ohledu na instruktora, stejný krok kontroly u překladu bez ohledu na to, jaký text přišel. Kontrola kvality zachytí odchylku od standardu dříve, než ji zachytí zákazník, což je z hlediska pověsti levnější."
+  },
+  {
+   "id": "04.11.06.03",
+   "level": 3,
+   "parentId": "04.11.06",
+   "name": "Inventory and Supply Management",
+   "zone": "votable",
+   "ordinal": 2,
+   "kind": "ext",
+   "en": "Deciding how much stock to hold, when to reorder, and how to absorb variation in supplier lead time without either running out or tying up cash in goods that sit unsold. The calculus differs sharply by product: an e-shop managing fast-moving, easily replenished goods faces a different problem from a producer managing a perishable, seasonal harvest that cannot simply be reordered once it is gone. Holding too little inventory costs lost sales; holding too much costs cash flow, storage and, for perishables, outright spoilage — a beekeeper's honey stock additionally needs batch records for any later complaint or inspection.",
+   "cs": "Rozhodování, kolik zásob držet, kdy doobjednat a jak vstřebat kolísání dodacích lhůt dodavatelů, aniž by došlo zboží, nebo naopak aniž by se v neprodaném zboží vázala hotovost. Výpočet se podle druhu produktu výrazně liší: e-shop spravující rychloobrátkové, snadno doplnitelné zboží řeší jiný problém než producent spravující pomíjivou, sezónní sklizeň, kterou po vyprodání nelze prostě doobjednat. Příliš málo zásob stojí ztracené prodeje; příliš mnoho zásob stojí hotovostní tok, skladování a u pomíjivého zboží přímou zkázu — u zásoby medu navíc vyžaduje evidenci šarží pro případ pozdější reklamace nebo kontroly."
+  },
+  {
+   "id": "04.11.06.04",
+   "level": 3,
+   "parentId": "04.11.06",
+   "name": "Last-Mile Delivery and Logistics",
+   "zone": "votable",
+   "ordinal": 3,
+   "kind": "ext",
+   "en": "Getting a good from the last point in a supply chain to the individual customer — routing, time windows, proof of delivery, and the failure modes particular to this stage: the recipient not being home, an address that does not exist, a parcel damaged in transit. Last-mile delivery is disproportionately expensive relative to the rest of a supply chain because it cannot be consolidated the way earlier legs can, which is why courier businesses compete chiefly on route efficiency and reliability rather than on the underlying transport cost alone. It is also the delivery stage a customer actually sees, so failures here damage the sender's reputation as much as the courier's.",
+   "cs": "Dostání zboží z posledního bodu dodavatelského řetězce k jednotlivému zákazníkovi — trasování, časová okna, potvrzení o doručení a poruchové stavy typické pro tuto fázi: příjemce není doma, adresa neexistuje, zásilka je poškozena při přepravě. Poslední míle je vůči zbytku dodavatelského řetězce neúměrně nákladná, protože ji nelze slučovat tak jako dřívější úseky, a proto kurýrní služby soutěží především efektivitou trasy a spolehlivostí, nikoli jen samotným nákladem na přepravu. Je to zároveň fáze doručení, kterou zákazník skutečně vidí, takže selhání zde poškozuje pověst odesílatele stejně jako pověst kurýra."
+  },
+  {
+   "id": "04.11.06.05",
+   "level": 3,
+   "parentId": "04.11.06",
+   "name": "Seasonal and Perishable Production Planning",
+   "zone": "votable",
+   "ordinal": 4,
+   "kind": "ext",
+   "en": "Planning output where nature, not the firm, sets the production window: a single annual harvest, a growing or breeding season, weather that can shorten or ruin it without warning. A business built around such production must plan financing, storage and sales around a calendar it does not control, front-loading costs long before the corresponding revenue arrives — an apiary buys equipment and feeds colonies for months before a single jar of honey is sold. This is a fundamentally different planning problem from a business that can simply produce more when demand rises.",
+   "cs": "Plánování výroby tam, kde výrobní okno neurčuje podnik, ale příroda: jediná roční sklizeň, chovné či pěstební období, počasí, které je může bez varování zkrátit či zmařit. Podnik postavený na takové výrobě musí plánovat financování, skladování i prodej podle kalendáře, který nemá pod kontrolou, a náklady mu vznikají dlouho před odpovídajícím příjmem — včelařství nakupuje vybavení a krmí včelstva měsíce předtím, než se prodá první sklenice medu. Jde o zásadně jiný plánovací problém než u podniku, který dokáže prostě vyrobit víc, jakmile stoupne poptávka."
+  },
+  {
+   "id": "04.11.06.06",
+   "level": 3,
+   "parentId": "04.11.06",
+   "name": "Complaint Handling and Service Recovery",
+   "zone": "votable",
+   "ordinal": 5,
+   "kind": "ext",
+   "en": "The structured response to a service failure once a customer has noticed it: acknowledging the failure, fixing what can still be fixed, and compensating what cannot, quickly enough that the recovery itself becomes part of what the customer remembers. Handled well, a service failure recovered fast can leave a customer more loyal than if nothing had gone wrong at all — a courier that proactively replaces a lost parcel, a driving school that reschedules a cancelled lesson without argument. Handled badly, or ignored, the same failure becomes the story the customer tells everyone else, which is why recovery is treated as a distinct operational competence rather than an afterthought to quality control.",
+   "cs": "Strukturovaná reakce na selhání služby poté, co si jej zákazník všiml: uznání selhání, náprava toho, co lze ještě napravit, a odškodnění toho, co napravit nelze, a to dost rychle na to, aby se samotná náprava stala součástí toho, co si zákazník zapamatuje. Dobře zvládnuté selhání služby, rychle napravené, dokáže zákazníka připoutat pevněji, než kdyby k selhání vůbec nedošlo — kurýr, který sám od sebe nahradí ztracenou zásilku, autoškola, která bez dohadování přeloží zrušenou lekci. Špatně zvládnuté nebo ignorované selhání se naopak stane příběhem, který zákazník vypráví všem ostatním, a proto se náprava po selhání považuje za samostatnou provozní schopnost, nikoli za dodatek ke kontrole kvality."
+  },
+  {
    "id": "04.11.07",
    "level": 2,
    "parentId": "04.11",
@@ -244,6 +530,72 @@
    "cs": "Směna zboží a služeb mezi organizacemi a přes hranice: velkoobchodní a maloobchodní struktury, distribuční kanály, dovozní a vývozní postupy a smluvní i logistická praxe přesunu zboží od výrobce ke kupujícímu. Praktická vrstva pod mezinárodním obchodním právem popsaným v balíku Právo."
   },
   {
+   "id": "04.11.07.01",
+   "level": 3,
+   "parentId": "04.11.07",
+   "name": "Retail and E-Commerce Operations",
+   "zone": "votable",
+   "ordinal": 0,
+   "kind": "ext",
+   "en": "Running the point of sale where a business meets the end consumer directly, whether a physical counter or an online storefront: product listings, checkout, order fulfilment, and the returns process that follows a sale. An e-shop is a retailer whose shopfront is software, which removes geographic limits on reach but adds obligations — accurate product information, a working checkout, secure payment — that a physical shop satisfies partly through the customer's own eyes and presence. Operational failures here are visible immediately and publicly, in a way a wholesale error to a single business customer is not.",
+   "cs": "Provoz prodejního místa, kde se podnik přímo setkává s konečným spotřebitelem, ať jde o fyzický pult nebo online e-shop: nabídku produktů, pokladnu, vyřízení objednávky a proces vrácení zboží, který po prodeji následuje. E-shop je maloobchod, jehož výlohou je software — což odstraňuje zeměpisná omezení dosahu, ale přidává povinnosti, jako je přesná informace o produktu, funkční pokladna a bezpečná platba — které fyzická prodejna částečně plní už tím, že ji zákazník vidí a je v ní přítomen. Provozní selhání se zde projeví okamžitě a veřejně, jinak než chyba ve velkoobchodní dodávce jedinému firemnímu zákazníkovi."
+  },
+  {
+   "id": "04.11.07.02",
+   "level": 3,
+   "parentId": "04.11.07",
+   "name": "Wholesale and Distribution Channels",
+   "zone": "votable",
+   "ordinal": 1,
+   "kind": "ext",
+   "en": "Selling in bulk to intermediaries rather than to the final consumer, and choosing the channel structure — direct sale, distributor, agent, retail partner — through which goods reach the market. Each layer added to a channel takes a margin and adds distance from the end customer's actual feedback, so the choice trades reach and lower own effort against reduced control over price, presentation and the customer relationship itself. A small producer often runs both channels at once, selling wholesale to a shop for volume while also selling directly for a better margin on what it can move itself.",
+   "cs": "Prodej ve velkém zprostředkovatelům, nikoli konečnému spotřebiteli, a volba struktury odbytového kanálu — přímý prodej, distributor, obchodní zástupce, maloobchodní partner — jímž se zboží dostává na trh. Každá vrstva přidaná do kanálu si bere marži a vzdaluje od skutečné zpětné vazby konečného zákazníka, takže volba je kompromisem mezi dosahem a nižším vlastním úsilím na jedné straně a sníženou kontrolou nad cenou, prezentací a samotným vztahem se zákazníkem na straně druhé. Malý producent často provozuje oba kanály zároveň — prodává velkoobchodně do prodejny kvůli objemu a zároveň přímo pro lepší marži na tom, co dokáže odbýt sám."
+  },
+  {
+   "id": "04.11.07.03",
+   "level": 3,
+   "parentId": "04.11.07",
+   "name": "Import and Export Procedures",
+   "zone": "votable",
+   "ordinal": 2,
+   "kind": "ext",
+   "en": "The customs declarations, tariff classification, certificates of origin and other documentation required to move goods legally across a border, together with the duties and import taxes that attach on entry. A shipment held at customs for missing or incorrect paperwork costs more in delay than most tariffs cost in money, which is why the practical skill in this area is procedural accuracy rather than trade theory. An e-shop selling beyond its home market meets this the moment a single order crosses a border the business has not shipped to before.",
+   "cs": "Celní deklarace, sazební zařazení zboží, osvědčení o původu a další dokumentace nutná k legálnímu přesunu zboží přes hranici, spolu s cly a dovozními daněmi, které při vstupu vznikají. Zásilka zadržená na celnici kvůli chybějícím nebo nesprávným dokladům stojí na zpoždění víc, než kolik stojí většina cel na penězích, a proto je praktickou dovedností v této oblasti procesní přesnost, nikoli teorie obchodu. E-shop prodávající mimo domácí trh se s tím setká hned při první objednávce směřující přes hranici, na kterou dosud nezasílal."
+  },
+  {
+   "id": "04.11.07.04",
+   "level": 3,
+   "parentId": "04.11.07",
+   "name": "Consumer Sales Law and Returns",
+   "zone": "votable",
+   "ordinal": 3,
+   "kind": "ext",
+   "en": "The mandatory rights a consumer holds when buying from a business — a cooling-off period for distance sales, a statutory guarantee period, the right to a repair, replacement or refund — which exist regardless of what a seller's own terms say and cannot be contracted away. A returns policy is therefore not a marketing courtesy a business chooses to offer but a floor set by consumer-protection law, on top of which a business may only be more generous, never less. This bites hardest on distance selling, where the buyer never saw or handled the goods before paying, which is exactly the situation an e-shop transaction always is.",
+   "cs": "Kogentní práva, která má spotřebitel při nákupu od podnikatele — lhůta pro odstoupení od smlouvy uzavřené na dálku, zákonná záruční doba, právo na opravu, výměnu nebo vrácení peněz — jež platí bez ohledu na to, co říkají vlastní obchodní podmínky prodejce, a nelze se jich smluvně vzdát. Reklamační řád tedy není marketingovou zdvořilostí, kterou se podnik rozhodne nabídnout, ale minimem stanoveným spotřebitelským právem, nad nějž může být podnik jen štědřejší, nikdy méně. Nejtvrději to dopadá na prodej na dálku, kde kupující zboží před zaplacením neviděl ani nedržel v ruce — což je přesně situace každé transakce v e-shopu."
+  },
+  {
+   "id": "04.11.07.05",
+   "level": 3,
+   "parentId": "04.11.07",
+   "name": "Payment Processing and Settlement",
+   "zone": "votable",
+   "ordinal": 4,
+   "kind": "ext",
+   "en": "Accepting money from a customer through cards, bank transfer, cash or digital wallets, and the chain of intermediaries — acquirer, card network, payment gateway — that moves funds from buyer to seller and eventually settles into the seller's account. Each method carries a different mix of fee, speed and fraud risk, and a business that accepts several must reconcile all of them against orders taken, which is a common source of quiet bookkeeping error in a small operation. Chargebacks and disputed payments transfer risk back onto the seller after the fact, which is why payment processing is treated as an operational control point and not merely an administrative detail.",
+   "cs": "Přijímání peněz od zákazníka kartou, bankovním převodem, hotovostí nebo digitální peněženkou a řetězec zprostředkovatelů — acquirer, kartová asociace, platební brána — kteří převádějí prostředky od kupujícího k prodejci a nakonec je připíší na jeho účet. Každý způsob nese jinou kombinaci poplatku, rychlosti a rizika podvodu, a podnik přijímající více způsobů je musí všechny spárovat s přijatými objednávkami, což bývá v malém provozu tichým zdrojem účetních chyb. Chargeback a rozporované platby přenášejí riziko zpět na prodejce až dodatečně, a proto se zpracování plateb považuje za provozní kontrolní bod, nikoli jen za administrativní detail."
+  },
+  {
+   "id": "04.11.07.06",
+   "level": 3,
+   "parentId": "04.11.07",
+   "name": "Cross-Border VAT and Trade Compliance",
+   "zone": "votable",
+   "ordinal": 5,
+   "kind": "ext",
+   "en": "The value-added-tax obligations that attach specifically to selling across borders: registration thresholds in the buyer's country, the place-of-supply rules that decide whose VAT rate applies, and simplified schemes such as the EU's One-Stop Shop that let a seller report foreign VAT through a single domestic return instead of registering in every destination country. Getting this wrong is not merely a paperwork failure — charging the wrong VAT rate on a cross-border sale is a compliance failure with the tax authority of a country the business may never otherwise deal with directly. It is the point at which the practical layer of trade meets the tax branch of the law pack most directly.",
+   "cs": "Povinnosti k dani z přidané hodnoty vázané konkrétně na prodej přes hranice: registrační prahy v zemi kupujícího, pravidla místa plnění určující, čí sazba DPH se použije, a zjednodušené režimy jako unijní One Stop Shop, které umožňují nahlásit zahraniční DPH jedním tuzemským přiznáním místo registrace v každé cílové zemi. Chyba zde není pouhým administrativním nedopatřením — účtování nesprávné sazby DPH u přeshraničního prodeje je porušením povinností vůči finanční správě země, se kterou by podnik jinak vůbec přímo nejednal. Je to bod, kde se praktická vrstva obchodu nejpříměji střetává s daňovou větví právního balíku."
+  },
+  {
    "id": "04.11.08",
    "level": 2,
    "parentId": "04.11",
@@ -253,6 +605,72 @@
    "kind": "ext",
    "en": "Managing an individual's or household's money: budgeting and saving, debt and credit, insurance against loss, and investing for retirement or other long-term goals. Distinct from corporate finance in scale and stakes, not in its underlying logic — many of the same trade-offs between return, risk and liquidity apply.",
    "cs": "Hospodaření s penězi jednotlivce nebo domácnosti: rozpočtování a spoření, dluhy a úvěr, pojištění proti ztrátě a investování na důchod či jiné dlouhodobé cíle. Od podnikových financí se liší měřítkem a sázkami, nikoli svou vnitřní logikou — platí mnohé stejné kompromisy mezi výnosem, rizikem a likviditou."
+  },
+  {
+   "id": "04.11.08.01",
+   "level": 3,
+   "parentId": "04.11.08",
+   "name": "Household Budgeting and Saving",
+   "zone": "votable",
+   "ordinal": 0,
+   "kind": "ext",
+   "en": "Tracking income and expenditure at the level of a person or household, and setting aside a deliberate margin before spending consumes it, rather than saving whatever happens to be left over. A budget's value is less in the arithmetic than in the discipline of naming categories honestly — irregular costs such as annual insurance or a car service are the ones most budgets quietly ignore until they arrive as a surprise. The habit matters most for anyone whose income is itself irregular, which includes most of the self-employed trades this pack anchors to.",
+   "cs": "Sledování příjmů a výdajů na úrovni jednotlivce nebo domácnosti a odkládání záměrné rezervy dřív, než ji spotřebuje útrata, nikoli spoření toho, co náhodou zbude. Hodnota rozpočtu netkví ani tak v aritmetice jako v disciplíně poctivě pojmenovat kategorie — nepravidelné náklady, jako je roční pojistka nebo servis auta, bývají právě ty, které většina rozpočtů tiše přehlíží, dokud nepřijdou jako překvapení. Návyk je nejdůležitější pro každého, jehož příjem je sám nepravidelný, což zahrnuje většinu živnostenských oborů, k nimž se tento balík vztahuje."
+  },
+  {
+   "id": "04.11.08.02",
+   "level": 3,
+   "parentId": "04.11.08",
+   "name": "Debt and Credit Management",
+   "zone": "votable",
+   "ordinal": 1,
+   "kind": "ext",
+   "en": "Understanding the real cost of borrowing — interest, fees, and the difference between a mortgage, a consumer loan and revolving credit-card debt — and managing repayment so that debt service does not crowd out other obligations. A credit history built by borrowing and repaying reliably is itself an asset, since it determines the terms on which future credit, including business credit, will be offered. The most costly mistake in this area is rarely borrowing itself but rolling short-term, high-interest debt forward instead of resolving it, which compounds against the borrower rather than for them.",
+   "cs": "Pochopení skutečné ceny půjčky — úroku, poplatků a rozdílu mezi hypotékou, spotřebitelským úvěrem a revolvingovým dluhem na kreditní kartě — a řízení splácení tak, aby dluhová služba nevytlačila ostatní závazky. Úvěrová historie vybudovaná spolehlivým půjčováním a splácením je sama o sobě aktivem, protože určuje podmínky, za nichž bude nabídnut budoucí úvěr, včetně podnikatelského. Nejnákladnější chybou v této oblasti bývá zřídka samotné půjčování, spíše převalování krátkodobého, draze úročeného dluhu místo jeho vyřešení — což se úročí proti dlužníkovi, nikoli v jeho prospěch."
+  },
+  {
+   "id": "04.11.08.03",
+   "level": 3,
+   "parentId": "04.11.08",
+   "name": "Insurance and Risk Protection",
+   "zone": "votable",
+   "ordinal": 2,
+   "kind": "ext",
+   "en": "Transferring the financial consequence of a loss too large to absorb from savings alone onto an insurer, in exchange for a premium paid whether or not the loss ever occurs. The discipline is choosing which risks are worth transferring this way — catastrophic ones, where the loss would be ruinous — against which are cheaper to simply self-insure by holding a reserve. For anyone self-employed, this extends beyond property and liability cover to income protection: unlike an employee, a sole trader who cannot work typically has no employer-funded sick pay standing behind them.",
+   "cs": "Přenesení finančního důsledku ztráty, kterou nelze absorbovat pouze z úspor, na pojistitele výměnou za pojistné placené bez ohledu na to, zda ke ztrátě vůbec dojde. Disciplína spočívá ve volbě, která rizika se takto vyplatí přenést — ta katastrofická, kde by byla ztráta zničující — oproti těm, která je levnější prostě samopojistit držením rezervy. U každého, kdo podniká samostatně, to přesahuje pojištění majetku a odpovědnosti až k pojištění příjmu: na rozdíl od zaměstnance nemá živnostník, který nemůže pracovat, typicky za sebou žádnou zaměstnavatelem hrazenou nemocenskou."
+  },
+  {
+   "id": "04.11.08.04",
+   "level": 3,
+   "parentId": "04.11.08",
+   "name": "Retirement and Pension Planning",
+   "zone": "votable",
+   "ordinal": 3,
+   "kind": "ext",
+   "en": "Building the resources that will replace earned income once a person stops working, combining a public pay-as-you-go pension with voluntary private saving where the public scheme alone would leave a shortfall. The planning problem is compounding in reverse: money set aside decades before retirement grows on a scale that the same sum set aside a decade before never can, which makes the cost of starting late far higher than intuition suggests. Self-employed people carry more of this responsibility than employees, since their pension contributions are typically calculated on a self-declared base rather than actual full income, and default participation in a workplace scheme is not available to them.",
+   "cs": "Budování prostředků, které nahradí výdělek po skončení pracovní činnosti, kombinací veřejného průběžného důchodového systému s dobrovolným soukromým spořením tam, kde by samotný veřejný systém zanechal nedostatek. Plánovací problém funguje jako úročení naruby: peníze odložené desítky let před důchodem narostou v míře, jaké nikdy nedosáhne stejná částka odložená deset let před ním, takže cena pozdního začátku je mnohem vyšší, než napovídá intuice. Osoby samostatně výdělečně činné nesou v tomto větší díl odpovědnosti než zaměstnanci, protože jejich odvody na důchodové pojištění se obvykle počítají ze zvoleného vyměřovacího základu, nikoli ze skutečného celého příjmu, a nemají k dispozici žádné výchozí zapojení do zaměstnaneckého systému."
+  },
+  {
+   "id": "04.11.08.05",
+   "level": 3,
+   "parentId": "04.11.08",
+   "name": "Investing and Asset Allocation",
+   "zone": "votable",
+   "ordinal": 4,
+   "kind": "ext",
+   "en": "Putting savings to work across asset classes — cash, bonds, equities, property — in proportions matched to a time horizon and a tolerance for seeing the value fall before it recovers. The central, well-evidenced trade-off is between expected return and volatility, and the central well-evidenced mistake is chasing the return of an asset that has already risen while ignoring the volatility that came with it. Diversification does not raise expected return; its function is to reduce the chance that a single bad outcome in one asset determines the whole result.",
+   "cs": "Zhodnocování úspor napříč třídami aktiv — hotovostí, dluhopisy, akciemi, nemovitostmi — v poměru odpovídajícím časovému horizontu a ochotě snést pokles hodnoty, než se zotaví. Ústředním, dobře doloženým kompromisem je vztah mezi očekávaným výnosem a kolísavostí, a ústřední dobře doloženou chybou je honba za výnosem aktiva, které už vzrostlo, při přehlížení kolísavosti, jež k němu patřila. Diverzifikace nezvyšuje očekávaný výnos; jejím účelem je snížit pravděpodobnost, že jediný špatný výsledek u jednoho aktiva určí výsledek celku."
+  },
+  {
+   "id": "04.11.08.06",
+   "level": 3,
+   "parentId": "04.11.08",
+   "name": "Self-Employed Income and Personal Tax Planning",
+   "zone": "votable",
+   "ordinal": 5,
+   "kind": "ext",
+   "en": "The personal-tax side of working for oneself: declaring income from a trade, choosing between actual and lump-sum expense deductions, and paying advance instalments of tax and social and health insurance through the year rather than having an employer withhold them automatically. This is distinct from business accounting proper — it is what happens to the money after the business's own books are closed — and it is where a sole trader's personal and business finances, legally separate in principle, are in practice managed side by side. Underestimating advance payments is a common early mistake, since the shortfall is only discovered when the annual return is settled, by which point it must be paid in a lump sum.",
+   "cs": "Osobní daňová stránka samostatné výdělečné činnosti: přiznání příjmu ze živnosti, volba mezi skutečnými výdaji a výdajovým paušálem a placení záloh na daň a na sociální a zdravotní pojištění v průběhu roku místo automatické srážky zaměstnavatelem. Liší se od podnikového účetnictví samotného — je to to, co se s penězi děje po uzavření vlastních knih podniku — a je to místo, kde se osobní a podnikatelské finance živnostníka, v zásadě právně oddělené, v praxi řídí bok po boku. Podhodnocení záloh je běžnou ranou chybou, protože nedostatek se odhalí až při vyúčtování ročního přiznání, kdy už musí být doplacen najednou."
   }
  ],
  "relations": [
@@ -332,6 +750,69 @@
    "type": "related-concept",
    "explored": null,
    "source": "curated-xref"
+  },
+  {
+   "from": "04.11.01.02",
+   "to": "04.06.10.01",
+   "type": "requires",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.11.01.04",
+   "to": "04.04",
+   "type": "derived-from",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.11.04.07",
+   "to": "04.06.08.05",
+   "type": "related-concept",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.11.05.04",
+   "to": "04.06.11.02",
+   "type": "specializes",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.11.05.05",
+   "to": "04.06.11.04",
+   "type": "specializes",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.11.05.07",
+   "to": "04.06.11.01",
+   "type": "depends-on",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.11.07.04",
+   "to": "04.06.08.05",
+   "type": "related-concept",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.11.07.06",
+   "to": "04.06.13.02",
+   "type": "related-concept",
+   "explored": null,
+   "source": "brief-xref"
+  },
+  {
+   "from": "04.11.08.06",
+   "to": "04.06.13.01",
+   "type": "related-concept",
+   "explored": null,
+   "source": "brief-xref"
   }
  ]
 }
