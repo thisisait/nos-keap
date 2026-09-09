@@ -131,6 +131,29 @@ describe('updateTableSchema', () => {
     ).toThrow(/would change kind/);
   });
 
+  it('anchors REPLACE on a definition re-sync and survive row bumps', async () => {
+    // The old union-merge could never DROP a removed anchor — a corrected
+    // def left stale [[refs]] on the card forever (the nOS lint
+    // broken-anchor class). Law now mirrors graph/view: provided → replace,
+    // absent (row bumps) → preserve.
+    const db = await import('./db');
+    const t = tables.getTable('t-declare')!;
+    tables.syncCard(t, ['01.01', '02.02']);
+    const links = () =>
+      ((db.getObject(`table-${t.id}`)?.links ?? []) as Array<{ kind: string; ref: string }>)
+        .filter((l) => l.kind === 'node')
+        .map((l) => l.ref)
+        .sort();
+    expect(links()).toEqual(['01.01', '02.02']);
+    tables.syncCard(t, ['01.02']); // the def moved — 01.01/02.02 must GO
+    expect(links()).toEqual(['01.02']);
+    tables.syncCard({ ...t, rowCount: t.rowCount + 1 }); // row bump: no anchors arg
+    expect(links()).toEqual(['01.02']);
+    // and the reconcile path carries them (updateTableSchema 4th arg)
+    tables.updateTableSchema(tables.getTable('t-declare')!, { columns: tables.getTable('t-declare')!.schema.columns } as never, undefined, ['02.01']);
+    expect(links()).toEqual(['02.01']);
+  });
+
   it('reports EVERY violation at once, not just the first', async () => {
     const t = tables.getTable('t-declare')!;
     const next = t.schema.columns

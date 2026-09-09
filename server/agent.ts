@@ -905,7 +905,18 @@ export function registerAgentRoutes(app: Express) {
           updateTableSharing(existing.id, sw.data);
           existing.sharedWith = sw.data;
         }
-        return ok(res, { ...existing, ...updateTableSchema(existing, cols.data, view) });
+        // Anchors ride the reconcile too — and REPLACE (the old union-merge
+        // could never drop a removed anchor, so a corrected def left stale
+        // [[refs]] on the card forever). Absent → the card keeps its own.
+        let anchors: string[] | undefined;
+        if (b.anchors !== undefined) {
+          const a = b.anchors;
+          if (!Array.isArray(a) || a.length > 8 || a.some((x) => typeof x !== 'string')) {
+            return fail(res, 400, 'anchors must be up to 8 node-id strings');
+          }
+          anchors = a as string[];
+        }
+        return ok(res, { ...existing, ...updateTableSchema(existing, cols.data, view, anchors) });
       } catch (e) {
         return fail(res, 409, e instanceof Error ? e.message : 'schema reconcile failed');
       }

@@ -198,6 +198,10 @@ export function updateTableSchema(
    * columns, one field over. Absent → prior block preserved, as before.
    */
   view?: ViewMeta,
+  /** Definition anchors — same ride-the-reconcile law as `view`: absent →
+   *  the card keeps its prior anchors, provided → REPLACES them (the def
+   *  file is the source of truth; see syncCard). */
+  anchors?: string[],
 ): Omit<TableInfo, 'capabilities'> {
   const prior = new Map(t.schema.columns.map((c) => [c.key, c]));
   const nextKeys = new Set(next.columns.map((c) => c.key));
@@ -226,7 +230,7 @@ export function updateTableSchema(
     .run(JSON.stringify(next), t.id);
 
   const updated = { ...t, schema: next };
-  syncCard(updated, [], undefined, view);
+  syncCard(updated, anchors, undefined, view);
   syncRows(updated);
   return updated;
 }
@@ -307,18 +311,22 @@ export function listDrivers(): Array<{
 
 export function syncCard(
   t: Omit<TableInfo, 'capabilities'>,
-  anchors: string[] = [],
+  anchors?: string[],
   graph?: GraphMeta,
   view?: ViewMeta,
 ): void {
-  // Re-syncs (row-count bumps) must not lose the anchors the card already
-  // has — merge them in from the existing card's extracted links.
+  // Anchors follow the same law as the graph/view blocks below: an absent
+  // arg (row-count bumps) preserves the card's own anchors; a PROVIDED list
+  // REPLACES them — the definition is the source of truth, and the old
+  // union-merge could never drop a removed anchor on a def re-POST, leaving
+  // stale [[refs]] on the card forever (nOS lint broken-anchor class,
+  // 2026-09-09).
   const existing = db.getObject(`table-${t.id}`);
   const prior = ((existing?.links ?? []) as ObjectRefLike[])
     .filter((l) => l.kind === 'node')
     .map((l) => l.ref);
-  const merged = [...new Set([...prior, ...anchors])];
-  const anchorBody = merged.map((a) => `[[${a}]]`).join(' ');
+  const nextAnchors = anchors ?? prior;
+  const anchorBody = [...new Set(nextAnchors)].map((a) => `[[${a}]]`).join(' ');
   const columnLine = t.schema.columns
     .map((c) => `${c.label} (${c.kind}${c.role !== 'attribute' ? `, ${c.role}` : ''})`)
     .join(' · ');
