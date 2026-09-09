@@ -368,6 +368,38 @@ const MIGRATIONS: Migration[] = [
       ALTER TABLE table_rows ADD COLUMN sharing TEXT;
     `,
   },
+  {
+    // Todos stop being a separate entity: each user's todos become rows in
+    // their own PRIVATE DataTable 'todos-<uid>' (table privacy is the
+    // isolation — no per-row sharing needed; the write law is why it is
+    // per-user: new rows in a communal table would need write grants for
+    // every user). The runtime table is ensured by GET /api/todos-table;
+    // this migration only carries existing data across, then drops the old
+    // entity. The CREATE IF NOT EXISTS guard makes it a no-op on a fresh DB
+    // (the app schema no longer creates todos).
+    id: '010-todos-to-dtt',
+    sql: `
+      CREATE TABLE IF NOT EXISTS todos (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL DEFAULT 'local',
+        title TEXT NOT NULL,
+        completed INTEGER DEFAULT 0,
+        created_at INTEGER DEFAULT (strftime('%s','now')),
+        updated_at INTEGER DEFAULT (strftime('%s','now'))
+      );
+      INSERT OR IGNORE INTO data_tables (id, user_id, title, driver, schema_json, visibility, row_count)
+      SELECT 'todos-' || user_id, user_id, 'Todos', 'libsql',
+             '{"columns":[{"key":"title","label":"Title","kind":"text","role":"dimension","required":true},{"key":"completed","label":"Done","kind":"boolean","role":"attribute"}]}',
+             'private', COUNT(*)
+        FROM todos GROUP BY user_id;
+      INSERT OR IGNORE INTO table_rows (table_id, row_id, data, created_at, updated_at, updated_by)
+      SELECT 'todos-' || user_id, id,
+             json_object('title', title, 'completed', json(CASE WHEN completed THEN 'true' ELSE 'false' END)),
+             created_at, updated_at, user_id
+        FROM todos;
+      DROP TABLE todos;
+    `,
+  },
 ];
 
 export function runMigrations(db: Database.Database): void {

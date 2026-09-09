@@ -98,15 +98,6 @@ const SCHEMA = [
      updated_at INTEGER DEFAULT (strftime('%s','now')),
      PRIMARY KEY (user_id, key)
    )`,
-  `CREATE TABLE IF NOT EXISTS todos (
-     id TEXT PRIMARY KEY,
-     user_id TEXT NOT NULL DEFAULT 'local',
-     title TEXT NOT NULL,
-     completed INTEGER DEFAULT 0,
-     visibility TEXT NOT NULL DEFAULT 'private',
-     created_at INTEGER DEFAULT (strftime('%s','now')),
-     updated_at INTEGER DEFAULT (strftime('%s','now'))
-   )`,
   // Baked star positions — pure function of the root index (ROADMAP U1,
   // spatial-memory contract; see server/layout.ts). Rebaked ONLY when
   // layout_version changes.
@@ -880,56 +871,6 @@ export function getSetting(userId: string, key: string): string | null {
     | { value: string }
     | undefined;
   return row ? row.value : null;
-}
-
-// ── Todos (per-user) ──────────────────────────────────────────────────────────
-
-export interface TodoItem {
-  id: string;
-  title: string;
-  completed: boolean;
-  createdAt: number;
-  updatedAt: number;
-}
-
-export function getTodos(userId: string): TodoItem[] {
-  const rows = getDb()
-    .prepare('SELECT * FROM todos WHERE user_id = ? ORDER BY created_at DESC')
-    .all(userId) as Array<{
-    id: string;
-    title: string;
-    completed: number;
-    created_at: number;
-    updated_at: number;
-  }>;
-  return rows.map((row) => ({
-    id: row.id,
-    title: row.title,
-    completed: Boolean(row.completed),
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-  }));
-}
-
-export function saveTodo(
-  userId: string,
-  todo: { id: string; title: string; completed?: boolean; createdAt?: number },
-): void {
-  getDb()
-    .prepare(
-      `INSERT INTO todos (id, user_id, title, completed, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?, strftime('%s','now'))
-       ON CONFLICT(id) DO UPDATE SET
-         title = excluded.title,
-         completed = excluded.completed,
-         updated_at = excluded.updated_at
-       WHERE todos.user_id = excluded.user_id`,
-    )
-    .run(todo.id, userId, todo.title, todo.completed ? 1 : 0, todo.createdAt ?? Math.floor(Date.now() / 1000));
-}
-
-export function deleteTodo(userId: string, id: string): void {
-  getDb().prepare('DELETE FROM todos WHERE user_id = ? AND id = ?').run(userId, id);
 }
 
 // ── Knowledge objects (per-user OKF index cards; admins see all) ─────────────

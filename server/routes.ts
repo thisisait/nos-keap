@@ -743,16 +743,34 @@ export function registerApiRoutes(app: Express) {
     }
   });
 
-  // Todos (per-user)
-  app.get('/api/todos', (req, res) => ok(res, db.getTodos(req.user.id)));
-  app.post('/api/todos', (req, res) => {
-    if (!req.body?.id || !req.body?.title) return fail(res, 400, 'No data provided');
-    db.saveTodo(req.user.id, req.body);
-    ok(res);
-  });
-  app.delete('/api/todos/:id', (req, res) => {
-    db.deleteTodo(req.user.id, req.params.id);
-    ok(res);
+  // Todos live as each user's own PRIVATE DataTable (migration 010) — this
+  // is the one piece of todo-specific machinery left: a deterministic,
+  // idempotent ensure. Everything else (rows CRUD, isolation, listing) is
+  // the plain tables surface. Per-user table because the write law only
+  // lets owner/admin/write-grant INSERT rows — a communal table would need
+  // a grant per user.
+  app.get('/api/todos-table', async (req, res) => {
+    const id = `todos-${req.user.id}`;
+    const existing = getTable(id);
+    if (existing) return ok(res, existing);
+    const parsed = createTableRequestSchema.parse({
+      title: 'Todos',
+      schema: {
+        columns: [
+          { key: 'title', label: 'Title', kind: 'text', role: 'dimension', required: true },
+          { key: 'completed', label: 'Done', kind: 'boolean', role: 'attribute' },
+        ],
+      },
+      visibility: 'private',
+    });
+    try {
+      ok(res, await storeFor('libsql').createTable(req.user.id, { ...parsed, id }));
+    } catch {
+      // lost a create race — the winner's table is the answer
+      const t = getTable(id);
+      if (t) return ok(res, t);
+      fail(res, 500, 'todos table create failed');
+    }
   });
 
   // Unknown /api path → 404 in the same envelope (the SPA fallback must not
