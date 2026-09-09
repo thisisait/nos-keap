@@ -85,7 +85,12 @@ function EditableCell({
     return (
       <button
         type="button"
-        className="block h-8 w-full truncate rounded border border-transparent px-1 text-left text-sm hover:border-input"
+        // Wrapping over truncation: a nowrap cell makes the auto-layout table
+        // as wide as the longest value and the whole grid horizontally
+        // scrolls; max-w on this block element is what actually caps the
+        // column (table cells ignore max-width in auto layout, their content
+        // does not).
+        className="block min-h-8 w-full max-w-md whitespace-pre-wrap break-words rounded border border-transparent px-1 py-1 text-left text-sm leading-snug hover:border-input"
         onClick={() => {
           setDraft(displayCell(col, value));
           setEditing(true);
@@ -318,7 +323,7 @@ export default function TableEditor() {
               {grid.getRowModel().rows.map((row) => (
                 <tr key={row.original.id} className="border-b border-border/50 hover:bg-muted/20">
                   {row.getVisibleCells().map((cell) => (
-                    <td key={cell.id} className="px-2 py-1">
+                    <td key={cell.id} className="px-2 py-1 align-top">
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </td>
                   ))}

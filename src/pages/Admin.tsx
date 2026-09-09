@@ -226,7 +226,8 @@ export default function Admin() {
 
       <div className="container mx-auto px-4 py-6">
         <Tabs defaultValue="captures" className="space-y-6">
-          <TabsList className="w-full max-w-2xl">
+          {/* 9 triggers no longer fit one h-10 row — wrap instead of overflow. */}
+          <TabsList className="h-auto w-full flex-wrap justify-start gap-1">
             <TabsTrigger value="captures" className="flex-1">{t('admin.tabs.captures')}</TabsTrigger>
             <TabsTrigger value="objects" className="flex-1">{t('admin.tabs.objects')}</TabsTrigger>
             <TabsTrigger value="homepage" className="flex-1">{t('admin.tabs.homepage')}</TabsTrigger>
@@ -286,9 +287,9 @@ export default function Admin() {
                       return (
                         <Card key={item.id} className="border-l-4 border-l-primary">
                           <CardContent className="p-4">
-                            <div className="flex items-center gap-2 mb-2">
+                            <div className="flex flex-wrap items-center gap-2 mb-2">
                               {item.metadata?.icon && <span className="text-lg">{item.metadata.icon}</span>}
-                              <h3 className="font-semibold">{item.title}</h3>
+                              <h3 className="min-w-0 break-words font-semibold">{item.title}</h3>
                               {taxonomyId && <Badge variant="secondary">{taxonomyId}</Badge>}
                               {fromAgent && (
                                 <Badge variant="outline" className="flex items-center gap-1">
@@ -298,18 +299,19 @@ export default function Admin() {
                               )}
                             </div>
                             {item.description && (
-                              <p className="text-sm text-muted-foreground mb-2">{item.description}</p>
+                              <p className="break-words text-sm text-muted-foreground mb-2">{item.description}</p>
                             )}
-                            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                               {item.url && (
                                 <a
                                   href={item.url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="flex items-center gap-1 hover:text-primary"
+                                  className="flex min-w-0 items-center gap-1 hover:text-primary"
                                 >
-                                  <ExternalLink className="w-3 h-3" />
-                                  {item.domain ?? item.url}
+                                  <ExternalLink className="w-3 h-3 shrink-0" />
+                                  {/* fs paths / bare urls have no break points — break-all or the card overflows */}
+                                  <span className="break-all">{item.domain ?? item.url}</span>
                                 </a>
                               )}
                               {links?.priority && (
@@ -326,7 +328,7 @@ export default function Admin() {
                               )}
                             </div>
                             {links?.tags?.length > 0 && (
-                              <div className="flex gap-1 mt-2">
+                              <div className="flex flex-wrap gap-1 mt-2">
                                 {links.tags.map((tag: string) => (
                                   <Badge key={tag} variant="outline" className="text-xs">
                                     {tag}
