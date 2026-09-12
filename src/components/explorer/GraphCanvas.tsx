@@ -2,11 +2,10 @@
  * The universe canvas — 3D only (ROADMAP Track U; the 2.5D/2D renderer was
  * retired 2026-07-11 by owner decision: one renderer, one force config).
  *
- * This is the OBSERVER mode: orbit camera over the baked universe. Taxonomy
- * stars arrive PINNED (fx/fy/fz from the U1 layout bake — the spatial-memory
- * contract); the force engine only places free bodies (semantic stars,
- * nebula dust) around them. Ship mode swaps the camera controller for a
- * third-person low-poly rocket with custom physics, not the scene.
+ * OBSERVER mode: orbit camera over the baked universe. Taxonomy stars arrive
+ * PINNED (fx/fy/fz from the U1 layout bake — the spatial-memory contract);
+ * the force engine only places free bodies (semantic stars, nebula dust)
+ * around them.
  *
  * Stars (semantic hits that are captures/notes/objects, i.e. NOT part of the
  * hard-coded taxonomy) arrive as extra nodes with star=true, linked to the
@@ -15,6 +14,14 @@
  * focused constellation. Taxonomy hits reuse their existing tree node and
  * only gain the dashed semantic link. Nebula nodes are anchored knowledge
  * objects orbiting their taxonomy star on a short leash.
+ *
+ * LOD doctrine (explore-decomplexity Phase C): ONE pixel curve. A body draws
+ * once it is BODY_PX tall on screen (hysteresis ratio LOD_HYST), a name plate
+ * once it is LABEL_PX — labels arrive while bodies are still small, because a
+ * 10 px dot with a readable name carries more information than a 30 px dot
+ * without one. All plates are constant-pixel (sizeAttenuation=false), all
+ * labels come from ONE proximity pool (cap LABEL_MAX, largest-on-screen
+ * first) plus the unconditional focus + hover plates.
  */
 import { useMemo, useRef, useEffect, useCallback } from 'react';
 import ForceGraph3D, {
@@ -23,15 +30,11 @@ import ForceGraph3D, {
   type NodeObject,
 } from 'react-force-graph-3d';
 import SpriteText from 'three-spritetext';
-import { repoLangs, repoTexture, langOfPath, langColor } from './repoVisuals';
+import { langOfPath, langColor } from './repoVisuals';
 import * as THREE from 'three';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { forceCollide } from 'd3-force-3d';
-import { createShipModel, type ShipModelParts } from './ShipModel';
-import { useShipController } from './useShipController';
 import { FORM_SIZE, type CelestialForm } from './orbital';
-
-export type CameraMode = 'observer' | 'ship';
 
 const REDUCED_MOTION =
   typeof window !== 'undefined' &&
@@ -54,82 +57,33 @@ function warpMs(ms: number): number {
 const NEAR_HOP_TARGET = 300;
 const NEAR_HOP_CAMERA = 750;
 
-// PERF/S2 label LOD budgets. Every SpriteText is one canvas + CanvasTexture, so
-// a deep folder tree or a dense star field must not allocate thousands of them.
-// Beyond these counts the labels fall back to hover-only (nodeLabel tooltip) —
-// the same budget the file-cube name plates (fileLabels) already enforce.
-const STAR_LABEL_CAP = 400; // level-2 star names
-const FOLDER_LABEL_CAP = 400; // files-core folder-hub names
-const REL_LABEL_CAP = 300; // Track R3 typed-relation verb labels (Vazby midpoints)
-// PERF doctrine: only a SPARSE typed-relation overlay may afford tubes (a mesh +
-// draw call each); past this the Vazby render as width-0 GL lines like every
-// other bulk edge. Keeps the "only sparse overlays afford tubes" invariant true
-// even under ?relations=all (unmoderated proposed edges) or a large corpus.
-const REL_TUBE_CAP = 300;
-// Galaxy/constellation names are orientation anchors, kept always-on UNTIL the
-// object field itself is huge — past that even the top tier is too dense to read.
-const HUGE_FIELD = 5000; // objects
+// Track R3 typed-relation overlay budget: a SPARSE overlay affords midpoint
+// verb plates AND confidence-width tubes (a mesh + draw call each); past this
+// the Vazby render as width-0 GL lines with hover-only verbs. One cap, both
+// uses — they were provably the identical boolean.
+const REL_LABEL_CAP = 300;
 
-// U2″ Phase B (B1) — orbital-object LOD by APPARENT size. A body shows once its
-// angular size (rendered radius ÷ camera distance) rises past SHOW and hides
-// once it falls below HIDE; the SHOW>HIDE gap is hysteresis, so a body sitting
-// exactly at the boundary can't flicker on/off frame to frame. Bigger bodies
-// (planets) clear SHOW from farther, so the constellation overview reveals a
-// few largest per star; small moons only cross it as the camera closes in — the
-// "solar system" materialises on approach WITHOUT a click, and dense stars
-// never flood the wide view. Tunables: raise SHOW to reveal later (sparser
-// overview), lower it to reveal sooner. rendered radius = √(nodeVal)·nodeRelSize.
-//
-// RETUNED 2026-08-01 on operator feedback: at 0.01/0.007 a body only resolved
-// once the camera was almost on top of it, so approaching a star showed nothing
-// until the last moment and then everything at once. 2.5x lower means a body
-// clears SHOW from 2.5x farther out — the system materialises during the
-// approach rather than at the end of it. The SHOW:HIDE ratio is unchanged (0.7),
-// so the anti-flicker hysteresis is exactly as wide, proportionally, as before.
-const ORBITAL_LOD_SHOW = 0.004; // ~visible when radius/dist exceeds this
-const ORBITAL_LOD_HIDE = 0.0028; // ~hidden when it drops below this
+// ── The one pixel curve ─────────────────────────────────────────────────────
+// Every threshold is a PIXEL number (radius ÷ distance × focal factor), so the
+// policy is resolution- and FOV-aware instead of hand-tuned per screen.
+const BODY_PX = 2; // a body draws once its on-screen radius passes this
+const LABEL_PX = 4; // a name plate materialises at this radius — BEFORE bodies are big
+const LOD_HYST = 0.7; // hide at show×0.7 — one hysteresis ratio, not a second constant
+const LABEL_MAX = 48; // proximity-pool cap, largest-on-screen first
+const LABEL_TEXT_PX = 14; // constant on-screen text height of every plate
+// The observer camera's FOV — three-render-objects' PerspectiveCamera default.
+// Nothing changes it any more (the ship-mode FOV kick is gone), so the
+// screen-fraction label scale can be computed once per plate, no per-frame JS.
+const CAM_FOV = 50;
 
 // PERF/B2a — above this many observer-view bodies, the per-body Mesh draw calls
 // (buildAssetMesh) are the bound, so the bodies collapse into per-form
-// InstancedMeshes (the effect further down). Below it the individual meshes stay
-// — few, cheap, and they keep the ring/tail dressing + the apparent-size LOD.
+// InstancedMeshes (the effect further down). Below it the individual meshes
+// stay — few, cheap, and they keep the apparent-size LOD.
 const ORBITAL_INSTANCE_CAP = 300;
-// Below this the apparent-size hiding stays OFF — a small/typical field shows
-// every body in full form (the owner's ask). Hiding only declutters the medium
-// band (ORBITAL_LOD_MIN … ORBITAL_INSTANCE_CAP); above the cap bodies are
-// instanced (all drawn), and the 'full' detail toggle disables hiding outright.
-const ORBITAL_LOD_MIN = 150;
-
-// B2b — cluster nebula impostors. Each anchor's orbiting bodies aggregate into a
-// soft nebula sprite (dominant hue, sized by the body cloud's extent). It
-// cross-fades on whether the individual BODIES are resolvable — a representative
-// body's apparent size (rendered radius ÷ camera distance): while the bodies are
-// sub-pixel (zoomed out / far) the nebula is full; as the camera closes and the
-// bodies grow legible (star-inspection range) the nebula fades and the bodies
-// take over. Body-relative (not cluster-extent) so it self-calibrates to the
-// layout scale instead of needing hand-tuned absolute distances. So a distant
-// dense region reads as a shaped nebula instead of a wall of overlapping bodies
-// — the U2″ vision, with the Phase-C shader nebula later replacing this sprite.
-const IMPOSTOR_BODY_R = 4; // representative rendered body radius (√FORM_SIZE·2.4)
-const IMPOSTOR_FULL_APP = 0.0025; // body apparent size ≤ this → nebula full opacity
-const IMPOSTOR_GONE_APP = 0.008; // ≥ this → bodies legible, nebula gone
-
-// Proximity label LOD — a name plate materialises once its node's apparent
-// size crosses SHOW and survives until it drops under KEEP (hysteresis); at
-// most MAX at once, largest-on-screen first. Covers everything the S2 budgets
-// left permanently unlabeled (deep taxonomy stars, over-budget cubes/folders,
-// observer bodies) — the "zoom in and the names appear" tier of the LOD arc.
-//
-// RETUNED 2026-08-01, same reason and the same 2.5x as the body LOD above — a
-// name that only appears after the body has is a second cliff, and it left small
-// non-file bodies effectively anonymous (fs cubes carry their own permanent
-// plate, which is why files looked labelled and nothing else did). MAX rises
-// with the range but not proportionally: every plate is one canvas + one
-// CanvasTexture, and the largest-on-screen-first ordering means the extra slots
-// go to what the operator is actually looking at.
-const PROX_LABEL_SHOW = 0.014;
-const PROX_LABEL_KEEP = 0.0096;
-const PROX_LABEL_MAX = 72;
+// PERF/S4 — same doctrine for core file cubes: past this many the leaves render
+// as ONE InstancedMesh instead of thousands of individual cube draw calls.
+const CUBE_INSTANCE_CAP = 400;
 
 export interface CanvasNode {
   id: string;
@@ -146,7 +100,7 @@ export interface CanvasNode {
   folder?: boolean;
   /** fs path (objects: file relPath; used for core-view cubes + lang colour). */
   path?: string;
-  /** Repo folder hub — renders as a textured language sphere. */
+  /** Repo folder hub — bytes-sized default sphere. */
   repo?: boolean;
   /** Subtree file bytes (repo hubs) — modulates the sphere size. */
   bytes?: number;
@@ -154,8 +108,7 @@ export interface CanvasNode {
   exts?: Array<[string, number]>;
   /** Celestial form (objects only) — planet | moon | asteroid | comet | station. */
   form?: CelestialForm;
-  /** Anchor taxonomy node id (objects) — the star this body orbits; the key the
-   *  B2b cluster impostors aggregate by. */
+  /** Anchor taxonomy node id (objects) — the star this body orbits. */
   anchor?: string;
   glyph?: string;
   distance?: number;
@@ -226,21 +179,10 @@ interface Props {
   onNodeClick: (id: string) => void;
   width: number;
   height: number;
-  /** observer = orbit camera; ship = 3rd-person low-poly rocket.
-   *  Optional since the Explore ship toggle was culled; ship internals go in
-   *  the Phase C GraphCanvas pass. */
-  mode?: CameraMode;
-  /** Called every engine tick with the current ship telemetry (ship mode only). */
-  onShipUpdate?: (state: { speed: number; boosting: boolean; thrust: number }) => void;
-  /** Semantic lens: recolour stars by an embedding-derived axis + size by centrality. */
+  /** Recency lens: recolour objects/hubs on the mtime age gradient. */
   lens?: LensState;
   /** Files core active — flying the camera in/out of the ring center. */
   coreView?: boolean;
-  /** Detail mode. 'auto' (default) lets the perf LODs engage at scale
-   *  (instancing above the cap, apparent-size hiding for medium fields); 'full'
-   *  forces every body in full form — no instancing, no hiding — for when the
-   *  field is small enough to just show everything. */
-  detail?: 'auto' | 'full';
 }
 
 const STAR_COLOR: Record<string, string> = {
@@ -303,19 +245,14 @@ function objectBodyColor(node: CanvasNode, coreView: boolean, lens?: LensState):
     const lang = langOfPath(node.path);
     return bodyColor(node, lang ? langColor(lang) : `hsl(${node.categoryHue}, 70%, 60%)`, lens);
   }
-  // Softer saturation than the old neon 70/60, plus a deterministic per-body
-  // lightness jitter — a dense field then reads with depth and variety instead
-  // of a flat wall of identically-saturated blobs.
-  const j = hash01v(`${node.id}:l`);
-  return bodyColor(node, `hsl(${node.categoryHue}, 54%, ${52 + j * 14}%)`, lens);
+  return bodyColor(node, `hsl(${node.categoryHue}, 54%, 59%)`, lens);
 }
 
 function nodeColor(n: CanvasNode, focusId: string | null, lens?: LensState): string {
   if (lens?.axis === RECENT_AXIS) {
-    // Recency lens: only objects + plain folder hubs shift to the age
-    // gradient (repo spheres keep their language texture); everything else
-    // falls through to its structural colour untouched.
-    if ((n.object || n.folder) && !n.repo && n.mtime !== undefined)
+    // Recency lens: only objects + folder hubs shift to the age gradient;
+    // everything else falls through to its structural colour untouched.
+    if ((n.object || n.folder) && n.mtime !== undefined)
       return ageColor(n.mtime, n.id === focusId);
   } else if (lens?.axis && !n.object && !n.star) {
     // Semantic lens: taxonomy stars are recoloured by their axis projection; the
@@ -323,7 +260,7 @@ function nodeColor(n: CanvasNode, focusId: string | null, lens?: LensState): str
     const s = nodeFeature(n, lens.axis);
     if (s !== undefined) return lensColor(s, n.id === focusId);
   }
-  if (n.folder) return `hsl(${n.categoryHue} 22% 64% / 0.9)`; // core folder hub — slate (215); topic hubs violet (265)
+  if (n.folder) return `hsl(${n.categoryHue} 22% 64% / 0.9)`; // core folder hub — slate (215)
   if (n.object) return `hsl(${n.categoryHue} 72% 60%)`; // hue = data-type identity
   if (n.star) return STAR_COLOR[n.kind] ?? STAR_COLOR[n.dataType ?? ''] ?? '#fbbf24';
   if (n.level === 0) return `hsl(${n.categoryHue} 55% 55% / 0.22)`; // faint nebula core
@@ -363,6 +300,15 @@ function nodeSize(n: CanvasNode, lens?: LensState): number {
   return base;
 }
 
+/** Rendered radius of the body an object actually draws with. Objects REPLACE
+ *  the default sphere with a form mesh scaled by bodyScale(); everything else
+ *  IS the default sphere (√val · nodeRelSize). ONE function shared by the LOD,
+ *  the label offset, the hover offset and the focus pulse — four call sites
+ *  that previously each used a radius the bodies didn't have. */
+function renderedRadius(n: CanvasNode): number {
+  return n.object ? bodyScale(n) : Math.sqrt(Math.max(nodeSize(n), 0.01)) * 2.4;
+}
+
 // ── Shared GPU resources (built ONCE, never per-node) ────────────────────────
 // Sharing a material/geometry across nodes is fine; sharing a Mesh instance is
 // NOT (three positions it), so buildAssetMesh news one Mesh per node off the
@@ -383,24 +329,8 @@ function radialSprite(inner: string, mid: string): THREE.Texture {
   return tex;
 }
 
-function tailSprite(): THREE.Texture {
-  const c = document.createElement('canvas');
-  c.width = 128;
-  c.height = 32;
-  const g = c.getContext('2d')!;
-  const grad = g.createLinearGradient(0, 0, 128, 0);
-  grad.addColorStop(0, 'rgba(255,255,255,0.9)');
-  grad.addColorStop(1, 'rgba(255,255,255,0)');
-  g.fillStyle = grad;
-  g.fillRect(0, 0, 128, 32);
-  const tex = new THREE.CanvasTexture(c);
-  tex.needsUpdate = true;
-  return tex;
-}
-
 const _nebulaTex = radialSprite('rgba(255,255,255,0.9)', 'rgba(255,255,255,0.28)');
 const _discTex = radialSprite('rgba(255,255,255,1)', 'rgba(255,255,255,0.35)');
-const _cometTex = tailSprite();
 
 /** Hollow ring — the focus pulse outline (a stroke, not a glow blob). */
 function ringTexture(): THREE.Texture {
@@ -418,9 +348,9 @@ function ringTexture(): THREE.Texture {
 }
 const _pulseTex = ringTexture();
 
-// Decorative overlays (nebula halo, galaxy disc, labels, comet tail) must NOT
-// intercept clicks — a 560u nebula sprite would swallow every click meant for a
-// star inside that domain. Disable raycast so only the node's core sphere (or an
+// Decorative overlays (nebula halo, galaxy disc, labels) must NOT intercept
+// clicks — a 560u nebula sprite would swallow every click meant for a star
+// inside that domain. Disable raycast so only the node's core sphere (or an
 // object's asset mesh) is the click target.
 const noRaycast = (o: THREE.Object3D) => {
   o.raycast = () => {};
@@ -434,7 +364,6 @@ const _formGeo: Record<CelestialForm, THREE.BufferGeometry> = {
   station: new THREE.OctahedronGeometry(1, 0),
   comet: new THREE.SphereGeometry(1, 10, 8),
 };
-const _ringGeo = new THREE.RingGeometry(1.5, 2.2, 24);
 
 function nebulaSprite(hue: number): THREE.Sprite {
   const s = new THREE.Sprite(
@@ -484,167 +413,82 @@ function starGlow(hue: number): THREE.Sprite {
   return noRaycast(s) as THREE.Sprite;
 }
 
-// Per-BODY variety so a dense field doesn't read as a wall of identical shapes.
-// Deterministic (hash of the id) → stable across renders and byte-identical
-// between the individual mesh, the pick stub, and the instanced overlay.
-
-/** Rendered radius, with a per-body size jitter on top of the form base. */
+/** Rendered radius of an object's form mesh — size IS the data channel
+ *  (FORM_SIZE per type), no per-body jitter corrupting it. */
 function bodyScale(node: CanvasNode): number {
-  const form = node.form ?? 'asteroid';
-  return (FORM_SIZE[form] ?? 1.4) * 2.4 * (0.62 + hash01v(`${node.id}:s`) * 0.9);
-}
-
-/** Ring geometry for a planet, or null. Only ~60% of planets get one, and each
- *  varies in tilt + size — otherwise every planet is the same Saturn. */
-function ringSpec(node: CanvasNode): { tiltX: number; tiltZ: number; scale: number } | null {
-  if (hash01v(`${node.id}:ring`) < 0.4) return null;
-  return {
-    tiltX: Math.PI / 2.4 + (hash01v(`${node.id}:rtx`) - 0.5) * 1.5,
-    tiltZ: (hash01v(`${node.id}:rtz`) - 0.5) * 0.7,
-    scale: 0.82 + hash01v(`${node.id}:rs`) * 0.6,
-  };
+  return (FORM_SIZE[node.form ?? 'asteroid'] ?? 1.4) * 2.4;
 }
 
 /** One typed orbital body: a per-form mesh (new Mesh off shared geometry). */
 function buildAssetMesh(node: CanvasNode, lens?: LensState): THREE.Object3D {
   const form = node.form ?? 'asteroid';
-  const size = bodyScale(node);
   const mat = new THREE.MeshBasicMaterial({
     color: new THREE.Color(objectBodyColor(node, false, lens)),
-    // DoubleSide so the planet ring (a flat RingGeometry) stays visible from
-    // BOTH hemispheres — with the default FrontSide it back-face-culls and the
-    // ring vanishes whenever the camera orbits behind its plane. The body
-    // meshes are convex/opaque, so rendering their back faces is a visual no-op.
-    side: THREE.DoubleSide,
   });
   const mesh = new THREE.Mesh(_formGeo[form] ?? _formGeo.asteroid, mat);
-  mesh.scale.setScalar(size);
-  const ring = form === 'planet' ? ringSpec(node) : null;
-  if (ring) {
-    const r = new THREE.Mesh(_ringGeo, mat);
-    r.rotation.set(ring.tiltX, 0, ring.tiltZ);
-    r.scale.setScalar(size * ring.scale);
-    noRaycast(r);
-    const g = new THREE.Group();
-    g.add(mesh, r);
-    return g;
-  }
-  if (form === 'comet') {
-    const tail = new THREE.Sprite(
-      new THREE.SpriteMaterial({
-        map: _cometTex,
-        color: mat.color,
-        transparent: true,
-        opacity: 0.4,
-        depthWrite: false,
-        blending: THREE.AdditiveBlending,
-      }),
-    );
-    tail.scale.set(size * 6, size * 1.2, 1);
-    tail.center.set(0.1, 0.5);
-    noRaycast(tail);
-    const g = new THREE.Group();
-    g.add(mesh, tail);
-    return g;
-  }
+  mesh.scale.setScalar(bodyScale(node));
   return mesh;
 }
 
-const _repoGeo = new THREE.SphereGeometry(1, 24, 16);
 const _cubeGeo = new THREE.BoxGeometry(1, 1, 1);
 
-/** Permanent hub/name plate shared by folder + repo hubs. */
-function hubLabel(node: CanvasNode, radius: number): THREE.Sprite {
-  const sprite = new SpriteText(node.name);
-  sprite.color = '#cfd8ec';
-  sprite.textHeight = 2.8;
-  sprite.fontSize = 110;
+// ── The ONE plate recipe ─────────────────────────────────────────────────────
+// Constant-pixel text: sizeAttenuation=false makes three's sprite shader
+// multiply the scale by the view depth, so a scale expressed as a screen
+// fraction renders at the same pixel size at ANY distance — zero per-frame JS.
+// screen px = scale · viewH / (2·tan(fov/2))  ⇒  scale = px · 2·tan(fov/2) / viewH.
+function plate(
+  text: string,
+  textPx: number,
+  viewH: number,
+  opts: { color?: string; bg?: string; border?: string } = {},
+): THREE.Sprite {
+  const sprite = new SpriteText(text);
+  sprite.color = opts.color ?? '#dfe6f5';
+  sprite.textHeight = 1; // unit text height — the screen-fraction scale below is then exact
+  sprite.fontSize = 110; // higher-res canvas → sharper, less blur when scaled
   sprite.fontWeight = '600';
-  sprite.backgroundColor = 'rgba(8,12,22,0.86)';
-  sprite.padding = 1.6;
-  sprite.borderRadius = 1.5;
-  sprite.borderWidth = 0.4;
-  sprite.borderColor = 'rgba(180,195,225,0.35)';
+  // Solid dark plate + hairline border so labels read as data annotations,
+  // not glowing sci-fi text — legible over bright stars/nebulae.
+  sprite.backgroundColor = opts.bg ?? 'rgba(8,12,22,0.86)';
+  sprite.padding = 0.55;
+  sprite.borderRadius = 0.5;
+  sprite.borderWidth = 0.14;
+  sprite.borderColor = opts.border ?? 'rgba(180,195,225,0.35)';
   const label = sprite as unknown as THREE.Sprite;
-  label.position.y = -(radius + 4);
   label.material.depthWrite = false;
+  label.material.sizeAttenuation = false;
+  const s = (2 * Math.tan((CAM_FOV * Math.PI) / 360) * textPx) / Math.max(viewH, 1);
+  label.scale.set(label.scale.x * s, label.scale.y * s, 1);
+  // Hang the plate fully BELOW its anchor point (the body's bottom edge), so
+  // a constant-pixel plate never covers the body it names at any distance.
+  label.center.set(0.5, 1.05);
   return noRaycast(label) as THREE.Sprite;
 }
 
-/** Repo folder hub: language-banded identicon sphere, sized by subtree bytes. */
-function buildRepoMesh(node: CanvasNode): THREE.Object3D {
-  const langs = repoLangs(node.exts ?? []);
-  const tex = repoTexture(node.name, langs);
-  const mesh = new THREE.Mesh(_repoGeo, new THREE.MeshBasicMaterial({ map: tex }));
-  const r = Math.sqrt(nodeSize(node)) * 2.4; // matches the collide-force radius
-  mesh.scale.setScalar(r);
-  // Name-seeded axis tilt — repos read as individual "worlds", not a grid of
-  // identically-oriented beach balls.
-  mesh.rotation.z = (hash01v(node.id) - 0.5) * 0.9;
-  mesh.rotation.y = hash01v(`${node.id}:y`) * Math.PI * 2;
-  const g = new THREE.Group();
-  g.add(mesh, hubLabel(node, r));
-  return g;
-}
-
-/** Track R3 typed-relation verb label — the same dark-plate recipe as the
- *  star/folder name plates, sat at the edge midpoint (linkPositionUpdate). LOD-
- *  capped by REL_LABEL_CAP; dense Vazby fall back to hover-only, like stars. */
-function relationLabelSprite(verb: string): THREE.Sprite {
-  const sprite = new SpriteText(verb);
-  sprite.color = '#e9eefc';
-  sprite.textHeight = 3;
-  sprite.fontSize = 110;
-  sprite.fontWeight = '600';
-  sprite.backgroundColor = 'rgba(8,12,22,0.86)';
-  sprite.padding = 1.6;
-  sprite.borderRadius = 1.5;
-  sprite.borderWidth = 0.4;
-  sprite.borderColor = 'rgba(180,195,225,0.35)';
-  const label = sprite as unknown as THREE.Sprite;
-  label.material.depthWrite = false;
-  return noRaycast(label) as THREE.Sprite;
-}
-
-/** Core-view file leaf: a small satellite cube, lang-coloured, optional name. */
-function buildFileCube(node: CanvasNode, withLabel: boolean, lens?: LensState): THREE.Object3D {
+/** Core-view file leaf: a small satellite cube, lang-coloured. Names come from
+ *  the proximity label pool like everything else. */
+function buildFileCube(node: CanvasNode, lens?: LensState): THREE.Object3D {
   const color = objectBodyColor(node, true, lens);
   const mesh = new THREE.Mesh(_cubeGeo, new THREE.MeshBasicMaterial({ color: new THREE.Color(color) }));
   mesh.scale.setScalar(2.6);
   mesh.rotation.y = hash01v(node.id) * Math.PI; // deterministic variety
   mesh.rotation.x = hash01v(`${node.id}:x`) * 0.5;
-  if (!withLabel) return mesh;
-  const sprite = new SpriteText(node.name);
-  sprite.color = '#aeb8d0';
-  sprite.textHeight = 2;
-  sprite.fontSize = 110;
-  const label = sprite as unknown as THREE.Sprite;
-  label.position.y = -3.6;
-  label.material.depthWrite = false;
-  noRaycast(label);
-  const g = new THREE.Group();
-  g.add(mesh, label);
-  return g;
+  return mesh;
 }
 
-// ── PERF/S4 — instanced core cubes ───────────────────────────────────────────
-// When the files-core field is large enough that per-cube name plates are
-// already culled (fileLabels off), the file leaves render as ONE InstancedMesh
-// drawn from a SCENE overlay instead of thousands of individual Mesh draw calls
-// — the measured draw-call-bound surface. Each object node still gets its own
-// invisible-but-raycastable stub (fileCubeStub) as its nodeThreeObject, so
+// ── PERF — instanced regimes ─────────────────────────────────────────────────
+// Above the caps, bodies render as InstancedMeshes drawn from a SCENE overlay
+// instead of thousands of individual Mesh draw calls. Each node still gets its
+// own invisible-but-raycastable stub as its nodeThreeObject, so
 // react-force-graph positions it and per-node picking is unchanged; the overlay
-// only mirrors those pinned positions for rendering. three r0.185 raycasts
-// objects regardless of `visible` (Raycaster tests layers, not visibility), so
-// an invisible stub stays clickable at the cube's exact bounds, and the overlay
-// lives outside the forceGraph subtree so RFG's own raycaster never sees it.
+// only mirrors those pinned positions. three r0.185 raycasts objects regardless
+// of `visible` (Raycaster tests layers, not visibility), so an invisible stub
+// stays clickable at the body's exact bounds, and the overlay lives outside the
+// forceGraph subtree so RFG's own raycaster never sees it.
 const _cubeInstMat = new THREE.MeshBasicMaterial(); // white base; per-instance colour tints it
 const _stubMat = new THREE.MeshBasicMaterial(); // never rendered (the stub is visible=false)
-// B2a — shared instance materials for the observer-view orbital bodies. DoubleSide
-// so the (reused) planet-ring InstancedMesh renders both faces, same as the
-// non-instanced ring. Bodies are convex, so DoubleSide is a no-op for them.
-const _assetInstMat = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
-const _ringInstMat = new THREE.MeshBasicMaterial({ side: THREE.DoubleSide });
+const _assetInstMat = new THREE.MeshBasicMaterial();
 
 /** Core-view file leaf, instanced variant: an invisible pick stub matching the
  *  cube's bounds + rotation. The visible body is drawn by the overlay below. */
@@ -657,14 +501,13 @@ function fileCubeStub(node: CanvasNode): THREE.Object3D {
   return mesh;
 }
 
-/** B2a — observer-view orbital body, instanced variant: an invisible pick stub
- *  matching the per-form body geometry/scale/rotation. The visible body (and
- *  its ring) is drawn by the per-form InstancedMesh overlay below. */
+/** Observer-view orbital body, instanced variant: an invisible pick stub
+ *  matching the per-form body geometry/scale. The visible body is drawn by the
+ *  per-form InstancedMesh overlay below. */
 function assetStub(node: CanvasNode): THREE.Object3D {
   const form = node.form ?? 'asteroid';
   const mesh = new THREE.Mesh(_formGeo[form] ?? _formGeo.asteroid, _stubMat);
-  mesh.scale.setScalar(bodyScale(node)); // match buildAssetMesh (varied size)
-  mesh.rotation.set(hash01v(`${node.id}:x`) * 0.5, hash01v(node.id) * Math.PI, 0);
+  mesh.scale.setScalar(bodyScale(node)); // match buildAssetMesh
   mesh.visible = false; // 0 draw calls; still raycastable (three tests layers, not visible)
   return mesh;
 }
@@ -674,19 +517,14 @@ type GraphNode = NodeObject<CanvasNode>;
 /** A CanvasLink as the force engine sees it (source/target become node refs). */
 type GraphLink = LinkObject<CanvasNode, CanvasLink>;
 
-/** Objects + repos REPLACE the default sphere (their body IS the custom mesh);
- *  every other class extends it (halo/label added beside the sphere body).
- *  Module-level = a STABLE identity: an inline arrow here changes every render,
- *  and react-force-graph clears its whole node-object cache (rebuilding every
+/** Objects REPLACE the default sphere (their body IS the custom mesh); every
+ *  other class extends it (halo added beside the sphere body). Module-level =
+ *  a STABLE identity: an inline arrow here changes every render, and
+ *  react-force-graph clears its whole node-object cache (rebuilding every
  *  mesh) whenever this accessor's identity changes — S3 must not pay that on a
  *  lens toggle. */
-const extendsDefaultSphere = (n: GraphNode) => !n.object && !n.repo;
-/** The imperative graph handle. `enableNavigationControls` is a runtime
- *  method the wrapper forwards but the typings omit — kept optional, the
- *  call sites already feature-detect it. */
-type GraphRef = ForceGraphMethods<GraphNode, GraphLink> & {
-  enableNavigationControls?: (enable: boolean) => void;
-};
+const extendsDefaultSphere = (n: GraphNode) => !n.object;
+type GraphRef = ForceGraphMethods<GraphNode, GraphLink>;
 
 /** FNV-ish 0..1 hash — deterministic per-node variety (rotation, tilt). */
 function hash01v(s: string): number {
@@ -698,38 +536,46 @@ function hash01v(s: string): number {
   return ((h >>> 0) % 100000) / 100000;
 }
 
-export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width, height, mode = 'observer', onShipUpdate, lens, coreView, detail = 'auto' }: Props) {
-  const forceDetail = detail === 'full';
+export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width, height, lens, coreView }: Props) {
   const fgRef = useRef<GraphRef | undefined>(undefined);
   const didFitRef = useRef(false);
   const coreViewRef = useRef(coreView);
-  const modelRef = useRef<ShipModelParts | null>(null);
-  const lastTimeRef = useRef<number | null>(null);
   // Live lens, read by nodeThreeObject WITHOUT being one of its deps: keeping
   // it out of the useCallback deps holds the accessor's identity stable across
   // a lens toggle, so react-force-graph never clears its node-object cache (a
   // full mesh rebuild). The toggle's recolour is applied in place below.
   const lensRef = useRef(lens);
   lensRef.current = lens;
+  // Live focus for the label pool (a focus change must not rebuild the pool).
+  const focusRef = useRef(focusId);
+  focusRef.current = focusId;
   // PERF/S4: the live scene-overlay InstancedMesh of core file cubes (null when
   // not in the instanced regime). The build effect owns its lifecycle; the lens
   // effect recolours it in place.
   const cubeOverlayRef = useRef<THREE.InstancedMesh | null>(null);
-  // B2a — per-form InstancedMeshes for the observer orbital bodies (+ ring mesh),
-  // each paired with its source node list so the lens recolour maps instance→node.
+  // B2a — per-form InstancedMeshes for the observer orbital bodies, each paired
+  // with its source node list so the lens recolour maps instance→node.
   const assetOverlayRef = useRef<Array<{ mesh: THREE.InstancedMesh; nodes: CanvasNode[] }> | null>(null);
-  // B2b — cluster nebula impostor sprites + their centroids/extent, cross-faded
-  // per frame by camera distance (the effect near the overlays owns the fade).
-  const impostorRef = useRef<Array<{
-    sprite: THREE.Sprite; cx: number; cy: number; cz: number; extent: number; count: number;
-  }> | null>(null);
+
+  // THE one rAF loop. Every animated concern (dust orbit, LOD + label pool,
+  // focus pulse) registers a per-frame task here instead of owning its own
+  // requestAnimationFrame — one loop, one camera read per frame.
+  const frameTasks = useRef(new Set<(now: number) => void>());
+  useEffect(() => {
+    let raf = 0;
+    const loop = (now: number) => {
+      for (const t of frameTasks.current) t(now);
+      raf = requestAnimationFrame(loop);
+    };
+    raf = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(raf);
+  }, []);
 
   // Files core: fly INTO the ring center when the core switches on, back out
-  // to the whole sky when it switches off. Ship mode owns its own camera.
+  // to the whole sky when it switches off.
   useEffect(() => {
     if (coreViewRef.current === coreView) return;
     coreViewRef.current = coreView;
-    if (mode === 'ship') return;
     const ref = fgRef.current;
     if (!ref) return;
     try {
@@ -744,14 +590,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     } catch {
       // Renderer not ready — the toggle just skips the flight.
     }
-  }, [coreView, mode]);
-  const { shipRef, tick, reset } = useShipController(mode === 'ship');
-
-  const _camOffset = useMemo(() => new THREE.Vector3(0, 3.5, -14), []);
-  const _lookOffset = useMemo(() => new THREE.Vector3(0, 1.5, 8), []);
-  const _targetPos = useMemo(() => new THREE.Vector3(), []);
-  const _lookTarget = useMemo(() => new THREE.Vector3(), []);
-  const _forward = useMemo(() => new THREE.Vector3(), []);
+  }, [coreView]);
 
   // Deep-space dressing, once per mount: a decorative starfield shell far
   // beyond the data (never clickable, never part of spatial memory) and an
@@ -819,108 +658,6 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Ship mode: mount the player model, disable built-in controls, lock the
-  // pointer, and start from the current camera orientation.
-  useEffect(() => {
-    if (mode !== 'ship') return;
-    const t = setTimeout(() => {
-      const ref = fgRef.current;
-      if (!ref) return;
-      try {
-        const cam = ref.camera();
-        const scene = ref.scene();
-        const model = createShipModel();
-        modelRef.current = model;
-        scene.add(model.group);
-
-        // Start the ship where the camera is, facing the same way — UNLESS the
-        // camera sits inside the galaxy ring (initial frame, files-core
-        // close-up): a pilot spawned in the empty ring center sees nothing.
-        // Those starts relocate to a hangar vantage outside the ring, nose
-        // toward the center, the whole sky ahead.
-        const camDist = Math.hypot(cam.position.x, cam.position.y, cam.position.z);
-        if (camDist < 1900) {
-          // Hangar vantage: the galaxy ring lives in the XY plane (r=1400).
-          // Park outside the rim, slightly above the plane, nose at the
-          // nearest arc — galaxies ~800u ahead fill the canopy while the rest
-          // of the ring curves away to both sides. (The ring CENTER is empty
-          // space — aiming there, or spawning inside it, shows a blank sky.)
-          const pos = new THREE.Vector3(0, -2050, 420);
-          const target = new THREE.Vector3(0, -1350, 0);
-          // Ship forward is LOCAL +Z (thrust convention) — Matrix4.lookAt is
-          // camera-convention (-z view), so eye/target swap to point +z there.
-          const look = new THREE.Matrix4().lookAt(target, pos, new THREE.Vector3(0, 1, 0));
-          reset(pos, new THREE.Quaternion().setFromRotationMatrix(look));
-        } else {
-          reset(cam.position, cam.quaternion);
-        }
-
-        // Disable the graph's camera controls so we own the camera.
-        if (typeof ref.enableNavigationControls === 'function') {
-          ref.enableNavigationControls(false);
-        }
-        const controls = ref.controls() as { enabled?: boolean };
-        if (controls && typeof controls.enabled === 'boolean') {
-          controls.enabled = false;
-        }
-
-        // Pointer lock for smooth mouse look.
-        const canvas = ref.renderer()?.domElement;
-        if (canvas && document.pointerLockElement !== canvas) {
-          canvas.requestPointerLock?.();
-        }
-      } catch {
-        // Renderer not ready yet.
-      }
-    }, 100);
-
-    return () => {
-      clearTimeout(t);
-      try {
-        // exhaustive-deps wants fgRef.current copied into a variable at effect
-        // SETUP time and used here instead. That would be wrong: setup runs
-        // before the force-graph renderer exists (which is exactly why the
-        // body above waits 100ms before touching it), so the captured value
-        // would be null and this cleanup would return early every time —
-        // leaking the ship model's geometry/materials into the THREE scene and
-        // leaving navigation controls disabled and the pointer locked. We
-        // deliberately read the CURRENT ref: teardown must act on whatever
-        // graph instance is live at unmount, not on a snapshot from mount.
-        // eslint-disable-next-line react-hooks/exhaustive-deps -- see above: setup-time capture is null, cleanup must read the live ref
-        const ref = fgRef.current;
-        if (!ref) return;
-        const model = modelRef.current;
-        if (model) {
-          ref.scene().remove(model.group);
-          model.group.traverse((obj: THREE.Object3D) => {
-            if (obj instanceof THREE.Mesh) {
-              obj.geometry?.dispose();
-              const material = obj.material;
-              if (Array.isArray(material)) {
-                material.forEach((m) => m.dispose());
-              } else {
-                material?.dispose();
-              }
-            }
-          });
-          modelRef.current = null;
-        }
-        if (typeof ref.enableNavigationControls === 'function') {
-          ref.enableNavigationControls(true);
-        }
-        const controls = ref.controls() as { enabled?: boolean };
-        if (controls && typeof controls.enabled === 'boolean') {
-          controls.enabled = true;
-        }
-        if (document.pointerLockElement) {
-          document.exitPointerLock?.();
-        }
-      } catch {
-        // Ignore cleanup errors.
-      }
-    };
-  }, [mode, reset]);
-
   const graphData = useMemo(() => {
     // force-graph mutates its input (source/target become object refs) —
     // hand it shallow copies so React Query's cache stays clean.
@@ -958,16 +695,14 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
           );
         }
         // Breathing room: stronger repulsion + a collide force so sibling
-        // clusters don't sit on top of each other (radius tracks the node's
-        // rendered size: r = sqrt(val) * nodeRelSize, plus padding).
-        // S3: a pinned node (fx set) never moves and shouldn't push either —
-        // gate both forces to 0 for pinned nodes so only the unpinned fallback
-        // dust participates. Pinned charge/collide was pure wasted iteration.
+        // clusters don't sit on top of each other. S3: a pinned node (fx set)
+        // never moves and shouldn't push either — gate both forces to 0 for
+        // pinned nodes so only the unpinned fallback dust participates.
         const charge = ref.d3Force('charge');
         if (charge) charge.strength((n: CanvasNode) => (n.fx != null ? 0 : -55));
         ref.d3Force(
           'collide',
-          forceCollide((n: CanvasNode) => (n.fx != null ? 0 : Math.sqrt(nodeSize(n)) * 2.4 + 4)),
+          forceCollide((n: CanvasNode) => (n.fx != null ? 0 : renderedRadius(n) + 4)),
         );
         // Only reheat when there's actually an unpinned node to solve for;
         // otherwise the engine is frozen (cooldownTicks 0) and a reheat would
@@ -988,9 +723,8 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
 
   // Warp to the focused node once the engine placed it — the "semantic
   // hyperspace jump" (search or click sets focus, the camera travels).
-  // In ship mode we own the camera, so skip the warp.
   useEffect(() => {
-    if (!focusId || mode === 'ship') return;
+    if (!focusId) return;
     const t = setTimeout(() => {
       const ref = fgRef.current;
       const node = graphData.nodes.find((n) => n.id === focusId) as GraphNode | undefined;
@@ -1026,22 +760,15 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       ref.cameraPosition(dest, node as { x: number; y: number; z: number }, warpMs(1100));
     }, 400);
     return () => clearTimeout(t);
-  }, [focusId, graphData, mode]);
+  }, [focusId, graphData]);
 
   const handleClick = useCallback((node: GraphNode) => onNodeClick(node.id), [onNodeClick]);
 
   // HOVER PLATE — a name for whatever the cursor is on, unconditionally.
-  //
-  // Every other label tier is a BUDGET: star/folder/anchor plates cull past a
-  // cap, and the proximity tier needs the body to be big enough on screen. So a
-  // small body in a dense field could be un-nameable at any zoom that still
-  // showed its neighbours, and the only fallback was the HTML tooltip. This one
-  // answers a direct question — "what is that?" — so it obeys nothing: no cap,
-  // no apparent-size gate, one plate at a time.
-  //
-  // It lives in the scene next to the proximity plates and uses the identical
-  // styling, so hovering does not make a node look like a different KIND of
-  // thing; only slightly brighter, because it is the one you asked about.
+  // The label pool is a budget; this answers a direct question — "what is
+  // that?" — so it obeys nothing: no cap, no pixel gate, one plate at a time.
+  // Same recipe as the pool plates, only slightly brighter, because it is the
+  // one you asked about.
   const hoverRef = useRef<{ id: string; sprite: THREE.Sprite } | null>(null);
   const handleHover = useCallback((node: GraphNode | null) => {
     const ref = fgRef.current;
@@ -1061,26 +788,20 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       cur.sprite.material.dispose();
       hoverRef.current = null;
     }
-    if (!n || n.fx == null || n.fy == null || n.fz == null) return;
-    const sprite = new SpriteText(n.name);
-    sprite.color = '#ffffff';
-    sprite.textHeight = n.object ? 2.4 : 3.2;
-    sprite.fontSize = 110;
-    sprite.fontWeight = '600';
-    sprite.backgroundColor = 'rgba(8,12,22,0.94)';
-    sprite.padding = 1.8;
-    sprite.borderRadius = 1.5;
-    sprite.borderWidth = 0.5;
-    sprite.borderColor = 'rgba(125,211,252,0.75)'; // sky-300: "this is the one"
-    const label = sprite as unknown as THREE.Sprite;
-    const r = Math.sqrt(Math.max(nodeSize(n), 0.01)) * 2.4;
-    label.position.set(n.fx, n.fy - (r + 4), n.fz);
-    label.material.depthWrite = false;
+    const nx = n?.fx ?? (n as GraphNode | null)?.x;
+    const ny = n?.fy ?? (n as GraphNode | null)?.y;
+    const nz = n?.fz ?? (n as GraphNode | null)?.z;
+    if (!n || nx == null || ny == null || nz == null) return;
+    const label = plate(n.name, LABEL_TEXT_PX, height, {
+      color: '#ffffff',
+      bg: 'rgba(8,12,22,0.94)',
+      border: 'rgba(125,211,252,0.75)', // sky-300: "this is the one"
+    });
+    label.position.set(nx, ny - renderedRadius(n), nz);
     label.renderOrder = 999; // never occluded by the body it names
-    noRaycast(label);
     scene.add(label);
     hoverRef.current = { id: n.id, sprite: label };
-  }, []);
+  }, [height]);
 
   // Drop the plate on unmount — a hover that outlives the canvas leaks a
   // texture and paints a name over whatever replaces it.
@@ -1096,273 +817,48 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     [],
   );
 
-  // Per-frame update in ship mode: physics, animation, camera, trail.
-  const updateFrame = useCallback(
-    (dt: number) => {
-      const ref = fgRef.current;
-      const model = modelRef.current;
-      if (!ref || !model) return;
-
-      tick(dt);
-
-      const ship = shipRef.current;
-      const cam = ref.camera() as THREE.PerspectiveCamera;
-      const group = model.group;
-      const flame = model.flame;
-      const trail = model.trail;
-
-      group.position.copy(ship.position);
-      group.quaternion.copy(ship.quaternion);
-
-      // Animate flame length/width by thrust + boost.
-      const baseFlame = 0.4;
-      const thrust = ship.thrust;
-      const boosting = ship.boosting;
-      const now = performance.now();
-      const pulse = 1 + Math.sin(now * 0.02) * 0.08;
-      const flameLen = (baseFlame + thrust * 1.2 + (boosting ? 1.4 : 0)) * pulse;
-      const flameWidth = baseFlame + thrust * 0.4 + (boosting ? 0.3 : 0);
-      flame.scale.set(flameWidth, flameWidth, flameLen);
-      flame.position.z = -2.6 - flameLen * 0.5;
-      flame.material.opacity = 0.7 + thrust * 0.2 + (boosting ? 0.1 : 0);
-
-      // Trail length and color from speed.
-      const speedRatio = Math.min(ship.speed / 240, 1);
-      const trailLen = 1 + ship.speed * 0.025;
-      trail.scale.set(1 + speedRatio * 0.5, 1 + speedRatio * 0.5, trailLen);
-      trail.position.z = -3.0 - trailLen * 0.5;
-      trail.material.opacity = 0.25 + speedRatio * 0.55;
-      trail.material.color.setHex(boosting ? 0xfacc15 : 0x67e8f9);
-
-      // Third-person camera: smooth follow behind the ship.
-      _camOffset.set(0, 3.5, -14).applyQuaternion(ship.quaternion);
-      _targetPos.copy(ship.position).add(_camOffset);
-      cam.position.lerp(_targetPos, 1 - Math.exp(-2.5 * dt));
-
-      _forward.set(0, 0, 1).applyQuaternion(ship.quaternion);
-      _lookTarget.copy(ship.position).addScaledVector(_forward, 8).add(_lookOffset);
-      cam.lookAt(_lookTarget);
-
-      const targetFov = 60 + (boosting ? 12 : 0) + speedRatio * 6;
-      cam.fov = THREE.MathUtils.lerp(cam.fov, targetFov, 0.1);
-      cam.updateProjectionMatrix();
-
-      onShipUpdate?.({ speed: ship.speed, boosting, thrust });
-    },
-    [tick, shipRef, _camOffset, _lookOffset, _targetPos, _lookTarget, _forward, onShipUpdate],
-  );
-
-  // Drive the ship with our own requestAnimationFrame loop so it keeps
-  // running even after the d3-force simulation has cooled down.
-  useEffect(() => {
-    if (mode !== 'ship') {
-      lastTimeRef.current = null;
-      return;
-    }
-    let raf = 0;
-    const loop = (now: number) => {
-      if (lastTimeRef.current != null) {
-        const dt = Math.min((now - lastTimeRef.current) / 1000, 0.1);
-        updateFrame(dt);
-      }
-      lastTimeRef.current = now;
-      raf = requestAnimationFrame(loop);
-    };
-    raf = requestAnimationFrame(loop);
-    return () => {
-      cancelAnimationFrame(raf);
-      lastTimeRef.current = null;
-    };
-  }, [mode, updateFrame]);
-
-  // Cube name plates are per-node canvas textures — cap them to small fields
-  // so a 20k-file mapping doesn't allocate 20k sprite canvases at once.
-  // 'full' detail = the owner explicitly asked to see EVERYTHING — every label
-  // budget below yields to it (the field may lag; that is the toggle's deal).
-  const fileLabels = useMemo(
-    () => (Boolean(coreView) && nodes.filter((n) => n.object && n.path).length <= 400) || forceDetail,
-    [nodes, coreView, forceDetail],
-  );
-
-  // Same LOD budget for the two other unbounded label sources: folder-hub names
-  // and level-2 star names. Both derive from `nodes`, so they only re-evaluate
-  // on a graphData change — exactly when the node meshes rebuild anyway.
-  const folderLabels = useMemo(
-    () => nodes.filter((n) => n.folder).length <= FOLDER_LABEL_CAP || forceDetail,
-    [nodes, forceDetail],
-  );
-  const starLabels = useMemo(
-    () => nodes.filter((n) => n.star).length <= STAR_LABEL_CAP || forceDetail,
-    [nodes, forceDetail],
-  );
-  // Galaxy/constellation anchors stay on unless the whole object field is huge.
-  const anchorLabels = useMemo(
-    () => nodes.filter((n) => n.object).length <= HUGE_FIELD || forceDetail,
-    [nodes, forceDetail],
-  );
-  // Track R3 verb labels ride the SAME LOD doctrine: a sparse Vazby overlay gets
-  // midpoint verb plates; a dense one falls back to hover-only (no thousands of
-  // SpriteText canvases). Counts only the typed cross-type layer.
-  const relLabels = useMemo(() => links.filter((l) => l.vazba).length <= REL_LABEL_CAP, [links]);
-  // PERF: promote typed edges to confidence-width TUBES only while the overlay is
-  // sparse; a dense one keeps them as width-0 GL lines (still coloured, still
-  // hover-labelled) so tube count stays bounded regardless of corpus size.
-  const relTubes = useMemo(() => links.filter((l) => l.vazba).length <= REL_TUBE_CAP, [links]);
   // PERF/S4: instance the file cubes in exactly the regime that is slow — core
-  // view with a field too large for name plates (fileLabels off). Below the cap
-  // the per-cube meshes stay (few, cheap, and they carry labels); above it the
-  // bodies collapse into ONE InstancedMesh overlay (the effect further down),
-  // and nodeThreeObject returns invisible pick stubs instead of drawn cubes.
-  const instanceCubes = Boolean(coreView) && !fileLabels;
-  // B2a — the observer-view twin: above ORBITAL_INSTANCE_CAP anchored bodies the
-  // per-body asset meshes collapse into per-form InstancedMeshes (effect below),
-  // and nodeThreeObject returns invisible pick stubs. Below the cap the pretty
-  // individual meshes stay (rings/tails + apparent-size LOD). Core view is
-  // handled by the cube overlay above, so this is observer-only.
-  const instanceBodies = useMemo(
-    () => !forceDetail && !coreView && nodes.filter((n) => n.object).length > ORBITAL_INSTANCE_CAP,
-    [nodes, coreView, forceDetail],
+  // view with a large field. PERF/B2a: the observer-view twin for orbital
+  // bodies. Below the caps the per-node meshes stay (few, cheap).
+  const instanceCubes = useMemo(
+    () => Boolean(coreView) && nodes.filter((n) => n.object && n.path).length > CUBE_INSTANCE_CAP,
+    [nodes, coreView],
   );
-  // B2b — aggregate anchored bodies into clusters (one per anchor star): centroid
-  // (body-cloud mean), extent (bbox half-diagonal), count, and a circular-mean
-  // dominant hue. Observer view only, and never in 'full' detail (the owner
-  // asked to see everything raw then). One O(bodies) pass.
-  //
-  // GROUPING KEY, and this is why core view used to have no envelopes at all:
-  // the observer view groups by ANCHOR, and in core view the bodies no longer
-  // sit near their anchors — they are relocated to their hub — so an
-  // anchor-keyed centroid would land in empty space between clusters. The old
-  // `coreView` early-return was therefore a correct guard for the WRONG key,
-  // not a decision that core view should be structureless. With the by-type
-  // order the right key exists: group by the hub the body was placed under.
-  const clusters = useMemo(() => {
-    if (forceDetail) return [] as Array<{ cx: number; cy: number; cz: number; extent: number; count: number; hue: number }>;
-    type Agg = { n: number; sx: number; sy: number; sz: number; hx: number; hy: number;
-      minx: number; maxx: number; miny: number; maxy: number; minz: number; maxz: number };
-    const acc = new Map<string, Agg>();
-    for (const nd of nodes) {
-      if (!nd.object || nd.fx == null || nd.fy == null || nd.fz == null) continue;
-      const key = coreView ? nd.dataType : nd.anchor;
-      if (!key) continue;
-      let a = acc.get(key);
-      if (!a) {
-        a = { n: 0, sx: 0, sy: 0, sz: 0, hx: 0, hy: 0,
-          minx: Infinity, maxx: -Infinity, miny: Infinity, maxy: -Infinity, minz: Infinity, maxz: -Infinity };
-        acc.set(key, a);
-      }
-      a.n++;
-      a.sx += nd.fx; a.sy += nd.fy; a.sz += nd.fz;
-      const h = (nd.categoryHue * Math.PI) / 180;
-      a.hx += Math.cos(h); a.hy += Math.sin(h);
-      if (nd.fx < a.minx) a.minx = nd.fx; if (nd.fx > a.maxx) a.maxx = nd.fx;
-      if (nd.fy < a.miny) a.miny = nd.fy; if (nd.fy > a.maxy) a.maxy = nd.fy;
-      if (nd.fz < a.minz) a.minz = nd.fz; if (nd.fz > a.maxz) a.maxz = nd.fz;
-    }
-    const out: Array<{ cx: number; cy: number; cz: number; extent: number; count: number; hue: number }> = [];
-    for (const [, a] of acc) {
-      // Skip trivially small clusters — a lone body reads fine as itself.
-      if (a.n < 3) continue;
-      const extent = 0.5 * Math.hypot(a.maxx - a.minx, a.maxy - a.miny, a.maxz - a.minz) + 8;
-      out.push({
-        cx: a.sx / a.n, cy: a.sy / a.n, cz: a.sz / a.n,
-        extent, count: a.n,
-        hue: ((Math.atan2(a.hy, a.hx) * 180) / Math.PI + 360) % 360,
-      });
-    }
-    return out;
-  }, [nodes, coreView, forceDetail]);
+  const instanceBodies = useMemo(
+    () => !coreView && nodes.filter((n) => n.object).length > ORBITAL_INSTANCE_CAP,
+    [nodes, coreView],
+  );
+  // Track R3 typed-relation overlay: sparse ⇒ midpoint verb plates + confidence
+  // tubes; dense ⇒ width-0 GL lines with hover-only verbs.
+  const relLabels = useMemo(() => links.filter((l) => l.vazba).length <= REL_LABEL_CAP, [links]);
 
-  // Always-on labels: galaxy names (categories) so the observer never loses
-  // orientation, and star names so semantic hits are readable at a glance.
-  // Everything else keeps the hover tooltip only. Returning a falsy object
-  // with nodeThreeObjectExtend keeps the default sphere; the sprite is
-  // ADDED next to it, not a replacement.
+  // Node meshes. Objects REPLACE the default sphere with their typed body (or
+  // an invisible pick stub in the instanced regimes); taxonomy nodes ADD a
+  // level-appropriate halo next to the default sphere; everything else IS the
+  // default sphere. All NAMES come from the label pool + hover — no permanent
+  // per-class plates.
   const nodeThreeObject = useCallback((node: GraphNode) => {
-    // Objects: a typed body REPLACES the default sphere (extend=false below).
-    // In the core view, fs-file leaves become satellite CUBES (lang-coloured,
-    // named while the field is small enough to stay legible).
     if (node.object) {
       // lensRef (not lens) so a toggle doesn't change this accessor's identity
       // and force a full mesh rebuild — the body is painted with the live lens
       // here and recoloured in place by the effect below on subsequent toggles.
       const lens = lensRef.current;
       if (coreView && node.path) {
-        // Instanced regime: an invisible pick stub; the overlay draws the body.
-        if (instanceCubes) return fileCubeStub(node);
-        return buildFileCube(node, fileLabels, lens);
+        return instanceCubes ? fileCubeStub(node) : buildFileCube(node, lens);
       }
-      // Observer view, dense field: instanced regime — a pick stub; the per-form
-      // overlay draws the body (and ring). Below the cap, the full asset mesh.
-      if (instanceBodies) return assetStub(node);
-      return buildAssetMesh(node, lens);
+      return instanceBodies ? assetStub(node) : buildAssetMesh(node, lens);
     }
-    // Repo folder hubs: the language-banded identicon sphere REPLACES the
-    // default hub sphere (extend=false below).
-    if (node.repo) return buildRepoMesh(node);
-    // Files-core folders: the default sphere is the hub, a permanent label
-    // names it — folder names ARE the orientation inside the core.
-    if (node.folder) {
-      // Over budget: keep the default hub sphere, drop the name plate (hover only).
-      if (!folderLabels) return false as unknown as THREE.Object3D;
-      const g = new THREE.Group();
-      const sprite = new SpriteText(node.name);
-      sprite.color = '#cfd8ec';
-      sprite.textHeight = 2.8;
-      sprite.fontSize = 110;
-      sprite.fontWeight = '600';
-      sprite.backgroundColor = 'rgba(8,12,22,0.86)';
-      sprite.padding = 1.6;
-      sprite.borderRadius = 1.5;
-      sprite.borderWidth = 0.4;
-      sprite.borderColor = 'rgba(180,195,225,0.35)';
-      const label = sprite as unknown as THREE.Sprite;
-      label.position.y = -(Math.sqrt(nodeSize(node)) * 2.4 + 4);
-      label.material.depthWrite = false;
-      noRaycast(label);
-      g.add(label);
-      return g;
-    }
-    // Taxonomy celestial hierarchy — a level-appropriate halo ADDED next to the
-    // default sphere (the sphere is the lens-coloured body): galaxy › constellation
-    // › star, then planets (L3) and satellites (L4+) are the bare sphere by size.
-    const g = new THREE.Group();
+    // Taxonomy celestial hierarchy — galaxy › constellation › star halos.
     // A relocated user-root (core view, node.sat) trades its 560u nebula for
     // the 70u constellation disc — inside the core the full nebula would
     // additive-bloom the whole center into one white ball.
-    if (node.level === 0) g.add(node.sat ? galaxyDisc(node.categoryHue) : nebulaSprite(node.categoryHue)); // galaxy
-    else if (node.level === 1) g.add(galaxyDisc(node.categoryHue)); // constellation
-    else if (node.level === 2) g.add(starGlow(node.categoryHue)); // star
-    // Two label tiers, each on its own budget: galaxy/constellation ANCHORS
-    // (level <= 1) stay on unless the field is huge; STAR names cull past the
-    // cap. Plain taxonomy stars (L2+) normally get proximity labels only (the
-    // effect below) — EXCEPT in 'full' detail, where every node is named.
-    const isAnchor = node.level <= 1;
-    if ((isAnchor && anchorLabels) || (!isAnchor && (node.star ? starLabels : forceDetail))) {
-      const sprite = new SpriteText(node.name);
-      sprite.color = '#e9eefc';
-      sprite.textHeight = node.level <= 1 ? 6 : 3.2;
-      sprite.fontSize = 110; // higher-res canvas → sharper, less blur when scaled
-      sprite.fontWeight = '600';
-      // Solid dark plate + hairline border so labels read as data annotations,
-      // not glowing sci-fi text — legible over bright stars/nebulae.
-      sprite.backgroundColor = 'rgba(8,12,22,0.86)';
-      sprite.padding = node.level <= 1 ? 2.5 : 1.6;
-      sprite.borderRadius = 1.5;
-      sprite.borderWidth = 0.4;
-      sprite.borderColor = 'rgba(180,195,225,0.35)';
-      const label = sprite as unknown as THREE.Sprite;
-      label.position.y = -(Math.sqrt(nodeSize(node)) * 2.4 + 6);
-      label.material.depthWrite = false;
-      noRaycast(label);
-      g.add(label);
-    }
+    if (node.level === 0) return node.sat ? galaxyDisc(node.categoryHue) : nebulaSprite(node.categoryHue);
+    if (node.level === 1) return galaxyDisc(node.categoryHue);
+    if (node.level === 2) return starGlow(node.categoryHue);
     // Falsy return keeps the default sphere — a runtime contract the library
     // typings don't model (they only allow Object3D), hence the double cast.
-    return g.children.length ? g : (false as unknown as THREE.Object3D);
-    // lens is deliberately NOT a dep (read via lensRef): a lens toggle must not
-    // change this accessor's identity, or react-force-graph rebuilds EVERY mesh.
-    // The recency recolour is applied in place to the existing bodies below.
-  }, [coreView, fileLabels, folderLabels, starLabels, anchorLabels, instanceCubes, instanceBodies, forceDetail]);
+    return false as unknown as THREE.Object3D;
+  }, [coreView, instanceCubes, instanceBodies]);
 
   // Lens recolour, IN PLACE (replaces the old fgRef.refresh(), which set
   // _flushObjects → cleared the node-object cache → rebuilt thousands of
@@ -1374,34 +870,24 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
   useEffect(() => {
     for (const n of graphData.nodes) {
       if (!n.object) continue;
-      // Instanced bodies (core cubes OR observer orbital bodies) are recoloured
-      // via their overlay's instanceColor, not the invisible stub — skip here.
+      // Instanced bodies are recoloured via their overlay's instanceColor,
+      // not the invisible stub — skip here.
       if (instanceCubes && n.path) continue;
       if (instanceBodies) continue;
       const obj = (n as CanvasNode & { __threeObj?: THREE.Object3D }).__threeObj;
-      if (!obj) continue;
-      // buildAssetMesh/buildFileCube return the body Mesh directly, or a Group
-      // whose first child is the body (planet ring / comet tail / file label).
-      const body = obj instanceof THREE.Mesh ? obj : obj.children[0];
-      if (!(body instanceof THREE.Mesh)) continue;
-      const mat = Array.isArray(body.material) ? body.material[0] : body.material;
+      if (!(obj instanceof THREE.Mesh)) continue;
+      const mat = Array.isArray(obj.material) ? obj.material[0] : obj.material;
       (mat as THREE.MeshBasicMaterial).color?.set(objectBodyColor(n, Boolean(coreView), lens));
     }
   }, [lens, coreView, graphData, instanceCubes, instanceBodies]);
 
   // PERF/S4 — the instanced-cube overlay lifecycle. ONE InstancedMesh added to
   // the renderer SCENE (NOT the forceGraph subtree, so react-force-graph's
-  // raycaster — objects([forceGraph]) — never traverses it and picking is left
-  // entirely to the per-node stubs). Instance matrices come straight from the
-  // pinned fx/fy/fz, which is exactly where RFG positions each node's stub, so
-  // the visible body and its pick target coincide and spatial memory is
-  // byte-identical. Rebuilt only when the node set or the instanced-regime flag
-  // change (graphData is memoised), never per frame — the cubes are static.
-  // Caveat: because the matrices are baked once from the pinned coords, actively
-  // dragging one of these cubes (enableNodeDrag) moves its invisible stub — and
-  // so its click/hover target — but not the drawn body until the next rebuild.
-  // Node drag is not a required interaction and dragging a spatial-memory-pinned
-  // node contradicts the layout contract anyway, so the overlay stays static.
+  // raycaster never traverses it and picking is left entirely to the per-node
+  // stubs). Instance matrices come straight from the pinned fx/fy/fz, which is
+  // exactly where RFG positions each node's stub, so the visible body and its
+  // pick target coincide and spatial memory is byte-identical. Rebuilt only
+  // when the node set or the regime flag change, never per frame.
   useEffect(() => {
     if (!instanceCubes) return;
     const cubes = graphData.nodes.filter((n) => n.object && n.path && n.fx != null);
@@ -1422,7 +908,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     mesh.instanceMatrix.needsUpdate = true;
     if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
     cubeOverlayRef.current = mesh;
-    // Attach once the renderer scene exists (mirrors the dust / dressing guards).
+    // Attach once the renderer scene exists (mirrors the dressing guards).
     let raf = 0;
     let scene: THREE.Scene | null = null;
     const attach = () => {
@@ -1449,8 +935,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
 
   // PERF/S4 — recolour the instanced cubes IN PLACE on a lens toggle (recency
   // gradient), the instanceColor twin of the in-place body recolour above. Same
-  // filter/order as the build effect, so instance i always maps to node i. No
-  // position or geometry is touched — pure instanceColor writes.
+  // filter/order as the build effect, so instance i always maps to node i.
   useEffect(() => {
     const mesh = cubeOverlayRef.current;
     if (!mesh) return;
@@ -1461,11 +946,9 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
   }, [lens, graphData]);
 
   // PERF/B2a — the observer-body overlay lifecycle, the S4 pattern extended to
-  // the FIVE celestial forms (each its own geometry → its own InstancedMesh) plus
-  // one ring InstancedMesh at the planet positions. Matrices come from the pinned
-  // fx/fy/fz (byte-identical to where RFG positions each stub), so visible body
-  // and pick target coincide. Rebuilt only when the node set / regime change;
-  // the comet tail (a Sprite) is dropped in this dense regime, like labels are.
+  // the FIVE celestial forms (each its own geometry → its own InstancedMesh).
+  // Matrices come from the pinned fx/fy/fz (byte-identical to where RFG
+  // positions each stub), so visible body and pick target coincide.
   useEffect(() => {
     if (!instanceBodies) return;
     const bodies = graphData.nodes.filter((n) => n.object && n.fx != null) as Array<
@@ -1488,8 +971,8 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       noRaycast(body); // picking stays on the per-node stubs
       list.forEach((n, i) => {
         dummy.position.set(n.fx, n.fy, n.fz);
-        dummy.rotation.set(hash01v(`${n.id}:x`) * 0.5, hash01v(n.id) * Math.PI, 0); // == assetStub
-        dummy.scale.setScalar(bodyScale(n)); // per-instance varied size (== buildAssetMesh)
+        dummy.rotation.set(0, 0, 0);
+        dummy.scale.setScalar(bodyScale(n)); // == buildAssetMesh / assetStub
         dummy.updateMatrix();
         body.setMatrixAt(i, dummy.matrix);
         body.setColorAt(i, col.set(objectBodyColor(n, false, lensRef.current)));
@@ -1497,29 +980,6 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       body.instanceMatrix.needsUpdate = true;
       if (body.instanceColor) body.instanceColor.needsUpdate = true;
       groups.push({ mesh: body, nodes: list });
-      // Planet rings: a parallel InstancedMesh over ONLY the planets that get a
-      // ring (~60%), each with its own tilt + size — matches buildAssetMesh, so
-      // the field reads as varied Saturns, not one repeated shape.
-      if (form === 'planet') {
-        const ringNodes = list.filter((n) => ringSpec(n));
-        if (ringNodes.length) {
-          const ring = new THREE.InstancedMesh(_ringGeo, _ringInstMat, ringNodes.length);
-          ring.frustumCulled = false;
-          noRaycast(ring);
-          ringNodes.forEach((n, i) => {
-            const rs = ringSpec(n)!;
-            dummy.position.set(n.fx, n.fy, n.fz);
-            dummy.rotation.set(rs.tiltX, 0, rs.tiltZ);
-            dummy.scale.setScalar(bodyScale(n) * rs.scale);
-            dummy.updateMatrix();
-            ring.setMatrixAt(i, dummy.matrix);
-            ring.setColorAt(i, col.set(objectBodyColor(n, false, lensRef.current)));
-          });
-          ring.instanceMatrix.needsUpdate = true;
-          if (ring.instanceColor) ring.instanceColor.needsUpdate = true;
-          groups.push({ mesh: ring, nodes: ringNodes });
-        }
-      }
     }
     assetOverlayRef.current = groups;
     let raf = 0;
@@ -1546,9 +1006,8 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     };
   }, [graphData, instanceBodies]);
 
-  // PERF/B2a — recolour the instanced bodies (+ rings) in place on a lens toggle,
-  // the instanceColor twin of the cube-overlay recolour. The stored node lists
-  // preserve the build order, so instance i always maps to node i per group.
+  // PERF/B2a — recolour the instanced bodies in place on a lens toggle. The
+  // stored node lists preserve the build order, so instance i maps to node i.
   useEffect(() => {
     const groups = assetOverlayRef.current;
     if (!groups) return;
@@ -1567,7 +1026,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     const dust = graphData.nodes.filter((n: CanvasNode) => n.orbit) as Array<
       CanvasNode & { x?: number; y?: number; z?: number; __threeObj?: THREE.Object3D }
     >;
-    if (!dust.length || mode === 'ship') return;
+    if (!dust.length) return;
     const geo = new THREE.BufferGeometry();
     const pos = new Float32Array(dust.length * 6);
     geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
@@ -1575,312 +1034,143 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     const lines = new THREE.LineSegments(geo, mat);
     noRaycast(lines);
     let sceneObj: THREE.Scene | null = null;
-    let raf = 0;
     const t0 = performance.now();
-    const step = () => {
+    const task = () => {
       const ref = fgRef.current;
-      if (ref) {
-        if (!sceneObj) {
-          try {
-            sceneObj = ref.scene();
-            sceneObj!.add(lines);
-          } catch {
-            // Renderer not ready yet — retry next frame.
-          }
+      if (!ref) return;
+      if (!sceneObj) {
+        try {
+          sceneObj = ref.scene();
+          sceneObj!.add(lines);
+        } catch {
+          return; // renderer not ready yet — retry next frame
         }
-        // Reduced motion: the halo still forms (placement is information),
-        // it just does not revolve.
-        const t = REDUCED_MOTION ? 0 : (performance.now() - t0) / 1000;
-        dust.forEach((n, i) => {
-          const o = n.orbit!;
-          const th = o.phase + t * o.speed;
-          const x = o.cx + o.r * Math.cos(th);
-          const y = o.cy + o.r * Math.sin(th) * Math.sin(o.tilt);
-          const z = o.cz + o.r * Math.sin(th) * Math.cos(o.tilt);
-          // Keep the data-side coords in step (raycast targets, future focus)
-          // AND move the rendered object — the engine stopped syncing.
-          n.fx = n.x = x;
-          n.fy = n.y = y;
-          n.fz = n.z = z;
-          n.__threeObj?.position.set(x, y, z);
-          pos[i * 6] = o.cx;
-          pos[i * 6 + 1] = o.cy;
-          pos[i * 6 + 2] = o.cz;
-          pos[i * 6 + 3] = x;
-          pos[i * 6 + 4] = y;
-          pos[i * 6 + 5] = z;
-        });
-        geo.attributes.position.needsUpdate = true;
       }
-      raf = requestAnimationFrame(step);
+      // Reduced motion: the halo still forms (placement is information),
+      // it just does not revolve.
+      const t = REDUCED_MOTION ? 0 : (performance.now() - t0) / 1000;
+      dust.forEach((n, i) => {
+        const o = n.orbit!;
+        const th = o.phase + t * o.speed;
+        const x = o.cx + o.r * Math.cos(th);
+        const y = o.cy + o.r * Math.sin(th) * Math.sin(o.tilt);
+        const z = o.cz + o.r * Math.sin(th) * Math.cos(o.tilt);
+        // Keep the data-side coords in step (raycast targets, future focus)
+        // AND move the rendered object — the engine stopped syncing.
+        n.fx = n.x = x;
+        n.fy = n.y = y;
+        n.fz = n.z = z;
+        n.__threeObj?.position.set(x, y, z);
+        pos[i * 6] = o.cx;
+        pos[i * 6 + 1] = o.cy;
+        pos[i * 6 + 2] = o.cz;
+        pos[i * 6 + 3] = x;
+        pos[i * 6 + 4] = y;
+        pos[i * 6 + 5] = z;
+      });
+      geo.attributes.position.needsUpdate = true;
     };
-    raf = requestAnimationFrame(step);
+    const tasks = frameTasks.current;
+    tasks.add(task);
     return () => {
-      cancelAnimationFrame(raf);
+      tasks.delete(task);
       sceneObj?.remove(lines);
       geo.dispose();
       mat.dispose();
     };
-  }, [graphData, mode]);
+  }, [graphData]);
 
-  // PERF/B2b — cluster nebula impostor lifecycle. One additive nebula sprite per
-  // cluster, coloured by its dominant hue and scaled to its body cloud. Built
-  // when the cluster set changes; the cross-fade effect below drives per-frame
-  // opacity. Sprites live in the scene (outside the forceGraph subtree) and never
-  // raycast, so picking is untouched.
+  // THE pixel-curve pass: body LOD + the label pool, one camera-driven step.
+  //
+  // Per moved frame it computes each pinned node's on-screen radius in PIXELS
+  // (renderedRadius ÷ distance × focal factor). Individually-drawn observer
+  // bodies toggle visibility at BODY_PX (hysteresis LOD_HYST); the LABEL_MAX
+  // largest nodes past LABEL_PX get a constant-pixel name plate — level≥2
+  // taxonomy, folders, hubs, cubes, everything, plus the focus node
+  // unconditionally. Plate sprites are cached by id and only toggled visible,
+  // so camera motion allocates nothing after first sight.
+  // ponytail: the cache grows with every node ever labeled (bounded by node
+  // count, rebuilt on graphData change); add an LRU cap if texture memory
+  // ever matters.
   useEffect(() => {
-    if (!clusters.length) return;
-    const built = clusters.map((c) => {
-      const sprite = new THREE.Sprite(
-        new THREE.SpriteMaterial({
-          map: _nebulaTex,
-          color: new THREE.Color(`hsl(${c.hue.toFixed(0)}, 55%, 55%)`),
-          opacity: 0, // the cross-fade sets it every frame
-          transparent: true,
-          depthWrite: false,
-          blending: THREE.AdditiveBlending,
-        }),
-      );
-      sprite.position.set(c.cx, c.cy, c.cz);
-      sprite.scale.setScalar(c.extent * 2.6); // the glow reads bigger than the cloud
-      noRaycast(sprite);
-      return { sprite, cx: c.cx, cy: c.cy, cz: c.cz, extent: c.extent, count: c.count };
-    });
-    impostorRef.current = built;
-    let raf = 0;
+    type Pinned = CanvasNode & { fx: number; fy: number; fz: number; __threeObj?: THREE.Object3D };
+    // Orbit dust moves per frame — the hover plate covers it; the pool sticks
+    // to pinned nodes so a plate's position is set once.
+    const cands = graphData.nodes.filter((n) => n.fx != null && !n.orbit) as Pinned[];
+    if (!cands.length) return;
+    const radius = cands.map((n) => renderedRadius(n));
+    const byId = new Map(cands.map((n, i) => [n.id, i] as const));
+    // Body LOD only applies to objects that own a drawn per-node mesh: the
+    // instanced regimes draw everything (cheap), core cubes are dense on
+    // purpose, and taxonomy/hub spheres are the orientation skeleton.
+    const lodIdx: number[] = [];
+    if (!coreView && !instanceBodies) cands.forEach((n, i) => { if (n.object) lodIdx.push(i); });
+    const pool = new Map<string, THREE.Sprite>();
     let scene: THREE.Scene | null = null;
-    const attach = () => {
+    let lastX = Infinity, lastY = Infinity, lastZ = Infinity;
+    let lastFocus: string | null | undefined;
+    const focal = height / (2 * Math.tan((CAM_FOV * Math.PI) / 360)); // world→px at unit distance
+    const task = () => {
       const ref = fgRef.current;
-      if (ref) {
+      if (!ref) return;
+      if (!scene) {
         try {
           scene = ref.scene();
-          for (const b of built) scene.add(b.sprite);
-          return;
         } catch {
-          // Renderer not ready — retry next frame.
+          return; // renderer not ready — retry next frame
         }
       }
-      raf = requestAnimationFrame(attach);
+      const cp = ref.camera().position;
+      const dmx = cp.x - lastX, dmy = cp.y - lastY, dmz = cp.z - lastZ;
+      // Idle guard: a still camera (and unchanged focus) can't change any band.
+      if (dmx * dmx + dmy * dmy + dmz * dmz <= 0.5 && focusRef.current === lastFocus) return;
+      lastX = cp.x; lastY = cp.y; lastZ = cp.z;
+      lastFocus = focusRef.current;
+      const px = new Float64Array(cands.length);
+      for (let i = 0; i < cands.length; i++) {
+        const n = cands[i];
+        const d = Math.hypot(cp.x - n.fx, cp.y - n.fy, cp.z - n.fz) || 1;
+        px[i] = (radius[i] / d) * focal;
+      }
+      for (const i of lodIdx) {
+        const obj = cands[i].__threeObj;
+        if (!obj) continue;
+        if (obj.visible) {
+          if (px[i] < BODY_PX * LOD_HYST) obj.visible = false;
+        } else if (px[i] > BODY_PX) {
+          obj.visible = true;
+        }
+      }
+      const vis: Array<{ i: number; px: number }> = [];
+      for (let i = 0; i < cands.length; i++) if (px[i] > LABEL_PX) vis.push({ i, px: px[i] });
+      vis.sort((a, b) => b.px - a.px);
+      const want = new Set<string>();
+      for (const v of vis.slice(0, LABEL_MAX)) want.add(cands[v.i].id);
+      if (lastFocus) want.add(lastFocus); // the focus is named no matter how small
+      for (const [id, s] of pool) s.visible = want.has(id);
+      for (const id of want) {
+        if (pool.has(id)) continue;
+        const i = byId.get(id);
+        if (i === undefined) continue;
+        const n = cands[i];
+        const label = plate(n.name, LABEL_TEXT_PX, height);
+        label.position.set(n.fx, n.fy - radius[i], n.fz);
+        scene.add(label);
+        pool.set(id, label);
+      }
     };
-    attach();
+    const tasks = frameTasks.current;
+    tasks.add(task);
     return () => {
-      cancelAnimationFrame(raf);
-      if (scene) for (const b of built) scene.remove(b.sprite);
-      for (const b of built) b.sprite.material.dispose(); // shared _nebulaTex kept
-      impostorRef.current = null;
-    };
-  }, [clusters]);
-
-  // PERF/B2b — cross-fade the nebula impostors by apparent size each frame. A
-  // cluster small on screen (far / zoomed out) shows its nebula at full opacity;
-  // as the camera closes and it fills the view, the nebula fades and the bodies
-  // take over. Denser clusters (more bodies) keep a stronger nebula. Cheap: one
-  // distance + opacity write per cluster, and an idle guard skips a still camera.
-  useEffect(() => {
-    if (coreView || mode === 'ship') return;
-    let raf = 0;
-    let lastX = Infinity;
-    let lastY = Infinity;
-    let lastZ = Infinity;
-    const step = () => {
-      const ref = fgRef.current;
-      const impostors = impostorRef.current;
-      if (ref && impostors) {
-        const cp = ref.camera().position;
-        const dmx = cp.x - lastX;
-        const dmy = cp.y - lastY;
-        const dmz = cp.z - lastZ;
-        if (dmx * dmx + dmy * dmy + dmz * dmz > 0.5) {
-          lastX = cp.x;
-          lastY = cp.y;
-          lastZ = cp.z;
-          for (const im of impostors) {
-            const dx = cp.x - im.cx;
-            const dy = cp.y - im.cy;
-            const dz = cp.z - im.cz;
-            // Apparent size of a representative body — the nebula fades in as this
-            // shrinks (bodies become sub-pixel far away) and out as it grows.
-            const app = IMPOSTOR_BODY_R / (Math.sqrt(dx * dx + dy * dy + dz * dz) || 1);
-            const frac = Math.min(
-              1,
-              Math.max(0, (app - IMPOSTOR_FULL_APP) / (IMPOSTOR_GONE_APP - IMPOSTOR_FULL_APP)),
-            );
-            const maxOp = 0.16 + Math.min(1, im.count / 40) * 0.32; // denser → stronger
-            const op = maxOp * (1 - frac);
-            (im.sprite.material as THREE.SpriteMaterial).opacity = op;
-            im.sprite.visible = op > 0.012;
-          }
-        }
+      tasks.delete(task);
+      for (const [, s] of pool) {
+        s.parent?.remove(s);
+        (s.material.map as THREE.Texture | null)?.dispose?.();
+        s.material.dispose();
       }
-      raf = requestAnimationFrame(step);
+      pool.clear();
     };
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-  }, [clusters, coreView, mode]);
-
-  // U2″ Phase B (B1) — orbital-object LOD. Toggles each anchored body's mesh
-  // visibility by its apparent size (rendered radius ÷ camera distance) with
-  // hysteresis, so the "solar system" reveals on approach and dense stars never
-  // flood the overview. Observer view only — bodies exist solely there (the core
-  // view relocates objects to the ring centre as cubes). Hidden bodies also drop
-  // out of the raycast (three skips invisible), which is exactly right: you
-  // can't click what you can't see. Cheap: one distance + compare per body, and
-  // an idle guard skips the whole pass while the camera is still. In the
-  // instanced regime the bodies have no drawn per-node object (only stubs), so
-  // toggling stub.visible would be a no-op — skip it; instancing makes drawing
-  // them all cheap, and distance declutter of whole clusters is B2b's job.
-  useEffect(() => {
-    // 'full' detail forces every body visible; the instanced regime handles its
-    // own drawing; small/typical fields (≤ ORBITAL_LOD_MIN) show in full form.
-    if (coreView || mode === 'ship' || instanceBodies || forceDetail) return;
-    const bodies = graphData.nodes.filter(
-      (n: CanvasNode) => n.object && n.fx != null,
-    ) as Array<CanvasNode & { fx: number; fy: number; fz: number; __threeObj?: THREE.Object3D }>;
-    if (bodies.length <= ORBITAL_LOD_MIN) return;
-    // Rendered radius per body — object size is lens-independent (nodeSize only
-    // scales non-objects by centrality), so precompute once for the effect.
-    const radius = bodies.map(
-      (n) => Math.sqrt(Math.max(nodeSize(n, lensRef.current), 0.01)) * 2.4,
-    );
-    let raf = 0;
-    let lastX = Infinity;
-    let lastY = Infinity;
-    let lastZ = Infinity;
-    const step = () => {
-      const ref = fgRef.current;
-      if (ref) {
-        const cp = ref.camera().position;
-        // Idle guard: re-evaluate only once the camera has actually moved
-        // (sub-unit drift can't change any body's LOD band).
-        const dmx = cp.x - lastX;
-        const dmy = cp.y - lastY;
-        const dmz = cp.z - lastZ;
-        if (dmx * dmx + dmy * dmy + dmz * dmz > 0.5) {
-          lastX = cp.x;
-          lastY = cp.y;
-          lastZ = cp.z;
-          for (let i = 0; i < bodies.length; i++) {
-            const obj = bodies[i].__threeObj;
-            if (!obj) continue;
-            const dx = cp.x - bodies[i].fx;
-            const dy = cp.y - bodies[i].fy;
-            const dz = cp.z - bodies[i].fz;
-            const app = radius[i] / (Math.sqrt(dx * dx + dy * dy + dz * dz) || 1);
-            if (obj.visible) {
-              if (app < ORBITAL_LOD_HIDE) obj.visible = false;
-            } else if (app > ORBITAL_LOD_SHOW) {
-              obj.visible = true;
-            }
-          }
-        }
-      }
-      raf = requestAnimationFrame(step);
-    };
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-  }, [graphData, coreView, mode, instanceBodies, forceDetail]);
-
-  // Proximity labels — the "zoom reveals names" tier of the LOD arc. Permanent
-  // name plates are budget-capped (S2) and deep taxonomy stars never grew one
-  // at all, so a close-up used to be a field of anonymous spheres. This effect
-  // materialises a plate for whatever the camera is actually near: apparent
-  // size past PROX_LABEL_SHOW earns one, kept until it falls under
-  // PROX_LABEL_KEEP (hysteresis against boundary flicker), at most
-  // PROX_LABEL_MAX at once (largest-on-screen first). Sprites live in the
-  // scene (outside the forceGraph subtree) and never raycast; the camera-move
-  // guard makes an idle frame free.
-  useEffect(() => {
-    if (mode === 'ship') return;
-    // A node qualifies iff the CURRENT budgets gave it no permanent plate.
-    const hasPlate = (n: CanvasNode): boolean =>
-      n.repo
-        ? true
-        : n.folder
-          ? folderLabels
-          : n.object
-            ? Boolean(coreView) && !instanceCubes && fileLabels
-            : n.star
-              ? starLabels
-              : n.level <= 1
-                ? anchorLabels
-                : forceDetail;
-    const cands = graphData.nodes.filter(
-      (n) => n.fx != null && !n.orbit && !hasPlate(n),
-    ) as Array<CanvasNode & { fx: number; fy: number; fz: number }>;
-    if (!cands.length) return;
-    const radius = cands.map((n) => Math.sqrt(Math.max(nodeSize(n), 0.01)) * 2.4);
-    const pool = new Map<string, THREE.Sprite>();
-    const drop = (id: string, s: THREE.Sprite) => {
-      scene?.remove(s);
-      (s.material.map as THREE.Texture | null)?.dispose?.();
-      s.material.dispose();
-      pool.delete(id);
-    };
-    let scene: THREE.Scene | null = null;
-    let raf = 0;
-    let lastX = Infinity;
-    let lastY = Infinity;
-    let lastZ = Infinity;
-    const step = () => {
-      const ref = fgRef.current;
-      if (ref) {
-        if (!scene) {
-          try {
-            scene = ref.scene();
-          } catch {
-            // Renderer not ready — retry next frame.
-          }
-        }
-        const cp = ref.camera().position;
-        const dmx = cp.x - lastX;
-        const dmy = cp.y - lastY;
-        const dmz = cp.z - lastZ;
-        if (scene && dmx * dmx + dmy * dmy + dmz * dmz > 0.5) {
-          lastX = cp.x;
-          lastY = cp.y;
-          lastZ = cp.z;
-          const vis: Array<{ i: number; app: number }> = [];
-          for (let i = 0; i < cands.length; i++) {
-            const dx = cp.x - cands[i].fx;
-            const dy = cp.y - cands[i].fy;
-            const dz = cp.z - cands[i].fz;
-            const app = radius[i] / (Math.sqrt(dx * dx + dy * dy + dz * dz) || 1);
-            if (app > (pool.has(cands[i].id) ? PROX_LABEL_KEEP : PROX_LABEL_SHOW)) vis.push({ i, app });
-          }
-          vis.sort((a, b) => b.app - a.app);
-          const wantIdx = vis.slice(0, PROX_LABEL_MAX);
-          const wantIds = new Set(wantIdx.map((v) => cands[v.i].id));
-          for (const [id, s] of pool) if (!wantIds.has(id)) drop(id, s);
-          for (const { i } of wantIdx) {
-            const n = cands[i];
-            if (pool.has(n.id)) continue;
-            const sprite = new SpriteText(n.name);
-            sprite.color = '#dfe6f5';
-            sprite.textHeight = n.object ? 2.2 : 3;
-            sprite.fontSize = 110;
-            sprite.fontWeight = '600';
-            sprite.backgroundColor = 'rgba(8,12,22,0.86)';
-            sprite.padding = 1.6;
-            sprite.borderRadius = 1.5;
-            sprite.borderWidth = 0.4;
-            sprite.borderColor = 'rgba(180,195,225,0.35)';
-            const label = sprite as unknown as THREE.Sprite;
-            label.position.set(n.fx, n.fy - (radius[i] + 4), n.fz);
-            label.material.depthWrite = false;
-            noRaycast(label);
-            scene.add(label);
-            pool.set(n.id, label);
-          }
-        }
-      }
-      raf = requestAnimationFrame(step);
-    };
-    raf = requestAnimationFrame(step);
-    return () => {
-      cancelAnimationFrame(raf);
-      for (const [id, s] of pool) drop(id, s);
-    };
-  }, [graphData, mode, coreView, fileLabels, folderLabels, starLabels, anchorLabels, instanceCubes, forceDetail]);
+  }, [graphData, coreView, instanceBodies, height]);
 
   // Focus pulse — a short blinking outline ring on the focused node once a
   // focus lands (click, search, "Focus in graph"), so the target catches the
@@ -1893,7 +1183,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       | (CanvasNode & { x?: number; y?: number; z?: number })
       | undefined;
     if (!node) return;
-    const r = Math.sqrt(Math.max(nodeSize(node, lensRef.current), 1)) * 2.4;
+    const r = Math.max(renderedRadius(node), 2.4);
     const sprite = new THREE.Sprite(
       new THREE.SpriteMaterial({
         map: _pulseTex,
@@ -1906,37 +1196,36 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     );
     noRaycast(sprite);
     let scene: THREE.Scene | null = null;
-    let raf = 0;
     const t0 = performance.now();
     const DUR = 2600;
-    const step = () => {
+    const tasks = frameTasks.current;
+    const task = () => {
       const ref = fgRef.current;
-      if (ref) {
-        if (!scene) {
-          try {
-            scene = ref.scene();
-            scene.add(sprite);
-          } catch {
-            // Renderer not ready — retry next frame.
-          }
+      if (!ref) return;
+      if (!scene) {
+        try {
+          scene = ref.scene();
+          scene.add(sprite);
+        } catch {
+          return; // renderer not ready — retry next frame
         }
-        const t = (performance.now() - t0) / DUR;
-        if (t >= 1) {
-          scene?.remove(sprite);
-          sprite.material.dispose();
-          return; // done — no further frames
-        }
-        // Follow the node (focus dust keeps orbiting; pinned nodes are static).
-        sprite.position.set(node.x ?? node.fx ?? 0, node.y ?? node.fy ?? 0, node.z ?? node.fz ?? 0);
-        const blink = REDUCED_MOTION ? 1 : 0.45 + 0.55 * Math.abs(Math.cos(t * Math.PI * 5));
-        sprite.material.opacity = (1 - t) * 0.9 * blink;
-        sprite.scale.setScalar(r * (3.6 - 1.6 * t));
       }
-      raf = requestAnimationFrame(step);
+      const t = (performance.now() - t0) / DUR;
+      if (t >= 1) {
+        tasks.delete(task);
+        scene?.remove(sprite);
+        sprite.material.dispose();
+        return; // done — no further frames
+      }
+      // Follow the node (focus dust keeps orbiting; pinned nodes are static).
+      sprite.position.set(node.x ?? node.fx ?? 0, node.y ?? node.fy ?? 0, node.z ?? node.fz ?? 0);
+      const blink = REDUCED_MOTION ? 1 : 0.45 + 0.55 * Math.abs(Math.cos(t * Math.PI * 5));
+      sprite.material.opacity = (1 - t) * 0.9 * blink;
+      sprite.scale.setScalar(r * (3.6 - 1.6 * t));
     };
-    raf = requestAnimationFrame(step);
+    tasks.add(task);
     return () => {
-      cancelAnimationFrame(raf);
+      tasks.delete(task);
       scene?.remove(sprite);
       sprite.material.dispose();
     };
@@ -1949,15 +1238,15 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
   // rebuild). Custom object bodies are recoloured by the in-place effect above.
   const nodeColorFn = useCallback((n: GraphNode) => nodeColor(n, focusId, lens), [focusId, lens]);
   const nodeValFn = useCallback((n: GraphNode) => nodeSize(n, lens), [lens]);
+  // No HTML tooltip — the in-scene hover plate answers "what is that?".
+  const noTooltip = useCallback(() => '', []);
   // Track R3: a verb plate for each typed cross-type edge, capped by relLabels.
-  // Memoised on relLabels so its identity is stable (an inline accessor would
-  // rebuild every edge object each render).
   const linkThreeObjectFn = useCallback(
     (l: GraphLink): THREE.Object3D =>
       l.vazba && relLabels && l.relVerb
-        ? relationLabelSprite(l.relVerb)
+        ? plate(l.relVerb, 12, height, { color: '#e9eefc' })
         : (false as unknown as THREE.Object3D),
-    [relLabels],
+    [relLabels, height],
   );
   // EXTEND (not replace) the default line/tube for a typed edge that carries a
   // verb plate — same predicate as the sprite accessor. With extend the library
@@ -2000,9 +1289,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       graphData={graphData}
       nodeId="id"
       nodeRelSize={2.4}
-      nodeLabel={(n: GraphNode) =>
-        n.star ? `☆ ${n.name}${n.distance ? ` · d=${n.distance.toFixed(2)}` : ''}` : n.name
-      }
+      nodeLabel={noTooltip}
       nodeVal={nodeValFn}
       nodeColor={nodeColorFn}
       nodeThreeObject={nodeThreeObject}
@@ -2019,42 +1306,33 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
           ? l.relColor ?? 'rgba(148,163,184,0.6)' // typed cross-type: registry hue
           : l.relation
           ? REL_COLOR[l.relType] ?? 'rgba(148,163,184,0.5)'
-          : l.mray
-            ? 'rgba(45,212,191,0.6)' // mapping-hub tether — the loudest teal
-            : l.ray
-              // Lines (width 0) ignore per-link alpha — the dimming is baked
-              // into the rgb instead (teal ×0.4, slate ×0.45, base ×0.25).
-              ? '#12554c' // core tether — teal, the objects' colour family
-              : l.olink
-                ? '#433064' // object→object ref — violet (#a78bfa ×0.4)
-                : l.fs
-                  ? '#434953' // folder skeleton — quiet slate
-                  : l.semantic
-                    ? 'rgba(251,191,36,0.55)'
-                    : '#1e2126'
+          : l.ray || l.mray
+            // Lines (width 0) ignore per-link alpha — the dimming is baked
+            // into the rgb instead. ONE tether colour: object→anchor and
+            // hub→anchor answer the same question.
+            ? '#12554c' // core tether — teal, the objects' colour family
+            : l.olink
+              ? '#433064' // object→object ref — violet (#a78bfa ×0.4)
+              : l.fs
+                ? '#434953' // folder skeleton — quiet slate
+                : l.semantic
+                  ? 'rgba(251,191,36,0.55)'
+                  : '#1e2126'
       }
       linkWidth={(l: GraphLink) =>
         // PERF: any non-zero width promotes the link to a TubeGeometry MESH
         // (one draw call each); width 0 renders a GL line. Bulk links (tree
-        // skeleton, fs edges, per-object rays — thousands at scale) MUST stay
-        // lines; only the sparse overlays may afford tubes.
+        // skeleton, fs edges, rays — thousands at scale) MUST stay lines;
+        // only the sparse overlays may afford tubes.
         l.vazba
-          ? relTubes
+          ? relLabels
             ? 0.6 + (l.confidence ?? 0.5) * 1.4 // sparse typed overlay: width by confidence (0.6–2.0)
             : 0 // dense overlay → GL line (PERF doctrine: tubes stay sparse)
           : l.relation
-          ? l.explored === 'barely'
-            ? 1.8 // research frontier — brightest/thickest
-            : l.explored === 'partially'
-              ? 1.1
-              : l.explored === 'well'
-                ? 0.6
-                : 0.8
-          : l.mray
-            ? 1.4 // mapping-hub tethers — a handful per mapping
-            : l.semantic
-              ? 1.2 // focus star field — dozens at most
-              : 0
+          ? 0.8 // ToE research edges — one width, the colour is the channel
+          : l.semantic
+            ? 1.2 // focus star field — dozens at most
+            : 0
       }
       onNodeClick={handleClick}
       onNodeHover={handleHover}
@@ -2075,8 +1353,6 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       cooldownTime={6000}
       d3AlphaDecay={0.04}
       showNavInfo={false}
-      enablePointerInteraction={mode !== 'ship'}
-      enableNodeDrag={mode !== 'ship'}
     />
   );
 }

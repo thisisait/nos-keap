@@ -19,11 +19,7 @@
  *   taxonomy  — objects cluster by their first anchor's galaxy, each cluster
  *               sits at the SAME ring angle as its galaxy (scaled inward), so
  *               rays leave the core radially and never cross it.
- *   topic     — embedding-space clustering OUTSIDE the taxonomy: server-side
- *               k-means over object vectors ships birth-frozen `theta` per
- *               topic (graph.topics). Hubs land on a violet ring via chain-
- *               spread (only colliding hubs shift); unclustered objects hold
- *               the center as `~untopiced` fog. Relabels restyle, never move.
+ *   type      — one hub per asset type on the ring ("what have I got").
  *
  * Pure functions, deterministic in their inputs (same hash-jitter approach as
  * server/layout.ts) — re-renders and toggle round-trips are always stable.
@@ -32,16 +28,15 @@
  */
 import type { GraphObject } from '@/hooks/useExplorerData';
 
-export type CoreOrder = 'fs' | 'taxonomy' | 'topic' | 'type';
+export type CoreOrder = 'fs' | 'taxonomy' | 'type';
 
 export const CORE_MAX = 420; // keep well inside the ring's clear zone (~1000)
 const FS_LEVEL_RADIUS = [0, 230, 105, 50, 28]; // shells per folder depth
 const TAX_RING = 280; // by-taxonomy cluster ring radius
-const TOPIC_RING = 280; // topic constellation ring (TAX_RING band)
 const TYPE_RING = 280;  // by-type cluster ring — same band, so switching order
                         // moves bodies WITHIN a known shell rather than across
                         // the scene (spatial memory, decision #10's reasoning).
-const TOPIC_MIN_SEP = 0.35; // min rad between topic hubs — chain-spread (decision #10)
+const TYPE_MIN_SEP = 0.35; // min rad between type hubs (decision #10's sweep)
 // Standalone mapping constellations sit on their own ring: outside the core
 // (CORE_MAX 420), inside the taxonomy clear zone (~1000). Worst subtree
 // extent ≈ (120+55+28+16+…)·1.15 ≈ 260 ⇒ constellations span r ∈ [440, 960].
@@ -101,8 +96,6 @@ export interface CoreFolder {
   count: number; // direct children (dirs + files)
   /** Set on mapping hubs (`dir:@<mapId>`) — carries the label + ray source. */
   mapping?: string;
-  /** Set on topic hubs (`topic:<id>`) — carries the cluster id (topic order). */
-  topic?: string;
   /** Set on TYPE hubs (`type:<assetType>`) — carries the asset type and the
    *  hue its members already render in (asset-types.ts). Without this the
    *  caller would have to re-derive a hue for the hub and the cluster would
@@ -116,7 +109,7 @@ export interface CoreLayout {
   folders: CoreFolder[];
   /** Pinned position per node id (`obj:<id>` and `dir:<path>`). */
   positions: Map<string, [number, number, number]>;
-  /** Folder-tree / topic-hub edges (dir→dir, dir→obj, topic→obj) — fs + topic orders. */
+  /** Folder-tree / hub edges (dir→dir, dir→obj, type→obj). */
   fsLinks: Array<{ source: string; target: string }>;
   /** Object → taxonomy-anchor tethers (all orders keep the rays). */
   rays: Array<{ source: string; target: string }>;
@@ -342,155 +335,10 @@ function taxonomyLayout(
 }
 
 /**
- * Topic-hub angles via CHAIN-SPREAD (decision #10) — the SAT_MIN_SEP clockwise
- * push's stable-identity cousin. θ is birth-frozen server-side; here we resolve
- * ONLY collisions: sort hubs by (θ, id), find maximal chains whose neighbours
- * sit closer than TOPIC_MIN_SEP, and re-space each chain's members at exactly
- * TOPIC_MIN_SEP centered on the chain's circular mean (order preserved, wrap
- * unrolled). A non-colliding hub renders at its EXACT frozen θ; a topic birth
- * perturbs only the hubs inside its own collision chain — deterministic and
- * order-independent. y is an id-hashed vertical jitter. Returns center per id.
- */
-function topicHubPositions(
-  topics: Array<{ id: string; theta: number }>,
-): Map<string, [number, number, number]> {
-  const TWO_PI = 2 * Math.PI;
-  const norm = (a: number) => ((a % TWO_PI) + TWO_PI) % TWO_PI;
-  const hubs = topics
-    .map((t) => ({ id: t.id, theta: norm(t.theta) }))
-    .sort((a, b) => a.theta - b.theta || a.id.localeCompare(b.id));
-  const n = hubs.length;
-  const out = new Map<string, [number, number, number]>();
-  if (n === 0) return out;
-
-  // Circular gap to the predecessor (index 0 wraps around from the last hub).
-  const gap = (i: number) =>
-    i === 0 ? hubs[0].theta + TWO_PI - hubs[n - 1].theta : hubs[i].theta - hubs[i - 1].theta;
-
-  const angleOf = new Map<string, number>();
-  // Spread one contiguous chain (indices in sorted order) at exact separation,
-  // centered on the unrolled circular mean; single-member chains stay put.
-  const spread = (chain: number[]) => {
-    const unrolled = [hubs[chain[0]].theta];
-    for (let c = 1; c < chain.length; c++) {
-      let g = hubs[chain[c]].theta - hubs[chain[c - 1]].theta;
-      if (g < 0) g += TWO_PI; // wrap within the chain
-      unrolled.push(unrolled[c - 1] + g);
-    }
-    const m = chain.length;
-    const mean = unrolled.reduce((s, a) => s + a, 0) / m;
-    chain.forEach((idx, c) => angleOf.set(hubs[idx].id, mean + (c - (m - 1) / 2) * TOPIC_MIN_SEP));
-  };
-
-  // Anchor the linear walk at a real break (gap ≥ sep). None ⇒ the whole ring
-  // is one wrapped chain (feasible: K_MAX·0.35 = 5.6 < 2π, so rare).
-  let start = -1;
-  for (let i = 0; i < n; i++) {
-    if (gap(i) >= TOPIC_MIN_SEP) {
-      start = i;
-      break;
-    }
-  }
-  if (start === -1) {
-    spread(hubs.map((_, i) => i));
-  } else {
-    let i = start;
-    for (let seen = 0; seen < n; ) {
-      const chain = [i];
-      let j = (i + 1) % n;
-      while (seen + chain.length < n && gap(j) < TOPIC_MIN_SEP) {
-        chain.push(j);
-        j = (j + 1) % n;
-      }
-      spread(chain);
-      seen += chain.length;
-      i = j;
-    }
-  }
-
-  for (const t of topics) {
-    const theta = angleOf.get(t.id);
-    if (theta === undefined) continue;
-    const y = (hash01(`ty:${t.id}`) - 0.5) * 160;
-    out.set(t.id, [Math.cos(theta) * TOPIC_RING, y, Math.sin(theta) * TOPIC_RING]);
-  }
-  return out;
-}
-
-/**
- * Topic order: object-only constellations keyed by the immutable topic id.
- * Assigned objects orbit their topic hub on the violet ring; everything else
- * (no topic, or a topic filtered out of this viewer's payload) gathers in the
- * hubless `~untopiced` fog at the origin — the `~unanchored` precedent. Labels
- * are stamped on hub nodes only; NO geometry keys off the label.
- */
-function topicLayout(
-  objects: GraphObject[],
-  topics: Array<{ id: string; label: string; theta: number }>,
-  untopicedLabel: string,
-): TreeOut {
-  const positions = new Map<string, [number, number, number]>();
-  const folders: CoreFolder[] = [];
-  const fsLinks: Array<{ source: string; target: string }> = [];
-  const topicIds = new Set(topics.map((t) => t.id));
-
-  const byTopic = new Map<string, GraphObject[]>();
-  const untopiced: GraphObject[] = [];
-  for (const o of objects) {
-    if (o.topic && topicIds.has(o.topic)) {
-      const g = byTopic.get(o.topic);
-      if (g) g.push(o);
-      else byTopic.set(o.topic, [o]);
-    } else {
-      untopiced.push(o);
-    }
-  }
-
-  // ~untopiced center fog — hubless, sorted by id (byte-identical to taxonomy).
-  const fog = [...untopiced].sort((a, b) => a.id.localeCompare(b.id));
-  const fogR = Math.min(200, 24 + 10 * Math.sqrt(fog.length));
-  fog.forEach((o, i) => {
-    const d = fibDir(i, fog.length, `~untopiced:${o.id}`);
-    positions.set(`obj:${o.id}`, [d[0] * fogR, d[1] * fogR, d[2] * fogR]);
-  });
-
-  // Fog aggregation hub — grown ONLY past the ray-collapse threshold, so below
-  // it the classic hubless fog stays byte-identical. It is a pure ray SOURCE at
-  // the fog center (no fsLinks, no fog object moves): computeCore fans its rays
-  // hub→distinct-anchor, mirroring the mapping/topic-hub collapse. The sentinel
-  // `topic` id keeps Explore's violet-hue + label path (never resolved as a real
-  // cluster; the empty node id `topic:` is what the aggregate rays source from).
-  const anchoredFog = fog.reduce((n, o) => n + (o.anchors.length > 0 ? 1 : 0), 0);
-  if (anchoredFog > AGGREGATE_RAYS_AT) {
-    positions.set('topic:', [0, 0, 0]);
-    folders.push({ id: 'topic:', name: untopicedLabel, path: '~topic/~untopiced', depth: 0, count: fog.length, topic: '~untopiced' });
-  }
-
-  // Hub + member spheres — only non-empty topics grow a hub node.
-  const hubPos = topicHubPositions(topics);
-  for (const t of topics) {
-    const members = byTopic.get(t.id);
-    if (!members || members.length === 0) continue;
-    const at = hubPos.get(t.id) ?? [0, 0, 0];
-    positions.set(`topic:${t.id}`, at);
-    folders.push({ id: `topic:${t.id}`, name: t.label, path: `~topic/${t.id}`, depth: 0, count: members.length, topic: t.id });
-    const sorted = [...members].sort((a, b) => a.id.localeCompare(b.id));
-    const r = Math.min(200, 24 + 10 * Math.sqrt(sorted.length));
-    sorted.forEach((o, i) => {
-      const d = fibDir(i, sorted.length, `${t.id}:${o.id}`);
-      positions.set(`obj:${o.id}`, [at[0] + d[0] * r, at[1] + d[1] * r, at[2] + d[2] * r]);
-      fsLinks.push({ source: `topic:${t.id}`, target: `obj:${o.id}` });
-    });
-  }
-
-  return { folders, positions, fsLinks };
-}
-
-/**
  * By-TYPE core: one hub per asset type, members on a fib sphere around it.
  *
  * WHY THIS ORDER EXISTS. The other three group by PROVENANCE — where a thing
- * came from (`fs`), what it is about (`taxonomy`, `topic`). None of them answer
+ * came from (`fs`), what it is about (`taxonomy`). Neither answers
  * "what have I got", which is the question the core view is actually opened to
  * ask. Before this, `core` relocated all 322 objects into one undifferentiated
  * ball and drew a tether per object back across the whole scene; the result was
@@ -498,8 +346,7 @@ function topicLayout(
  *
  * Hubs sit on TYPE_RING at an angle frozen by a hash of the type NAME, not by
  * its index — so adding a new asset type never rotates the existing ones out
- * from under the operator's spatial memory. Same reason topicHubPositions
- * freezes θ at birth.
+ * from under the operator's spatial memory.
  *
  * The hub carries its members' own hue (asset-types.ts), so a cluster and the
  * bodies inside it read as one thing.
@@ -528,10 +375,10 @@ function typeLayout(objects: GraphObject[]): TreeOut {
     for (let guard = 0; guard < 64; guard += 1) {
       const clash = taken.some((u) => {
         const d = Math.abs(((th - u + Math.PI) % (Math.PI * 2)) - Math.PI);
-        return d < TOPIC_MIN_SEP;
+        return d < TYPE_MIN_SEP;
       });
       if (!clash) break;
-      th = (th + TOPIC_MIN_SEP) % (Math.PI * 2);
+      th = (th + TYPE_MIN_SEP) % (Math.PI * 2);
     }
     taken.push(th);
     return th;
@@ -576,15 +423,11 @@ export function computeCore(
   order: CoreOrder,
   opts: {
     unfiledLabel: string;
-    /** Label stamped on the ~untopiced fog hub (topic order, past threshold). */
-    untopicedLabel: string;
     galaxyOf: (o: GraphObject) => { id: string; x: number; y: number; z: number } | null;
     /** Mapped-folder hubs (fs_mappings) — [] keeps the classic core intact. */
     mappings: CoreMapping[];
     /** Baked position of a taxonomy node's ROOT galaxy — standalone hubs face it. */
     galaxyPosOf: (nodeId: string) => { id: string; x: number; y: number; z: number } | null;
-    /** Topic hubs (graph.topics) — birth-frozen θ; [] keeps topic order empty. */
-    topics?: Array<{ id: string; label: string; theta: number }>;
   },
 ): CoreLayout {
   if (order === 'taxonomy') {
@@ -599,7 +442,7 @@ export function computeCore(
   }
 
   if (order === 'type') {
-    // Rays follow the same collapse rule as topic/mapping hubs: per-object
+    // Rays follow the same collapse rule as mapping hubs: per-object
     // below AGGREGATE_RAYS_AT, hub→distinct-anchor above it. That threshold is
     // the whole reason this order is readable — 322 per-object tethers across
     // the scene is the cable bundle this order was added to replace.
@@ -618,40 +461,6 @@ export function computeCore(
         const targets = new Set<string>();
         for (const o of anchored) for (const a of o.anchors) targets.add(a);
         for (const a of targets) rays.push({ source: `type:${t}`, target: a });
-      } else {
-        for (const o of anchored) {
-          for (const a of new Set(o.anchors)) rays.push({ source: `obj:${o.id}`, target: a });
-        }
-      }
-    }
-    return { ...base, rays, mrays: [] };
-  }
-
-  if (order === 'topic') {
-    // Inserted BEFORE the fs fall-through: `order='topic'` must never render
-    // the filesystem tree. Rays follow the taxonomy anchors (per-object, or
-    // hub-aggregated past AGGREGATE_RAYS_AT — decision #11). The '' bucket
-    // aggregates too once its fog grows a hub (topicLayout, same threshold);
-    // below it the fog stays hubless with per-object rays.
-    const topics = opts.topics ?? [];
-    const base = topicLayout(objects, topics, opts.untopicedLabel);
-    const topicIds = new Set(topics.map((t) => t.id));
-    const hubIds = new Set(base.folders.filter((f) => f.topic).map((f) => f.id));
-    const byTopic = new Map<string, GraphObject[]>();
-    for (const o of objects) {
-      const tid = o.topic && topicIds.has(o.topic) ? o.topic : '';
-      const g = byTopic.get(tid);
-      if (g) g.push(o);
-      else byTopic.set(tid, [o]);
-    }
-    const rays: Array<{ source: string; target: string }> = [];
-    for (const [tid, members] of byTopic) {
-      const anchored = members.filter((o) => o.anchors.length > 0);
-      const hubId = `topic:${tid}`;
-      if (anchored.length > AGGREGATE_RAYS_AT && hubIds.has(hubId)) {
-        const targets = new Set<string>();
-        for (const o of anchored) for (const a of o.anchors) targets.add(a);
-        for (const a of targets) rays.push({ source: hubId, target: a });
       } else {
         for (const o of anchored) {
           for (const a of new Set(o.anchors)) rays.push({ source: `obj:${o.id}`, target: a });

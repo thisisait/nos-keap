@@ -33,11 +33,9 @@ function obj(id: string, assetType: string, anchors: string[] = [], hue = 95): G
 
 const OPTS = {
   unfiledLabel: 'Unfiled',
-  untopicedLabel: 'Untopiced',
   galaxyOf: () => null,
   mappings: [],
   galaxyPosOf: () => null,
-  topics: [],
 };
 
 const run = (objects: GraphObject[], order: CoreOrder = 'type') => computeCore(objects, order, OPTS);
@@ -128,9 +126,9 @@ describe('core order: type', () => {
     expect(out.fsLinks).toContainEqual({ source: 'type:page', target: 'obj:b' });
   });
 
-  it('leaves the other three orders untouched', () => {
+  it('leaves the other two orders untouched', () => {
     const objs = [obj('a', 'skill', ['01.01']), obj('b', 'page', ['01.02'])];
-    for (const order of ['fs', 'taxonomy', 'topic'] as CoreOrder[]) {
+    for (const order of ['fs', 'taxonomy'] as CoreOrder[]) {
       const out = run(objs, order);
       expect(out.folders.some((f) => f.assetType)).toBe(false);
       expect([...out.positions.keys()].some((k) => k.startsWith('type:'))).toBe(false);

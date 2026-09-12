@@ -326,8 +326,6 @@ export default function Explore() {
       };
       const layout = computeCore(sceneObjects, coreOrder, {
         unfiledLabel: t('explore.core.unfiled'),
-        untopicedLabel: t('explore.core.untopiced'),
-        topics: graph.topics ?? [],
         galaxyOf: (o) => {
           // Mapped objects without body-extracted anchors cluster under their
           // mapping's taxonomy root instead of ~unanchored (taxonomy order).
@@ -376,9 +374,8 @@ export default function Explore() {
         nodes.push({
           id: f.id,
           // Only the CENTRAL core root is "Root" — standalone mapping hubs and
-          // topic hubs are depth 0 too, but carry their own label (without the
-          // `!f.topic` guard every topic hub would be renamed "Files").
-          name: f.depth === 0 && !f.mapping && !f.topic && !f.assetType ? t('explore.core.root') : f.name,
+          // type hubs are depth 0 too, but carry their own label.
+          name: f.depth === 0 && !f.mapping && !f.assetType ? t('explore.core.root') : f.name,
           kind: 'folder',
           level: 98,
           childCount: f.count,
@@ -387,9 +384,8 @@ export default function Explore() {
           mtime: newestOf(f.id),
           ...(ds?.repo ? { repo: true, bytes: ds.bytes, exts: ds.exts } : {}),
           // TYPE hubs take the hue of the bodies they hold (asset-types.ts), so a
-          // cluster and its members read as one thing; topic hubs render violet
-          // (semantic space); folder hubs stay blue.
-          categoryHue: f.hue ?? (f.topic ? 265 : 215),
+          // cluster and its members read as one thing; folder hubs stay slate.
+          categoryHue: f.hue ?? 215,
           fx: p[0],
           fy: p[1],
           fz: p[2],
