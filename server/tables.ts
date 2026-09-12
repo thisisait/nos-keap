@@ -202,6 +202,10 @@ export function updateTableSchema(
    *  the card keeps its prior anchors, provided → REPLACES them (the def
    *  file is the source of truth; see syncCard). */
   anchors?: string[],
+  /** The re-declared graph block — same law again: absent → the card keeps its
+   *  prior block, provided → REPLACES it (and syncRows materialises or retracts
+   *  row projection accordingly; un-project by sending mode:'card'). */
+  graph?: GraphMeta,
 ): Omit<TableInfo, 'capabilities'> {
   const prior = new Map(t.schema.columns.map((c) => [c.key, c]));
   const nextKeys = new Set(next.columns.map((c) => c.key));
@@ -230,8 +234,8 @@ export function updateTableSchema(
     .run(JSON.stringify(next), t.id);
 
   const updated = { ...t, schema: next };
-  syncCard(updated, anchors, undefined, view);
-  syncRows(updated);
+  syncCard(updated, anchors, graph, view);
+  syncRows(updated, graph);
   return updated;
 }
 

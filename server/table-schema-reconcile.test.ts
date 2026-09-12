@@ -196,4 +196,32 @@ describe('updateTableSchema', () => {
     // which is one vector over a truncated body. See rowBody's docblock.
     expect(after.body).toContain('Name [identity.name]: GeoLibre');
   });
+
+  it('graph rides the reconcile: an EXISTING table can be flipped into row projection', async () => {
+    // Without the 5th arg the block was write-once: create forwarded it,
+    // reconcile dropped it — so `graph:` added to the def of a converged
+    // table (invoice/party, the row-vector-search dispatch) validated in git
+    // and projected nothing. Same silent-drop class as `view` before 2026-08-28.
+    await makeTable('t-flip');
+    await tables.storeFor('libsql').upsertRow('t-flip', 'r1', { name: 'Pekarna Novak' }, OWNER);
+    expect(db.getObject('table-t-flip:row-r1')).toBeFalsy();
+
+    tables.updateTableSchema(tables.getTable('t-flip')!, { columns: BASE_COLUMNS } as never, undefined, undefined, {
+      mode: 'rows',
+      node: { labelColumn: 'name', kind: 'record' },
+      edges: [],
+    } as never);
+    expect(db.getObject('table-t-flip:row-r1')?.title).toBe('Pekarna Novak');
+
+    // absent → preserved (a plain reconcile must not un-project)
+    tables.updateTableSchema(tables.getTable('t-flip')!, { columns: BASE_COLUMNS } as never);
+    expect(db.getObject('table-t-flip:row-r1')).toBeTruthy();
+
+    // provided mode:'card' → retracts (the un-project path)
+    tables.updateTableSchema(tables.getTable('t-flip')!, { columns: BASE_COLUMNS } as never, undefined, undefined, {
+      mode: 'card',
+      edges: [],
+    } as never);
+    expect(db.getObject('table-t-flip:row-r1')).toBeFalsy();
+  });
 });
