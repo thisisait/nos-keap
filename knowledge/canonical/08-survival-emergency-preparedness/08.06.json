@@ -207,6 +207,13 @@
   },
   {
    "from": "08.06",
+   "to": "04.08.03",
+   "type": "related-concept",
+   "explored": null,
+   "source": "curated-xref"
+  },
+  {
+   "from": "08.06",
    "to": "08.06.02",
    "type": "references",
    "explored": null,
@@ -239,13 +246,6 @@
    "type": "references",
    "explored": null,
    "source": "brief-xref"
-  },
-  {
-   "from": "08.06",
-   "to": "04.08.03",
-   "type": "related-concept",
-   "explored": null,
-   "source": "curated-xref"
   }
  ]
 }

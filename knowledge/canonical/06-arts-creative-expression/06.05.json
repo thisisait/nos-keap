@@ -74,6 +74,20 @@
    "source": "curated-xref"
   },
   {
+   "from": "06.05.03",
+   "to": "07.08.04",
+   "type": "related-concept",
+   "explored": null,
+   "source": "curated-xref"
+  },
+  {
+   "from": "06.05.05",
+   "to": "10.04.01",
+   "type": "related-concept",
+   "explored": null,
+   "source": "curated-xref"
+  },
+  {
    "from": "06.05",
    "to": "06.01",
    "type": "references",
@@ -107,20 +121,6 @@
    "type": "references",
    "explored": null,
    "source": "brief-xref"
-  },
-  {
-   "from": "06.05.05",
-   "to": "10.04.01",
-   "type": "related-concept",
-   "explored": null,
-   "source": "curated-xref"
-  },
-  {
-   "from": "06.05.03",
-   "to": "07.08.04",
-   "type": "related-concept",
-   "explored": null,
-   "source": "curated-xref"
   }
  ]
 }

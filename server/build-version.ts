@@ -19,7 +19,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
 /** Resolved eagerly: a failure here shows up at boot, never on a probe. */
-const VERSION: string = (() => {
+export const BUILD_VERSION: string = (() => {
   try {
     // The image runs `node dist-server/index.js` from WORKDIR /app, where
     // package.json sits; in dev and e2e the cwd is the repo root. Both resolve
@@ -31,7 +31,3 @@ const VERSION: string = (() => {
     return 'unknown';
   }
 })();
-
-export function buildVersion(): string {
-  return VERSION;
-}

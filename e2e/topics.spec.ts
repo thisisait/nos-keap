@@ -146,22 +146,15 @@ function topicsOf(snap: Snapshot, prefix: string): Set<string> {
 }
 
 test.describe('topics mode', () => {
-  test('disabled-state first: no clusters ⇒ Topics button disabled with the truthful tooltip', async ({
-    page,
-  }) => {
-    // Before any object vectors exist: /api/graph ships no topics, so the
-    // reorder bar's Topics button is disabled with topicUnavailable (§8.1).
+  test('disabled-state first: no clusters ⇒ Topics is not a view', async ({ page }) => {
+    // Clustering still ships on /api/graph when assignments exist; the Explore
+    // view control does not offer Topics until that order earns a slot.
     const graphResponse = page.waitForResponse((r) => r.url().includes('/api/graph') && r.ok());
     await page.goto('/explore');
     await graphResponse;
     await expect(page.locator('canvas').first()).toBeVisible({ timeout: 15_000 });
-    // Core is on by default — the reorder bar is already visible.
-    const topicsBtn = page.getByRole('button', { name: 'Topics' });
-    await expect(topicsBtn).toBeDisabled();
-    await expect(topicsBtn).toHaveAttribute(
-      'title',
-      'No topic clusters yet — waiting for object embeddings (keap-embed-sync)',
-    );
+    await expect(page.getByTestId('explore-view-control')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Topics' })).toHaveCount(0);
   });
 
   test('seed + embed + first cluster: every embedded object assigned, no A/B mix, labels planted', async ({
@@ -289,10 +282,7 @@ test.describe('topics mode', () => {
     expect(restored.label).toBe(restored.labelAuto);
   });
 
-  test('payload + UI: objects carry topic, topics[] + meta.topics ship, and the Topics core renders', async ({
-    request,
-    page,
-  }) => {
+  test('payload: objects carry topic, topics[] + meta.topics ship', async ({ request, page }) => {
     const graph = (await (await request.get('/api/graph')).json()).data as {
       objects: Array<{ id: string; topic?: string }>;
       topics: Array<{ id: string; label: string; theta: number; count: number; terms?: string[] }>;
@@ -309,17 +299,11 @@ test.describe('topics mode', () => {
     expect(graph.meta.topics?.available).toBe(true);
     expect(graph.objects.some((o) => o.topic)).toBeTruthy();
 
-    // UI: enable the core, switch to Topics (now enabled), assert the canvas.
     const graphResponse = page.waitForResponse((r) => r.url().includes('/api/graph') && r.ok());
     await page.goto('/explore');
     await graphResponse;
     await expect(page.locator('canvas').first()).toBeVisible({ timeout: 15_000 });
-    // Core is on by default — go straight to the (now enabled) Topics order.
-    const topicsBtn = page.getByRole('button', { name: 'Topics' });
-    await expect(topicsBtn).toBeEnabled();
-    await topicsBtn.click();
-    await page.waitForTimeout(2000); // camera flight into the ring center
-    await expect(page.locator('canvas').first()).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Topics' })).toHaveCount(0);
     await page.screenshot({ path: 'e2e/screenshots/core-topics.png' });
   });
 

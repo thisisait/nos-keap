@@ -458,6 +458,12 @@ export function syncRows(
   }
 
   const all = rows ?? readAllRows(t.id);
+  // Row-anchor fallback: a row without an anchorColumn value inherits the
+  // table CARD's own first node anchor — otherwise projected rows are
+  // anchorless (invisible in orbital view, "unfiled" in the files core).
+  const cardAnchor = ((existingCard?.links ?? []) as ObjectRefLike[]).find(
+    (l) => l.kind === 'node',
+  )?.ref;
   const kept = new Set<string>();
   for (const r of all.slice(0, ROW_OBJECT_CAP)) {
     // Most-restrictive-wins applied to projection: a row that NARROWED its
@@ -475,7 +481,7 @@ export function syncRows(
     if (kept.has(id)) id = rowObjectId(t.id, r.id, undefined);
     const label = node.labelColumn ? r.values[node.labelColumn] : undefined;
     const anchorRaw = node.anchorColumn ? r.values[node.anchorColumn] : undefined;
-    const anchor = typeof anchorRaw === 'string' && anchorRaw ? anchorRaw : undefined;
+    const anchor = typeof anchorRaw === 'string' && anchorRaw ? anchorRaw : cardAnchor;
     const body = rowBody(t, r.values, anchor);
     const resource = `keaptable:${t.id}#${r.id}`;
     kept.add(id);

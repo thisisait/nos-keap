@@ -79,13 +79,15 @@ export default function Admin() {
   const visibleNodes = useMemo(() => {
     const q = taxSearch.trim().toLowerCase();
     if (!q) return orderedNodes;
-    return orderedNodes.filter(
-      (n) =>
+    return orderedNodes.filter((n) => {
+      const curated = curatedById.get(n.id)?.description ?? '';
+      return (
         n.id.toLowerCase().includes(q) ||
         n.name.toLowerCase().includes(q) ||
-        (n.description ?? '').toLowerCase().includes(q),
-    );
-  }, [orderedNodes, taxSearch]);
+        curated.toLowerCase().includes(q)
+      );
+    });
+  }, [orderedNodes, taxSearch, curatedById]);
 
   // Open the curated-metadata editor for a node: reuse an existing overlay row
   // or seed a blank one keyed to the node id (the tree already owns the name).
@@ -431,7 +433,7 @@ export default function Admin() {
                     ) : (
                       visibleNodes.map((node) => {
                         const curated = curatedById.get(node.id);
-                        const desc = node.description || curated?.description;
+                        const desc = curated?.description;
                         return (
                           <div
                             key={node.id}

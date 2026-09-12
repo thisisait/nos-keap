@@ -409,34 +409,5 @@
    "cs": "Spolupráce s agenturami domácí péče, komunitními službami a veřejnými podpůrnými programy vedle vlastní rodinné péče a řízení předávání mezi nimi, jak se potřeby mění."
   }
  ],
- "relations": [
-  {
-   "from": "07.12",
-   "to": "07.01",
-   "type": "references",
-   "explored": null,
-   "source": "brief-xref"
-  },
-  {
-   "from": "07.12",
-   "to": "07.04",
-   "type": "references",
-   "explored": null,
-   "source": "brief-xref"
-  },
-  {
-   "from": "07.12",
-   "to": "04.05",
-   "type": "references",
-   "explored": null,
-   "source": "brief-xref"
-  },
-  {
-   "from": "07.12",
-   "to": "04.11.08",
-   "type": "references",
-   "explored": null,
-   "source": "brief-xref"
-  }
- ]
+ "relations": []
 }
