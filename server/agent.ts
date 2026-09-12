@@ -32,13 +32,15 @@ import { allNodes } from './taxonomy';
 import { normalizeAndSaveCapture, parseEnvelope } from './intake';
 import { syncAllFs, syncMapping, fsSyncStatus, USER_FILES_DIR } from './fs-sync';
 import { scheduleTopicRecluster, clusterTopics } from './topics';
-import { claimRow, getTable, listTables, referencesTo, releaseRow, storeFor, updateTableSchema, updateTableSharing } from './tables';
+import { assertRowProjectionAllowed, claimRow, getTable, listTables, referencesTo, releaseRow, storeFor, updateTableSchema, updateTableSharing } from './tables';
 import { extractRowSharing, sharedWithSchema, type Principal } from '../shared/contracts/visibility';
 import {
   createTableRequestSchema,
+  graphMetaSchema,
   tableSchemaSchema,
   viewMetaSchema,
   validateViewMeta,
+  type GraphMeta,
   type ViewMeta,
 } from '../shared/contracts/table';
 import { cortexValidateRequestSchema } from '../shared/contracts/cortex';
@@ -916,7 +918,18 @@ export function registerAgentRoutes(app: Express) {
           }
           anchors = a as string[];
         }
-        return ok(res, { ...existing, ...updateTableSchema(existing, cols.data, view, anchors) });
+        // The graph block rides the reconcile like view does — without this it
+        // was write-once: create forwarded it, reconcile dropped it, so a
+        // `graph:` added to the def of an already-converged table (the path
+        // every real table takes) validated in git and reached no database.
+        let graph: GraphMeta | undefined;
+        if (b.graph !== undefined) {
+          const g = graphMetaSchema.safeParse(b.graph);
+          if (!g.success) return fail(res, 400, g.error.issues[0]?.message ?? 'invalid graph');
+          assertRowProjectionAllowed(existing.rowCount, g.data);
+          graph = g.data;
+        }
+        return ok(res, { ...existing, ...updateTableSchema(existing, cols.data, view, anchors, graph) });
       } catch (e) {
         return fail(res, 409, e instanceof Error ? e.message : 'schema reconcile failed');
       }
