@@ -19,7 +19,7 @@ import { listContentServices } from './content-links';
 import { extractRefs } from './objects';
 import { markCorpusDirty } from './search';
 import { runLint, lastLintReport } from './lint';
-import { propose, proposeNode, proposeDescription, proposeBrief, vote, decide, moderationPolicy } from './promotions';
+import { propose, proposeNode, proposeDescription, proposeBrief, vote, decide, decideBriefBulk, moderationPolicy } from './promotions';
 import { exportBundle, importBundle } from './okf';
 import { normalizeAndSaveCapture } from './intake';
 import {
@@ -378,6 +378,19 @@ export function registerApiRoutes(app: Express) {
       }
     }
     ok(res, { decision, kind, decided, errors });
+  });
+  // Selected-set twin of decide-desc-bulk for the weekly drain loop: decides
+  // EXPLICIT ids (the operator-approved verdict batch), not everything open.
+  // Brief-kind only; per-id errors so a re-run is idempotent-safe.
+  app.post('/api/promotions/decide-brief-bulk', (req, res) => {
+    if (!requireAdmin(req, res)) return;
+    const decision = req.body?.decision;
+    if (decision !== 'approve' && decision !== 'reject') return fail(res, 400, 'decision approve|reject required');
+    const ids = req.body?.ids;
+    if (!Array.isArray(ids) || !ids.length || ids.length > 1000 || ids.some((i) => typeof i !== 'string')) {
+      return fail(res, 400, 'ids required (1-1000 promotion id strings)');
+    }
+    ok(res, { decision, ...decideBriefBulk(ids, decision, req.user.username) });
   });
   app.post('/api/promotions/:id/vote', (req, res) => {
     const value = req.body?.value === -1 ? -1 : 1;
