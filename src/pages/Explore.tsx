@@ -13,6 +13,7 @@ import { useCallback, useMemo, useState, useRef, useLayoutEffect, useEffect } fr
 import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowLeft, Search, Waypoints, PanelRight } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
@@ -23,14 +24,11 @@ import GraphCanvas, {
   type CanvasNode,
   type CanvasLink,
 } from '@/components/explorer/GraphCanvas';
-import SidePanel, { type FocusRelation } from '@/components/explorer/SidePanel';
-import DetailPanel, { type DrawerTarget } from '@/components/explorer/DetailPanel';
-import {
-  useGraph,
-  useNeighbors,
-  type NeighborItem,
-  type GraphObject,
-} from '@/hooks/useExplorerData';
+import DetailPanel, {
+  type DrawerTarget,
+  type FocusRelation,
+} from '@/components/explorer/DetailPanel';
+import { useGraph, useNeighbors, type GraphObject } from '@/hooks/useExplorerData';
 import { orbitalPosition } from '@/components/explorer/orbital';
 import {
   computeCore,
@@ -56,7 +54,7 @@ interface SearchHit {
 }
 
 export default function Explore() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { data: graph, isLoading } = useGraph();
 
   // Addressable view: focus / core order / lens / relations round-trip through
@@ -658,7 +656,6 @@ export default function Explore() {
           dataType: item.dataType,
           description: item.description,
           url: item.url,
-          distance: item.distance,
           isStar: true,
           nodeId: item.nodeId,
         });
@@ -763,20 +760,6 @@ export default function Explore() {
     }
   };
 
-  const onPanelItem = (item: NeighborItem) => {
-    setDrawer({
-      id: item.nodeId ?? `star:${item.kind}:${item.refId}`,
-      name: item.name,
-      kind: item.kind,
-      dataType: item.dataType,
-      description: item.description,
-      url: item.url,
-      distance: item.distance,
-      isStar: item.kind !== 'taxonomy',
-      nodeId: item.nodeId,
-    });
-  };
-
   // Canvas size tracks its container (the graph libs need explicit px).
   const canvasRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState({ w: 800, h: 600 });
@@ -790,18 +773,17 @@ export default function Explore() {
     return () => ro.disconnect();
   }, []);
 
-  // The neighbours panel content — hoisted so it can render either as the
-  // desktop right rail or inside a mobile Sheet drawer (never both).
-  // Typed relations touching the focused node, in EITHER direction, resolved to
-  // display names. Unlike the drawn edges this is not filtered to bodies in the
-  // scene: the panel is a reading surface, and a relation to something currently
-  // off-screen is exactly the kind of thing the user came here to discover.
-  const focusRelations = useMemo<FocusRelation[]>(() => {
-    if (!focusId || !graph?.crossRelations) return [];
-    // Focus can be a taxonomy node OR an object (`obj:` id) — relations match
-    // on the bare ref + the right kind, so an object focus reads its own edges.
-    const bare = focusId.startsWith('obj:') ? focusId.slice(4) : focusId;
-    const focusKind: 'node' | 'object' = focusId.startsWith('obj:') ? 'object' : 'node';
+  // Typed relations touching the PANEL TARGET, in EITHER direction, resolved
+  // to display names. Unlike the drawn edges this is not filtered to bodies in
+  // the scene: the rail is a reading surface, and a relation to something
+  // currently off-screen is exactly what the user came here to discover.
+  const targetId = drawer?.id ?? null;
+  const targetRelations = useMemo<FocusRelation[]>(() => {
+    if (!targetId || !graph?.crossRelations) return [];
+    // The target can be a taxonomy node OR an object (`obj:` id) — relations
+    // match on the bare ref + the right kind.
+    const bare = targetId.startsWith('obj:') ? targetId.slice(4) : targetId;
+    const focusKind: 'node' | 'object' = targetId.startsWith('obj:') ? 'object' : 'node';
     const nameOf = (ref: string, kind: 'node' | 'object') =>
       kind === 'node' ? nodeById.get(ref)?.name ?? ref : objectById.get(ref)?.title ?? ref;
     const out: FocusRelation[] = [];
@@ -821,60 +803,31 @@ export default function Explore() {
       });
     }
     return out;
-  }, [focusId, graph, nodeById, objectById]);
+  }, [targetId, graph, nodeById, objectById]);
 
-  const sidePanelEl = (
-    <SidePanel
-      relations={focusRelations}
-      onRelationClick={(r) => {
-        if (r.otherKind === 'node') {
-          setFocusId(r.otherRef);
-          return;
-        }
-        const o = objectById.get(r.otherRef);
-        if (o) {
-          // The obj:-prefixed shape every other object drawer uses (openTarget
-          // above) — DetailPanel derives its link lists and the Focus button
-          // from the prefix + isStar + nodeId, so a bare id opened a degraded
-          // panel that dead-ended the relation chase at the first hop.
-          setDrawer({
-            id: `obj:${o.id}`,
-            name: o.title,
-            kind: 'object',
-            dataType: o.type,
-            isStar: true,
-            nodeId: `obj:${o.id}`,
-          });
-        }
-      }}
-      // Rail header must name WHATEVER is focused — obj:/dir: ids included —
-      // not claim "no focus" while the canvas shows a halo.
-      focusName={
-        !focusId
-          ? null
-          : focusId.startsWith('obj:')
-            ? objectById.get(focusId.slice(4))?.title ?? null
-            : focusId.startsWith('dir:')
-              ? coreLayout?.folders.find((f) => f.id === focusId)?.name ?? null
-              : nodeById.get(focusId)?.name ?? null
-      }
-      typeFilter={typeFilter}
-      onTypeToggle={(dt) =>
-        setTypeFilter((prev) => {
-          const next = new Set(prev);
-          if (next.has(dt)) next.delete(dt);
-          else next.add(dt);
-          return next;
-        })
-      }
-      availableTypes={availableTypes}
-      items={neighbors.data?.items ?? []}
-      loading={neighbors.isFetching}
-      semantic={neighbors.data?.semantic ?? false}
-      vectorsReady={graph?.meta.vectors ?? false}
-      onItemClick={onPanelItem}
+  // The ONE rail content — rendered as the desktop right rail or inside the
+  // mobile Sheet (never both).
+  const detailEl = (
+    <DetailPanel
+      target={drawer}
+      nodeById={nodeById}
+      objects={graph?.objects ?? []}
+      objectLinks={graph?.objectLinks ?? []}
+      relations={targetRelations}
+      // Both kinds route through openTarget: it does drawer + focus + warp
+      // consistently, so chasing a relation never dead-ends the rail.
+      onRelationClick={(r) => openTarget(r.otherKind === 'node' ? r.otherRef : `obj:${r.otherRef}`)}
+      onClose={() => setDrawer(null)}
+      onFocus={(id) => warpTo(id)}
+      onSelect={openTarget}
+      onSliceRoot={(id) => setRootId(id)}
     />
   );
+
+  // Mobile: picking anything opens the Sheet — the tap needs feedback.
+  useEffect(() => {
+    if (isMobile && drawer) setPanelOpen(true);
+  }, [isMobile, drawer]);
 
   // Slice breadcrumb chip content — the root's full ancestry path.
   const slicePath = useMemo(() => {
@@ -898,14 +851,6 @@ export default function Explore() {
           </Link>
         </Button>
         <h1 className="shrink-0 text-sm font-semibold">{t('explore.title')}</h1>
-        <span className="hidden text-xs text-muted-foreground sm:inline">
-          {graph
-            ? t('explore.stats', {
-                nodes: graph.nodes.length,
-                embedded: graph.meta.embeddings.total,
-              })
-            : '…'}
-        </span>
         {rootId && (
           <span
             className="flex max-w-56 shrink-0 items-center gap-1.5 rounded-full border border-teal-400/40 bg-teal-400/10 px-2 py-0.5 text-xs text-teal-200"
@@ -993,6 +938,37 @@ export default function Explore() {
             <Waypoints className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">{t('explore.toggle.links')}</span>
           </Button>
+          {/* Facet chips — the object-type whitelist filters the SCENE. */}
+          {availableTypes.length > 0 && (
+            <div className="flex shrink-0 flex-wrap items-center gap-1">
+              {availableTypes.map((dt) => (
+                <Badge
+                  key={dt}
+                  variant={typeFilter.size === 0 || typeFilter.has(dt) ? 'default' : 'outline'}
+                  className="cursor-pointer text-[10px]"
+                  onClick={() =>
+                    setTypeFilter((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(dt)) next.delete(dt);
+                      else next.add(dt);
+                      return next;
+                    })
+                  }
+                >
+                  {dt}
+                </Badge>
+              ))}
+            </div>
+          )}
+          <Button
+            variant={recent ? 'default' : 'outline'}
+            size="sm"
+            className="h-8 shrink-0 text-xs"
+            onClick={() => setRecent((v) => !v)}
+            title={t('explore.lens.recentTitle')}
+          >
+            {t('explore.lens.recent')}
+          </Button>
           {isMobile && (
             <Button
               variant="outline"
@@ -1038,53 +1014,28 @@ export default function Explore() {
               coreView={coreOn}
             />
           )}
-          {!isLoading && (
+          {!isLoading && recent && (
             <div className="absolute bottom-3 left-3 z-10 flex max-w-[calc(100vw-1.5rem)] flex-wrap items-center gap-1.5 rounded-lg border border-slate-500/25 bg-slate-950/85 px-2 py-1.5 text-xs text-slate-300">
-              <button
-                title={t('explore.lens.recentTitle')}
-                className={`rounded px-1.5 py-0.5 ${recent ? 'bg-orange-400 text-slate-900' : 'hover:bg-slate-700/60'}`}
-                onClick={() => setRecent((v) => !v)}
-              >
-                {t('explore.lens.recent')}
-              </button>
-              {recent && (
-                <span className="ml-1 flex items-center gap-1" data-testid="recent-legend">
-                  <span className="opacity-60">{t('explore.lens.recentHot')}</span>
-                  <span
-                    className="h-2 w-14 rounded-full"
-                    style={{ background: 'linear-gradient(to right, hsl(18 85% 60%), hsl(218 50% 60%))' }}
-                  />
-                  <span className="opacity-60">{t('explore.lens.recentCold')}</span>
-                </span>
-              )}
+              <span className="flex items-center gap-1" data-testid="recent-legend">
+                <span className="opacity-60">{t('explore.lens.recentHot')}</span>
+                <span
+                  className="h-2 w-14 rounded-full"
+                  style={{ background: 'linear-gradient(to right, hsl(18 85% 60%), hsl(218 50% 60%))' }}
+                />
+                <span className="opacity-60">{t('explore.lens.recentCold')}</span>
+              </span>
             </div>
           )}
-          <DetailPanel
-            target={drawer}
-            nodeById={nodeById}
-            objects={graph?.objects ?? []}
-            objectLinks={graph?.objectLinks ?? []}
-            onClose={() => setDrawer(null)}
-            onFocus={(id) => {
-              setDrawer(null);
-              warpTo(id);
-            }}
-            onSelect={openTarget}
-            onSliceRoot={(id) => {
-              setDrawer(null);
-              setRootId(id);
-            }}
-          />
         </div>
         {isMobile ? (
           <Sheet open={panelOpen} onOpenChange={setPanelOpen}>
             <SheetContent side="right" className="w-[85vw] max-w-sm overflow-y-auto p-0">
               <SheetTitle className="sr-only">{t('explore.panel.title')}</SheetTitle>
-              {sidePanelEl}
+              {detailEl}
             </SheetContent>
           </Sheet>
         ) : (
-          <aside className="w-72 shrink-0 border-l">{sidePanelEl}</aside>
+          <aside className="w-80 shrink-0 border-l">{detailEl}</aside>
         )}
       </div>
 

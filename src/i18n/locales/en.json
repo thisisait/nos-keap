@@ -378,41 +378,16 @@
   },
   "explore": {
     "title": "Explorer — knowledge map",
-    "stats": "{{nodes}} nodes · {{embedded}} embeddings",
-    "mode": {
-      "related": "Related",
-      "unrelated": "Most unrelated"
-    },
-    "kind": {
-      "taxonomy": "Taxonomy",
-      "capture": "Captured pages",
-      "note": "Curated notes",
-      "object": "Knowledge objects"
-    },
-    "camera": {
-      "observer": "Observer",
-      "ship": "Ship",
-      "shipHint": "Mouse: look · WASD: fly · R/F: up/down · Space: boost"
-    },
     "jump": {
       "placeholder": "Hyperspace jump…"
     },
     "panel": {
       "title": "Constellation",
-      "focusOn": "Focus: {{name}}",
       "noFocus": "Click a node to reveal its semantic neighbourhood.",
-      "noVectors": "Vectors not synced yet — run keap-embed-sync on the host. The tree works without them.",
-      "kinds": "Sources",
-      "dataTypes": "Data types",
-      "results": "{{count}} points",
-      "notSemantic": "no vectors",
-      "relations": "Ontological relations",
-      "relationsEmpty": "No confirmed relations for this node.",
       "relOut": "outgoing",
       "relIn": "incoming"
     },
     "drawer": {
-      "open": "Open content",
       "focus": "Focus in graph"
     },
     "detail": {
@@ -422,34 +397,14 @@
         "free": "free zone"
       },
       "grown": "grown",
-      "noDescription": "No description yet — the taxonomy-describe skill (or you, via Describe) will fill it.",
-      "describe": "Describe",
-      "grow": "New sub-node",
-      "anchorLocked": "Anchor core — the sky’s constants change only by release.",
-      "growHintFree": "Free zone: an approved proposal materializes immediately (audited).",
-      "growHintVotable": "Votable core: the proposal goes to the moderator.",
-      "childName": "Node name",
-      "childDesc": "Description (min 20 chars) — it becomes the node’s search text (load-bearing).",
-      "submitGrow": "Propose node",
-      "descHint": "Descriptions are load-bearing: English is the canonical search/embedding text, Czech is the UI localization.",
-      "descEn": "Description (English, canonical, min 20 chars)",
-      "descCs": "Popis (česky, volitelný)",
-      "submitDesc": "Propose description",
-      "growApproved": "Node {{id}} materialized — the star is in the universe.",
-      "growProposed": "Proposal submitted — awaits the moderator.",
-      "descProposed": "Description proposed — awaits the moderator.",
-      "children": "Sub-nodes ({{count}})",
-      "anchored": "Anchored knowledge ({{count}})",
-      "linkedOut": "Links to ({{count}})",
-      "linkedIn": "Linked from ({{count}})",
-      "brief": "Brief",
       "folderBadge": "Folder",
-      "folderContents": "Contents ({{count}})",
       "folderEmpty": "No synced files here yet — mapped folders and the user tree fill this in as fs-sync runs.",
       "repoBadge": "Repo",
       "repoLangs": "Languages",
-      "topicTerms": "Key terms",
-      "sliceRoot": "Only this subtree"
+      "sliceRoot": "Only this subtree",
+      "inside": "Inside ({{count}})",
+      "related": "Related",
+      "openWhere": "Open where it lives"
     },
     "lens": {
       "recent": "Recent",
@@ -458,25 +413,10 @@
       "recentCold": "old"
     },
     "core": {
-      "toggle": "Core",
-      "tooltip": "Move files into the ring center as a 3D core",
       "root": "Files",
-      "unfiled": "cards",
-      "untopiced": "unsorted",
-      "topicUnavailable": "No topic clusters yet — waiting for object embeddings (keap-embed-sync)",
-      "topicCoverage": "{{assigned}}/{{total}} clustered",
-      "order": {
-        "fs": "Folders",
-        "taxonomy": "Taxonomy",
-        "topic": "Topics",
-        "type": "By type"
-      }
+      "unfiled": "cards"
     },
     "toggle": {
-      "ontology": "Ontology",
-      "ontologyHint": "Show typed ontological relations (R3 verbs + concept web)",
-      "olinks": "Links",
-      "olinksHint": "Show [[object:…]] references between cards",
       "links": "Links",
       "linksHint": "Show relations: typed verbs, concept web and [[object:…]] references"
     },
