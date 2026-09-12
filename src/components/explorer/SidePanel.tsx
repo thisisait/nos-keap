@@ -1,22 +1,16 @@
 /**
- * The constellation control panel: relation mode, source kinds, dataType
- * facets, and the distance-sorted result list. What is checked here decides
- * which stars get rendered behind the focused branch.
+ * The constellation reading panel: dataType facets, typed relations grouped
+ * by verb, and the distance-sorted result list for the focused node.
  */
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
-import type { NeighborItem, NeighborMode } from '@/hooks/useExplorerData';
+import type { NeighborItem } from '@/hooks/useExplorerData';
 
 interface Props {
   focusName: string | null;
-  mode: NeighborMode;
-  onModeChange: (m: NeighborMode) => void;
-  kinds: string[];
-  onKindsChange: (k: string[]) => void;
   typeFilter: Set<string>;
   onTypeToggle: (t: string) => void;
   availableTypes: string[];
@@ -44,14 +38,8 @@ export interface FocusRelation {
   otherName: string;
 }
 
-const KINDS = ['taxonomy', 'capture', 'note', 'object'] as const;
-
 export default function SidePanel({
   focusName,
-  mode,
-  onModeChange,
-  kinds,
-  onKindsChange,
   typeFilter,
   onTypeToggle,
   availableTypes,
@@ -65,8 +53,10 @@ export default function SidePanel({
 }: Props) {
   const { t } = useTranslation();
 
+  // The facet is an OBJECT filter: captures/notes carry no dataType and must
+  // survive a facet pick (requiring one deleted the whole semantic star field).
   const filtered = typeFilter.size
-    ? items.filter((i) => i.dataType && typeFilter.has(i.dataType))
+    ? items.filter((i) => !i.dataType || typeFilter.has(i.dataType))
     : items;
 
   // Group by VERB so the panel reads as an ontology ("Depends on: a, b") rather
@@ -102,35 +92,6 @@ export default function SidePanel({
           {t('explore.panel.noVectors')}
         </p>
       )}
-
-      <div className="flex gap-1">
-        {(['related', 'unrelated'] as const).map((m) => (
-          <button
-            key={m}
-            onClick={() => onModeChange(m)}
-            className={`rounded-md px-2 py-1 text-xs transition-colors ${
-              mode === m ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground hover:bg-muted/70'
-            }`}
-          >
-            {t(`explore.mode.${m}`)}
-          </button>
-        ))}
-      </div>
-
-      <div className="space-y-1.5">
-        <p className="text-xs font-medium text-muted-foreground">{t('explore.panel.kinds')}</p>
-        {KINDS.map((k) => (
-          <label key={k} className="flex items-center gap-2 text-xs">
-            <Checkbox
-              checked={kinds.includes(k)}
-              onCheckedChange={(on) =>
-                onKindsChange(on ? [...kinds, k] : kinds.filter((x) => x !== k))
-              }
-            />
-            {t(`explore.kind.${k}`)}
-          </label>
-        ))}
-      </div>
 
       {availableTypes.length > 0 && (
         <div className="space-y-1.5">

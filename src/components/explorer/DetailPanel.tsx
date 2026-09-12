@@ -72,6 +72,8 @@ interface Props {
   onClose: () => void;
   onFocus: (nodeId: string) => void;
   onSelect: (id: string) => void;
+  /** Slice the map to this taxonomy node's subtree (?root=). */
+  onSliceRoot?: (nodeId: string) => void;
 }
 
 function ancestors(id: string, nodeById: Map<string, GraphNode>): GraphNode[] {
@@ -154,7 +156,7 @@ function BriefBody({
   );
 }
 
-export default function DetailPanel({ target, nodeById, objects, objectLinks, onClose, onFocus, onSelect }: Props) {
+export default function DetailPanel({ target, nodeById, objects, objectLinks, onClose, onFocus, onSelect, onSliceRoot }: Props) {
   const { t, i18n } = useTranslation();
   const qc = useQueryClient();
   const [growOpen, setGrowOpen] = useState(false);
@@ -406,6 +408,17 @@ export default function DetailPanel({ target, nodeById, objects, objectLinks, on
               <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => onFocus(target.nodeId!)}>
                 <Crosshair className="mr-1 h-3 w-3" />
                 {t('explore.drawer.focus')}
+              </Button>
+            )}
+            {node && node.childCount > 0 && onSliceRoot && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs"
+                data-testid="detail-slice-root"
+                onClick={() => onSliceRoot(node.id)}
+              >
+                {t('explore.detail.sliceRoot')}
               </Button>
             )}
             {node && (

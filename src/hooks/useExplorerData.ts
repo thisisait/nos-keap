@@ -182,17 +182,14 @@ export function useGraph() {
   });
 }
 
-export function useNeighbors(
-  focusId: string | null,
-  mode: NeighborMode,
-  kinds: string[],
-  limit = 25,
-) {
+export function useNeighbors(focusId: string | null, limit = 25) {
+  // Mode is always 'related' and kinds always all — the server defaults.
+  // ('unrelated' + kind checkboxes were culled: novelty, not information.)
   return useQuery({
-    queryKey: ['graph-neighbors', focusId, mode, kinds.join(','), limit],
+    queryKey: ['graph-neighbors', focusId, limit],
     queryFn: () =>
       apiFetch<NeighborsPayload>(
-        `/api/graph/neighbors?id=${encodeURIComponent(focusId!)}&mode=${mode}&kinds=${kinds.join(',')}&limit=${limit}`,
+        `/api/graph/neighbors?id=${encodeURIComponent(focusId!)}&limit=${limit}`,
       ),
     enabled: Boolean(focusId),
     staleTime: 60 * 1000,

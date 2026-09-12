@@ -226,8 +226,10 @@ interface Props {
   onNodeClick: (id: string) => void;
   width: number;
   height: number;
-  /** observer = orbit camera; ship = 3rd-person low-poly rocket. */
-  mode: CameraMode;
+  /** observer = orbit camera; ship = 3rd-person low-poly rocket.
+   *  Optional since the Explore ship toggle was culled; ship internals go in
+   *  the Phase C GraphCanvas pass. */
+  mode?: CameraMode;
   /** Called every engine tick with the current ship telemetry (ship mode only). */
   onShipUpdate?: (state: { speed: number; boosting: boolean; thrust: number }) => void;
   /** Semantic lens: recolour stars by an embedding-derived axis + size by centrality. */
@@ -696,7 +698,7 @@ function hash01v(s: string): number {
   return ((h >>> 0) % 100000) / 100000;
 }
 
-export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width, height, mode, onShipUpdate, lens, coreView, detail = 'auto' }: Props) {
+export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width, height, mode = 'observer', onShipUpdate, lens, coreView, detail = 'auto' }: Props) {
   const forceDetail = detail === 'full';
   const fgRef = useRef<GraphRef | undefined>(undefined);
   const didFitRef = useRef(false);

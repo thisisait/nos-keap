@@ -448,7 +448,8 @@
       "folderEmpty": "Zatím žádné synchronizované soubory — mapované složky a uživatelský strom se sem doplní, jakmile fs-sync poběží.",
       "repoBadge": "Repo",
       "repoLangs": "Jazyky",
-      "topicTerms": "Klíčové pojmy"
+      "topicTerms": "Klíčové pojmy",
+      "sliceRoot": "Zobrazit jen tento podstrom"
     },
     "lens": {
       "recent": "Nedávné",
@@ -475,7 +476,15 @@
       "ontology": "Ontologie",
       "ontologyHint": "Zobrazit typované ontologické vazby (slovesa R3 + koncepční síť)",
       "olinks": "Odkazy",
-      "olinksHint": "Zobrazit [[object:…]] odkazy mezi kartami"
+      "olinksHint": "Zobrazit [[object:…]] odkazy mezi kartami",
+      "links": "Vazby",
+      "linksHint": "Zobrazit vazby: typovaná slovesa, koncepční síť i [[object:…]] odkazy"
+    },
+    "view": {
+      "constellation": "Konstelace",
+      "fs": "Složky",
+      "taxonomy": "Taxonomie",
+      "type": "Typy"
     }
   },
   "tables": {

@@ -448,7 +448,8 @@
       "folderEmpty": "No synced files here yet — mapped folders and the user tree fill this in as fs-sync runs.",
       "repoBadge": "Repo",
       "repoLangs": "Languages",
-      "topicTerms": "Key terms"
+      "topicTerms": "Key terms",
+      "sliceRoot": "Only this subtree"
     },
     "lens": {
       "recent": "Recent",
@@ -475,7 +476,15 @@
       "ontology": "Ontology",
       "ontologyHint": "Show typed ontological relations (R3 verbs + concept web)",
       "olinks": "Links",
-      "olinksHint": "Show [[object:…]] references between cards"
+      "olinksHint": "Show [[object:…]] references between cards",
+      "links": "Links",
+      "linksHint": "Show relations: typed verbs, concept web and [[object:…]] references"
+    },
+    "view": {
+      "constellation": "Constellation",
+      "fs": "Folders",
+      "taxonomy": "Taxonomy",
+      "type": "Types"
     }
   },
   "tables": {
