@@ -24,10 +24,9 @@ export interface GraphNode {
   /** Track T zone + provenance. */
   zone?: 'anchor' | 'votable' | 'free';
   ext?: boolean;
-  /** K1 curated description (en canonical) + cs localization. */
-  description?: string;
-  descriptionCs?: string;
-  /** Baked star position (U1) — present once the server has a layout. */
+  /** Baked star position (U1) — present once the server has a layout.
+   *  (K1 descriptions are NOT in the bulk payload — DetailPanel fetches
+   *  them per node via /api/taxonomy-metadata/:id.) */
   x?: number;
   y?: number;
   z?: number;

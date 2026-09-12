@@ -122,9 +122,21 @@ function parseKinds(raw: unknown): db.EmbeddingKind[] {
 }
 
 export function registerGraphRoutes(app: Express) {
-  // The full taxonomy as a render-ready graph. The dataset is static, curated
-  // overlay is tiny — one uncached pass per request is fine at ~790 nodes.
+  // The full taxonomy as a render-ready graph. One uncached pass per request;
+  // the payload diet (no prose, no bodies read) keeps it viable at ~2.6k nodes.
   app.get('/api/graph', (req: Request, res: Response) => {
+    const metaBlock = {
+      vectors: db.vectorSearchAvailable(),
+      embeddings: db.embeddingStats(),
+      liveEmbed: liveEmbedAvailable(),
+      layoutVersion: db.getLayoutVersion(),
+      topics: db.topicStats(),
+    };
+    // ?meta=1 — stats only, for the homepage tile (which needs two numbers,
+    // not the corpus).
+    if (req.query.meta === '1') {
+      return ok(res, { counts: { nodes: allNodes().length }, meta: metaBlock });
+    }
     const curated = db.getTaxonomyMetadata();
     const curatedById = new Map(
       (Array.isArray(curated) ? curated : []).map((c) => [c.id, c.data]),
@@ -156,9 +168,8 @@ export function registerGraphRoutes(app: Express) {
         url: resolved?.url,
         zone: n.zone,
         ext: n.ext ?? false,
-        // K1 curated descriptions — en is canonical, cs is the UI locale.
-        description: n.description,
-        descriptionCs: n.descriptionCs,
+        // K1 curated descriptions are NOT shipped in bulk (payload diet) —
+        // the DetailPanel reads them per node via /api/taxonomy-metadata/:id.
         x: p?.x,
         y: p?.y,
         z: p?.z,
@@ -347,13 +358,7 @@ export function registerGraphRoutes(app: Express) {
       fsMappings,
       fsDirs,
       topics,
-      meta: {
-        vectors: db.vectorSearchAvailable(),
-        embeddings: db.embeddingStats(),
-        liveEmbed: liveEmbedAvailable(),
-        layoutVersion: db.getLayoutVersion(),
-        topics: db.topicStats(),
-      },
+      meta: metaBlock,
     });
   });
 

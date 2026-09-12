@@ -166,8 +166,13 @@ export default function DetailPanel({ target, nodeById, objects, objectLinks, on
   const [notice, setNotice] = useState<string | null>(null);
 
   const node = target && !target.isStar ? nodeById.get(target.id) : null;
-  // Curated note layer — the node's brief (taxonomy-brief skill output).
-  const { data: curatedRow } = useQuery<{ data?: { brief?: string; briefCs?: string; [key: string]: unknown } } | null>({
+  // Curated note layer — the node's brief (taxonomy-brief skill output) plus
+  // the K1 description, which the bulk graph payload no longer carries.
+  const { data: curatedRow } = useQuery<{
+    data?: { brief?: string; briefCs?: string; [key: string]: unknown };
+    description?: string;
+    descriptionCs?: string;
+  } | null>({
     queryKey: ['node-meta', node?.id],
     queryFn: () => apiFetch(`/api/taxonomy-metadata/${node!.id}`),
     enabled: Boolean(node),
@@ -250,7 +255,7 @@ export default function DetailPanel({ target, nodeById, objects, objectLinks, on
   if (!target) return null;
 
   const description = node
-    ? (i18n.language?.startsWith('cs') && node.descriptionCs) || node.description
+    ? (i18n.language?.startsWith('cs') && curatedRow?.descriptionCs) || curatedRow?.description
     : target.description;
   const zone = node?.zone;
 

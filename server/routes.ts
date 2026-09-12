@@ -14,7 +14,7 @@
 import crypto from 'node:crypto';
 import type { Express, Request, Response } from 'express';
 import * as db from './db';
-import { generateTaxonomyOptions } from './taxonomy';
+import { generateTaxonomyOptions, getNode } from './taxonomy';
 import { listContentServices } from './content-links';
 import { extractRefs } from './objects';
 import { markCorpusDirty } from './search';
@@ -248,7 +248,21 @@ export function registerApiRoutes(app: Express) {
 
   // Curated taxonomy metadata (global knowledge layer; writes admin-gated)
   app.get('/api/taxonomy-metadata', (_req, res) => ok(res, db.getTaxonomyMetadata()));
-  app.get('/api/taxonomy-metadata/:id', (req, res) => ok(res, db.getTaxonomyMetadata(req.params.id)));
+  // Per-node fetch also carries the node's K1 description (en+cs) — the bulk
+  // /api/graph payload no longer ships prose (explore-decomplexity Phase A).
+  app.get('/api/taxonomy-metadata/:id', (req, res) => {
+    const row = db.getTaxonomyMetadata(req.params.id);
+    const base = row && !Array.isArray(row) ? row : null;
+    const n = getNode(req.params.id);
+    if (!base && !n) return ok(res, null);
+    ok(res, {
+      id: req.params.id,
+      data: base?.data ?? null,
+      updatedAt: base?.updatedAt ?? 0,
+      description: n?.description,
+      descriptionCs: n?.descriptionCs,
+    });
+  });
   app.post('/api/taxonomy-metadata', (req, res) => {
     if (!requireAdmin(req, res)) return;
     if (!req.body?.id) return fail(res, 400, 'No data provided');

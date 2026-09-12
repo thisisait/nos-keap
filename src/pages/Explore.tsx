@@ -696,8 +696,7 @@ export default function Explore() {
       name: n.name,
       kind: n.kind,
       dataType: n.dataType,
-      // K1: prefer the cs localization when the UI runs Czech.
-      description: (i18n.language?.startsWith('cs') && n.descriptionCs) || n.description,
+      // K1 description arrives via DetailPanel's per-node fetch, not the drawer.
       isStar: false,
     });
     setFocusId(id);
