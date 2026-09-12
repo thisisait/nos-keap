@@ -122,3 +122,18 @@ Vazby · facet chips (moved from rail) · stáří toggle.
 tsc clean, vitest green (fix e2e/ship asserts, core-type-order), lint no
 NEW errors, `npm run build` passes, i18n keys pruned. Update this spec with
 any recorded deviation.
+
+## Recorded deviations
+
+- `/api/graph` still attaches `features` (node_features) and linked-data
+  `meta` on every node, plus `topic` on objects. The client lenses that
+  consumed them are gone; leftover payload, not a behaviour bug. Drop in a
+  later diet pass.
+- Hover name plates are a separate sprite (`hoverRef`), not members of the
+  proximity pool. Spec asked for "pool + unconditional focus + hover"; this
+  is that split, not a second label system.
+- `REL_LABEL_CAP` (300) stays as the one dense-Vazby cliff (midpoint plates
+  vs width-0 lines). The duplicate `REL_TUBE_CAP` is gone.
+- Recency toggle copy is "Nedávné" / "Recent", not the spec's "Barvit podle
+  stáří" — the tooltip carries the colour-by-age meaning.
+- Server-side `?root=` filtering remains later, as written.

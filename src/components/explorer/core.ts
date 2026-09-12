@@ -27,6 +27,7 @@
  * renaming a mapping must not move a single node.
  */
 import type { GraphObject } from '@/hooks/useExplorerData';
+import { hash01 } from './repoVisuals';
 
 export type CoreOrder = 'fs' | 'taxonomy' | 'type';
 
@@ -47,16 +48,6 @@ const SAT_MIN_SEP = 0.35; // min rad between hubs — ~17 per ring
 // objects in one mapping — 5k tethers from one folder would white-out the map.
 const AGGREGATE_RAYS_AT = 200;
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
-
-/** Cheap deterministic 0..1 from a string (FNV-1a) — mirrors orbital.ts. */
-function hash01(s: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return ((h >>> 0) % 100000) / 100000;
-}
 
 /** i-th of n points on a unit sphere, hash-jittered (layout.ts twin). */
 function fibDir(i: number, n: number, id: string): [number, number, number] {

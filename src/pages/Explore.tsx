@@ -271,7 +271,6 @@ export default function Explore() {
       kind: 'object',
       level,
       childCount: 0,
-      hasNote: false,
       dataType: o.type,
       object: true,
       form: o.form,
@@ -377,7 +376,6 @@ export default function Explore() {
           kind: 'folder',
           level: 98,
           childCount: f.count,
-          hasNote: false,
           folder: true,
           mtime: newestOf(f.id),
           ...(ds?.repo ? { repo: true, bytes: ds.bytes, exts: ds.exts } : {}),
@@ -512,7 +510,6 @@ export default function Explore() {
             target: r.target,
             relation: true,
             relType: r.type,
-            explored: r.explored,
           });
         }
       }
@@ -569,7 +566,6 @@ export default function Explore() {
             kind: item.kind,
             level: 99,
             childCount: 0,
-            hasNote: false,
             dataType: item.dataType,
             star: true,
             distance: item.distance,
@@ -829,16 +825,17 @@ export default function Explore() {
     if (isMobile && drawer) setPanelOpen(true);
   }, [isMobile, drawer]);
 
-  // Slice breadcrumb chip content — the root's full ancestry path.
-  const slicePath = useMemo(() => {
-    if (!rootId) return null;
-    const parts: string[] = [];
+  // Slice breadcrumb — each ancestor is a real crumb: click it to slice
+  // there (drop the deeper levels, keep the parent). ✕ clears the slice.
+  const sliceCrumbs = useMemo(() => {
+    if (!rootId) return [];
+    const parts: { id: string; name: string }[] = [];
     let cur = nodeById.get(rootId);
     while (cur) {
-      parts.unshift(cur.name);
+      parts.unshift({ id: cur.id, name: cur.name });
       cur = cur.parentId ? nodeById.get(cur.parentId) : undefined;
     }
-    return parts.length ? parts.join(' › ') : rootId;
+    return parts.length ? parts : [{ id: rootId, name: rootId }];
   }, [rootId, nodeById]);
 
   return (
@@ -851,14 +848,29 @@ export default function Explore() {
           </Link>
         </Button>
         <h1 className="shrink-0 text-sm font-semibold">{t('explore.title')}</h1>
-        {rootId && (
-          <span
-            className="flex max-w-56 shrink-0 items-center gap-1.5 rounded-full border border-teal-400/40 bg-teal-400/10 px-2 py-0.5 text-xs text-teal-200"
+        {sliceCrumbs.length > 0 && (
+          <nav
+            className="flex min-w-0 max-w-[min(100%,28rem)] flex-wrap items-center gap-x-1 gap-y-0.5 rounded-full border border-teal-400/40 bg-teal-400/10 px-2 py-0.5 text-xs text-teal-200"
             data-testid="explore-slice-chip"
+            aria-label={sliceCrumbs.map((c) => c.name).join(' › ')}
           >
-            <span className="truncate" title={slicePath ?? undefined}>
-              {slicePath}
-            </span>
+            {sliceCrumbs.map((c, i) => (
+              <span key={c.id} className="flex min-w-0 items-center gap-1">
+                {i > 0 && <span className="shrink-0 opacity-50">›</span>}
+                {i < sliceCrumbs.length - 1 ? (
+                  <button
+                    type="button"
+                    className="truncate hover:text-white hover:underline"
+                    data-testid="explore-slice-crumb"
+                    onClick={() => setRootId(c.id)}
+                  >
+                    {c.name}
+                  </button>
+                ) : (
+                  <span className="truncate">{c.name}</span>
+                )}
+              </span>
+            ))}
             <button
               className="shrink-0 hover:text-white"
               aria-label={t('common.close')}
@@ -866,7 +878,7 @@ export default function Explore() {
             >
               ✕
             </button>
-          </span>
+          </nav>
         )}
         <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto">
           <div className="relative min-w-0 flex-1 sm:flex-none">

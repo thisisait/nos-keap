@@ -42,9 +42,7 @@ export const useTheme = () => {
   };
 
   return {
-    theme,
     isDark: theme === 'dark',
-    toggleTheme: () => setThemeValue(theme === 'dark' ? 'light' : 'dark'),
     setTheme: setThemeValue,
   };
 };

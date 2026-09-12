@@ -17,11 +17,10 @@
  *
  * LOD doctrine (explore-decomplexity Phase C): ONE pixel curve. A body draws
  * once it is BODY_PX tall on screen (hysteresis ratio LOD_HYST), a name plate
- * once it is LABEL_PX — labels arrive while bodies are still small, because a
- * 10 px dot with a readable name carries more information than a 30 px dot
- * without one. All plates are constant-pixel (sizeAttenuation=false), all
- * labels come from ONE proximity pool (cap LABEL_MAX, largest-on-screen
- * first) plus the unconditional focus + hover plates.
+ * once it is past its per-level gate (roots earlier than leaves). Labels
+ * fade opacity rather than popping. All plates are constant-pixel
+ * (sizeAttenuation=false). All labels come from ONE proximity pool (cap
+ * LABEL_MAX, ranked by px/gate) plus the unconditional focus + hover plates.
  */
 import { useMemo, useRef, useEffect, useCallback } from 'react';
 import ForceGraph3D, {
@@ -30,7 +29,7 @@ import ForceGraph3D, {
   type NodeObject,
 } from 'react-force-graph-3d';
 import SpriteText from 'three-spritetext';
-import { langOfPath, langColor } from './repoVisuals';
+import { hash01, langOfPath, langColor } from './repoVisuals';
 import * as THREE from 'three';
 import { UnrealBloomPass } from 'three/examples/jsm/postprocessing/UnrealBloomPass.js';
 import { forceCollide } from 'd3-force-3d';
@@ -67,10 +66,13 @@ const REL_LABEL_CAP = 300;
 // Every threshold is a PIXEL number (radius ÷ distance × focal factor), so the
 // policy is resolution- and FOV-aware instead of hand-tuned per screen.
 const BODY_PX = 2; // a body draws once its on-screen radius passes this
-const LABEL_PX = 4; // a name plate materialises at this radius — BEFORE bodies are big
+const LABEL_PX = 4; // L2+ / objects — BEFORE bodies are big
+const LABEL_PX_L0 = 1.1; // root galaxies: zoomToFit leaves them ~3 px
+const LABEL_PX_L1 = 3; // constellations: hidden at fit (~2.3 px), in once you lean in
 const LOD_HYST = 0.7; // hide at show×0.7 — one hysteresis ratio, not a second constant
 const LABEL_MAX = 48; // proximity-pool cap, largest-on-screen first
 const LABEL_TEXT_PX = 14; // constant on-screen text height of every plate
+const LABEL_FADE_MS = 360; // opacity lerp; reduced-motion snaps
 // The observer camera's FOV — three-render-objects' PerspectiveCamera default.
 // Nothing changes it any more (the ship-mode FOV kick is gone), so the
 // screen-fraction label scale can be computed once per plate, no per-frame JS.
@@ -91,7 +93,6 @@ export interface CanvasNode {
   kind: string;
   level: number;
   childCount: number;
-  hasNote: boolean;
   dataType?: string;
   star?: boolean;
   /** Anchored knowledge object rendering as a typed body orbiting its star. */
@@ -123,11 +124,6 @@ export interface CanvasNode {
   /** Recency (unix seconds): objects = file mtime / card updatedAt; folder
    *  hubs = newest descendant. The "Recent" lens age gradient reads this. */
   mtime?: number;
-  /** Embedding-derived semantic-lens features (colour/size channels). */
-  features?: Record<string, number>;
-  /** Linked-data enrichment (Wikidata QID + entity typing + QRank scope). */
-  meta?: { qid?: string; keapType?: string; schemaType?: string; wdLabel?: string;
-    confidence?: string; scopeRank?: number; scopeNorm?: number };
   /** Baked position pin (U1) — d3-force never moves fx/fy/fz nodes. */
   fx?: number;
   fy?: number;
@@ -143,7 +139,6 @@ export interface CanvasLink {
   /** Typed concept relation (imported research graph overlay, e.g. ToE). */
   relation?: boolean;
   relType?: string;
-  explored?: string | null;
   /** Track R3 typed cross-type relation (Vazby): registry colour + verb label +
    *  confidence-driven width. Distinct from the ToE `relation` layer above. */
   vazba?: boolean;
@@ -196,21 +191,7 @@ const STAR_COLOR: Record<string, string> = {
 // GALAXY discs, L2+ as STARS graded by depth (hotter/whiter shallow → cooler/
 // redder deep). Anchored objects are typed orbital bodies (see buildAssetMesh).
 
-// Semantic-lens state: colour by a chosen embedding-derived axis + size by
-// centrality. Positions never change — the lens only re-skins the stars.
-export interface LensState { axis?: string; sizeByCentrality?: boolean }
-
-// Diverging blue→red gradient over an axis score (~[-0.35, 0.35] in practice).
-function lensColor(score: number, focus: boolean): string {
-  const t = Math.max(0, Math.min(1, (score + 0.35) / 0.7)); // → [0,1]
-  const hue = 235 - t * 235; // low = blue (calm), high = red (toward the +pole)
-  return `hsl(${hue} 78% ${focus ? 80 : 56}%)`;
-}
-function nodeFeature(n: CanvasNode, key: string): number | undefined {
-  const f = (n as { features?: Record<string, number> }).features;
-  const v = f?.[key];
-  return typeof v === 'number' ? v : undefined;
-}
+export interface LensState { axis?: string }
 
 // ── Recency lens ─────────────────────────────────────────────────────────────
 // axis === RECENT_AXIS recolours knowledge objects (file mtime / card
@@ -254,11 +235,6 @@ function nodeColor(n: CanvasNode, focusId: string | null, lens?: LensState): str
     // everything else falls through to its structural colour untouched.
     if ((n.object || n.folder) && n.mtime !== undefined)
       return ageColor(n.mtime, n.id === focusId);
-  } else if (lens?.axis && !n.object && !n.star) {
-    // Semantic lens: taxonomy stars are recoloured by their axis projection; the
-    // structural hue (below) is the default when the lens is off / feature absent.
-    const s = nodeFeature(n, lens.axis);
-    if (s !== undefined) return lensColor(s, n.id === focusId);
   }
   if (n.folder) return `hsl(${n.categoryHue} 22% 64% / 0.9)`; // core folder hub — slate (215)
   if (n.object) return `hsl(${n.categoryHue} 72% 60%)`; // hue = data-type identity
@@ -277,7 +253,7 @@ function nodeColor(n: CanvasNode, focusId: string | null, lens?: LensState): str
 const LEVEL_BASE = [26, 14, 8, 5, 3.2];
 const LEVEL_SCOPE_REF = [600, 250, 130, 20, 10]; // typical subtree max per level
 
-function nodeSize(n: CanvasNode, lens?: LensState): number {
+function nodeSize(n: CanvasNode): number {
   let base: number;
   // Repo hubs: size follows the subtree's file bytes (log scale) — a 1 MB
   // toy and a 500 MB monorepo should read differently at a glance.
@@ -292,11 +268,6 @@ function nodeSize(n: CanvasNode, lens?: LensState): number {
     const t = Math.min(1, Math.log1p(n.scope ?? 0) / Math.log1p(ref));
     base = (LEVEL_BASE[lvl] ?? 2.6) * (0.55 + 1.35 * t);
   }
-  // Semantic lens: additionally scale by centrality (hubs bigger).
-  if (lens?.sizeByCentrality && !n.object && !n.star && (n.level ?? 2) >= 2) {
-    const c = nodeFeature(n, 'centrality');
-    if (c !== undefined) base *= 0.7 + Math.max(0, Math.min(1, c)) * 1.6;
-  }
   return base;
 }
 
@@ -307,6 +278,16 @@ function nodeSize(n: CanvasNode, lens?: LensState): number {
  *  that previously each used a radius the bodies didn't have. */
 function renderedRadius(n: CanvasNode): number {
   return n.object ? bodyScale(n) : Math.sqrt(Math.max(nodeSize(n), 0.01)) * 2.4;
+}
+
+/** On-screen body radius at which a name plate may appear. Roots are the
+ *  overview's orientation skeleton — they must read from farther than a leaf. */
+function labelGatePx(n: CanvasNode): number {
+  if (n.object || n.star) return LABEL_PX;
+  const lvl = n.level ?? 2;
+  if (lvl <= 0) return LABEL_PX_L0;
+  if (lvl === 1) return LABEL_PX_L1;
+  return LABEL_PX;
 }
 
 // ── Shared GPU resources (built ONCE, never per-node) ────────────────────────
@@ -457,7 +438,9 @@ function plate(
   sprite.borderColor = opts.border ?? 'rgba(180,195,225,0.35)';
   const label = sprite as unknown as THREE.Sprite;
   label.material.depthWrite = false;
+  label.material.depthTest = false; // else closer bodies eat the plate (renderOrder is not enough)
   label.material.sizeAttenuation = false;
+  label.material.transparent = true;
   const s = (2 * Math.tan((CAM_FOV * Math.PI) / 360) * textPx) / Math.max(viewH, 1);
   label.scale.set(label.scale.x * s, label.scale.y * s, 1);
   // Hang the plate fully BELOW its anchor point (the body's bottom edge), so
@@ -472,8 +455,8 @@ function buildFileCube(node: CanvasNode, lens?: LensState): THREE.Object3D {
   const color = objectBodyColor(node, true, lens);
   const mesh = new THREE.Mesh(_cubeGeo, new THREE.MeshBasicMaterial({ color: new THREE.Color(color) }));
   mesh.scale.setScalar(2.6);
-  mesh.rotation.y = hash01v(node.id) * Math.PI; // deterministic variety
-  mesh.rotation.x = hash01v(`${node.id}:x`) * 0.5;
+  mesh.rotation.y = hash01(node.id) * Math.PI; // deterministic variety
+  mesh.rotation.x = hash01(`${node.id}:x`) * 0.5;
   return mesh;
 }
 
@@ -495,8 +478,8 @@ const _assetInstMat = new THREE.MeshBasicMaterial();
 function fileCubeStub(node: CanvasNode): THREE.Object3D {
   const mesh = new THREE.Mesh(_cubeGeo, _stubMat);
   mesh.scale.setScalar(2.6); // match buildFileCube — this IS the raycast target
-  mesh.rotation.y = hash01v(node.id) * Math.PI;
-  mesh.rotation.x = hash01v(`${node.id}:x`) * 0.5;
+  mesh.rotation.y = hash01(node.id) * Math.PI;
+  mesh.rotation.x = hash01(`${node.id}:x`) * 0.5;
   mesh.visible = false; // 0 draw calls; still raycastable (three tests layers, not visible)
   return mesh;
 }
@@ -525,16 +508,6 @@ type GraphLink = LinkObject<CanvasNode, CanvasLink>;
  *  lens toggle. */
 const extendsDefaultSphere = (n: GraphNode) => !n.object;
 type GraphRef = ForceGraphMethods<GraphNode, GraphLink>;
-
-/** FNV-ish 0..1 hash — deterministic per-node variety (rotation, tilt). */
-function hash01v(s: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return ((h >>> 0) % 100000) / 100000;
-}
 
 export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width, height, lens, coreView }: Props) {
   const fgRef = useRef<GraphRef | undefined>(undefined);
@@ -899,7 +872,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     const col = new THREE.Color();
     cubes.forEach((n, i) => {
       dummy.position.set(n.fx!, n.fy!, n.fz!);
-      dummy.rotation.set(hash01v(`${n.id}:x`) * 0.5, hash01v(n.id) * Math.PI, 0); // == buildFileCube
+      dummy.rotation.set(hash01(`${n.id}:x`) * 0.5, hash01(n.id) * Math.PI, 0); // == buildFileCube
       dummy.scale.setScalar(2.6);
       dummy.updateMatrix();
       mesh.setMatrixAt(i, dummy.matrix);
@@ -1085,10 +1058,10 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
   // Per moved frame it computes each pinned node's on-screen radius in PIXELS
   // (renderedRadius ÷ distance × focal factor). Individually-drawn observer
   // bodies toggle visibility at BODY_PX (hysteresis LOD_HYST); the LABEL_MAX
-  // largest nodes past LABEL_PX get a constant-pixel name plate — level≥2
-  // taxonomy, folders, hubs, cubes, everything, plus the focus node
-  // unconditionally. Plate sprites are cached by id and only toggled visible,
-  // so camera motion allocates nothing after first sight.
+  // largest nodes past their *per-level* gate get a constant-pixel name plate
+  // (L0 roots from farther than leaves), plus the focus node unconditionally.
+  // Rank is "how many times over your own gate" so roots keep the overview
+  // slots. Plates fade opacity instead of popping visible.
   // ponytail: the cache grows with every node ever labeled (bounded by node
   // count, rebuilt on graphData change); add an LRU cap if texture memory
   // ever matters.
@@ -1099,6 +1072,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     const cands = graphData.nodes.filter((n) => n.fx != null && !n.orbit) as Pinned[];
     if (!cands.length) return;
     const radius = cands.map((n) => renderedRadius(n));
+    const gate = cands.map((n) => labelGatePx(n));
     const byId = new Map(cands.map((n, i) => [n.id, i] as const));
     // Body LOD only applies to objects that own a drawn per-node mesh: the
     // instanced regimes draw everything (cheap), core cubes are dense on
@@ -1106,11 +1080,15 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     const lodIdx: number[] = [];
     if (!coreView && !instanceBodies) cands.forEach((n, i) => { if (n.object) lodIdx.push(i); });
     const pool = new Map<string, THREE.Sprite>();
+    const held = new Set<string>(); // hysteresis: in-band even if currently under the cap
+    let want = new Set<string>();
     let scene: THREE.Scene | null = null;
     let lastX = Infinity, lastY = Infinity, lastZ = Infinity;
     let lastFocus: string | null | undefined;
+    let lastT = 0;
+    let fading = false;
     const focal = height / (2 * Math.tan((CAM_FOV * Math.PI) / 360)); // world→px at unit distance
-    const task = () => {
+    const task = (now: number) => {
       const ref = fgRef.current;
       if (!ref) return;
       if (!scene) {
@@ -1120,43 +1098,73 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
           return; // renderer not ready — retry next frame
         }
       }
+      const dt = lastT ? Math.min(now - lastT, 48) : 16;
+      lastT = now;
       const cp = ref.camera().position;
       const dmx = cp.x - lastX, dmy = cp.y - lastY, dmz = cp.z - lastZ;
-      // Idle guard: a still camera (and unchanged focus) can't change any band.
-      if (dmx * dmx + dmy * dmy + dmz * dmz <= 0.5 && focusRef.current === lastFocus) return;
-      lastX = cp.x; lastY = cp.y; lastZ = cp.z;
-      lastFocus = focusRef.current;
-      const px = new Float64Array(cands.length);
-      for (let i = 0; i < cands.length; i++) {
-        const n = cands[i];
-        const d = Math.hypot(cp.x - n.fx, cp.y - n.fy, cp.z - n.fz) || 1;
-        px[i] = (radius[i] / d) * focal;
-      }
-      for (const i of lodIdx) {
-        const obj = cands[i].__threeObj;
-        if (!obj) continue;
-        if (obj.visible) {
-          if (px[i] < BODY_PX * LOD_HYST) obj.visible = false;
-        } else if (px[i] > BODY_PX) {
-          obj.visible = true;
+      const camMoved = dmx * dmx + dmy * dmy + dmz * dmz > 0.5;
+      const focusNow = focusRef.current;
+      // Recompute the want-set only when the camera/focus actually moved; keep
+      // ticking while a fade is in flight so plates don't freeze mid-opacity.
+      if (camMoved || focusNow !== lastFocus) {
+        lastX = cp.x; lastY = cp.y; lastZ = cp.z;
+        lastFocus = focusNow;
+        const px = new Float64Array(cands.length);
+        for (let i = 0; i < cands.length; i++) {
+          const n = cands[i];
+          const d = Math.hypot(cp.x - n.fx, cp.y - n.fy, cp.z - n.fz) || 1;
+          px[i] = (radius[i] / d) * focal;
         }
+        for (const i of lodIdx) {
+          const obj = cands[i].__threeObj;
+          if (!obj) continue;
+          if (obj.visible) {
+            if (px[i] < BODY_PX * LOD_HYST) obj.visible = false;
+          } else if (px[i] > BODY_PX) {
+            obj.visible = true;
+          }
+        }
+        for (let i = 0; i < cands.length; i++) {
+          const id = cands[i].id;
+          if (held.has(id)) {
+            if (px[i] < gate[i] * LOD_HYST) held.delete(id);
+          } else if (px[i] > gate[i]) {
+            held.add(id);
+          }
+        }
+        const vis: Array<{ i: number; score: number }> = [];
+        for (const id of held) {
+          const i = byId.get(id);
+          if (i === undefined) continue;
+          vis.push({ i, score: px[i] / gate[i] });
+        }
+        vis.sort((a, b) => b.score - a.score);
+        want = new Set<string>();
+        for (const v of vis.slice(0, LABEL_MAX)) want.add(cands[v.i].id);
+        if (lastFocus) want.add(lastFocus);
+      } else if (!fading) {
+        return;
       }
-      const vis: Array<{ i: number; px: number }> = [];
-      for (let i = 0; i < cands.length; i++) if (px[i] > LABEL_PX) vis.push({ i, px: px[i] });
-      vis.sort((a, b) => b.px - a.px);
-      const want = new Set<string>();
-      for (const v of vis.slice(0, LABEL_MAX)) want.add(cands[v.i].id);
-      if (lastFocus) want.add(lastFocus); // the focus is named no matter how small
-      for (const [id, s] of pool) s.visible = want.has(id);
+      fading = false;
+      const step = REDUCED_MOTION ? 1 : dt / LABEL_FADE_MS;
       for (const id of want) {
         if (pool.has(id)) continue;
         const i = byId.get(id);
         if (i === undefined) continue;
         const n = cands[i];
         const label = plate(n.name, LABEL_TEXT_PX, height);
+        (label.material as THREE.SpriteMaterial).opacity = 0;
         label.position.set(n.fx, n.fy - radius[i], n.fz);
         scene.add(label);
         pool.set(id, label);
+      }
+      for (const [id, s] of pool) {
+        const m = s.material as THREE.SpriteMaterial;
+        const target = want.has(id) ? 1 : 0;
+        const next = m.opacity + Math.sign(target - m.opacity) * Math.min(step, Math.abs(target - m.opacity));
+        m.opacity = next;
+        s.visible = next > 0.02;
+        if (Math.abs(next - target) > 0.02) fading = true;
       }
     };
     const tasks = frameTasks.current;
@@ -1237,7 +1245,7 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
   // identity makes react-force-graph re-read them (cache NOT cleared, no
   // rebuild). Custom object bodies are recoloured by the in-place effect above.
   const nodeColorFn = useCallback((n: GraphNode) => nodeColor(n, focusId, lens), [focusId, lens]);
-  const nodeValFn = useCallback((n: GraphNode) => nodeSize(n, lens), [lens]);
+  const nodeValFn = useCallback((n: GraphNode) => nodeSize(n), []);
   // No HTML tooltip — the in-scene hover plate answers "what is that?".
   const noTooltip = useCallback(() => '', []);
   // Track R3: a verb plate for each typed cross-type edge, capped by relLabels.
@@ -1285,7 +1293,9 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
   return (
     <ForceGraph3D
       ref={fgRef}
-      controlType="orbit"
+      // trackball, not orbit: orbit clamps polar angle at the poles — a drag
+      // that reaches the Y axis hits a wall. Trackball has no such stop.
+      controlType="trackball"
       graphData={graphData}
       nodeId="id"
       nodeRelSize={2.4}

@@ -17,7 +17,6 @@ export interface GraphNode {
   parentId: string | null;
   level: number;
   childCount: number;
-  hasNote: boolean;
   dataType?: string;
   /** Resolved content link — the DetailPanel's "open in service" action. */
   url?: string;
@@ -54,8 +53,6 @@ export interface GraphObject {
   /** Mapped-folder provenance (fs_mappings id) — groups the object under its
    *  mapping's hub instead of the owner's tree. */
   mapping?: string;
-  /** Topics-mode cluster id (present in `topics[]`) — undefined = ~untopiced. */
-  topic?: string;
   /** Recency (unix seconds) — file mtime for fs mirrors, updatedAt for cards.
    *  Drives the "Recent" lens age gradient (recolor only). */
   mtime?: number;
@@ -82,20 +79,6 @@ export interface GraphMapping {
   /** Primary taxonomy anchor (hub ray target); dangling ids are filtered server-side. */
   taxonomyRoot?: string;
   taxonomyLinks: string[];
-  tags: string[];
-  /** Disabled mappings still ship — their retained objects need placement + labels. */
-  enabled: boolean;
-  count: number;
-}
-
-/** One semantic topic hub (topic_clusters) — viewer-filtered, per-viewer count.
- *  `theta` is the birth-frozen ring angle; `terms` are top c-TF-IDF chips. */
-export interface GraphTopic {
-  id: string;
-  label: string;
-  theta: number;
-  count: number;
-  terms?: string[];
 }
 
 /** One object→object ref edge ([[object:<id>]] wiki link) — bare object ids. */
@@ -109,7 +92,6 @@ export interface GraphRelation {
   source: string;
   target: string;
   type: string;
-  explored: string | null;
 }
 
 /** Track R3 stage 2: a typed cross-type relation (Vazby) across any kind pair —
@@ -125,7 +107,6 @@ export interface GraphCrossRelation {
   label: string;
   color: string | null;
   confidence: number | null;
-  status: string;
 }
 
 export interface GraphPayload {
@@ -142,15 +123,11 @@ export interface GraphPayload {
   /** Mapped-folder hubs — labels + placement for the files core (admin-managed). */
   fsMappings?: GraphMapping[];
   fsDirs?: GraphDirStat[];
-  /** Semantic topic hubs — viewer-filtered; empty/absent until objects embed. */
-  topics?: GraphTopic[];
   meta: {
     vectors: boolean;
     embeddings: { total: number; byKind: Record<string, number>; model: string | null };
     liveEmbed: boolean;
     layoutVersion: string | null;
-    /** Topics-mode summary — additive+optional; absent on old servers. */
-    topics?: { available: boolean; k: number; assigned: number; lastRunAt: number | null };
   };
 }
 

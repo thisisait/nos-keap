@@ -26,7 +26,7 @@ import { embedText, pendingEmbeddings, EMBED_MODEL, EMBED_DIM } from './embeddin
 import { extractRefs } from './objects';
 import { hybridSearch, markCorpusDirty } from './search';
 import { runLint, lastLintReport } from './lint';
-import { buildVersion } from './build-version';
+import { BUILD_VERSION } from './build-version';
 import { propose, proposeNode, proposeDescription, proposeBrief, moderationPolicy } from './promotions';
 import { allNodes } from './taxonomy';
 import { normalizeAndSaveCapture, parseEnvelope } from './intake';
@@ -184,7 +184,7 @@ export function registerAgentRoutes(app: Express) {
       // different facts, and until this field existed the running system could
       // not tell them apart: an image labelled with one version and built from
       // another is invisible from the inside, which is how a dead pin survives.
-      version: buildVersion(),
+      version: BUILD_VERSION,
       surface: TOKEN_RO || TOKEN_RW ? 'enabled' : 'disabled',
       corpus: { taxonomyNodes: taxonomyNodeCount(), ...stats },
       embeddings: db.embeddingStats(),

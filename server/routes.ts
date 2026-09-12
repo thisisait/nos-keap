@@ -33,7 +33,6 @@ import {
 import {
   listTables,
   getTable,
-  canReadTable,
   canWriteTable,
   updateTableVisibility,
   updateTableSharing,

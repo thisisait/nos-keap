@@ -14,7 +14,6 @@ import { useQuery } from '@tanstack/react-query';
 import { ExternalLink, Crosshair, X, ChevronRight, Folder, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { apiFetch } from '@/services/api/client';
 import type { GraphNode, GraphObject, GraphObjectLink } from '@/hooks/useExplorerData';
 import { fmtBytes, type RepoLang } from './repoVisuals';
@@ -308,7 +307,7 @@ export default function DetailPanel({
         </Button>
       </div>
 
-      <ScrollArea className="min-h-0 flex-1">
+      <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="space-y-4 p-3">
           {prose && <BriefBody md={prose} nodeById={nodeById} onSelect={onSelect} />}
 
@@ -458,7 +457,7 @@ export default function DetailPanel({
             )}
           </div>
         </div>
-      </ScrollArea>
+      </div>
     </div>
   );
 }
