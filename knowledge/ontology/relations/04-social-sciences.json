@@ -351,42 +351,6 @@
    "createdAt": 1785000000
   },
   {
-   "from": "04.11.03",
-   "fromKind": "node",
-   "to": "04.04",
-   "toKind": "node",
-   "type": "related-concept",
-   "source": "manual",
-   "status": "confirmed",
-   "confidence": 0.72,
-   "justification": "Accounting reads financial statements against valuation concepts economics supplies; after the 04.11 re-home it is a peer discipline related to economics, no longer descended from it.",
-   "createdAt": 1785000000
-  },
-  {
-   "from": "04.11.03",
-   "fromKind": "node",
-   "to": "09.05",
-   "toKind": "node",
-   "type": "specializes",
-   "source": "manual",
-   "status": "confirmed",
-   "confidence": 0.71,
-   "justification": "Accounting is measurement applied to economic activity, and its recognition rules are measurement conventions.",
-   "createdAt": 1785000000
-  },
-  {
-   "from": "04.11.02.03",
-   "fromKind": "node",
-   "to": "03.05",
-   "toKind": "node",
-   "type": "derived-from",
-   "source": "manual",
-   "status": "confirmed",
-   "confidence": 0.87,
-   "justification": "Operations management derives from manufacturing practice and generalises its flow concepts to services.",
-   "createdAt": 1785000000
-  },
-  {
    "from": "04.05.01",
    "fromKind": "node",
    "to": "04.05.02",
@@ -1368,6 +1332,42 @@
    "status": "confirmed",
    "confidence": 0.88,
    "justification": "Archaeological science rests on nuclear physics: radiometric dating is decay measurement.",
+   "createdAt": 1785000000
+  },
+  {
+   "from": "04.11.02.03",
+   "fromKind": "node",
+   "to": "03.05",
+   "toKind": "node",
+   "type": "derived-from",
+   "source": "manual",
+   "status": "confirmed",
+   "confidence": 0.87,
+   "justification": "Operations management derives from manufacturing practice and generalises its flow concepts to services.",
+   "createdAt": 1785000000
+  },
+  {
+   "from": "04.11.03",
+   "fromKind": "node",
+   "to": "04.04",
+   "toKind": "node",
+   "type": "related-concept",
+   "source": "manual",
+   "status": "confirmed",
+   "confidence": 0.72,
+   "justification": "Accounting reads financial statements against valuation concepts economics supplies; after the 04.11 re-home it is a peer discipline related to economics, no longer descended from it.",
+   "createdAt": 1785000000
+  },
+  {
+   "from": "04.11.03",
+   "fromKind": "node",
+   "to": "09.05",
+   "toKind": "node",
+   "type": "specializes",
+   "source": "manual",
+   "status": "confirmed",
+   "confidence": 0.71,
+   "justification": "Accounting is measurement applied to economic activity, and its recognition rules are measurement conventions.",
    "createdAt": 1785000000
   }
  ]

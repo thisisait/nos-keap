@@ -53,6 +53,8 @@ export interface GraphObject {
   /** Mapped-folder provenance (fs_mappings id) — groups the object under its
    *  mapping's hub instead of the owner's tree. */
   mapping?: string;
+  /** Topics-mode cluster id when assigned (viewer-scoped via visible members). */
+  topic?: string;
   /** Recency (unix seconds) — file mtime for fs mirrors, updatedAt for cards.
    *  Drives the "Recent" lens age gradient (recolor only). */
   mtime?: number;
@@ -123,11 +125,14 @@ export interface GraphPayload {
   /** Mapped-folder hubs — labels + placement for the files core (admin-managed). */
   fsMappings?: GraphMapping[];
   fsDirs?: GraphDirStat[];
+  /** Viewer-scoped topic hubs (only clusters with ≥1 visible member). */
+  topics?: Array<{ id: string; label: string; theta: number; count: number; terms?: string[] }>;
   meta: {
     vectors: boolean;
     embeddings: { total: number; byKind: Record<string, number>; model: string | null };
     liveEmbed: boolean;
     layoutVersion: string | null;
+    topics?: { available: boolean; k: number; assigned: number; lastRunAt: number | null };
   };
 }
 

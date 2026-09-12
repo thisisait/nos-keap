@@ -125,10 +125,10 @@ any recorded deviation.
 
 ## Recorded deviations
 
-- `/api/graph` still attaches `features` (node_features) and linked-data
-  `meta` on every node, plus `topic` on objects. The client lenses that
-  consumed them are gone; leftover payload, not a behaviour bug. Drop in a
-  later diet pass.
+- `/api/graph` still ships viewer-scoped `topics[]` and `object.topic` (tenant
+  leak guard + clustering e2e). Node `features` / linked-data `meta`, mapping
+  `tags`/`enabled`/`count`, and relation `status`/`explored` were dropped —
+  Explore no longer reads them.
 - Hover name plates are a separate sprite (`hoverRef`), not members of the
   proximity pool. Spec asked for "pool + unconditional focus + hover"; this
   is that split, not a second label system.
@@ -137,3 +137,5 @@ any recorded deviation.
 - Recency toggle copy is "Nedávné" / "Recent", not the spec's "Barvit podle
   stáří" — the tooltip carries the colour-by-age meaning.
 - Server-side `?root=` filtering remains later, as written.
+- Hierarchical label LOD (L0 farther, L1 later, ~360 ms fade) and Trackball
+  Controls replaced the spec's single px-threshold + OrbitControls polar wall.

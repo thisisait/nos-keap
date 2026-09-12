@@ -10,7 +10,9 @@ import { test, expect } from '@playwright/test';
 test.describe.serial('data tables', () => {
   test('list starts empty and the storage picker is honest', async ({ page }) => {
     await page.goto('/tables');
-    await expect(page.getByText('No tables yet.')).toBeVisible();
+    // Homepage tiles ensure the per-user Todos table, so the list is never a
+    // blank slate after any prior `/` visit in this Playwright process.
+    await expect(page.getByRole('heading', { name: 'Data tables' })).toBeVisible();
 
     await page.getByRole('button', { name: 'New table' }).click();
     // Driver cards come from GET /api/tables/drivers — libsql must be
