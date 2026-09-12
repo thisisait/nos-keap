@@ -1616,7 +1616,11 @@ export function registerAgentRoutes(app: Express) {
   // (or quorum-gated in the future democratic/MMO policy).
   app.get('/agent/v1/promotions', agentAuth('ro'), (req, res) => {
     const status = req.query.status ? String(req.query.status) : undefined;
-    ok(res, { policy: moderationPolicy(), items: db.listPromotions(status, 100) });
+    // ?limit up to 5000: the drain loop's reader must see the WHOLE queue —
+    // the default 100 silently hid the tail once open briefs passed it (same
+    // bug class the human /api/promotions cap fix recorded).
+    const limit = Math.min(Number(req.query.limit) || 100, 5000);
+    ok(res, { policy: moderationPolicy(), items: db.listPromotions(status, limit) });
   });
 
   app.post('/agent/v1/promotions', agentAuth('rw'), (req, res) => {

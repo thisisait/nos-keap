@@ -103,6 +103,37 @@ export function vote(
   return { status: 'proposed', net };
 }
 
+/**
+ * Decide a SELECTED SET of brief promotions — the apply half of the weekly
+ * moderation-drain loop (nOS prepares a git-tracked verdict JSON, the operator
+ * applies it under their session). Explicit ids, never "everything open":
+ * the loop's whole point is that different domains get different verdicts.
+ * Per-id try/catch = idempotent-safe: a re-run skips already-decided ids as
+ * error entries instead of failing the batch. Refuses non-brief kinds — bulk
+ * relief stays scoped to content briefs; object/node proposals change corpus
+ * structure and remain individual.
+ */
+export function decideBriefBulk(
+  ids: string[],
+  decision: Decision,
+  decidedBy: string,
+): { decided: number; errors: Array<{ id: string; error: string }> } {
+  let decided = 0;
+  const errors: Array<{ id: string; error: string }> = [];
+  for (const id of ids) {
+    try {
+      const p = db.getPromotion(id);
+      if (!p) throw new Error('unknown promotion');
+      if (p.kind !== 'brief') throw new Error(`not a brief promotion (kind=${p.kind})`);
+      decide(id, decision, decidedBy);
+      decided++;
+    } catch (err) {
+      errors.push({ id, error: (err as Error).message });
+    }
+  }
+  return { decided, errors };
+}
+
 export function decide(
   promotionId: string,
   decision: Decision,
