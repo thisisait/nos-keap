@@ -487,6 +487,13 @@
    "source": "curated-xref"
   },
   {
+   "from": "04.08.03",
+   "to": "08.06",
+   "type": "related-concept",
+   "explored": null,
+   "source": "curated-xref"
+  },
+  {
    "from": "04.08.04.02",
    "to": "01.04.03",
    "type": "related-concept",
@@ -527,13 +534,6 @@
    "type": "references",
    "explored": null,
    "source": "brief-xref"
-  },
-  {
-   "from": "04.08.03",
-   "to": "08.06",
-   "type": "related-concept",
-   "explored": null,
-   "source": "curated-xref"
   }
  ]
 }
