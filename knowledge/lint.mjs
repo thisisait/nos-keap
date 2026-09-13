@@ -107,6 +107,12 @@ for (const f of files) {
   }
   for (const r of doc.relations || []) {
     if (!r.from || !r.to || !r.type) errors.push(`${rel}: relation missing from/to/type — ${JSON.stringify(r)}`);
+    // lift-xrefs drops every source='brief-xref' row and re-derives ONLY type
+    // 'references' from the current briefs — a curated typing filed under that
+    // source is silently deleted on the next re-lift (the v1.47 04.11 loss).
+    // Curated edges belong under source 'curated-xref'.
+    if (r.source === 'brief-xref' && r.type !== 'references')
+      errors.push(`${rel}: relation ${r.from}→${r.to} type '${r.type}' under source 'brief-xref' — lift-xrefs will delete it; use source 'curated-xref'`);
   }
 }
 
