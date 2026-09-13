@@ -387,7 +387,9 @@
       "noFocus": "Click a node to reveal its semantic neighbourhood.",
       "noVectors": "Vectors not synced yet — run keap-embed-sync on the host. The tree works without them.",
       "relOut": "outgoing",
-      "relIn": "incoming"
+      "relIn": "incoming",
+      "proseError": "Description failed to load.",
+      "retry": "Retry"
     },
     "drawer": {
       "focus": "Focus in graph"

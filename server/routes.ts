@@ -14,7 +14,7 @@
 import crypto from 'node:crypto';
 import type { Express, Request, Response } from 'express';
 import * as db from './db';
-import { generateTaxonomyOptions, getNode } from './taxonomy';
+import { generateTaxonomyOptions, getNode, allNodes } from './taxonomy';
 import { listContentServices } from './content-links';
 import { extractRefs } from './objects';
 import { markCorpusDirty } from './search';
@@ -248,6 +248,14 @@ export function registerApiRoutes(app: Express) {
 
   // Curated taxonomy metadata (global knowledge layer; writes admin-gated)
   app.get('/api/taxonomy-metadata', (_req, res) => ok(res, db.getTaxonomyMetadata()));
+  // Bulk id→description projection for list views (Admin tree). The prose left
+  // the bulk /api/graph payload in explore-decomplexity Phase A; this map is
+  // the light way back for surfaces that need every node's canonical text.
+  app.get('/api/taxonomy-descriptions', (_req, res) => {
+    const out: Record<string, string> = {};
+    for (const n of allNodes()) if (n.description) out[n.id] = n.description;
+    ok(res, out);
+  });
   // Per-node fetch also carries the node's K1 description (en+cs) — the bulk
   // /api/graph payload no longer ships prose (explore-decomplexity Phase A).
   app.get('/api/taxonomy-metadata/:id', (req, res) => {

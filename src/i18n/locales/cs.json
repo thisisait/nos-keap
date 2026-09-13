@@ -387,7 +387,9 @@
       "noFocus": "Klikni na uzel — objeví se jeho sémantické okolí.",
       "noVectors": "Vektory zatím nejsou synchronizované — spusť keap-embed-sync na hostu. Strom funguje i bez nich.",
       "relOut": "odchozí",
-      "relIn": "příchozí"
+      "relIn": "příchozí",
+      "proseError": "Popis se nepodařilo načíst.",
+      "retry": "Zkusit znovu"
     },
     "drawer": {
       "focus": "Zaměřit v grafu"

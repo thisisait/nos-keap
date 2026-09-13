@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
+import { apiFetch } from '@/services/api/client';
 import { useDatabase, type TaxonomyMetadata, type HomepageTile } from '@/hooks/useDatabase';
 import { useGraph, type GraphNode } from '@/hooks/useExplorerData';
 import { Button } from '@/components/ui/button';
@@ -53,6 +55,15 @@ export default function Admin() {
   // "unnamed" and the list flat/half-empty. We render the tree, pre-order, and
   // fold the curated overlay in as badges.
   const graph = useGraph();
+  // Canonical K1 descriptions, bulk. /api/graph no longer ships prose
+  // (explore-decomplexity Phase A), so the tree fetches the id→description
+  // map separately — without it uncurated nodes render blank and canonical
+  // text is unsearchable.
+  const { data: descById } = useQuery<Record<string, string>>({
+    queryKey: ['taxonomy-descriptions'],
+    queryFn: () => apiFetch('/api/taxonomy-descriptions'),
+    staleTime: 5 * 60 * 1000,
+  });
   const curatedById = useMemo(
     () => new Map(taxonomyItems.map((i) => [i.id, i])),
     [taxonomyItems],
@@ -80,14 +91,14 @@ export default function Admin() {
     const q = taxSearch.trim().toLowerCase();
     if (!q) return orderedNodes;
     return orderedNodes.filter((n) => {
-      const curated = curatedById.get(n.id)?.description ?? '';
+      const desc = curatedById.get(n.id)?.description || descById?.[n.id] || '';
       return (
         n.id.toLowerCase().includes(q) ||
         n.name.toLowerCase().includes(q) ||
-        curated.toLowerCase().includes(q)
+        desc.toLowerCase().includes(q)
       );
     });
-  }, [orderedNodes, taxSearch, curatedById]);
+  }, [orderedNodes, taxSearch, curatedById, descById]);
 
   // Open the curated-metadata editor for a node: reuse an existing overlay row
   // or seed a blank one keyed to the node id (the tree already owns the name).
@@ -433,7 +444,7 @@ export default function Admin() {
                     ) : (
                       visibleNodes.map((node) => {
                         const curated = curatedById.get(node.id);
-                        const desc = curated?.description;
+                        const desc = curated?.description || descById?.[node.id];
                         return (
                           <div
                             key={node.id}
