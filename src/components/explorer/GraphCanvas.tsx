@@ -208,7 +208,10 @@ function ageColor(mtime: number, focus = false): string {
   const t = age <= WEEK_S ? 0 : Math.min(1, Math.log(age / WEEK_S) / Math.log(YEAR_S / WEEK_S));
   const hue = 18 + t * 200; // hot amber-orange → cold steel blue
   const sat = 85 - t * 35;
-  return `hsl(${hue} ${sat}% ${focus ? 78 : 60}%)`;
+  // Comma form ON PURPOSE: this string feeds new THREE.Color() in the mesh
+  // builders, and three's parser rejects the CSS4 space-separated hsl form
+  // (silent no-op → white body). Keep commas.
+  return `hsl(${hue}, ${sat}%, ${focus ? 78 : 60}%)`;
 }
 /** Object-mesh body colour — the recency lens overrides the identity hue. */
 function bodyColor(node: CanvasNode, fallback: string, lens?: LensState): string {
@@ -273,11 +276,12 @@ function nodeSize(n: CanvasNode): number {
 
 /** Rendered radius of the body an object actually draws with. Objects REPLACE
  *  the default sphere with a form mesh scaled by bodyScale(); everything else
- *  IS the default sphere (√val · nodeRelSize). ONE function shared by the LOD,
- *  the label offset, the hover offset and the focus pulse — four call sites
- *  that previously each used a radius the bodies didn't have. */
+ *  IS the default sphere (∛val · nodeRelSize — three-forcegraph uses cbrt,
+ *  NOT sqrt). ONE function shared by the LOD, the label offset, the hover
+ *  offset and the focus pulse — four call sites that previously each used a
+ *  radius the bodies didn't have. */
 function renderedRadius(n: CanvasNode): number {
-  return n.object ? bodyScale(n) : Math.sqrt(Math.max(nodeSize(n), 0.01)) * 2.4;
+  return n.object ? bodyScale(n) : Math.cbrt(Math.max(nodeSize(n), 0.01)) * 2.4;
 }
 
 /** On-screen body radius at which a name plate may appear. Roots are the
@@ -1118,10 +1122,18 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
         for (const i of lodIdx) {
           const obj = cands[i].__threeObj;
           if (!obj) continue;
+          // visible alone is NOT enough: three raycasts objects regardless of
+          // `visible` (layers only — see the pick-stub notes above), so a
+          // hidden body would stay a hover/click target covering empty sky.
+          // Flip layer 0 in lockstep so LOD-hidden means LOD-unpickable.
           if (obj.visible) {
-            if (px[i] < BODY_PX * LOD_HYST) obj.visible = false;
+            if (px[i] < BODY_PX * LOD_HYST) {
+              obj.visible = false;
+              obj.traverse((o) => o.layers.disable(0));
+            }
           } else if (px[i] > BODY_PX) {
             obj.visible = true;
+            obj.traverse((o) => o.layers.enable(0));
           }
         }
         for (let i = 0; i < cands.length; i++) {
@@ -1289,6 +1301,47 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
     },
     [relLabels],
   );
+  // Memoised for the same reason as nodeColorFn: an inline arrow's fresh
+  // identity every render makes the library re-digest/rebuild link objects on
+  // every unrelated render (search keystroke, drawer toggle).
+  const linkLabelFn = useCallback((l: GraphLink) => (l.vazba && l.relVerb ? l.relVerb : ''), []);
+  const linkColorFn = useCallback(
+    (l: GraphLink) =>
+      l.vazba
+        ? l.relColor ?? 'rgba(148,163,184,0.6)' // typed cross-type: registry hue
+        : l.relation
+        ? REL_COLOR[l.relType] ?? 'rgba(148,163,184,0.5)'
+        : l.ray || l.mray
+          // Lines (width 0) ignore per-link alpha — the dimming is baked
+          // into the rgb instead. ONE tether colour: object→anchor and
+          // hub→anchor answer the same question.
+          ? '#12554c' // core tether — teal, the objects' colour family
+          : l.olink
+            ? '#433064' // object→object ref — violet (#a78bfa ×0.4)
+            : l.fs
+              ? '#434953' // folder skeleton — quiet slate
+              : l.semantic
+                ? 'rgba(251,191,36,0.55)'
+                : '#1e2126',
+    [],
+  );
+  const linkWidthFn = useCallback(
+    (l: GraphLink) =>
+      // PERF: any non-zero width promotes the link to a TubeGeometry MESH
+      // (one draw call each); width 0 renders a GL line. Bulk links (tree
+      // skeleton, fs edges, rays — thousands at scale) MUST stay lines;
+      // only the sparse overlays may afford tubes.
+      l.vazba
+        ? relLabels
+          ? 0.6 + (l.confidence ?? 0.5) * 1.4 // sparse typed overlay: width by confidence (0.6–2.0)
+          : 0 // dense overlay → GL line (PERF doctrine: tubes stay sparse)
+        : l.relation
+        ? 0.8 // ToE research edges — one width, the colour is the channel
+        : l.semantic
+          ? 1.2 // focus star field — dozens at most
+          : 0,
+    [relLabels],
+  );
 
   return (
     <ForceGraph3D
@@ -1310,40 +1363,9 @@ export default function GraphCanvas({ nodes, links, focusId, onNodeClick, width,
       // Typed cross-type edges carry their verb on hover — the fallback when a
       // dense Vazby overlay (>REL_LABEL_CAP) drops the always-on midpoint plates,
       // so the verb is never fully invisible. Bulk/other links have no link label.
-      linkLabel={(l: GraphLink) => (l.vazba && l.relVerb ? l.relVerb : '')}
-      linkColor={(l: GraphLink) =>
-        l.vazba
-          ? l.relColor ?? 'rgba(148,163,184,0.6)' // typed cross-type: registry hue
-          : l.relation
-          ? REL_COLOR[l.relType] ?? 'rgba(148,163,184,0.5)'
-          : l.ray || l.mray
-            // Lines (width 0) ignore per-link alpha — the dimming is baked
-            // into the rgb instead. ONE tether colour: object→anchor and
-            // hub→anchor answer the same question.
-            ? '#12554c' // core tether — teal, the objects' colour family
-            : l.olink
-              ? '#433064' // object→object ref — violet (#a78bfa ×0.4)
-              : l.fs
-                ? '#434953' // folder skeleton — quiet slate
-                : l.semantic
-                  ? 'rgba(251,191,36,0.55)'
-                  : '#1e2126'
-      }
-      linkWidth={(l: GraphLink) =>
-        // PERF: any non-zero width promotes the link to a TubeGeometry MESH
-        // (one draw call each); width 0 renders a GL line. Bulk links (tree
-        // skeleton, fs edges, rays — thousands at scale) MUST stay lines;
-        // only the sparse overlays may afford tubes.
-        l.vazba
-          ? relLabels
-            ? 0.6 + (l.confidence ?? 0.5) * 1.4 // sparse typed overlay: width by confidence (0.6–2.0)
-            : 0 // dense overlay → GL line (PERF doctrine: tubes stay sparse)
-          : l.relation
-          ? 0.8 // ToE research edges — one width, the colour is the channel
-          : l.semantic
-            ? 1.2 // focus star field — dozens at most
-            : 0
-      }
+      linkLabel={linkLabelFn}
+      linkColor={linkColorFn}
+      linkWidth={linkWidthFn}
       onNodeClick={handleClick}
       onNodeHover={handleHover}
       backgroundColor="rgba(0,0,0,0)"

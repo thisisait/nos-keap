@@ -14,7 +14,7 @@
 import crypto from 'node:crypto';
 import type { Express, Request, Response } from 'express';
 import * as db from './db';
-import { generateTaxonomyOptions, getNode } from './taxonomy';
+import { generateTaxonomyOptions, getNode, allNodes } from './taxonomy';
 import { listContentServices } from './content-links';
 import { extractRefs } from './objects';
 import { markCorpusDirty } from './search';
@@ -39,6 +39,7 @@ import {
   hasRowGrantFor,
   updateTableSchema,
   syncCard,
+  syncRows,
   storeFor,
   listDrivers,
   assertRowId,
@@ -247,6 +248,14 @@ export function registerApiRoutes(app: Express) {
 
   // Curated taxonomy metadata (global knowledge layer; writes admin-gated)
   app.get('/api/taxonomy-metadata', (_req, res) => ok(res, db.getTaxonomyMetadata()));
+  // Bulk id→description projection for list views (Admin tree). The prose left
+  // the bulk /api/graph payload in explore-decomplexity Phase A; this map is
+  // the light way back for surfaces that need every node's canonical text.
+  app.get('/api/taxonomy-descriptions', (_req, res) => {
+    const out: Record<string, string> = {};
+    for (const n of allNodes()) if (n.description) out[n.id] = n.description;
+    ok(res, out);
+  });
   // Per-node fetch also carries the node's K1 description (en+cs) — the bulk
   // /api/graph payload no longer ships prose (explore-decomplexity Phase A).
   app.get('/api/taxonomy-metadata/:id', (req, res) => {
@@ -633,6 +642,16 @@ export function registerApiRoutes(app: Express) {
         updateTableSharing(t.id, sharedWith);
         next = { ...next, sharedWith };
       }
+      // The corpus card and the projected row objects carry their OWN
+      // visibility column — a bare data_tables UPDATE would leave a table
+      // narrowed to private still readable through getVisibleObjects/search
+      // until some unrelated schema write happened to resync. The schema
+      // branch resyncs via updateTableSchema (with `next`'s new visibility),
+      // so only the schema-less scope change needs it here.
+      if ((visibility || sharedWith) && !schema) {
+        syncCard(next);
+        syncRows(next);
+      }
       if (schema) next = { ...next, ...updateTableSchema(next, schema) };
       if (view) {
         // Validated against the LIVE columns, not the request's — a caller may
@@ -640,7 +659,11 @@ export function registerApiRoutes(app: Express) {
         // titleColumn no longer exists renders an untitled list forever.
         const errs = validateViewMeta(view, next.schema.columns);
         if (errs.length) return fail(res, 400, errs[0]);
-        syncCard(next, [], undefined, view);
+        // anchors = undefined, NOT []: syncCard treats a provided list as a
+        // replacement, so [] would wipe the card's [[node]] anchors — and the
+        // row-projection cardAnchor fallback would then re-file every row
+        // anchorless. A view-only PATCH carries no anchor opinion.
+        syncCard(next, undefined, undefined, view);
       }
       ok(res, { ...next, view });
     } catch (e) {

@@ -192,7 +192,7 @@ export default function Explore() {
   }, [neighbors.data, typeFilter]);
 
   // Merge the static constellation with the semantic star field.
-  const { canvasNodes, canvasLinks, coreLayout } = useMemo(() => {
+  const { canvasNodes: baseNodes, canvasLinks: baseLinks, coreLayout } = useMemo(() => {
     if (!graph)
       return {
         canvasNodes: [] as CanvasNode[],
@@ -514,82 +514,101 @@ export default function Explore() {
         }
       }
     }
-    if (focusId) {
-      // Focus-halo center: the focused node's coordinates (baked taxonomy
-      // star, or a core layout position for dir: hubs).
-      const fc = nodeById.get(focusId);
-      // Focus centre. Resolving ALL node classes (not just taxonomy) is
-      // load-bearing: an object/table/folder focus is NOT in nodeById, so the
-      // old lookup returned undefined → the dust below went unpinned → the sim
-      // reheated over every node (see the orbit note). Objects/folders carry the
-      // pinned fx we just built; core hubs come from the layout map.
-      const builtFocus = nodes.find((n) => n.id === focusId);
-      // Built node FIRST: in the core view a relocated user-root star carries
-      // its core fx, while nodeById still holds the baked outer-ring position
-      // — preferring the latter parked the halo (and its tethers) across the
-      // sky from the node the camera just flew to.
-      const fp: [number, number, number] | undefined =
-        builtFocus?.fx != null
-          ? [builtFocus.fx, builtFocus.fy!, builtFocus.fz!]
-          : fc && fc.x !== undefined
-            ? [fc.x, fc.y!, fc.z!]
-            : coreLayout?.positions.get(focusId);
-      let dustIdx = 0;
-      for (const item of starItems) {
-        if (item.kind === 'taxonomy' && item.nodeId && nodeIn(item.nodeId)) {
-          // Tree member: no new node, just the dashed semantic edge.
-          links.push({ source: focusId, target: item.nodeId, semantic: true, distance: item.distance });
-        } else {
-          const id = `star:${item.kind}:${item.refId}`;
-          // Deterministic ORBIT around the focus, not force dust: the d3
-          // engine spawned these at the ring center and the pinned-star
-          // charge field shot them out of view. Radius = semantic distance
-          // (closer hit = tighter orbit), golden-angle spread, hash tilt;
-          // GraphCanvas animates the very slow revolution + tether lines.
-          const r = 24 + Math.min(item.distance ?? 0.8, 1.4) * 70;
-          const phase = dustIdx * 2.399963 + hash01(id) * 0.6;
-          const tilt = (hash01(`${id}:t`) - 0.5) * 1.1;
-          const speed = (0.03 + hash01(`${id}:w`) * 0.03) * (hash01(`${id}:d`) < 0.5 ? 1 : -1);
-          dustIdx++;
-          // ALWAYS pin the dust — never leave a node force-free. A single
-          // unpinned node flips hasUnpinnedNode, which reheats the d3 sim over
-          // EVERY node; d3's charge then rebuilds a Barnes-Hut octree across all
-          // 20k+ bodies each tick (pinned strengths are 0 but still in the tree)
-          // → a multi-second freeze on focus and ~0.1 FPS at scale. Fall back to
-          // the origin if the focus centre is somehow unknown — orbiting the
-          // origin beats freezing the whole app.
-          const c = fp ?? [0, 0, 0];
-          const orbit = { cx: c[0], cy: c[1], cz: c[2], r, phase, tilt, speed };
-          nodes.push({
-            id,
-            name: item.name,
-            kind: item.kind,
-            level: 99,
-            childCount: 0,
-            dataType: item.dataType,
-            star: true,
-            distance: item.distance,
-            categoryHue: 45,
-            orbit,
-            // Pinned at the orbit's t=0 point; the GraphCanvas animator revolves
-            // it and draws its own tether, so nothing is ever force-free.
-            fx: orbit.cx + r * Math.cos(phase),
-            fy: orbit.cy + r * Math.sin(phase) * Math.sin(tilt),
-            fz: orbit.cz + r * Math.sin(phase) * Math.cos(tilt),
-          });
-        }
+    return { canvasNodes: nodes, canvasLinks: links, coreLayout };
+  }, [graph, hueByCategory, nodeById, showLinks, passesType, coreOn, coreOrder, rootId, t, dirStatByPath, mappingById, rootOf]);
+
+  // Focus halo dust — its OWN memo, concat'd onto the static scene. The dust
+  // must NOT live in the scene memo above: with focusId/starItems in that dep
+  // list every click rebuilt all ~20k node/link literals, so three-forcegraph
+  // saw an all-new node set, tore down every __threeObj and re-uploaded the
+  // whole scene (a multi-hundred-ms freeze per click at corpus scale). Here a
+  // focus change touches only the dust; the base arrays keep their identity.
+  const { canvasNodes, canvasLinks } = useMemo(() => {
+    if (!focusId || !starItems.length)
+      return { canvasNodes: baseNodes, canvasLinks: baseLinks };
+    // Drawn-id set stands in for the scene memo's nodeIn(): every scene
+    // taxonomy node was built into baseNodes, slice or not.
+    const drawn = new Set(baseNodes.map((n) => n.id));
+    // Focus-halo center: the focused node's coordinates (baked taxonomy
+    // star, or a core layout position for dir: hubs).
+    const fc = nodeById.get(focusId);
+    // Focus centre. Resolving ALL node classes (not just taxonomy) is
+    // load-bearing: an object/table/folder focus is NOT in nodeById, so the
+    // old lookup returned undefined → the dust below went unpinned → the sim
+    // reheated over every node (see the orbit note). Objects/folders carry the
+    // pinned fx the scene memo built; core hubs come from the layout map.
+    const builtFocus = baseNodes.find((n) => n.id === focusId);
+    // Built node FIRST: in the core view a relocated user-root star carries
+    // its core fx, while nodeById still holds the baked outer-ring position
+    // — preferring the latter parked the halo (and its tethers) across the
+    // sky from the node the camera just flew to.
+    const fp: [number, number, number] | undefined =
+      builtFocus?.fx != null
+        ? [builtFocus.fx, builtFocus.fy!, builtFocus.fz!]
+        : fc && fc.x !== undefined
+          ? [fc.x, fc.y!, fc.z!]
+          : coreLayout?.positions.get(focusId);
+    const dustNodes: CanvasNode[] = [];
+    const dustLinks: CanvasLink[] = [];
+    let dustIdx = 0;
+    for (const item of starItems) {
+      if (item.kind === 'taxonomy' && item.nodeId && drawn.has(item.nodeId)) {
+        // Tree member: no new node, just the dashed semantic edge.
+        dustLinks.push({ source: focusId, target: item.nodeId, semantic: true, distance: item.distance });
+      } else {
+        const id = `star:${item.kind}:${item.refId}`;
+        // Deterministic ORBIT around the focus, not force dust: the d3
+        // engine spawned these at the ring center and the pinned-star
+        // charge field shot them out of view. Radius = semantic distance
+        // (closer hit = tighter orbit), golden-angle spread, hash tilt;
+        // GraphCanvas animates the very slow revolution + tether lines.
+        const r = 24 + Math.min(item.distance ?? 0.8, 1.4) * 70;
+        const phase = dustIdx * 2.399963 + hash01(id) * 0.6;
+        const tilt = (hash01(`${id}:t`) - 0.5) * 1.1;
+        const speed = (0.03 + hash01(`${id}:w`) * 0.03) * (hash01(`${id}:d`) < 0.5 ? 1 : -1);
+        dustIdx++;
+        // ALWAYS pin the dust — never leave a node force-free. A single
+        // unpinned node flips hasUnpinnedNode, which reheats the d3 sim over
+        // EVERY node; d3's charge then rebuilds a Barnes-Hut octree across all
+        // 20k+ bodies each tick (pinned strengths are 0 but still in the tree)
+        // → a multi-second freeze on focus and ~0.1 FPS at scale. Fall back to
+        // the origin if the focus centre is somehow unknown — orbiting the
+        // origin beats freezing the whole app.
+        const c = fp ?? [0, 0, 0];
+        const orbit = { cx: c[0], cy: c[1], cz: c[2], r, phase, tilt, speed };
+        dustNodes.push({
+          id,
+          name: item.name,
+          kind: item.kind,
+          level: 99,
+          childCount: 0,
+          dataType: item.dataType,
+          star: true,
+          distance: item.distance,
+          categoryHue: 45,
+          orbit,
+          // Pinned at the orbit's t=0 point; the GraphCanvas animator revolves
+          // it and draws its own tether, so nothing is ever force-free.
+          fx: orbit.cx + r * Math.cos(phase),
+          fy: orbit.cy + r * Math.sin(phase) * Math.sin(tilt),
+          fz: orbit.cz + r * Math.sin(phase) * Math.cos(tilt),
+        });
       }
     }
-    return { canvasNodes: nodes, canvasLinks: links, coreLayout };
-  }, [graph, focusId, starItems, hueByCategory, nodeById, showLinks, passesType, coreOn, coreOrder, rootId, t, dirStatByPath, mappingById, rootOf]);
+    return {
+      canvasNodes: baseNodes.concat(dustNodes),
+      canvasLinks: baseLinks.concat(dustLinks),
+    };
+  }, [baseNodes, baseLinks, coreLayout, focusId, starItems, nodeById]);
 
   const openTarget = (id: string) => {
     // (No `topic:` branch — the topic core order was culled; topic hubs are
     // never built, so the id can't occur.)
-    if (id.startsWith('dir:')) {
-      // Core folder hub: warp the camera AND open a light folder panel —
-      // name, mapping popisek, direct contents. Without it a click on the
-      // (possibly empty) root hub reads as a dead click.
+    if (id.startsWith('dir:') || id.startsWith('type:')) {
+      // Core folder hub OR Types-view type hub (`type:<assetType>` from
+      // core.ts typeLayout — a folder entry too): warp the camera AND open a
+      // light folder panel — name, mapping popisek, direct contents. Without
+      // it a click on the (possibly empty) root hub reads as a dead click.
       const f = coreLayout?.folders.find((x) => x.id === id);
       if (f) {
         const folderById = new Map(coreLayout!.folders.map((x) => [x.id, x]));
@@ -608,11 +627,14 @@ export default function Explore() {
         const ds = dirStatByPath.get(f.path);
         setDrawer({
           id,
-          name: f.depth === 0 && !f.mapping ? t('explore.core.root') : f.name,
+          // `!f.assetType` matches the scene builder: type hubs are depth 0
+          // too but carry their own name — without it they'd all read "Root".
+          name: f.depth === 0 && !f.mapping && !f.assetType ? t('explore.core.root') : f.name,
           kind: 'folder',
           description: mapping?.description,
           isStar: false,
-          path: f.path.startsWith('@') ? undefined : f.path,
+          // Synthetic paths (@mapping roots, ~type/<t> hubs) are not fs paths.
+          path: /^[@~]/.test(f.path) ? undefined : f.path,
           children,
           ...(ds?.repo ? { repo: true, bytes: ds.bytes, langs: repoLangs(ds.exts) } : {}),
         });
@@ -636,6 +658,10 @@ export default function Explore() {
           // ring position (e.g. "Computer Science") on a cube's Focus click.
           nodeId: id,
         });
+        // Focus + warp too — the rail's caller comment promises "drawer +
+        // focus + warp", and a related-card click usually targets an
+        // off-screen body; a drawer swap without the camera reads as dead.
+        warpTo(id);
       }
       return;
     }
@@ -680,20 +706,38 @@ export default function Explore() {
   // ── Search: debounced top-5 dropdown over /api/search/semantic. A click
   // routes through openTarget, so an object hit selects THE OBJECT (drawer +
   // focus), not its parent anchor — and unanchored objects are reachable.
+  //
+  // Stale-response guard: every issued request (debounce AND Enter) takes a
+  // sequence number; only the response matching the latest one may write
+  // state — a slow older request resolving after a fast newer one must not
+  // overwrite the dropdown (or warp Enter to an abandoned query's hit).
+  const searchSeq = useRef(0);
+  // Distinguish a real miss from a broken search: 'error' = the request
+  // failed; 'noVectors' = the server answered with semantic:false (the
+  // vector index was never synced — name the host job to run).
+  const [searchNote, setSearchNote] = useState<'error' | 'noVectors' | null>(null);
   useEffect(() => {
     const q = jumpQuery.trim();
+    // Bump on EVERY query change, before the debounce: an in-flight response
+    // for the previous query is stale the moment the user types.
+    const seq = ++searchSeq.current;
     if (!q) {
       setHits(null);
+      setSearchNote(null);
       return;
     }
     const tmr = setTimeout(async () => {
       try {
-        const res = await apiFetch<{ items: SearchHit[] }>(
+        const res = await apiFetch<{ items: SearchHit[]; semantic?: boolean }>(
           `/api/search/semantic?q=${encodeURIComponent(q)}&limit=5`,
         );
+        if (seq !== searchSeq.current) return; // stale — a newer query owns the dropdown
         setHits(res.items);
+        setSearchNote(res.semantic === false ? 'noVectors' : null);
       } catch {
+        if (seq !== searchSeq.current) return;
         setHits([]);
+        setSearchNote('error');
       }
     }, 250);
     return () => clearTimeout(tmr);
@@ -745,16 +789,32 @@ export default function Explore() {
       pickHit(hits[0]);
       return;
     }
+    const seq = ++searchSeq.current;
     try {
-      const res = await apiFetch<{ items: SearchHit[] }>(
+      const res = await apiFetch<{ items: SearchHit[]; semantic?: boolean }>(
         `/api/search/semantic?q=${encodeURIComponent(q)}&limit=5`,
       );
+      if (seq !== searchSeq.current) return; // stale — never warp to an abandoned query's hit
       if (res.items.length) pickHit(res.items[0]);
-      else setJumpMiss(true);
+      else {
+        setJumpMiss(true);
+        if (res.semantic === false) {
+          setHits([]);
+          setSearchNote('noVectors');
+        }
+      }
     } catch {
+      if (seq !== searchSeq.current) return;
       setJumpMiss(true);
+      setHits([]);
+      setSearchNote('error');
     }
   };
+
+  // Stable lens identity: GraphCanvas keys nodeColorFn and three recolour
+  // effects on this object — a fresh literal per render re-ran full-scene
+  // recolours (instanceColor GPU re-uploads) on every unrelated render.
+  const lens = useMemo(() => (recent ? { axis: RECENT_AXIS } : undefined), [recent]);
 
   // Canvas size tracks its container (the graph libs need explicit px).
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -895,7 +955,7 @@ export default function Explore() {
               className={`h-8 w-full pl-7 text-xs sm:w-56 ${jumpMiss ? 'border-destructive' : ''}`}
               aria-label={t('explore.jump.placeholder')}
             />
-            {hits && hits.length > 0 && (
+            {hits && (hits.length > 0 || searchNote) && (
               <ul
                 className="absolute left-0 right-0 top-9 z-30 overflow-hidden rounded-md border border-white/10 bg-slate-950/95 shadow-xl"
                 data-testid="explore-search-results"
@@ -918,6 +978,16 @@ export default function Explore() {
                     </button>
                   </li>
                 ))}
+                {searchNote && (
+                  <li
+                    className="px-2 py-1.5 text-[11px] text-amber-300/90"
+                    data-testid="explore-search-note"
+                  >
+                    {searchNote === 'error'
+                      ? t('explore.jump.error')
+                      : t('explore.panel.noVectors')}
+                  </li>
+                )}
               </ul>
             )}
           </div>
@@ -1022,7 +1092,7 @@ export default function Explore() {
               onNodeClick={openTarget}
               width={size.w}
               height={size.h}
-              lens={recent ? { axis: RECENT_AXIS } : undefined}
+              lens={lens}
               coreView={coreOn}
             />
           )}

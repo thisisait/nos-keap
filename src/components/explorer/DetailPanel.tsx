@@ -188,7 +188,12 @@ export default function DetailPanel({
   const node = target && !target.isStar ? nodeById.get(target.id) : null;
   // Curated note layer — the node's brief (taxonomy-brief skill output) plus
   // the K1 description, which the bulk graph payload no longer carries.
-  const { data: curatedRow } = useQuery<{
+  const {
+    data: curatedRow,
+    isLoading: proseLoading,
+    isError: proseError,
+    refetch: refetchProse,
+  } = useQuery<{
     data?: { brief?: string; briefCs?: string; [key: string]: unknown };
     description?: string;
     descriptionCs?: string;
@@ -196,6 +201,9 @@ export default function DetailPanel({
     queryKey: ['node-meta', node?.id],
     queryFn: () => apiFetch(`/api/taxonomy-metadata/${node!.id}`),
     enabled: Boolean(node),
+    // Prose is near-static (curated writes only) — don't refetch on every
+    // node revisit; a failed fetch must read as an error, not "undescribed".
+    staleTime: 5 * 60 * 1000,
   });
   const brief = curatedRow?.data
     ? (i18n.language?.startsWith('cs') && curatedRow.data.briefCs) ||
@@ -309,7 +317,21 @@ export default function DetailPanel({
 
       <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="space-y-4 p-3">
-          {prose && <BriefBody md={prose} nodeById={nodeById} onSelect={onSelect} />}
+          {node && proseLoading ? (
+            <div className="space-y-2" aria-busy="true">
+              <div className="h-3 w-full animate-pulse rounded bg-muted/50 motion-reduce:animate-none" />
+              <div className="h-3 w-4/5 animate-pulse rounded bg-muted/50 motion-reduce:animate-none" />
+            </div>
+          ) : node && proseError ? (
+            <p className="text-xs text-muted-foreground">
+              {t('explore.panel.proseError')}{' '}
+              <button className="underline underline-offset-2 hover:text-foreground" onClick={() => refetchProse()}>
+                {t('explore.panel.retry')}
+              </button>
+            </p>
+          ) : (
+            prose && <BriefBody md={prose} nodeById={nodeById} onSelect={onSelect} />
+          )}
 
           {target.repo && target.langs && target.langs.length > 0 && (
             <div>

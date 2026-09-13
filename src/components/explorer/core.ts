@@ -365,7 +365,11 @@ function typeLayout(objects: GraphObject[]): TreeOut {
     let th = hash01(`type:${t}`) * Math.PI * 2;
     for (let guard = 0; guard < 64; guard += 1) {
       const clash = taken.some((u) => {
-        const d = Math.abs(((th - u + Math.PI) % (Math.PI * 2)) - Math.PI);
+        // Circular distance. JS % is SIGNED — the previous
+        // ((th-u+π) % 2π) - π form returned ~2π for pairs straddling the 0/2π
+        // seam, so two hubs hashed to 0.03 and 6.25 rad read as "far apart".
+        const raw = Math.abs(th - u) % (Math.PI * 2);
+        const d = Math.min(raw, Math.PI * 2 - raw);
         return d < TYPE_MIN_SEP;
       });
       if (!clash) break;

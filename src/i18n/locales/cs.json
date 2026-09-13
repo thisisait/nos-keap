@@ -379,13 +379,17 @@
   "explore": {
     "title": "Explorer — mapa znalostí",
     "jump": {
-      "placeholder": "Hyperprostorový skok…"
+      "placeholder": "Hyperprostorový skok…",
+      "error": "Hledání selhalo — zkus to znovu."
     },
     "panel": {
       "title": "Souhvězdí",
       "noFocus": "Klikni na uzel — objeví se jeho sémantické okolí.",
+      "noVectors": "Vektory zatím nejsou synchronizované — spusť keap-embed-sync na hostu. Strom funguje i bez nich.",
       "relOut": "odchozí",
-      "relIn": "příchozí"
+      "relIn": "příchozí",
+      "proseError": "Popis se nepodařilo načíst.",
+      "retry": "Zkusit znovu"
     },
     "drawer": {
       "focus": "Zaměřit v grafu"
