@@ -101,6 +101,22 @@ describe('core order: type', () => {
     }
   });
 
+  it('separates hubs whose hashes straddle the 0/2π seam', () => {
+    // hash01('type:a7') → θ≈6.278, hash01('type:z15') → θ≈0.030 — true circular
+    // separation ~0.035 rad, but the signed-% distance formula read it as ~6.25
+    // ("far apart") and skipped the sweep, stacking the two hubs on top of each
+    // other. θ is recoverable from the position as atan2(z, x) (the tilt scales
+    // x and z by the same cos factor).
+    const out = run([obj('o1', 'a7'), obj('o2', 'z15')]);
+    const thetas = ['a7', 'z15'].map((t) => {
+      const [x, , z] = out.positions.get(`type:${t}`)!;
+      return Math.atan2(z, x);
+    });
+    const raw = Math.abs(thetas[0] - thetas[1]) % (Math.PI * 2);
+    const d = Math.min(raw, Math.PI * 2 - raw);
+    expect(d).toBeGreaterThanOrEqual(0.35 - 1e-9); // TYPE_MIN_SEP
+  });
+
   it('RAY COLLAPSE: below the threshold rays are per-object', () => {
     const out = run([obj('a', 'skill', ['01.01']), obj('b', 'skill', ['01.02'])]);
     expect(out.rays.map((r) => r.source).sort()).toEqual(['obj:a', 'obj:b']);
