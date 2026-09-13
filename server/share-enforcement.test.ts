@@ -25,6 +25,7 @@ delete process.env.KEAP_PROXY_SHARED_SECRET;
 
 let server: http.Server;
 let base: string;
+let dbm: typeof import('./db');
 
 const USERS = {
   alice: { 'x-authentik-username': 'alice', 'x-authentik-groups': 'nos-users' },
@@ -68,6 +69,7 @@ const COLS = {
 beforeAll(async () => {
   const db = await import('./db');
   await db.initDb();
+  dbm = db;
   const { default: express } = await import('express');
   const { registerAgentRoutes } = await import('./agent');
   const { registerApiRoutes } = await import('./routes');
@@ -230,6 +232,59 @@ describe('row-level narrowing, grants and the __ meta keys (human door)', () => 
     ).toBe(403);
     // absence-safe: the hidden row's delete reads as unknown, not forbidden
     expect((await call('bob', 'DELETE', `/api/tables/${pid}/rows/hidden`)).status).toBe(404);
+  });
+});
+
+describe('declaration PATCH keeps the CORPUS in sync (card + projected rows)', () => {
+  let tid: string;
+
+  beforeAll(async () => {
+    const created = await call('alice', 'POST', '/api/tables', {
+      title: 'Projected notes',
+      schema: COLS,
+      visibility: 'shared',
+      anchors: ['04.11'],
+      graph: { mode: 'rows', node: { labelColumn: 'note', kind: 'record' }, edges: [] },
+    });
+    expect(created.status).toBe(200);
+    tid = rec(created.data).id as string;
+    await call('alice', 'POST', `/api/tables/${tid}/rows`, { id: 'p1', values: { note: 'projected row' } });
+  });
+
+  it('a visibility-only PATCH to private removes card AND rows from getVisibleObjects', async () => {
+    // The card and each projected row object carry their OWN visibility
+    // column; a bare data_tables UPDATE left them on the old scope — the
+    // narrowed table stayed readable in /explore, search and the agent
+    // surface until an unrelated schema write happened to resync.
+    const visibleTo = (userId: string) =>
+      dbm.getVisibleObjects(userId, false, ['nos-users']).map((o) => o.id);
+    expect(visibleTo('bob')).toContain(`table-${tid}`);
+    expect(visibleTo('bob')).toContain(`table-${tid}:row-p1`);
+
+    const patched = await call('alice', 'PATCH', `/api/tables/${tid}`, { visibility: 'private' });
+    expect(patched.status).toBe(200);
+
+    const bobSees = visibleTo('bob');
+    expect(bobSees).not.toContain(`table-${tid}`);
+    expect(bobSees).not.toContain(`table-${tid}:row-p1`);
+    // …while the owner keeps their own objects.
+    const ownerId = dbm.getObject(`table-${tid}`)!.userId!;
+    expect(visibleTo(ownerId)).toContain(`table-${tid}:row-p1`);
+  });
+
+  it('a view-only PATCH preserves the card anchors', async () => {
+    const nodeRefs = () =>
+      ((dbm.getObject(`table-${tid}`)!.links ?? []) as Array<{ kind: string; ref: string }>)
+        .filter((l) => l.kind === 'node')
+        .map((l) => l.ref);
+    expect(nodeRefs()).toContain('04.11');
+    // Passing [] here (instead of undefined) made syncCard REPLACE the
+    // anchors with nothing — the table and all its rows dropped to unfiled.
+    const patched = await call('alice', 'PATCH', `/api/tables/${tid}`, {
+      view: { style: 'grid', titleColumn: 'note' },
+    });
+    expect(patched.status).toBe(200);
+    expect(nodeRefs()).toContain('04.11');
   });
 });
 

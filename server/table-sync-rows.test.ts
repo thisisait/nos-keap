@@ -176,6 +176,21 @@ describe('syncRows', () => {
     const own = rowObjects('t-anchor').find((o) => o.title === 'Jiná')!;
     expect(own.links).toContainEqual(expect.objectContaining({ kind: 'node', ref: '05.01' }));
     expect(own.links).not.toContainEqual(expect.objectContaining({ ref: '04.11' }));
+    // A NON-STRING cell (JSON number/bool) is present-but-unusable, NOT absent:
+    // inheriting the card anchor would file rows carrying five distinct numeric
+    // anchors under one wrong star. No anchor at all is the honest projection.
+    insertRow('t-anchor', 'r3', { title: 'Číselná', note: 4.11 });
+    // …while a truly empty cell ('') still inherits, like a missing one.
+    insertRow('t-anchor', 'r4', { title: 'Prázdná', note: '' });
+    tables.syncRows({ ...t, rowCount: 4 }, {
+      mode: 'rows',
+      node: { labelColumn: 'title', kind: 'record', anchorColumn: 'note' },
+      edges: [],
+    } as never);
+    const numeric = rowObjects('t-anchor').find((o) => o.title === 'Číselná')!;
+    expect(numeric.links ?? []).not.toContainEqual(expect.objectContaining({ kind: 'node' }));
+    const empty = rowObjects('t-anchor').find((o) => o.title === 'Prázdná')!;
+    expect(empty.links).toContainEqual(expect.objectContaining({ kind: 'node', ref: '04.11' }));
   });
 
   it('still projects a row whose label cell is empty', () => {

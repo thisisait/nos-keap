@@ -39,6 +39,7 @@ import {
   hasRowGrantFor,
   updateTableSchema,
   syncCard,
+  syncRows,
   storeFor,
   listDrivers,
   assertRowId,
@@ -633,6 +634,16 @@ export function registerApiRoutes(app: Express) {
         updateTableSharing(t.id, sharedWith);
         next = { ...next, sharedWith };
       }
+      // The corpus card and the projected row objects carry their OWN
+      // visibility column — a bare data_tables UPDATE would leave a table
+      // narrowed to private still readable through getVisibleObjects/search
+      // until some unrelated schema write happened to resync. The schema
+      // branch resyncs via updateTableSchema (with `next`'s new visibility),
+      // so only the schema-less scope change needs it here.
+      if ((visibility || sharedWith) && !schema) {
+        syncCard(next);
+        syncRows(next);
+      }
       if (schema) next = { ...next, ...updateTableSchema(next, schema) };
       if (view) {
         // Validated against the LIVE columns, not the request's — a caller may
@@ -640,7 +651,11 @@ export function registerApiRoutes(app: Express) {
         // titleColumn no longer exists renders an untitled list forever.
         const errs = validateViewMeta(view, next.schema.columns);
         if (errs.length) return fail(res, 400, errs[0]);
-        syncCard(next, [], undefined, view);
+        // anchors = undefined, NOT []: syncCard treats a provided list as a
+        // replacement, so [] would wipe the card's [[node]] anchors — and the
+        // row-projection cardAnchor fallback would then re-file every row
+        // anchorless. A view-only PATCH carries no anchor opinion.
+        syncCard(next, undefined, undefined, view);
       }
       ok(res, { ...next, view });
     } catch (e) {

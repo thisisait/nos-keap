@@ -481,7 +481,15 @@ export function syncRows(
     if (kept.has(id)) id = rowObjectId(t.id, r.id, undefined);
     const label = node.labelColumn ? r.values[node.labelColumn] : undefined;
     const anchorRaw = node.anchorColumn ? r.values[node.anchorColumn] : undefined;
-    const anchor = typeof anchorRaw === 'string' && anchorRaw ? anchorRaw : cardAnchor;
+    // Inherit ONLY when the cell is truly absent (null/undefined/'') — a
+    // non-string cell (JSON number/bool) is a present-but-unusable value, and
+    // inheriting would file rows with distinct anchors under one wrong star.
+    const anchor =
+      typeof anchorRaw === 'string'
+        ? anchorRaw || cardAnchor
+        : anchorRaw == null
+          ? cardAnchor
+          : undefined;
     const body = rowBody(t, r.values, anchor);
     const resource = `keaptable:${t.id}#${r.id}`;
     kept.add(id);
