@@ -379,11 +379,13 @@
   "explore": {
     "title": "Explorer — knowledge map",
     "jump": {
-      "placeholder": "Hyperspace jump…"
+      "placeholder": "Hyperspace jump…",
+      "error": "Search failed — try again."
     },
     "panel": {
       "title": "Constellation",
       "noFocus": "Click a node to reveal its semantic neighbourhood.",
+      "noVectors": "Vectors not synced yet — run keap-embed-sync on the host. The tree works without them.",
       "relOut": "outgoing",
       "relIn": "incoming"
     },
