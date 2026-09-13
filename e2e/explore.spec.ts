@@ -37,13 +37,10 @@ test.describe('universe explorer', () => {
     expect(pos(one)).toEqual(pos(two));
   });
 
-  test('mobile: neighbours panel is a drawer, ship mode hidden, canvas full-width', async ({ page }) => {
+  test('mobile: neighbours panel is a drawer, canvas full-width', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 }); // phone portrait
     await page.goto('/explore');
     await expect(page.locator('canvas').first()).toBeVisible({ timeout: 15_000 });
-
-    // Ship camera (pointer-lock + WASD) is desktop-only → its toggle is absent.
-    await expect(page.getByTestId('explore-camera-toggle')).toHaveCount(0);
 
     // The neighbours panel is a drawer: its toggle is present and the panel
     // content is NOT mounted until opened (no always-on w-72 rail stealing the
@@ -60,9 +57,9 @@ test.describe('universe explorer', () => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await page.goto('/explore');
     await expect(page.locator('canvas').first()).toBeVisible({ timeout: 15_000 });
-    // The mobile drawer toggle must not exist; the ship toggle must.
+    // The mobile drawer toggle must not exist; the view control must.
     await expect(page.getByTestId('explore-panel-toggle')).toHaveCount(0);
-    await expect(page.getByTestId('explore-camera-toggle')).toBeVisible();
+    await expect(page.getByTestId('explore-view-control')).toBeVisible();
   });
 
   test('api surface: health, fallback identity, drivers', async ({ request }) => {
@@ -84,12 +81,11 @@ test.describe('universe explorer', () => {
 });
 
 /**
- * Edge layers are independent. The Ontology toggle used to gate only the typed
- * relations while [[object:…]] wiki refs drew unconditionally, so switching it
- * off still left the card core webbed with lines — the toggle looked broken
- * because a layer it never owned kept drawing.
+ * ONE edge-layer switch (Vazby) gates typed relations, the concept overlay
+ * and [[object:…]] wiki refs together. It round-trips as ?rel=0, and old
+ * ?olinks=0 deep links migrate to the same off state.
  */
-test.describe('explore edge-layer toggles', () => {
+test.describe('explore edge-layer toggle', () => {
   const OA = 'explore-olink-a';
   const OB = 'explore-olink-b';
 
@@ -102,64 +98,46 @@ test.describe('explore edge-layer toggles', () => {
     expect((await mk(OA, `anchored to [[01.01]] physics, see [[object:${OB}]].`)).ok()).toBeTruthy();
   });
 
-  test('ontology and links are separate toggles, each round-tripping through the URL', async ({
+  test('the links toggle gates the edge layers and round-trips through the URL', async ({
     page,
   }) => {
-    // core=fs so the cards are actually in the scene; without it no object edge
-    // is drawn at all and every count below reads zero for the wrong reason.
-    await page.goto('/explore?core=fs');
-    const ontology = page.getByTestId('explore-ontology-toggle');
-    const olinks = page.getByTestId('explore-olinks-toggle');
-    await expect(ontology).toBeVisible();
-    await expect(olinks).toBeVisible();
+    // core (default fs view) so the cards are actually in the scene; without it
+    // no object edge is drawn and every count below reads zero for the wrong reason.
+    await page.goto('/explore');
+    const links = page.getByTestId('explore-links-toggle');
+    await expect(links).toBeVisible();
 
-    // Both default on, so neither param is in a clean URL.
+    // Default on → clean URL.
     expect(page.url()).not.toContain('rel=0');
-    expect(page.url()).not.toContain('olinks=0');
 
     // Assert the SCENE, not just the URL. A stale useMemo dependency once let the
     // param flip while the geometry never recomputed, and a URL-only assertion
     // passed straight through it.
     const canvas = page.getByTestId('explore-canvas');
     const olinkCount = async () => Number(await canvas.getAttribute('data-olink-count'));
-    // NB: no typed-relation assertion here. This spec runs before any confirmed
-    // relation exists, so data-vazba-count is 0 either way and asserting on it
-    // would only look like coverage. The ontology layer is covered where the
-    // relations fixture lives.
 
     // Guard the guard: if the fixture stopped producing edges these assertions
-    // would pass by being empty, which is how the first version of this test
-    // sailed past a stale useMemo dependency.
+    // would pass by being empty.
     await expect.poll(olinkCount, { message: 'fixture must produce object links' }).toBeGreaterThan(0);
 
-    // Turning ontology off must NOT silence the links layer.
-    const olinksBefore = await olinkCount();
-    await ontology.click();
+    await links.click();
     await expect.poll(() => new URL(page.url()).searchParams.get('rel')).toBe('0');
-    expect(new URL(page.url()).searchParams.get('olinks')).toBeNull();
-    expect(await olinkCount(), 'links layer untouched').toBe(olinksBefore);
-
-    // ...and the links layer is independently switchable — in the scene.
-    await olinks.click();
-    await expect.poll(() => new URL(page.url()).searchParams.get('olinks')).toBe('0');
-    expect(new URL(page.url()).searchParams.get('rel')).toBe('0');
     await expect.poll(olinkCount, { message: 'link edges gone' }).toBe(0);
 
-    // Both restore.
-    await ontology.click();
-    await olinks.click();
+    await links.click();
     await expect.poll(() => new URL(page.url()).searchParams.get('rel')).toBeNull();
-    expect(new URL(page.url()).searchParams.get('olinks')).toBeNull();
+    await expect.poll(olinkCount).toBeGreaterThan(0);
   });
 
   test('cleanup: olink fixture removed', async ({ request }) => {
     for (const id of [OA, OB]) expect((await request.delete(`/api/objects/${id}`)).ok()).toBeTruthy();
   });
 
-  test('a deep link with olinks=0 starts with the links layer off', async ({ page }) => {
+  test('old ?olinks=0 and ?rel=0 deep links both start with the layer off', async ({ page }) => {
     await page.goto('/explore?olinks=0');
-    await expect(page.getByTestId('explore-olinks-toggle')).toBeVisible();
-    expect(new URL(page.url()).searchParams.get('olinks')).toBe('0');
+    await expect(page.getByTestId('explore-links-toggle')).toBeVisible();
+    // The migrated state is written back as rel=0.
+    await expect.poll(() => new URL(page.url()).searchParams.get('rel')).toBe('0');
   });
 });
 

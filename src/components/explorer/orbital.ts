@@ -7,6 +7,7 @@
  * merge time and PINNED (fx/fy/fz) — they never enter the force sim as dust, so
  * dragging the star never scatters them. No layout bake, no server state.
  */
+import { hash01 } from './repoVisuals';
 
 export type CelestialForm = 'planet' | 'moon' | 'asteroid' | 'comet' | 'station';
 
@@ -39,16 +40,6 @@ export const FORM_RADIUS: Record<CelestialForm, number> = {
 };
 
 const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
-
-/** Cheap deterministic 0..1 from a string (FNV-1a) — no crypto in the browser. */
-function hash01(s: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return ((h >>> 0) % 100000) / 100000;
-}
 
 /**
  * Wrap body `i` of `n` around its star in 3D (a fibonacci direction so bodies

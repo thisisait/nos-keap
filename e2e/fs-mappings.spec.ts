@@ -33,9 +33,6 @@ interface GraphData {
       nested: boolean;
       taxonomyRoot?: string;
       taxonomyLinks: string[];
-      tags: string[];
-      enabled: boolean;
-      count: number;
     }>;
   };
 }
@@ -136,9 +133,6 @@ test.describe('mapped folders', () => {
       nested: false,
       taxonomyRoot: '01.02',
       taxonomyLinks: ['01.01'],
-      tags: ['e2e'],
-      enabled: true,
-      count: 2,
     });
     const mirrored = graph.data.objects.filter((o) => o.owner?.startsWith('fsmap:'));
     expect(mirrored).toHaveLength(2);
@@ -196,8 +190,10 @@ test.describe('mapped folders', () => {
     const body = (await res.json()) as { data: { resync: SyncResult } };
     // cfg mismatch defeats the unchanged-skip exactly once — both rewritten.
     expect(body.data.resync.upserted).toBe(2);
-    const graph = (await (await request.get('/api/graph')).json()) as GraphData;
-    expect(graph.data.fsMappings.find((m) => m.id === mapId)?.tags).toEqual(['e2e', 'v2']);
+    const listed = (await (await request.get('/api/fs/mappings')).json()) as {
+      data: Array<{ id: string; tags: string[] }>;
+    };
+    expect(listed.data.find((m) => m.id === mapId)?.tags).toEqual(['e2e', 'v2']);
   });
 
   test('a deleted file is pruned on the next pass', async ({ request }) => {
@@ -367,7 +363,6 @@ test.describe('mapped folders', () => {
     const payload = (await (await graphResponse).json()) as GraphData;
     const fm = payload.data.fsMappings.find((m) => m.id === mapId)!;
     expect(fm.nested).toBe(false);
-    expect(fm.count).toBe(1);
     expect(payload.data.objects.filter((o) => o.mapping === mapId)).toHaveLength(1);
 
     await expect(page.locator('canvas').first()).toBeVisible({ timeout: 15_000 });

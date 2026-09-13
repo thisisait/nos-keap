@@ -675,27 +675,6 @@
  ],
  "relations": [
   {
-   "from": "04.11",
-   "to": "04.04",
-   "type": "references",
-   "explored": null,
-   "source": "brief-xref"
-  },
-  {
-   "from": "04.11",
-   "to": "04.06.10",
-   "type": "references",
-   "explored": null,
-   "source": "brief-xref"
-  },
-  {
-   "from": "04.11",
-   "to": "04.06.11",
-   "type": "references",
-   "explored": null,
-   "source": "brief-xref"
-  },
-  {
    "from": "04.11.02.01",
    "to": "02.05.01.04",
    "type": "related-concept",
@@ -750,69 +729,6 @@
    "type": "related-concept",
    "explored": null,
    "source": "curated-xref"
-  },
-  {
-   "from": "04.11.01.02",
-   "to": "04.06.10.01",
-   "type": "requires",
-   "explored": null,
-   "source": "brief-xref"
-  },
-  {
-   "from": "04.11.01.04",
-   "to": "04.04",
-   "type": "derived-from",
-   "explored": null,
-   "source": "brief-xref"
-  },
-  {
-   "from": "04.11.04.07",
-   "to": "04.06.08.05",
-   "type": "related-concept",
-   "explored": null,
-   "source": "brief-xref"
-  },
-  {
-   "from": "04.11.05.04",
-   "to": "04.06.11.02",
-   "type": "specializes",
-   "explored": null,
-   "source": "brief-xref"
-  },
-  {
-   "from": "04.11.05.05",
-   "to": "04.06.11.04",
-   "type": "specializes",
-   "explored": null,
-   "source": "brief-xref"
-  },
-  {
-   "from": "04.11.05.07",
-   "to": "04.06.11.01",
-   "type": "depends-on",
-   "explored": null,
-   "source": "brief-xref"
-  },
-  {
-   "from": "04.11.07.04",
-   "to": "04.06.08.05",
-   "type": "related-concept",
-   "explored": null,
-   "source": "brief-xref"
-  },
-  {
-   "from": "04.11.07.06",
-   "to": "04.06.13.02",
-   "type": "related-concept",
-   "explored": null,
-   "source": "brief-xref"
-  },
-  {
-   "from": "04.11.08.06",
-   "to": "04.06.13.01",
-   "type": "related-concept",
-   "explored": null,
-   "source": "brief-xref"
   }
  ]
 }

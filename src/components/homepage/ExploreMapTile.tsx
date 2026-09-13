@@ -11,16 +11,18 @@ interface ExploreMapTileProps {
   title?: string;
 }
 
-/** Entry point to /explore — shows how much of the corpus is embedded. */
+/** Entry point to /explore — shows how much of the corpus is embedded.
+ *  Stats-only fetch (?meta=1): the tile needs two numbers, not the corpus. */
 export const ExploreMapTile: React.FC<ExploreMapTileProps> = ({ title }) => {
   const { t } = useTranslation();
   const { data } = useQuery({
-    queryKey: ['graph'],
-    queryFn: () => apiFetch<GraphPayload>('/api/graph'),
+    queryKey: ['graph-meta'],
+    queryFn: () =>
+      apiFetch<{ counts: { nodes: number }; meta: GraphPayload['meta'] }>('/api/graph?meta=1'),
     staleTime: 5 * 60 * 1000,
   });
 
-  const nodes = data?.nodes?.length ?? 0;
+  const nodes = data?.counts?.nodes ?? 0;
   const embedded = data?.meta?.embeddings?.total ?? 0;
 
   return (

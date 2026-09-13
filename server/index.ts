@@ -29,7 +29,7 @@ import * as dbmod from './db';
 import { allNodes, registerExtNodes, applyDescriptionOverride } from './taxonomy';
 import { ensureLayout } from './layout';
 import { startFsSync } from './fs-sync';
-import { buildVersion } from './build-version';
+import { BUILD_VERSION } from './build-version';
 import { embedOrigins } from './embed-origins';
 import { startTopicSync } from './topics';
 import { startFsWatch } from './fs-watch';
@@ -92,7 +92,7 @@ async function main() {
   app.get('/api/health', (_req, res) =>
     res.json({
       success: true,
-      data: { status: 'OK', version: buildVersion(), ts: new Date().toISOString() },
+      data: { status: 'OK', version: BUILD_VERSION, ts: new Date().toISOString() },
     }),
   );
 

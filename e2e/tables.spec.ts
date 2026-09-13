@@ -10,7 +10,9 @@ import { test, expect } from '@playwright/test';
 test.describe.serial('data tables', () => {
   test('list starts empty and the storage picker is honest', async ({ page }) => {
     await page.goto('/tables');
-    await expect(page.getByText('No tables yet.')).toBeVisible();
+    // Homepage tiles ensure the per-user Todos table, so the list is never a
+    // blank slate after any prior `/` visit in this Playwright process.
+    await expect(page.getByRole('heading', { name: 'Data tables' })).toBeVisible();
 
     await page.getByRole('button', { name: 'New table' }).click();
     // Driver cards come from GET /api/tables/drivers — libsql must be
@@ -41,8 +43,9 @@ test.describe.serial('data tables', () => {
 
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     await expect(page.getByText('Table created.').first()).toBeVisible();
-    await expect(page.getByRole('link', { name: /Workshop stock/ })).toBeVisible();
-    await expect(page.getByText('0 rows · 2 columns')).toBeVisible();
+    const workshop = page.getByRole('link', { name: /Workshop stock/ });
+    await expect(workshop).toBeVisible();
+    await expect(workshop).toContainText('0 rows · 2 columns');
   });
 
   test('grid: add rows, inline-edit a cell, Σ summary aggregates', async ({ page }) => {
@@ -99,8 +102,10 @@ test.describe.serial('data tables', () => {
   test('delete the table', async ({ page }) => {
     await page.goto('/tables');
     await expect(page.getByRole('link', { name: /Workshop stock/ })).toBeVisible();
-    await page.getByRole('button', { name: 'Delete' }).click();
+    // Todos is ensured by the homepage tiles — delete the card we created.
+    const workshopCard = page.locator('.rounded-lg.border').filter({ hasText: 'Workshop stock' });
+    await workshopCard.getByRole('button', { name: 'Delete' }).click();
     await expect(page.getByText('Table deleted.').first()).toBeVisible();
-    await expect(page.getByText('No tables yet.')).toBeVisible();
+    await expect(page.getByRole('link', { name: /Workshop stock/ })).toHaveCount(0);
   });
 });

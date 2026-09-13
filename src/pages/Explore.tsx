@@ -5,14 +5,15 @@
  * queries the libSQL vector corpus for its semantic neighbourhood and hangs
  * the hits as "stars behind the constellation" — points that are NOT part of
  * the hard-coded tree (captures, curated notes) or distant tree nodes,
- * placed by vector distance. The side panel picks the relation mode
- * (related / most-unrelated), source kinds, and dataType facets. One toggle
- * lifts the same graph into full 3D.
+ * placed by vector distance. `?root=<nodeId>` slices the whole scene down to
+ * one subtree (client-side): nodes outside it, and objects not anchored in
+ * it, simply aren't built.
  */
 import { useCallback, useMemo, useState, useRef, useLayoutEffect, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, Rocket, Orbit, Search, Waypoints, Link2, Boxes, Sparkles, PanelRight } from 'lucide-react';
+import { ArrowLeft, Search, Waypoints, PanelRight } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
@@ -22,29 +23,12 @@ import GraphCanvas, {
   RECENT_AXIS,
   type CanvasNode,
   type CanvasLink,
-  type CameraMode,
-  type LensState,
 } from '@/components/explorer/GraphCanvas';
-
-// Semantic-lens axes the user can colour the map by (must match node_features).
-// The "Recent" lens (RECENT_AXIS) is a special case OUTSIDE this list: it
-// reads mtime, not node_features, recolours objects/folder hubs instead of
-// taxonomy stars, and carries its own i18n label + gradient legend.
-const LENS_AXES = [
-  { key: 'abstractness', label: 'Abstract ↔ Concrete' },
-  { key: 'scale', label: 'Macro ↔ Micro' },
-  { key: 'formalness', label: 'Formal ↔ Empirical' },
-  { key: 'dynamism', label: 'Dynamic ↔ Static' },
-] as const;
-import SidePanel, { type FocusRelation } from '@/components/explorer/SidePanel';
-import DetailPanel, { type DrawerTarget } from '@/components/explorer/DetailPanel';
-import {
-  useGraph,
-  useNeighbors,
-  type NeighborItem,
-  type NeighborMode,
-  type GraphObject,
-} from '@/hooks/useExplorerData';
+import DetailPanel, {
+  type DrawerTarget,
+  type FocusRelation,
+} from '@/components/explorer/DetailPanel';
+import { useGraph, useNeighbors, type GraphObject } from '@/hooks/useExplorerData';
 import { orbitalPosition } from '@/components/explorer/orbital';
 import {
   computeCore,
@@ -54,8 +38,23 @@ import {
 } from '@/components/explorer/core';
 import { repoLangs, hash01 } from '@/components/explorer/repoVisuals';
 
+/** The one view control: constellation = core off, the rest are core orders. */
+type ViewMode = 'constellation' | 'fs' | 'taxonomy' | 'type';
+const VIEWS: ViewMode[] = ['constellation', 'fs', 'taxonomy', 'type'];
+
+/** One hit of /api/search/semantic as the dropdown needs it. */
+interface SearchHit {
+  kind: string;
+  refId: string;
+  name: string;
+  dataType?: string;
+  description?: string;
+  url?: string;
+  nodeId?: string;
+}
+
 export default function Explore() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { data: graph, isLoading } = useGraph();
 
   // Addressable view: focus / core order / lens / relations round-trip through
@@ -65,42 +64,39 @@ export default function Explore() {
   const initialParams = useRef(searchParams).current;
 
   const [focusId, setFocusId] = useState<string | null>(() => initialParams.get('focus') || null);
-  const [mode, setMode] = useState<NeighborMode>('related');
-  const [kinds, setKinds] = useState<string[]>(['taxonomy', 'capture', 'note', 'object']);
   const [typeFilter, setTypeFilter] = useState<Set<string>>(new Set());
   const [drawer, setDrawer] = useState<DrawerTarget | null>(null);
-  const [cameraMode, setCameraMode] = useState<CameraMode>('observer');
   const isMobile = useIsMobile();
   const [panelOpen, setPanelOpen] = useState(false);
-  // Two INDEPENDENT edge layers. They were conflated: `rel` gated the typed
-  // ontology (R3 verbs + the ToE concept web) while [[object:…]] wiki refs drew
-  // unconditionally — so turning the toggle off still left the card core webbed
-  // with lines, which read as the toggle being broken.
-  const [showOntology, setShowOntology] = useState(() => initialParams.get('rel') !== '0');
-  const [showOlinks, setShowOlinks] = useState(() => initialParams.get('olinks') !== '0');
-  // Detail mode: 'full' forces every orbital body in full form (no instancing /
-  // apparent-size hiding) for small fields; 'auto' lets the perf LODs engage.
-  const [detail, setDetail] = useState<'auto' | 'full'>(() =>
-    initialParams.get('detail') === 'full' ? 'full' : 'auto',
+  // ONE edge layer switch (Vazby): typed cross-relations, the concept overlay
+  // AND [[object:…]] wiki refs. `?rel=0` turns them all off; an old `olinks=0`
+  // deep link migrates to the same off state.
+  const [showLinks, setShowLinks] = useState(
+    () => initialParams.get('rel') !== '0' && initialParams.get('olinks') !== '0',
   );
   const [jumpQuery, setJumpQuery] = useState('');
   const [jumpMiss, setJumpMiss] = useState(false);
-  const [shipHud, setShipHud] = useState({ speed: 0, boosting: false, thrust: 0 });
-  const [lens, setLens] = useState<LensState>(() => {
-    const axis = initialParams.get('lens');
-    return axis ? { axis } : {};
-  });
-  // Files core: objects leave their orbital slots and form a 3D core at the
-  // ring center, reordered by filesystem / taxonomy / (later) topic. ON by
-  // default (owner decision 2026-07-22: the center IS the home view) — an
-  // absent ?core means core-on/fs, `core=0` is the explicit off state, and
-  // the old `core=<order>` links keep meaning exactly what they said.
-  const [core, setCore] = useState<{ on: boolean; order: CoreOrder }>(() => {
+  const [hits, setHits] = useState<SearchHit[] | null>(null);
+  // Recency lens — the one lens backed by shipped data (mtime/updatedAt).
+  // Old `?lens=<semantic axis>` links fall back to off (node_features is dead).
+  const [recent, setRecent] = useState(() => initialParams.get('lens') === RECENT_AXIS);
+  // Subtree slice: `?root=04.11` renders only that node's subtree + the
+  // objects anchored inside it.
+  const [rootId, setRootId] = useState<string | null>(() => initialParams.get('root') || null);
+  // View: constellation (core off) or the files core grouped by fs / taxonomy /
+  // type. Core-on/fs stays the default (owner decision 2026-07-22: the center
+  // IS the home view). Old `?core` links migrate: `0` → constellation,
+  // an order → that order (`topic` is gone → fs).
+  const [view, setView] = useState<ViewMode>(() => {
+    const v = initialParams.get('view');
+    if (v && VIEWS.includes(v as ViewMode)) return v as ViewMode;
     const c = initialParams.get('core');
-    const orders: CoreOrder[] = ['fs', 'taxonomy', 'topic', 'type'];
-    if (c === '0') return { on: false, order: 'fs' };
-    return { on: true, order: c && orders.includes(c as CoreOrder) ? (c as CoreOrder) : 'fs' };
+    if (c === '0') return 'constellation';
+    if (c === 'taxonomy' || c === 'type') return c;
+    return 'fs';
   });
+  const coreOn = view !== 'constellation';
+  const coreOrder: CoreOrder = coreOn ? view : 'fs';
 
   // State → URL (replace, so a focus change doesn't spam the back stack). This
   // is the ONLY writer; the initializers above are the only reader, so there's
@@ -108,46 +104,12 @@ export default function Explore() {
   useEffect(() => {
     const p = new URLSearchParams();
     if (focusId) p.set('focus', focusId);
-    // Core-on/fs is the default → clean URL; off is explicit (`core=0`).
-    if (!core.on) p.set('core', '0');
-    else if (core.order !== 'fs') p.set('core', core.order);
-    if (lens.axis) p.set('lens', lens.axis);
-    if (!showOntology) p.set('rel', '0');
-    if (!showOlinks) p.set('olinks', '0');
-    if (detail === 'full') p.set('detail', 'full');
+    if (rootId) p.set('root', rootId);
+    if (view !== 'fs') p.set('view', view);
+    if (recent) p.set('lens', RECENT_AXIS);
+    if (!showLinks) p.set('rel', '0');
     setSearchParams(p, { replace: true });
-  }, [focusId, core.on, core.order, lens.axis, showOntology, showOlinks, detail, setSearchParams]);
-
-  // Ship camera is desktop-only (pointer-lock + WASD/keyboard); on a touch
-  // device fall back to observer/orbit so a mobile user can never get stranded
-  // in a fly mode they can't drive.
-  useEffect(() => {
-    if (isMobile && cameraMode === 'ship') setCameraMode('observer');
-  }, [isMobile, cameraMode]);
-
-  // Semantic hyperspace jump: hybrid search → plot course to the best hit's
-  // star (objects/captures resolve to their anchor node). Focus does the
-  // actual warp (GraphCanvas flies the camera on focus change).
-  const hyperspaceJump = async () => {
-    const q = jumpQuery.trim();
-    if (!q) return;
-    try {
-      const res = await apiFetch<{ items: Array<{ kind: string; refId: string; nodeId?: string }> }>(
-        `/api/search/semantic?q=${encodeURIComponent(q)}&limit=5`,
-      );
-      const target = res.items.find((i) => i.nodeId || i.kind === 'taxonomy');
-      const nodeId = target?.nodeId ?? (target?.kind === 'taxonomy' ? target.refId : null);
-      if (nodeId) {
-        setJumpMiss(false);
-        setFocusId(null); // re-trigger the warp even when jumping to the same star
-        requestAnimationFrame(() => setFocusId(nodeId));
-      } else {
-        setJumpMiss(true);
-      }
-    } catch {
-      setJumpMiss(true);
-    }
-  };
+  }, [focusId, rootId, view, recent, showLinks, setSearchParams]);
 
   const nodeById = useMemo(
     () => new Map((graph?.nodes ?? []).map((n) => [n.id, n])),
@@ -168,25 +130,23 @@ export default function Explore() {
     [graph],
   );
 
-  // Topic order is available only once the server ships clusters; when it is
-  // not, the Topics button is disabled AND the effective order falls back to
-  // fs — topics can vanish on a payload refresh, and a silent wrong order
-  // (topic → fs render) is exactly the hazard the branch guards against.
-  const topicsReady = (graph?.topics?.length ?? 0) > 0;
-  const effectiveOrder: CoreOrder = core.order === 'topic' && !topicsReady ? 'fs' : core.order;
-  // Coverage caption (topic order): how many visible objects landed in a
-  // cluster this viewer can see — the rest hold the ~untopiced center fog.
-  const topicCoverage = useMemo(() => {
-    const objs = graph?.objects ?? [];
-    const known = new Set((graph?.topics ?? []).map((tp) => tp.id));
-    const assigned = objs.reduce((n, o) => n + (o.topic && known.has(o.topic) ? 1 : 0), 0);
-    return { assigned, total: objs.length };
-  }, [graph]);
+  const objectById = useMemo(
+    () => new Map((graph?.objects ?? []).map((o) => [o.id, o])),
+    [graph],
+  );
 
-  // Focus can land on a synthetic core node (`dir:…`) — the camera warps
-  // there, but the semantic-neighbourhood query is taxonomy-only.
-  const taxonomyFocus = focusId && nodeById.has(focusId) ? focusId : null;
-  const neighbors = useNeighbors(taxonomyFocus, mode, kinds);
+  // Focus can land on a synthetic core node (`dir:…`/`obj:…`) — the camera
+  // warps there, but the semantic-neighbourhood query is taxonomy-only, so an
+  // object focus falls back to its first anchor's star.
+  const focusAnchor =
+    focusId?.startsWith('obj:') ? objectById.get(focusId.slice(4))?.anchors[0] : undefined;
+  const taxonomyFocus =
+    focusId && nodeById.has(focusId)
+      ? focusId
+      : focusAnchor && nodeById.has(focusAnchor)
+        ? focusAnchor
+        : null;
+  const neighbors = useNeighbors(taxonomyFocus);
 
   // Hue per top-level category — the constellation's colour identity.
   const hueByCategory = useMemo(() => {
@@ -224,7 +184,11 @@ export default function Explore() {
 
   const starItems = useMemo(() => {
     const items = neighbors.data?.items ?? [];
-    return typeFilter.size ? items.filter((i) => i.dataType && typeFilter.has(i.dataType)) : items;
+    // Facet = object filter; captures/notes carry no dataType and must survive
+    // a facet pick (requiring one deleted the whole semantic star field).
+    return typeFilter.size
+      ? items.filter((i) => !i.dataType || typeFilter.has(i.dataType))
+      : items;
   }, [neighbors.data, typeFilter]);
 
   // Merge the static constellation with the semantic star field.
@@ -247,6 +211,39 @@ export default function Explore() {
         kids.set(n.parentId, a);
       }
     }
+    // Subtree slice (?root=): keep-set walked over the kids map. Nodes outside
+    // it, and objects not anchored inside it, are never built — every edge
+    // layer below already guards on drawn endpoints, so they need nothing.
+    let keep: Set<string> | null = null;
+    if (rootId && nodeById.has(rootId)) {
+      keep = new Set([rootId]);
+      const stack = [rootId];
+      while (stack.length) {
+        for (const c of kids.get(stack.pop()!) ?? []) {
+          if (!keep.has(c)) {
+            keep.add(c);
+            stack.push(c);
+          }
+        }
+      }
+    }
+    const sceneTaxonomy = keep ? graph.nodes.filter((n) => keep.has(n.id)) : graph.nodes;
+    const sceneObjects = keep
+      ? (graph.objects ?? []).filter((o) => o.anchors.some((a) => keep.has(a)))
+      : graph.objects ?? [];
+    /** Is this taxonomy node in the scene? (nodeById alone lies under a slice.) */
+    const nodeIn = (id: string) => (keep ? keep.has(id) : nodeById.has(id));
+    // Slice hue: the whole subtree shares one corpus root, so category hue
+    // collapses to monochrome — recolour by the slice root's DIRECT children
+    // instead, hash-frozen so growing the subtree never re-hues it.
+    const hueOf = (id: string): number => {
+      if (!keep || !rootId) return hueByCategory.get(rootOf(id)) ?? 210;
+      let cur = id;
+      while (cur !== rootId && nodeById.get(cur)?.parentId && nodeById.get(cur)!.parentId !== rootId) {
+        cur = nodeById.get(cur)!.parentId!;
+      }
+      return Math.round(hash01(cur) * 360);
+    };
     const scopeById = new Map<string, number>();
     const scopeOf = (id: string): number => {
       const cached = scopeById.get(id);
@@ -257,22 +254,23 @@ export default function Explore() {
       return s;
     };
     graph.nodes.forEach((n) => scopeOf(n.id));
-    const nodes: CanvasNode[] = graph.nodes.map((n) => ({
+    const nodes: CanvasNode[] = sceneTaxonomy.map((n) => ({
       ...n,
       fx: n.x,
       fy: n.y,
       fz: n.z,
-      categoryHue: hueByCategory.get(rootOf(n.id)) ?? 210,
+      categoryHue: hueOf(n.id),
       scope: scopeById.get(n.id) ?? 0,
     }));
-    const links: CanvasLink[] = graph.links.map((l) => ({ ...l }));
+    const links: CanvasLink[] = graph.links
+      .filter((l) => nodeIn(l.source) && nodeIn(l.target))
+      .map((l) => ({ ...l }));
     const objectNode = (o: GraphObject, level: number, p: [number, number, number]): CanvasNode => ({
       id: `obj:${o.id}`,
       name: o.title,
       kind: 'object',
       level,
       childCount: 0,
-      hasNote: false,
       dataType: o.type,
       object: true,
       form: o.form,
@@ -290,7 +288,7 @@ export default function Explore() {
       fz: p[2],
     });
     let coreLayout: CoreLayout | null = null;
-    if (core.on) {
+    if (coreOn) {
       // Files core: EVERY object (anchored or not) relocates to the 3D core at
       // the ring center; taxonomy stars stay pinned, rays tether objects to
       // their anchors across space. See core.ts for the reorder geometries.
@@ -302,7 +300,7 @@ export default function Explore() {
       // above the ring with a cross-sky ray bundle. Core-only override of the
       // pinned fx (observer spatial memory untouched); `sat` damps the L0
       // nebula halo so a relocated root can't white-out the core.
-      for (const n of graph.nodes) {
+      for (const n of sceneTaxonomy) {
         if (n.parentId || !/^[a-z][a-z0-9-]*$/.test(n.id)) continue;
         const satPos = userRootConstellation(
           n.id,
@@ -323,10 +321,8 @@ export default function Explore() {
         const g = nodeById.get(rootOf(nodeId));
         return g && g.x !== undefined ? { id: g.id, x: g.x, y: g.y!, z: g.z! } : null;
       };
-      const layout = computeCore(graph.objects ?? [], effectiveOrder, {
+      const layout = computeCore(sceneObjects, coreOrder, {
         unfiledLabel: t('explore.core.unfiled'),
-        untopicedLabel: t('explore.core.untopiced'),
-        topics: graph.topics ?? [],
         galaxyOf: (o) => {
           // Mapped objects without body-extracted anchors cluster under their
           // mapping's taxonomy root instead of ~unanchored (taxonomy order).
@@ -337,7 +333,7 @@ export default function Explore() {
         mappings: graph.fsMappings ?? [],
         galaxyPosOf,
       });
-      for (const o of graph.objects ?? []) {
+      for (const o of sceneObjects) {
         if (!passesType(o.type)) continue;
         const p = layout.positions.get(`obj:${o.id}`);
         if (p) nodes.push(objectNode(o, 99, p));
@@ -346,7 +342,7 @@ export default function Explore() {
       // own fs edges (dir→dir, dir→obj). Feeds ONLY the "Recent" lens
       // recolour — placement stays byte-identical with the lens off or on.
       const mtimeByObj = new Map<string, number>();
-      for (const o of graph.objects ?? []) {
+      for (const o of sceneObjects) {
         if (o.mtime !== undefined) mtimeByObj.set(`obj:${o.id}`, o.mtime);
       }
       const childrenByDir = new Map<string, string[]>();
@@ -375,20 +371,17 @@ export default function Explore() {
         nodes.push({
           id: f.id,
           // Only the CENTRAL core root is "Root" — standalone mapping hubs and
-          // topic hubs are depth 0 too, but carry their own label (without the
-          // `!f.topic` guard every topic hub would be renamed "Files").
-          name: f.depth === 0 && !f.mapping && !f.topic && !f.assetType ? t('explore.core.root') : f.name,
+          // type hubs are depth 0 too, but carry their own label.
+          name: f.depth === 0 && !f.mapping && !f.assetType ? t('explore.core.root') : f.name,
           kind: 'folder',
           level: 98,
           childCount: f.count,
-          hasNote: false,
           folder: true,
           mtime: newestOf(f.id),
           ...(ds?.repo ? { repo: true, bytes: ds.bytes, exts: ds.exts } : {}),
           // TYPE hubs take the hue of the bodies they hold (asset-types.ts), so a
-          // cluster and its members read as one thing; topic hubs render violet
-          // (semantic space); folder hubs stay blue.
-          categoryHue: f.hue ?? (f.topic ? 265 : 215),
+          // cluster and its members read as one thing; folder hubs stay slate.
+          categoryHue: f.hue ?? 215,
           fx: p[0],
           fy: p[1],
           fz: p[2],
@@ -404,12 +397,12 @@ export default function Explore() {
         if (drawnCore.has(l.source) && drawnCore.has(l.target)) links.push({ ...l, fs: true });
       }
       for (const r of layout.rays) {
-        if (drawnCore.has(r.source) && nodeById.has(r.target)) links.push({ ...r, ray: true });
+        if (drawnCore.has(r.source) && nodeIn(r.target)) links.push({ ...r, ray: true });
       }
-      // Mapping-hub tethers (hub → taxonomy root/links); the nodeById filter
-      // drops dangling anchors (deleted ext taxonomy nodes) silently.
+      // Mapping-hub tethers (hub → taxonomy root/links); the nodeIn filter
+      // drops dangling anchors (deleted ext taxonomy nodes, sliced-out stars).
       for (const r of layout.mrays) {
-        if (drawnCore.has(r.source) && nodeById.has(r.target)) links.push({ ...r, mray: true });
+        if (drawnCore.has(r.source) && nodeIn(r.target)) links.push({ ...r, mray: true });
       }
       coreLayout = layout;
     } else {
@@ -421,7 +414,7 @@ export default function Explore() {
       // remaining anchors stay panel/drawer facts. Unanchored objects render
       // only in the core view — free-floating dust would break spatial memory.
       const byAnchor = new Map<string, GraphObject[]>();
-      for (const o of graph.objects ?? []) {
+      for (const o of sceneObjects) {
         const anchor = o.anchors[0];
         if (!anchor) continue;
         // Filter BEFORE grouping: orbital slots are assigned by (index, count)
@@ -434,7 +427,9 @@ export default function Explore() {
       }
       for (const [anchor, group] of byAnchor) {
         const star = nodeById.get(anchor);
-        if (!star || star.x === undefined) continue;
+        // nodeIn guard: under a slice an object can be kept via anchors[1]
+        // while anchors[0] was sliced out — don't orbit an undrawn star.
+        if (!star || star.x === undefined || !nodeIn(anchor)) continue;
         group.forEach((o, i) => {
           const p = orbitalPosition(
             { x: star.x!, y: star.y!, z: star.z! },
@@ -462,7 +457,7 @@ export default function Explore() {
         ? drawnObj.has(`obj:${ref}`)
           ? `obj:${ref}`
           : null
-        : nodeById.has(ref)
+        : nodeIn(ref)
           ? ref
           : null;
     const pairKey = (a: string, b: string) => [a, b].sort().join('\u0000');
@@ -472,7 +467,7 @@ export default function Explore() {
     // confidence. A pair drawn here suppresses its plain [[object:…]] olink below
     // (an untyped ref upgrades to the typed edge — never double-drawn).
     const typedPairs = new Set<string>();
-    if (showOntology) {
+    if (showLinks) {
       for (const r of graph.crossRelations ?? []) {
         const s = resolveRel(r.from, r.fromKind);
         const tg = resolveRel(r.to, r.toKind);
@@ -495,7 +490,7 @@ export default function Explore() {
     // A wiki ref asserts "these two cards mention each other", not a typed
     // relation, so it is its OWN layer: the Ontology toggle must not claim it,
     // and it must not draw when the user has asked for no edges.
-    if (showOlinks && graph.objectLinks?.length) {
+    if (showLinks && graph.objectLinks?.length) {
       for (const l of graph.objectLinks) {
         const s = `obj:${l.source}`;
         const tg = `obj:${l.target}`;
@@ -507,15 +502,14 @@ export default function Explore() {
     // Concept-relation overlay (imported research graph, e.g. ToE) — typed
     // cross-node edges between taxonomy stars, gated by the toggle. Both
     // endpoints are pinned taxonomy nodes, so these are pure drawn edges.
-    if (showOntology) {
+    if (showLinks) {
       for (const r of graph.relations ?? []) {
-        if (nodeById.has(r.source) && nodeById.has(r.target)) {
+        if (nodeIn(r.source) && nodeIn(r.target)) {
           links.push({
             source: r.source,
             target: r.target,
             relation: true,
             relType: r.type,
-            explored: r.explored,
           });
         }
       }
@@ -542,7 +536,7 @@ export default function Explore() {
             : coreLayout?.positions.get(focusId);
       let dustIdx = 0;
       for (const item of starItems) {
-        if (item.kind === 'taxonomy' && item.nodeId && nodeById.has(item.nodeId)) {
+        if (item.kind === 'taxonomy' && item.nodeId && nodeIn(item.nodeId)) {
           // Tree member: no new node, just the dashed semantic edge.
           links.push({ source: focusId, target: item.nodeId, semantic: true, distance: item.distance });
         } else {
@@ -572,7 +566,6 @@ export default function Explore() {
             kind: item.kind,
             level: 99,
             childCount: 0,
-            hasNote: false,
             dataType: item.dataType,
             star: true,
             distance: item.distance,
@@ -588,34 +581,11 @@ export default function Explore() {
       }
     }
     return { canvasNodes: nodes, canvasLinks: links, coreLayout };
-  }, [graph, focusId, starItems, hueByCategory, nodeById, showOntology, showOlinks, passesType, core, effectiveOrder, t, dirStatByPath, mappingById, rootOf]);
+  }, [graph, focusId, starItems, hueByCategory, nodeById, showLinks, passesType, coreOn, coreOrder, rootId, t, dirStatByPath, mappingById, rootOf]);
 
   const openTarget = (id: string) => {
-    if (id.startsWith('topic:')) {
-      // Topic hub: warp the camera AND open a panel with the cluster label,
-      // its members (the hub→obj spokes), and the c-TF-IDF term chips.
-      const topic = (graph?.topics ?? []).find((x) => `topic:${x.id}` === id);
-      if (topic) {
-        const children = (coreLayout?.fsLinks ?? [])
-          .filter((l) => l.source === id)
-          .map((l) => {
-            const o = (graph?.objects ?? []).find((x) => `obj:${x.id}` === l.target);
-            return o ? { id: l.target, name: o.title, dataType: o.type } : null;
-          })
-          .filter((c): c is NonNullable<typeof c> => c !== null);
-        setDrawer({
-          id,
-          name: topic.label,
-          kind: 'folder',
-          isStar: false,
-          children,
-          terms: topic.terms,
-        });
-      }
-      setFocusId(null);
-      requestAnimationFrame(() => setFocusId(id));
-      return;
-    }
+    // (No `topic:` branch — the topic core order was culled; topic hubs are
+    // never built, so the id can't occur.)
     if (id.startsWith('dir:')) {
       // Core folder hub: warp the camera AND open a light folder panel —
       // name, mapping popisek, direct contents. Without it a click on the
@@ -682,7 +652,6 @@ export default function Explore() {
           dataType: item.dataType,
           description: item.description,
           url: item.url,
-          distance: item.distance,
           isStar: true,
           nodeId: item.nodeId,
         });
@@ -696,25 +665,95 @@ export default function Explore() {
       name: n.name,
       kind: n.kind,
       dataType: n.dataType,
-      // K1: prefer the cs localization when the UI runs Czech.
-      description: (i18n.language?.startsWith('cs') && n.descriptionCs) || n.description,
+      // K1 description arrives via DetailPanel's per-node fetch, not the drawer.
       isStar: false,
     });
     setFocusId(id);
   };
 
-  const onPanelItem = (item: NeighborItem) => {
+  /** Null-then-set so re-focusing the same id still fires the camera warp. */
+  const warpTo = (id: string) => {
+    setFocusId(null);
+    requestAnimationFrame(() => setFocusId(id));
+  };
+
+  // ── Search: debounced top-5 dropdown over /api/search/semantic. A click
+  // routes through openTarget, so an object hit selects THE OBJECT (drawer +
+  // focus), not its parent anchor — and unanchored objects are reachable.
+  useEffect(() => {
+    const q = jumpQuery.trim();
+    if (!q) {
+      setHits(null);
+      return;
+    }
+    const tmr = setTimeout(async () => {
+      try {
+        const res = await apiFetch<{ items: SearchHit[] }>(
+          `/api/search/semantic?q=${encodeURIComponent(q)}&limit=5`,
+        );
+        setHits(res.items);
+      } catch {
+        setHits([]);
+      }
+    }, 250);
+    return () => clearTimeout(tmr);
+  }, [jumpQuery]);
+
+  /** "parent" column of a dropdown row: taxonomy parent / object anchor star. */
+  const hitParentName = (h: SearchHit): string | undefined => {
+    if (h.kind === 'taxonomy') {
+      const p = nodeById.get(h.refId)?.parentId;
+      return p ? nodeById.get(p)?.name : undefined;
+    }
+    const anchor = h.kind === 'object' ? objectById.get(h.refId)?.anchors[0] : h.nodeId;
+    return anchor ? nodeById.get(anchor)?.name : undefined;
+  };
+
+  const pickHit = (h: SearchHit) => {
+    setHits(null);
+    setJumpMiss(false);
+    if (h.kind === 'taxonomy' && nodeById.has(h.refId)) {
+      openTarget(h.refId);
+      warpTo(h.refId);
+      return;
+    }
+    if (h.kind === 'object' && objectById.has(h.refId)) {
+      openTarget(`obj:${h.refId}`);
+      warpTo(`obj:${h.refId}`);
+      return;
+    }
+    // Capture/note (or an object outside the payload): drawer from the hit
+    // itself, warp to its anchor star when it has one.
     setDrawer({
-      id: item.nodeId ?? `star:${item.kind}:${item.refId}`,
-      name: item.name,
-      kind: item.kind,
-      dataType: item.dataType,
-      description: item.description,
-      url: item.url,
-      distance: item.distance,
-      isStar: item.kind !== 'taxonomy',
-      nodeId: item.nodeId,
+      id: `star:${h.kind}:${h.refId}`,
+      name: h.name,
+      kind: h.kind,
+      dataType: h.dataType,
+      description: h.description,
+      url: h.url,
+      isStar: true,
+      nodeId: h.nodeId,
     });
+    if (h.nodeId && nodeById.has(h.nodeId)) warpTo(h.nodeId);
+  };
+
+  /** Enter = first hit; fetches synchronously when the debounce hasn't fired. */
+  const jumpToFirst = async () => {
+    const q = jumpQuery.trim();
+    if (!q) return;
+    if (hits?.length) {
+      pickHit(hits[0]);
+      return;
+    }
+    try {
+      const res = await apiFetch<{ items: SearchHit[] }>(
+        `/api/search/semantic?q=${encodeURIComponent(q)}&limit=5`,
+      );
+      if (res.items.length) pickHit(res.items[0]);
+      else setJumpMiss(true);
+    } catch {
+      setJumpMiss(true);
+    }
   };
 
   // Canvas size tracks its container (the graph libs need explicit px).
@@ -730,25 +769,23 @@ export default function Explore() {
     return () => ro.disconnect();
   }, []);
 
-  // The neighbours panel content — hoisted so it can render either as the
-  // desktop right rail or inside a mobile Sheet drawer (never both).
-  // Typed relations touching the focused node, in EITHER direction, resolved to
-  // display names. Unlike the drawn edges this is not filtered to bodies in the
-  // scene: the panel is a reading surface, and a relation to something currently
-  // off-screen is exactly the kind of thing the user came here to discover.
-  const objectById = useMemo(
-    () => new Map((graph?.objects ?? []).map((o) => [o.id, o])),
-    [graph],
-  );
-
-  const focusRelations = useMemo<FocusRelation[]>(() => {
-    if (!focusId || !graph?.crossRelations) return [];
+  // Typed relations touching the PANEL TARGET, in EITHER direction, resolved
+  // to display names. Unlike the drawn edges this is not filtered to bodies in
+  // the scene: the rail is a reading surface, and a relation to something
+  // currently off-screen is exactly what the user came here to discover.
+  const targetId = drawer?.id ?? null;
+  const targetRelations = useMemo<FocusRelation[]>(() => {
+    if (!targetId || !graph?.crossRelations) return [];
+    // The target can be a taxonomy node OR an object (`obj:` id) — relations
+    // match on the bare ref + the right kind.
+    const bare = targetId.startsWith('obj:') ? targetId.slice(4) : targetId;
+    const focusKind: 'node' | 'object' = targetId.startsWith('obj:') ? 'object' : 'node';
     const nameOf = (ref: string, kind: 'node' | 'object') =>
       kind === 'node' ? nodeById.get(ref)?.name ?? ref : objectById.get(ref)?.title ?? ref;
     const out: FocusRelation[] = [];
     for (const r of graph.crossRelations) {
-      const isFrom = r.fromKind === 'node' && r.from === focusId;
-      const isTo = r.toKind === 'node' && r.to === focusId;
+      const isFrom = r.fromKind === focusKind && r.from === bare;
+      const isTo = r.toKind === focusKind && r.to === bare;
       if (!isFrom && !isTo) continue;
       out.push({
         type: r.type,
@@ -762,54 +799,44 @@ export default function Explore() {
       });
     }
     return out;
-  }, [focusId, graph, nodeById, objectById]);
+  }, [targetId, graph, nodeById, objectById]);
 
-  const sidePanelEl = (
-    <SidePanel
-      relations={focusRelations}
-      onRelationClick={(r) => {
-        if (r.otherKind === 'node') {
-          setFocusId(r.otherRef);
-          return;
-        }
-        const o = objectById.get(r.otherRef);
-        if (o) {
-          // The obj:-prefixed shape every other object drawer uses (openTarget
-          // above) — DetailPanel derives its link lists and the Focus button
-          // from the prefix + isStar + nodeId, so a bare id opened a degraded
-          // panel that dead-ended the relation chase at the first hop.
-          setDrawer({
-            id: `obj:${o.id}`,
-            name: o.title,
-            kind: 'object',
-            dataType: o.type,
-            isStar: true,
-            nodeId: `obj:${o.id}`,
-          });
-        }
-      }}
-      focusName={focusId ? nodeById.get(focusId)?.name ?? null : null}
-      mode={mode}
-      onModeChange={setMode}
-      kinds={kinds}
-      onKindsChange={setKinds}
-      typeFilter={typeFilter}
-      onTypeToggle={(dt) =>
-        setTypeFilter((prev) => {
-          const next = new Set(prev);
-          if (next.has(dt)) next.delete(dt);
-          else next.add(dt);
-          return next;
-        })
-      }
-      availableTypes={availableTypes}
-      items={neighbors.data?.items ?? []}
-      loading={neighbors.isFetching}
-      semantic={neighbors.data?.semantic ?? false}
-      vectorsReady={graph?.meta.vectors ?? false}
-      onItemClick={onPanelItem}
+  // The ONE rail content — rendered as the desktop right rail or inside the
+  // mobile Sheet (never both).
+  const detailEl = (
+    <DetailPanel
+      target={drawer}
+      nodeById={nodeById}
+      objects={graph?.objects ?? []}
+      objectLinks={graph?.objectLinks ?? []}
+      relations={targetRelations}
+      // Both kinds route through openTarget: it does drawer + focus + warp
+      // consistently, so chasing a relation never dead-ends the rail.
+      onRelationClick={(r) => openTarget(r.otherKind === 'node' ? r.otherRef : `obj:${r.otherRef}`)}
+      onClose={() => setDrawer(null)}
+      onFocus={(id) => warpTo(id)}
+      onSelect={openTarget}
+      onSliceRoot={(id) => setRootId(id)}
     />
   );
+
+  // Mobile: picking anything opens the Sheet — the tap needs feedback.
+  useEffect(() => {
+    if (isMobile && drawer) setPanelOpen(true);
+  }, [isMobile, drawer]);
+
+  // Slice breadcrumb — each ancestor is a real crumb: click it to slice
+  // there (drop the deeper levels, keep the parent). ✕ clears the slice.
+  const sliceCrumbs = useMemo(() => {
+    if (!rootId) return [];
+    const parts: { id: string; name: string }[] = [];
+    let cur = nodeById.get(rootId);
+    while (cur) {
+      parts.unshift({ id: cur.id, name: cur.name });
+      cur = cur.parentId ? nodeById.get(cur.parentId) : undefined;
+    }
+    return parts.length ? parts : [{ id: rootId, name: rootId }];
+  }, [rootId, nodeById]);
 
   return (
     <div className="flex h-screen flex-col bg-[hsl(222,45%,7%)] text-foreground dark">
@@ -821,14 +848,38 @@ export default function Explore() {
           </Link>
         </Button>
         <h1 className="shrink-0 text-sm font-semibold">{t('explore.title')}</h1>
-        <span className="hidden text-xs text-muted-foreground sm:inline">
-          {graph
-            ? t('explore.stats', {
-                nodes: graph.nodes.length,
-                embedded: graph.meta.embeddings.total,
-              })
-            : '…'}
-        </span>
+        {sliceCrumbs.length > 0 && (
+          <nav
+            className="flex min-w-0 max-w-[min(100%,28rem)] flex-wrap items-center gap-x-1 gap-y-0.5 rounded-full border border-teal-400/40 bg-teal-400/10 px-2 py-0.5 text-xs text-teal-200"
+            data-testid="explore-slice-chip"
+            aria-label={sliceCrumbs.map((c) => c.name).join(' › ')}
+          >
+            {sliceCrumbs.map((c, i) => (
+              <span key={c.id} className="flex min-w-0 items-center gap-1">
+                {i > 0 && <span className="shrink-0 opacity-50">›</span>}
+                {i < sliceCrumbs.length - 1 ? (
+                  <button
+                    type="button"
+                    className="truncate hover:text-white hover:underline"
+                    data-testid="explore-slice-crumb"
+                    onClick={() => setRootId(c.id)}
+                  >
+                    {c.name}
+                  </button>
+                ) : (
+                  <span className="truncate">{c.name}</span>
+                )}
+              </span>
+            ))}
+            <button
+              className="shrink-0 hover:text-white"
+              aria-label={t('common.close')}
+              onClick={() => setRootId(null)}
+            >
+              ✕
+            </button>
+          </nav>
+        )}
         <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto">
           <div className="relative min-w-0 flex-1 sm:flex-none">
             <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -838,65 +889,97 @@ export default function Explore() {
                 setJumpQuery(e.target.value);
                 setJumpMiss(false);
               }}
-              onKeyDown={(e) => e.key === 'Enter' && hyperspaceJump()}
+              onKeyDown={(e) => e.key === 'Enter' && jumpToFirst()}
+              onBlur={() => setHits(null)}
               placeholder={t('explore.jump.placeholder')}
               className={`h-8 w-full pl-7 text-xs sm:w-56 ${jumpMiss ? 'border-destructive' : ''}`}
               aria-label={t('explore.jump.placeholder')}
             />
+            {hits && hits.length > 0 && (
+              <ul
+                className="absolute left-0 right-0 top-9 z-30 overflow-hidden rounded-md border border-white/10 bg-slate-950/95 shadow-xl"
+                data-testid="explore-search-results"
+              >
+                {hits.map((h) => (
+                  <li key={`${h.kind}:${h.refId}`}>
+                    {/* onMouseDown beats the input's onBlur (which closes us). */}
+                    <button
+                      className="flex w-full items-center gap-2 px-2 py-1.5 text-left text-xs hover:bg-slate-800"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        pickHit(h);
+                      }}
+                    >
+                      <span className="truncate">{h.name}</span>
+                      <span className="ml-auto shrink-0 text-[10px] text-muted-foreground">
+                        {h.dataType ?? h.kind}
+                        {hitParentName(h) ? ` · ${hitParentName(h)}` : ''}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
-          {!isMobile && (
-            <Button
-              variant={cameraMode === 'ship' ? 'default' : 'outline'}
-              size="sm"
-              className="h-8 shrink-0 gap-1.5 text-xs"
-              data-testid="explore-camera-toggle"
-              onClick={() => setCameraMode((m) => (m === 'ship' ? 'observer' : 'ship'))}
-            >
-              {cameraMode === 'ship' ? <Orbit className="h-3.5 w-3.5" /> : <Rocket className="h-3.5 w-3.5" />}
-              {t(cameraMode === 'ship' ? 'explore.camera.observer' : 'explore.camera.ship')}
-            </Button>
-          )}
+          <div
+            className="flex shrink-0 overflow-hidden rounded-md border border-white/10"
+            data-testid="explore-view-control"
+          >
+            {VIEWS.map((v) => (
+              <button
+                key={v}
+                onClick={() => setView(v)}
+                className={`px-2 py-1 text-xs ${
+                  view === v
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:bg-muted/60'
+                }`}
+              >
+                {t(`explore.view.${v}`)}
+              </button>
+            ))}
+          </div>
           <Button
-            variant={showOntology ? 'default' : 'outline'}
+            variant={showLinks ? 'default' : 'outline'}
             size="sm"
             className="h-8 shrink-0 gap-1.5 text-xs"
-            onClick={() => setShowOntology((v) => !v)}
-            data-testid="explore-ontology-toggle"
-            title={t('explore.toggle.ontologyHint')}
+            onClick={() => setShowLinks((v) => !v)}
+            data-testid="explore-links-toggle"
+            title={t('explore.toggle.linksHint')}
           >
             <Waypoints className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{t('explore.toggle.ontology')}</span>
+            <span className="hidden sm:inline">{t('explore.toggle.links')}</span>
           </Button>
+          {/* Facet chips — the object-type whitelist filters the SCENE. */}
+          {availableTypes.length > 0 && (
+            <div className="flex shrink-0 flex-wrap items-center gap-1">
+              {availableTypes.map((dt) => (
+                <Badge
+                  key={dt}
+                  variant={typeFilter.size === 0 || typeFilter.has(dt) ? 'default' : 'outline'}
+                  className="cursor-pointer text-[10px]"
+                  onClick={() =>
+                    setTypeFilter((prev) => {
+                      const next = new Set(prev);
+                      if (next.has(dt)) next.delete(dt);
+                      else next.add(dt);
+                      return next;
+                    })
+                  }
+                >
+                  {dt}
+                </Badge>
+              ))}
+            </div>
+          )}
           <Button
-            variant={showOlinks ? 'default' : 'outline'}
+            variant={recent ? 'default' : 'outline'}
             size="sm"
-            className="h-8 shrink-0 gap-1.5 text-xs"
-            onClick={() => setShowOlinks((v) => !v)}
-            data-testid="explore-olinks-toggle"
-            title={t('explore.toggle.olinksHint')}
+            className="h-8 shrink-0 text-xs"
+            onClick={() => setRecent((v) => !v)}
+            title={t('explore.lens.recentTitle')}
           >
-            <Link2 className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{t('explore.toggle.olinks')}</span>
-          </Button>
-          <Button
-            variant={core.on ? 'default' : 'outline'}
-            size="sm"
-            className="h-8 shrink-0 gap-1.5 text-xs"
-            onClick={() => setCore((c) => ({ ...c, on: !c.on }))}
-            title={t('explore.core.tooltip')}
-          >
-            <Boxes className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{t('explore.core.toggle')}</span>
-          </Button>
-          <Button
-            variant={detail === 'full' ? 'default' : 'outline'}
-            size="sm"
-            className="h-8 shrink-0 gap-1.5 text-xs"
-            onClick={() => setDetail((d) => (d === 'full' ? 'auto' : 'full'))}
-            title="Detail: Auto lets performance LODs engage at scale; Full shows every body in full form"
-          >
-            <Sparkles className="h-3.5 w-3.5" />
-            <span className="hidden sm:inline">{detail === 'full' ? 'Full' : 'Auto'}</span>
+            {t('explore.lens.recent')}
           </Button>
           {isMobile && (
             <Button
@@ -939,141 +1022,32 @@ export default function Explore() {
               onNodeClick={openTarget}
               width={size.w}
               height={size.h}
-              mode={cameraMode}
-              onShipUpdate={setShipHud}
-              lens={lens}
-              coreView={core.on}
-              detail={detail}
+              lens={recent ? { axis: RECENT_AXIS } : undefined}
+              coreView={coreOn}
             />
           )}
-          {!isLoading && core.on && (
-            <div className="absolute bottom-14 left-3 z-10 flex max-w-[calc(100vw-1.5rem)] flex-wrap items-center gap-1.5 rounded-lg border border-slate-500/25 bg-slate-950/85 px-2 py-1.5 text-xs text-slate-300">
-              <span className="opacity-60">{t('explore.core.toggle')}</span>
-              {(['fs', 'taxonomy', 'topic', 'type'] as const).map((o) => (
-                <button
-                  key={o}
-                  disabled={o === 'topic' && !topicsReady}
-                  title={o === 'topic' && !topicsReady ? t('explore.core.topicUnavailable') : undefined}
-                  className={`rounded px-1.5 py-0.5 ${
-                    core.order === o
-                      ? 'bg-teal-400 text-slate-900'
-                      : o === 'topic' && !topicsReady
-                        ? 'cursor-not-allowed opacity-40'
-                        : 'hover:bg-slate-700/60'
-                  }`}
-                  onClick={() => setCore((c) => ({ ...c, order: o }))}
-                >
-                  {t(`explore.core.order.${o}`)}
-                </button>
-              ))}
-              {effectiveOrder === 'topic' && topicCoverage.assigned < topicCoverage.total && (
-                <span className="ml-1 opacity-60">
-                  {t('explore.core.topicCoverage', {
-                    assigned: topicCoverage.assigned,
-                    total: topicCoverage.total,
-                  })}
-                </span>
-              )}
-            </div>
-          )}
-          {!isLoading && (
+          {!isLoading && recent && (
             <div className="absolute bottom-3 left-3 z-10 flex max-w-[calc(100vw-1.5rem)] flex-wrap items-center gap-1.5 rounded-lg border border-slate-500/25 bg-slate-950/85 px-2 py-1.5 text-xs text-slate-300">
-              <span className="opacity-60">Lens</span>
-              <button
-                className={`rounded px-1.5 py-0.5 ${!lens.axis ? 'bg-slate-200 text-slate-900' : 'hover:bg-slate-700/60'}`}
-                onClick={() => setLens((l) => ({ ...l, axis: undefined }))}
-              >
-                Off
-              </button>
-              {LENS_AXES.map((a) => (
-                <button
-                  key={a.key}
-                  title={a.label}
-                  className={`rounded px-1.5 py-0.5 ${lens.axis === a.key ? 'bg-sky-400 text-slate-900' : 'hover:bg-slate-700/60'}`}
-                  onClick={() => setLens((l) => ({ ...l, axis: a.key }))}
-                >
-                  {a.label.split(' ')[0]}
-                </button>
-              ))}
-              <button
-                title={t('explore.lens.recentTitle')}
-                className={`rounded px-1.5 py-0.5 ${lens.axis === RECENT_AXIS ? 'bg-orange-400 text-slate-900' : 'hover:bg-slate-700/60'}`}
-                onClick={() => setLens((l) => ({ ...l, axis: RECENT_AXIS }))}
-              >
-                {t('explore.lens.recent')}
-              </button>
-              {lens.axis === RECENT_AXIS && (
-                <span className="ml-1 flex items-center gap-1" data-testid="recent-legend">
-                  <span className="opacity-60">{t('explore.lens.recentHot')}</span>
-                  <span
-                    className="h-2 w-14 rounded-full"
-                    style={{ background: 'linear-gradient(to right, hsl(18 85% 60%), hsl(218 50% 60%))' }}
-                  />
-                  <span className="opacity-60">{t('explore.lens.recentCold')}</span>
-                </span>
-              )}
-              <label className="ml-1 flex items-center gap-1">
-                <input
-                  type="checkbox"
-                  checked={!!lens.sizeByCentrality}
-                  onChange={(e) => setLens((l) => ({ ...l, sizeByCentrality: e.target.checked }))}
+              <span className="flex items-center gap-1" data-testid="recent-legend">
+                <span className="opacity-60">{t('explore.lens.recentHot')}</span>
+                <span
+                  className="h-2 w-14 rounded-full"
+                  style={{ background: 'linear-gradient(to right, hsl(18 85% 60%), hsl(218 50% 60%))' }}
                 />
-                hubs
-              </label>
+                <span className="opacity-60">{t('explore.lens.recentCold')}</span>
+              </span>
             </div>
-          )}
-          <DetailPanel
-            target={drawer}
-            nodeById={nodeById}
-            objects={graph?.objects ?? []}
-            objectLinks={graph?.objectLinks ?? []}
-            onClose={() => setDrawer(null)}
-            onFocus={(id) => {
-              setDrawer(null);
-              // Null-then-set so RE-focusing the already-focused node still
-              // fires the warp + focus pulse — without it the state doesn't
-              // change and "Focus in graph" visibly did nothing (owner report).
-              setFocusId(null);
-              requestAnimationFrame(() => setFocusId(id));
-            }}
-            onSelect={openTarget}
-          />
-          {cameraMode === 'ship' && (
-            <>
-              {/* Ship HUD: crosshair + control hints. Pure overlay, no logic. */}
-              <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-white/40 text-lg select-none">
-                +
-              </div>
-              <div className="pointer-events-none absolute bottom-6 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2 rounded-md bg-black/60 px-4 py-2 text-white/90 backdrop-blur-sm">
-                <div className="flex items-center gap-2 text-[10px] uppercase tracking-wider text-white/50">
-                  <span>SPD</span>
-                  <span className="font-mono text-cyan-300">{Math.round(shipHud.speed)}</span>
-                </div>
-                <div className="h-1.5 w-32 overflow-hidden rounded-full bg-white/10">
-                  <div
-                    className="h-full bg-cyan-400 transition-[width] duration-75"
-                    style={{ width: `${Math.min((shipHud.speed / 520) * 100, 100)}%` }}
-                  />
-                </div>
-                <div className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-wider">
-                  <span className={shipHud.boosting ? 'text-yellow-300' : 'text-white/30'}>
-                    {shipHud.boosting ? 'BOOST' : 'boost'}
-                  </span>
-                </div>
-                <div className="text-[10px] text-white/60">{t('explore.camera.shipHint')}</div>
-              </div>
-            </>
           )}
         </div>
         {isMobile ? (
           <Sheet open={panelOpen} onOpenChange={setPanelOpen}>
             <SheetContent side="right" className="w-[85vw] max-w-sm overflow-y-auto p-0">
               <SheetTitle className="sr-only">{t('explore.panel.title')}</SheetTitle>
-              {sidePanelEl}
+              {detailEl}
             </SheetContent>
           </Sheet>
         ) : (
-          <aside className="w-72 shrink-0 border-l">{sidePanelEl}</aside>
+          <aside className="w-80 shrink-0 border-l">{detailEl}</aside>
         )}
       </div>
 

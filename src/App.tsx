@@ -1,6 +1,5 @@
 import { useEffect, lazy, Suspense } from 'react';
 import { Toaster } from '@/components/ui/toaster';
-import { TooltipProvider } from '@/components/ui/tooltip';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Index from './pages/Index';
@@ -27,34 +26,32 @@ const App = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/admin" element={<Admin />} />
-            {/* The card-grid game layer is retired (locked pages made no
-                sense pre-content); the universe explorer IS the game now.
-                Old bookmarks land in the explorer. */}
-            <Route path="/game/*" element={<Navigate to="/explore" replace />} />
-            <Route path="/game" element={<Navigate to="/explore" replace />} />
-            <Route
-              path="/explore"
-              element={
-                <Suspense fallback={null}>
-                  <Explore />
-                </Suspense>
-              }
-            />
-            <Route path="/tables" element={<Tables />} />
-            <Route path="/tables/:id" element={<TableEditor />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/extension/pair" element={<ExtensionPair />} />
-            <Route path="/compose/:id" element={<ComposeDraft />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+      <Toaster />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<Index />} />
+          <Route path="/admin" element={<Admin />} />
+          {/* The card-grid game layer is retired (locked pages made no
+              sense pre-content); the universe explorer IS the game now.
+              Old bookmarks land in the explorer. */}
+          <Route path="/game/*" element={<Navigate to="/explore" replace />} />
+          <Route path="/game" element={<Navigate to="/explore" replace />} />
+          <Route
+            path="/explore"
+            element={
+              <Suspense fallback={null}>
+                <Explore />
+              </Suspense>
+            }
+          />
+          <Route path="/tables" element={<Tables />} />
+          <Route path="/tables/:id" element={<TableEditor />} />
+          <Route path="/settings" element={<Settings />} />
+          <Route path="/extension/pair" element={<ExtensionPair />} />
+          <Route path="/compose/:id" element={<ComposeDraft />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
     </QueryClientProvider>
   );
 };

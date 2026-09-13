@@ -27,7 +27,7 @@ async function call(
   method: string,
   p: string,
   body?: unknown,
-): Promise<{ status: number; data: any }> {
+): Promise<{ status: number; data: unknown }> {
   const res = await fetch(`${base}${p}`, {
     method,
     headers: {
@@ -38,6 +38,10 @@ async function call(
   });
   const json = (await res.json().catch(() => ({}))) as { data?: unknown };
   return { status: res.status, data: json.data };
+}
+
+function rec(v: unknown): Record<string, unknown> {
+  return v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : {};
 }
 
 beforeAll(async () => {
@@ -64,10 +68,10 @@ describe('todos as a per-user private DataTable', () => {
   it('ensure is deterministic and idempotent', async () => {
     const first = await call('alice', 'GET', '/api/todos-table');
     expect(first.status).toBe(200);
-    expect(first.data.id).toBe('todos-alice');
-    expect(first.data.visibility).toBe('private');
+    expect(rec(first.data).id).toBe('todos-alice');
+    expect(rec(first.data).visibility).toBe('private');
     const again = await call('alice', 'GET', '/api/todos-table');
-    expect(again.data.id).toBe('todos-alice');
+    expect(rec(again.data).id).toBe('todos-alice');
   });
 
   it('rows flow through the plain tables surface; table privacy isolates', async () => {
@@ -75,10 +79,13 @@ describe('todos as a per-user private DataTable', () => {
       values: { title: 'water the ficus', completed: false },
     });
     expect(add.status).toBe(200);
-    const rows = await call('alice', 'GET', '/api/tables/todos-alice/rows');
-    expect(rows.data.rows.map((r: any) => r.values.title)).toContain('water the ficus');
+    const listing = rec((await call('alice', 'GET', '/api/tables/todos-alice/rows')).data);
+    const titles = Array.isArray(listing.rows)
+      ? (listing.rows as Array<{ values?: { title?: string } }>).map((r) => r.values?.title)
+      : [];
+    expect(titles).toContain('water the ficus');
     // bob has his own table and alice's is ABSENT for him (private + absence-safe)
-    expect((await call('bob', 'GET', '/api/todos-table')).data.id).toBe('todos-bob');
+    expect(rec((await call('bob', 'GET', '/api/todos-table')).data).id).toBe('todos-bob');
     expect((await call('bob', 'GET', '/api/tables/todos-alice/rows')).status).toBe(404);
   });
 
@@ -86,7 +93,7 @@ describe('todos as a per-user private DataTable', () => {
     // The migration ran on a fresh DB (guard-created empty todos → no-op);
     // its LAW is pinned structurally: the legacy table is gone…
     const db = await import('./db');
-    const raw = (db as any).getDb?.() ?? null;
+    const raw = 'getDb' in db ? (db as { getDb?: () => { prepare: (sql: string) => { get: () => unknown } } }).getDb?.() : null;
     if (raw) {
       const t = raw
         .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='todos'")

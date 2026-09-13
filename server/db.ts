@@ -1300,6 +1300,13 @@ export function getObjectSyncIndex(userId: string): Map<string, ObjectSyncIndexE
 // a tier-scoped object (e.g. a 'tier-users' table card) reaches the callers
 // rbac.ts entitles — not admins only. 'shared' stays rank-99, so the set is a
 // STRICT SUPERSET of today's; 'private' (rank 0) is never granted by a tier.
+// LEAN read: every column except `body` — /api/graph never ships bodies, and
+// hauling up to 20k × 4000-char bodies through JSON row mapping per request
+// was pure waste. `links` + `frontmatter` stay (anchors/objectLinks/path/
+// mapping/mtime/graph.card come from them).
+const LEAN_OBJECT_COLS =
+  'id, user_id, type, title, description, resource, tags, frontmatter, links, visibility, created_at, updated_at';
+
 export function getVisibleObjects(
   userId: string,
   seeAll: boolean,
@@ -1308,14 +1315,16 @@ export function getVisibleObjects(
   const d = getDb();
   if (seeAll) {
     return (
-      d.prepare('SELECT * FROM knowledge_objects ORDER BY updated_at DESC').all() as ObjectDbRow[]
+      d
+        .prepare(`SELECT ${LEAN_OBJECT_COLS} FROM knowledge_objects ORDER BY updated_at DESC`)
+        .all() as ObjectDbRow[]
     ).map((r) => mapObjectRow(r));
   }
   const vis = readableVisibilitiesFor(groups); // always includes 'shared'
   const placeholders = vis.map(() => '?').join(', ');
   const rows = d
     .prepare(
-      `SELECT * FROM knowledge_objects WHERE user_id = ? OR visibility IN (${placeholders}) ORDER BY updated_at DESC`,
+      `SELECT ${LEAN_OBJECT_COLS} FROM knowledge_objects WHERE user_id = ? OR visibility IN (${placeholders}) ORDER BY updated_at DESC`,
     )
     .all(userId, ...vis);
   return (rows as ObjectDbRow[]).map((r) => mapObjectRow(r));

@@ -1,14 +1,11 @@
 /**
- * Repo rendering assets — language detection, GitHub-linguist colours and the
- * procedural sphere texture for repo folder hubs in the files core.
- *
- * A repo sphere reads like "gravatar × GH language bar": longitude bands
- * proportional to the repo's language byte-mix (colours below), rotated by a
- * name-seeded offset, with a mirrored identicon speckle overlay seeded by the
- * same name — every repo gets a stable, unique face. The server ships raw
- * extension byte-buckets (fsDirs.exts); everything language-ish happens here.
+ * Repo language assets — extension→language detection and GitHub-linguist
+ * colours, for the core file-cube colouring and the detail-panel language
+ * bar. The server ships raw extension byte-buckets (fsDirs.exts); everything
+ * language-ish happens here. (The procedural repo-sphere texture was retired
+ * by the explore-decomplexity Phase C layer cut — repo hubs are plain
+ * bytes-sized spheres now.)
  */
-import * as THREE from 'three';
 
 /** GitHub-linguist colours for the common languages (fallback = hashed hue). */
 const LANG_COLORS: Record<string, string> = {
@@ -111,55 +108,4 @@ export function fmtBytes(n: number): string {
   if (n < 1024 * 1024) return `${(n / 1024).toFixed(n < 10240 ? 1 : 0)} KB`;
   if (n < 1024 * 1024 * 1024) return `${(n / (1024 * 1024)).toFixed(1)} MB`;
   return `${(n / (1024 * 1024 * 1024)).toFixed(1)} GB`;
-}
-
-// Texture cache — nodeThreeObject re-runs on every graph rebuild; the canvas
-// work must happen once per (name, mix), not once per render.
-const texCache = new Map<string, THREE.CanvasTexture>();
-
-/**
- * 256×128 equirectangular face: language longitude-bands (name-seeded start
- * rotation) under a 4×8 mirrored identicon speckle. Deterministic by inputs.
- */
-export function repoTexture(name: string, langs: RepoLang[]): THREE.CanvasTexture {
-  const key = `${name}|${langs.map((l) => `${l.lang}:${l.pct.toFixed(2)}`).join(',')}`;
-  const hit = texCache.get(key);
-  if (hit) return hit;
-  const W = 256;
-  const H = 128;
-  const c = document.createElement('canvas');
-  c.width = W;
-  c.height = H;
-  const g = c.getContext('2d')!;
-  g.fillStyle = '#1a2233'; // base for language-less repos
-  g.fillRect(0, 0, W, H);
-  // Longitude bands, wrapped at the seam; start offset = the "original
-  // layout by name" — two repos with the same mix still look different.
-  let x = hash01(name) * W;
-  for (const l of langs) {
-    const w = l.pct * W;
-    g.fillStyle = l.color;
-    const x0 = x % W;
-    g.fillRect(x0, 0, Math.min(w, W - x0), H);
-    if (x0 + w > W) g.fillRect(0, 0, x0 + w - W, H); // wrap-around remainder
-    x += w;
-  }
-  // Identicon speckle: mirrored 4×8 grid, seeded by name — light/dark cells
-  // give the unique "gravatar" fingerprint over the language bands.
-  const cw = W / 8;
-  const ch = H / 4;
-  for (let row = 0; row < 4; row++) {
-    for (let col = 0; col < 4; col++) {
-      const v = hash01(`${name}:${row}:${col}`);
-      if (v < 0.3) g.fillStyle = 'rgba(255,255,255,0.16)';
-      else if (v > 0.72) g.fillStyle = 'rgba(0,0,0,0.28)';
-      else continue;
-      g.fillRect(col * cw, row * ch, cw, ch);
-      g.fillRect((7 - col) * cw, row * ch, cw, ch); // horizontal mirror
-    }
-  }
-  const tex = new THREE.CanvasTexture(c);
-  tex.needsUpdate = true;
-  texCache.set(key, tex);
-  return tex;
 }

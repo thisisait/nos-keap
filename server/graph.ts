@@ -15,7 +15,7 @@
  */
 import type { Express, Request, Response } from 'express';
 import * as db from './db';
-import { allNodes, getNode, getAncestors } from './taxonomy';
+import { allNodes, getNode, nodeLevel } from './taxonomy';
 import { resolveContentRef, inferCaptureType } from './content-links';
 import { assetDescriptor } from './asset-types';
 import { liveEmbedAvailable } from './embeddings';
@@ -29,11 +29,6 @@ const fail = (res: Response, status: number, error: string) =>
   res.status(status).json({ success: false, error });
 
 const MAX_NEIGHBORS = 50;
-
-/** Depth from root (category=0) — the explorer maps this to radial shells. */
-function nodeLevel(id: string): number {
-  return getAncestors(id).length;
-}
 
 // ── Neighbor hit enrichment: join vector hits back to their source rows ──────
 
@@ -122,9 +117,21 @@ function parseKinds(raw: unknown): db.EmbeddingKind[] {
 }
 
 export function registerGraphRoutes(app: Express) {
-  // The full taxonomy as a render-ready graph. The dataset is static, curated
-  // overlay is tiny — one uncached pass per request is fine at ~790 nodes.
+  // The full taxonomy as a render-ready graph. One uncached pass per request;
+  // the payload diet (no prose, no bodies read) keeps it viable at ~2.6k nodes.
   app.get('/api/graph', (req: Request, res: Response) => {
+    const metaBlock = {
+      vectors: db.vectorSearchAvailable(),
+      embeddings: db.embeddingStats(),
+      liveEmbed: liveEmbedAvailable(),
+      layoutVersion: db.getLayoutVersion(),
+      topics: db.topicStats(),
+    };
+    // ?meta=1 — stats only, for the homepage tile (which needs two numbers,
+    // not the corpus).
+    if (req.query.meta === '1') {
+      return ok(res, { counts: { nodes: allNodes().length }, meta: metaBlock });
+    }
     const curated = db.getTaxonomyMetadata();
     const curatedById = new Map(
       (Array.isArray(curated) ? curated : []).map((c) => [c.id, c.data]),
@@ -132,12 +139,6 @@ export function registerGraphRoutes(app: Express) {
     // Baked star positions (U1) — the explorer pins taxonomy nodes to these;
     // only semantic stars and nebula dust stay force-simulated.
     const layout = db.getLayout();
-    // Semantic-lens derived features (colour/size/texture channels). Empty until
-    // keap-features-sync populates node_features — the client just skips the lens.
-    const feats = db.getNodeFeatures();
-    // Linked-data enrichment (Wikidata QID + entity typing). Empty until the
-    // host-side resolve-typing.py job populates node_metadata — client skips it.
-    const meta = db.getNodeMetadata();
     const nodes = allNodes().map((n) => {
       const cur = curatedById.get(n.id);
       const ref = cur?.requiredData ?? n.requiredData;
@@ -150,20 +151,16 @@ export function registerGraphRoutes(app: Express) {
         parentId: n.parentId,
         level: nodeLevel(n.id),
         childCount: n.childIds.length,
-        hasNote: curatedById.has(n.id),
         dataType: resolved?.type,
         // Resolved content link — the DetailPanel's "open in service" action.
         url: resolved?.url,
         zone: n.zone,
         ext: n.ext ?? false,
-        // K1 curated descriptions — en is canonical, cs is the UI locale.
-        description: n.description,
-        descriptionCs: n.descriptionCs,
+        // K1 curated descriptions are NOT shipped in bulk (payload diet) —
+        // the DetailPanel reads them per node via /api/taxonomy-metadata/:id.
         x: p?.x,
         y: p?.y,
         z: p?.z,
-        features: feats.get(n.id),
-        meta: meta.get(n.id),
       };
     });
     const links = nodes
@@ -262,9 +259,6 @@ export function registerGraphRoutes(app: Express) {
         nested: m.nestUnderFiles,
         taxonomyRoot: m.taxonomyRoot && getNode(m.taxonomyRoot) ? m.taxonomyRoot : undefined,
         taxonomyLinks: m.taxonomyLinks.filter((l) => getNode(l)),
-        tags: m.tags,
-        enabled: m.enabled,
-        count: db.countObjectsByOwner(`fsmap:${m.id}`),
       }));
     // Concept-relation overlay (imported research graphs, e.g. ToE) — a SEPARATE
     // typed-edge layer, NOT folded into the parent-child `links` skeleton. Typed
@@ -273,7 +267,7 @@ export function registerGraphRoutes(app: Express) {
     const relations = db
       .listConceptRelations(typedOnly)
       .filter((r) => getNode(r.from) && getNode(r.to))
-      .map((r) => ({ source: r.from, target: r.to, type: r.type, explored: r.explored }));
+      .map((r) => ({ source: r.from, target: r.to, type: r.type }));
     // Track R3 stage 2: typed cross-type relations from the generalized `relations`
     // store (confirmed by default; ?relations=all adds high-confidence proposed).
     // ToE node↔node is EXCLUDED — it already ships via `relations` above with its
@@ -313,7 +307,6 @@ export function registerGraphRoutes(app: Express) {
           label: meta?.label ?? r.type,
           color: meta?.color ?? null,
           confidence: r.confidence,
-          status: r.status,
         };
       });
     // Repo-flagged directory aggregates (fs walks) — the client textures +
@@ -347,13 +340,7 @@ export function registerGraphRoutes(app: Express) {
       fsMappings,
       fsDirs,
       topics,
-      meta: {
-        vectors: db.vectorSearchAvailable(),
-        embeddings: db.embeddingStats(),
-        liveEmbed: liveEmbedAvailable(),
-        layoutVersion: db.getLayoutVersion(),
-        topics: db.topicStats(),
-      },
+      meta: metaBlock,
     });
   });
 

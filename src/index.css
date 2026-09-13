@@ -48,11 +48,6 @@ All colors MUST be HSL.
     --ring: 220 70% 50%;
 
     --radius: 0.375rem;
-
-    --game-primary: 220 70% 50%;
-    --game-secondary: 220 20% 85%;
-    --game-success: 120 50% 45%;
-    --game-warning: 40 90% 60%;
   }
 
   .dark {
@@ -84,11 +79,6 @@ All colors MUST be HSL.
     --border: 220 10% 20%;
     --input: 220 10% 15%;
     --ring: 220 70% 60%;
-
-    --game-primary: 220 70% 60%;
-    --game-secondary: 220 15% 25%;
-    --game-success: 120 50% 55%;
-    --game-warning: 40 90% 70%;
   }
 }
 

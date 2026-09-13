@@ -37,7 +37,7 @@ async function call(
   method: string,
   p: string,
   body?: unknown,
-): Promise<{ status: number; data: any }> {
+): Promise<{ status: number; data: unknown }> {
   const res = await fetch(`${base}${p}`, {
     method,
     headers: {
@@ -48,6 +48,17 @@ async function call(
   });
   const json = (await res.json().catch(() => ({}))) as { data?: unknown };
   return { status: res.status, data: json.data };
+}
+
+function rec(v: unknown): Record<string, unknown> {
+  return v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : {};
+}
+function tables(v: unknown): Array<{ id: string }> {
+  return Array.isArray(v) ? (v as Array<{ id: string }>) : [];
+}
+function rows(v: unknown): Array<{ id?: string; __id?: string; __sharing?: { owner?: string; visibility?: string } }> {
+  const list = rec(v).rows;
+  return Array.isArray(list) ? list : [];
 }
 
 const COLS = {
@@ -86,12 +97,12 @@ describe('table-level grades and grants (human door)', () => {
       visibility: 'private',
     });
     expect(created.status).toBe(200);
-    tid = created.data.id;
+    tid = rec(created.data).id as string;
     expect((await call('bob', 'GET', `/api/tables/${tid}`)).status).toBe(404);
     expect((await call('alice', 'GET', `/api/tables/${tid}`)).status).toBe(200);
     expect((await call('root', 'GET', `/api/tables/${tid}`)).status).toBe(200);
     const bobList = await call('bob', 'GET', '/api/tables');
-    expect(bobList.data.some((t: any) => t.id === tid)).toBe(false);
+    expect(tables(bobList.data).some((t) => t.id === tid)).toBe(false);
   });
 
   it('a READ grant opens reads, not writes — and never the declaration', async () => {
@@ -99,7 +110,7 @@ describe('table-level grades and grants (human door)', () => {
       sharedWith: [{ principal: 'user:bob', access: 'read' }],
     });
     expect((await call('bob', 'GET', `/api/tables/${tid}`)).status).toBe(200);
-    expect((await call('bob', 'GET', '/api/tables')).data.some((t: any) => t.id === tid)).toBe(true);
+    expect(tables((await call('bob', 'GET', '/api/tables')).data).some((t) => t.id === tid)).toBe(true);
     expect((await call('bob', 'POST', `/api/tables/${tid}/rows`, { values: { note: 'hi' } })).status).toBe(403);
     // a grantee never edits the shares (owner-class only)
     expect(
@@ -113,7 +124,7 @@ describe('table-level grades and grants (human door)', () => {
     });
     const w = await call('bob', 'POST', `/api/tables/${tid}/rows`, { id: 'b1', values: { note: 'from bob' } });
     expect(w.status).toBe(200);
-    expect(w.data.sharing?.owner, 'row owner stamps from the creating principal').toBe('user:bob');
+    expect(rec(rec(w.data).sharing).owner, 'row owner stamps from the creating principal').toBe('user:bob');
     expect((await call('bob', 'DELETE', `/api/tables/${tid}`)).status).toBe(403);
   });
 
@@ -124,8 +135,8 @@ describe('table-level grades and grants (human door)', () => {
       visibility: 'system',
     });
     expect(created.status).toBe(200);
-    expect((await call('bob', 'GET', `/api/tables/${created.data.id}`)).status).toBe(404);
-    expect((await call('root', 'GET', `/api/tables/${created.data.id}`)).status).toBe(200);
+    expect((await call('bob', 'GET', `/api/tables/${rec(created.data).id}`)).status).toBe(404);
+    expect((await call('root', 'GET', `/api/tables/${rec(created.data).id}`)).status).toBe(200);
   });
 });
 
@@ -138,7 +149,7 @@ describe('row-level narrowing, grants and the __ meta keys (human door)', () => 
       schema: COLS,
       visibility: 'tier-users',
     });
-    tid = created.data.id;
+    tid = rec(created.data).id as string;
     await call('alice', 'POST', `/api/tables/${tid}/rows`, { id: 'open1', values: { note: 'public note' } });
     await call('alice', 'POST', `/api/tables/${tid}/rows`, {
       id: 'secret1',
@@ -147,10 +158,10 @@ describe('row-level narrowing, grants and the __ meta keys (human door)', () => 
   });
 
   it('a row narrows below its table: absent for the tier reader, present for the owner', async () => {
-    const bobRows = (await call('bob', 'GET', `/api/tables/${tid}/rows`)).data.rows.map((r: any) => r.id);
+    const bobRows = rows((await call('bob', 'GET', `/api/tables/${tid}/rows`)).data).map((r) => r.id);
     expect(bobRows).toContain('open1');
     expect(bobRows).not.toContain('secret1');
-    const aliceRows = (await call('alice', 'GET', `/api/tables/${tid}/rows`)).data.rows.map((r: any) => r.id);
+    const aliceRows = rows((await call('alice', 'GET', `/api/tables/${tid}/rows`)).data).map((r) => r.id);
     expect(aliceRows).toContain('secret1');
   });
 
@@ -161,7 +172,7 @@ describe('row-level narrowing, grants and the __ meta keys (human door)', () => 
       filter: [],
     });
     expect(agg.status).toBe(200);
-    expect(agg.data[0]?.count_note).toBe(1); // secret1 excluded by law
+    expect((agg.data as Array<{ count_note?: number }>)[0]?.count_note).toBe(1); // secret1 excluded by law
   });
 
   it('__owner is refused; row sharing changes are owner-class only', async () => {
@@ -198,17 +209,17 @@ describe('row-level narrowing, grants and the __ meta keys (human door)', () => 
       schema: COLS,
       visibility: 'private',
     });
-    const pid = created.data.id;
+    const pid = rec(created.data).id as string;
     await call('alice', 'POST', `/api/tables/${pid}/rows`, { id: 'hidden', values: { note: 'no' } });
     await call('alice', 'POST', `/api/tables/${pid}/rows`, {
       id: 'forBob',
       values: { note: 'yes', __shared_with: [{ principal: 'user:bob', access: 'write' }] },
     });
     // the row grant lights the table up in bob's listing…
-    expect((await call('bob', 'GET', '/api/tables')).data.some((t: any) => t.id === pid)).toBe(true);
+    expect(tables((await call('bob', 'GET', '/api/tables')).data).some((t) => t.id === pid)).toBe(true);
     // …but only the granted row is in the page
-    const rows = (await call('bob', 'GET', `/api/tables/${pid}/rows`)).data.rows.map((r: any) => r.id);
-    expect(rows).toEqual(['forBob']);
+    const granted = rows((await call('bob', 'GET', `/api/tables/${pid}/rows`)).data).map((r) => r.id);
+    expect(granted).toEqual(['forBob']);
     // write grant on the row lets bob edit IT, not create siblings
     expect(
       (await call('bob', 'POST', `/api/tables/${pid}/rows`, { id: 'forBob', values: { note: 'edited' } }))
@@ -249,16 +260,18 @@ describe('agent door: phase-1 plumbing, no subtraction', () => {
       },
       body: JSON.stringify({ note: 'row', __visibility: 'private', __id: 'r1' }),
     });
-    const upJson = (await up.json()) as any;
+    const upJson = rec(await up.json());
     expect(up.status, JSON.stringify(upJson)).toBe(200);
-    const listing = (await (
-      await fetch(`${base}/agent/v1/tables/agent-share-t/rows`, {
-        headers: { authorization: 'Bearer rw-test-token' },
-      })
-    ).json()) as any;
-    const row = listing.data.rows.find((r: any) => r.__id === 'r1');
-    expect(row.__sharing.owner).toBe('agent:seeder');
-    expect(row.__sharing.visibility).toBe('private');
+    const listing = rec(
+      await (
+        await fetch(`${base}/agent/v1/tables/agent-share-t/rows`, {
+          headers: { authorization: 'Bearer rw-test-token' },
+        })
+      ).json(),
+    );
+    const row = rows(listing.data).find((r) => r.__id === 'r1');
+    expect(row?.__sharing?.owner).toBe('agent:seeder');
+    expect(row?.__sharing?.visibility).toBe('private');
     expect(upJson.success).toBe(true); // phase 1: stored, never refused
   });
 });

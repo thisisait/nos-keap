@@ -1137,20 +1137,6 @@
    "type": "references",
    "explored": null,
    "source": "brief-xref"
-  },
-  {
-   "from": "02.02.09",
-   "to": "02.02.11",
-   "type": "references",
-   "explored": null,
-   "source": "brief-xref"
-  },
-  {
-   "from": "02.02.09",
-   "to": "02.04",
-   "type": "references",
-   "explored": null,
-   "source": "brief-xref"
   }
  ]
 }

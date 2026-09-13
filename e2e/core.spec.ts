@@ -1,10 +1,10 @@
 import { test, expect } from '@playwright/test';
 
 /**
- * Files core — the explore toggle that relocates knowledge objects into a 3D
+ * Files core — the explore view that relocates knowledge objects into a 3D
  * core at the galaxy-ring center (folder constellations by default, rays back
  * to taxonomy anchors). Seeds objects through the human API (dev fallback
- * identity), then drives the toggle + reorder bar.
+ * identity), then drives the view control.
  */
 test.describe.configure({ mode: 'serial' });
 
@@ -71,47 +71,31 @@ test.describe('files core', () => {
     ).toBe(false);
   });
 
-  test('core toggle forms the 3D core and offers reorder modes', async ({ page }) => {
+  test('view control forms the 3D core (Folders / Taxonomy / Types)', async ({ page }) => {
     const graphResponse = page.waitForResponse((r) => r.url().includes('/api/graph') && r.ok());
     await page.goto('/explore');
     await graphResponse;
     await expect(page.locator('canvas').first()).toBeVisible({ timeout: 15_000 });
 
-    // ON by default (the center is the home view) — the reorder bar is
-    // already there: Folders (default, active), Taxonomy, Topics
-    // (disabled — no object vectors seeded here, so no clusters ship).
-    const coreButton = page.getByRole('button', { name: 'Core', exact: true });
-    await expect(coreButton).toBeVisible();
-    const folders = page.getByRole('button', { name: 'Folders' });
-    await expect(folders).toBeVisible();
-    const topicsBtn = page.getByRole('button', { name: 'Topics' });
-    await expect(topicsBtn).toBeDisabled();
-    // Disabled-state tooltip is the truthful "waiting for embeddings" key,
-    // not the old "coming soon" copy (topicUnavailable, decision #17).
-    await expect(topicsBtn).toHaveAttribute(
-      'title',
-      'No topic clusters yet — waiting for object embeddings (keap-embed-sync)',
-    );
+    // Folders is the default core view. Topics is not a view — clustering
+    // stays on /api/graph.topics until it earns a slot (explore-decomplexity).
+    await expect(page.getByTestId('explore-view-control')).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Folders', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Taxonomy', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Types', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Constellation', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Topics' })).toHaveCount(0);
     await page.waitForTimeout(2500); // camera flight into the ring center
     await page.screenshot({ path: 'e2e/screenshots/core-fs.png' });
 
     await page.getByRole('button', { name: 'Taxonomy', exact: true }).click();
+    await expect.poll(() => new URL(page.url()).searchParams.get('view')).toBe('taxonomy');
     await page.waitForTimeout(1200);
     await page.screenshot({ path: 'e2e/screenshots/core-taxonomy.png' });
 
-    // Toggle off — the bar goes away, the camera flies back out; on again —
-    // the bar returns (round-trip from the new on-by-default state).
-    // Explicit timeouts, like the canvas assertion above: toggling the core
-    // re-forms a 3D layout whose cost scales with the node count, and the
-    // taxonomy grew from 1750 to 2393 nodes on 2026-07-26. This round-trip
-    // passed locally in 11.5 s and timed out on a CI runner at the default 5 s
-    // — a slower machine doing more work, not a regression. If it fails again
-    // after another corpus increase, raise the bound or measure the layout;
-    // do not remove the assertion.
-    await coreButton.click();
-    await expect(page.getByRole('button', { name: 'Folders' })).toHaveCount(0, { timeout: 15_000 });
-    await coreButton.click();
-    await expect(page.getByRole('button', { name: 'Folders' })).toBeVisible({ timeout: 15_000 });
+    await page.getByRole('button', { name: 'Constellation', exact: true }).click();
+    await expect.poll(() => new URL(page.url()).searchParams.get('view')).toBe('constellation');
+    await expect(page.getByRole('button', { name: 'Folders', exact: true })).toBeVisible();
   });
 
   test('cleanup: seeded objects removed', async ({ request }) => {

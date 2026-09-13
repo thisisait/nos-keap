@@ -4,8 +4,8 @@
  *
  * Reads knowledge/canonical/<L0>/<L1>.json (each = one L1 domain: ext nodes +
  * K1 description overrides + briefs + typed relations), and materialises the
- * curated delta over the static seed spine into the live DB. Replaces the
- * per-domain import-domain.mjs / import-toe.mjs (one format, one code path).
+ * curated delta over the static seed spine into the live DB. This is the one
+ * format and one code path that replaced the retired per-domain importers.
  *
  * Also applies the ONTOLOGY layer from knowledge/ontology/ (the R3 verb registry
  * + moderated typed edges) — see the block near the end of this file for why it

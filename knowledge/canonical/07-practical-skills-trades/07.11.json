@@ -83,7 +83,7 @@
  "relations": [
   {
    "from": "07.11",
-   "to": "05.03",
+   "to": "04.01",
    "type": "references",
    "explored": null,
    "source": "brief-xref"
@@ -97,7 +97,7 @@
   },
   {
    "from": "07.11",
-   "to": "04.01",
+   "to": "05.03",
    "type": "references",
    "explored": null,
    "source": "brief-xref"

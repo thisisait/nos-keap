@@ -1,34 +1,19 @@
 /**
- * Docked detail panel for the selected point — the drawer's replacement.
- * Non-modal by design: it floats over the canvas' left edge so the universe
- * stays interactive while the panel is open (the old bottom sheet's backdrop
- * blocked everything and offered no actions).
+ * The ONE right rail: everything about the selected thing, in reading order —
+ * breadcrumb → name (type, zone) → prose (brief) → "Uvnitř" (children +
+ * folder contents) → "Souvisí" (anchored objects, [[object:…]] links, typed
+ * relations grouped by verb) → "Otevřít kde žije". Renders content-only so
+ * the page can mount it as the desktop rail or inside the mobile Sheet.
  *
- * For a taxonomy node it is the node's COCKPIT: ancestry breadcrumb, zone +
- * provenance badges, the curated description (K1, locale-aware), children,
- * anchored knowledge objects, the resolved content link — and the Track T
- * growth actions: propose a child node and propose a description, both
- * through the same moderated machinery agents use.
+ * Authoring (Describe / New sub-node) deliberately lives elsewhere — the
+ * admin/moderation page and the agent door — not in the map.
  */
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import {
-  ExternalLink,
-  Crosshair,
-  X,
-  Sparkles,
-  GitBranchPlus,
-  ChevronRight,
-  Loader2,
-  Folder,
-  FileText,
-} from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { ExternalLink, Crosshair, X, ChevronRight, Folder, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { apiFetch } from '@/services/api/client';
 import type { GraphNode, GraphObject, GraphObjectLink } from '@/hooks/useExplorerData';
 import { fmtBytes, type RepoLang } from './repoVisuals';
@@ -49,7 +34,6 @@ export interface DrawerTarget {
   dataType?: string;
   description?: string;
   url?: string;
-  distance?: number;
   isStar: boolean;
   nodeId?: string;
   /** Core folder hubs only: fs path ('' = root) + direct contents. */
@@ -59,19 +43,36 @@ export interface DrawerTarget {
   repo?: boolean;
   bytes?: number;
   langs?: RepoLang[];
-  /** Topic hubs only: the cluster's top c-TF-IDF term chips. */
-  terms?: string[];
+}
+
+/** One typed edge as the rail needs it: which verb, which way, and the far end. */
+export interface FocusRelation {
+  type: string;
+  /** Registry label ("Depends on"); falls back to the raw verb. */
+  label: string;
+  color?: string;
+  confidence?: number;
+  /** 'out' = target → other, 'in' = other → target. */
+  direction: 'out' | 'in';
+  otherRef: string;
+  otherKind: 'node' | 'object';
+  otherName: string;
 }
 
 interface Props {
   target: DrawerTarget | null;
   nodeById: Map<string, GraphNode>;
   objects: GraphObject[];
-  /** Object→object ref edges (bare ids) — the drawer's "linked objects" lists. */
+  /** Object→object ref edges (bare ids) — the "Souvisí" linked-card rows. */
   objectLinks: GraphObjectLink[];
+  /** Confirmed typed relations touching the target, either direction. */
+  relations?: FocusRelation[];
+  onRelationClick?: (r: FocusRelation) => void;
   onClose: () => void;
   onFocus: (nodeId: string) => void;
   onSelect: (id: string) => void;
+  /** Slice the map to this taxonomy node's subtree (?root=). */
+  onSliceRoot?: (nodeId: string) => void;
 }
 
 function ancestors(id: string, nodeById: Map<string, GraphNode>): GraphNode[] {
@@ -154,20 +155,44 @@ function BriefBody({
   );
 }
 
-export default function DetailPanel({ target, nodeById, objects, objectLinks, onClose, onFocus, onSelect }: Props) {
+/** Shared row: badge + title, click → onSelect. Every list in the rail is this shape. */
+function CardRow({ o, onSelect, prefix }: { o: GraphObject; onSelect: (id: string) => void; prefix?: string }) {
+  return (
+    <li>
+      <button
+        className="flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-left text-xs hover:bg-muted/60"
+        onClick={() => onSelect(`obj:${o.id}`)}
+      >
+        {prefix && <span className="shrink-0 text-muted-foreground">{prefix}</span>}
+        <Badge variant="outline" className="shrink-0 px-1 text-[9px]">{o.type}</Badge>
+        <span className="truncate">{o.title}</span>
+      </button>
+    </li>
+  );
+}
+
+export default function DetailPanel({
+  target,
+  nodeById,
+  objects,
+  objectLinks,
+  relations = [],
+  onRelationClick,
+  onClose,
+  onFocus,
+  onSelect,
+  onSliceRoot,
+}: Props) {
   const { t, i18n } = useTranslation();
-  const qc = useQueryClient();
-  const [growOpen, setGrowOpen] = useState(false);
-  const [descOpen, setDescOpen] = useState(false);
-  const [childName, setChildName] = useState('');
-  const [childDesc, setChildDesc] = useState('');
-  const [descEn, setDescEn] = useState('');
-  const [descCs, setDescCs] = useState('');
-  const [notice, setNotice] = useState<string | null>(null);
 
   const node = target && !target.isStar ? nodeById.get(target.id) : null;
-  // Curated note layer — the node's brief (taxonomy-brief skill output).
-  const { data: curatedRow } = useQuery<{ data?: { brief?: string; briefCs?: string; [key: string]: unknown } } | null>({
+  // Curated note layer — the node's brief (taxonomy-brief skill output) plus
+  // the K1 description, which the bulk graph payload no longer carries.
+  const { data: curatedRow } = useQuery<{
+    data?: { brief?: string; briefCs?: string; [key: string]: unknown };
+    description?: string;
+    descriptionCs?: string;
+  } | null>({
     queryKey: ['node-meta', node?.id],
     queryFn: () => apiFetch(`/api/taxonomy-metadata/${node!.id}`),
     enabled: Boolean(node),
@@ -187,75 +212,58 @@ export default function DetailPanel({ target, nodeById, objects, objectLinks, on
     () => (node ? objects.filter((o) => o.anchors.includes(node.id)) : []),
     [node, objects],
   );
-  // Object drawer: [[object:<id>]] ref edges resolved to cards, both directions.
+  // Object rail: [[object:<id>]] ref edges resolved to cards, both directions.
   const bareObjId = target?.id.startsWith('obj:') ? target.id.slice(4) : null;
   const objById = useMemo(() => new Map(objects.map((o) => [o.id, o])), [objects]);
-  const linkedOut = useMemo(
-    () =>
-      bareObjId
-        ? objectLinks
-            .filter((l) => l.source === bareObjId)
-            .map((l) => objById.get(l.target))
-            .filter((o): o is GraphObject => o !== undefined)
-        : [],
-    [bareObjId, objectLinks, objById],
-  );
-  const linkedIn = useMemo(
-    () =>
-      bareObjId
-        ? objectLinks
-            .filter((l) => l.target === bareObjId)
-            .map((l) => objById.get(l.source))
-            .filter((o): o is GraphObject => o !== undefined)
-        : [],
-    [bareObjId, objectLinks, objById],
-  );
-
-  const growMut = useMutation({
-    mutationFn: () =>
-      apiFetch<{ status: string; nodeId?: string }>('/api/taxonomy/propose', {
-        method: 'POST',
-        body: JSON.stringify({ parentId: node!.id, name: childName, description: childDesc }),
-      }),
-    onSuccess: (r) => {
-      setChildName('');
-      setChildDesc('');
-      setGrowOpen(false);
-      if (r.status === 'approved') {
-        // Free zone materializes instantly — the new star appears NOW.
-        qc.invalidateQueries({ queryKey: ['graph'] });
-        setNotice(t('explore.detail.growApproved', { id: r.nodeId }));
-      } else {
-        setNotice(t('explore.detail.growProposed'));
+  const linked = useMemo(() => {
+    if (!bareObjId) return [] as { o: GraphObject; dir: 'out' | 'in' }[];
+    const out: { o: GraphObject; dir: 'out' | 'in' }[] = [];
+    for (const l of objectLinks) {
+      if (l.source === bareObjId) {
+        const o = objById.get(l.target);
+        if (o) out.push({ o, dir: 'out' });
+      } else if (l.target === bareObjId) {
+        const o = objById.get(l.source);
+        if (o) out.push({ o, dir: 'in' });
       }
-    },
-    onError: (e: Error) => setNotice(e.message),
-  });
+    }
+    return out;
+  }, [bareObjId, objectLinks, objById]);
 
-  const descMut = useMutation({
-    mutationFn: () =>
-      apiFetch('/api/taxonomy/describe', {
-        method: 'POST',
-        body: JSON.stringify({ nodeId: node!.id, descriptionEn: descEn, descriptionCs: descCs || undefined }),
-      }),
-    onSuccess: () => {
-      setDescEn('');
-      setDescCs('');
-      setDescOpen(false);
-      setNotice(t('explore.detail.descProposed'));
-    },
-    onError: (e: Error) => setNotice(e.message),
-  });
+  // Typed relations grouped by VERB so the section reads as an ontology
+  // ("Depends on: a, b") rather than a flat list. Direction is carried per row,
+  // not per group: the registry has one label per verb and no inverse form.
+  const relGroups = useMemo(() => {
+    const by = new Map<string, { label: string; color?: string; rows: FocusRelation[] }>();
+    for (const r of relations) {
+      const g = by.get(r.type) ?? { label: r.label, color: r.color, rows: [] };
+      g.rows.push(r);
+      by.set(r.type, g);
+    }
+    for (const g of by.values()) g.rows.sort((a, b) => (b.confidence ?? 0) - (a.confidence ?? 0));
+    // Biggest group first — the node's dominant relation reads at the top.
+    return [...by.entries()].sort((a, b) => b[1].rows.length - a[1].rows.length);
+  }, [relations]);
 
-  if (!target) return null;
+  if (!target) {
+    return (
+      <div className="flex h-full w-full flex-col bg-background/80 p-4 backdrop-blur">
+        <h2 className="text-sm font-semibold">{t('explore.panel.title')}</h2>
+        <p className="mt-1 text-xs text-muted-foreground">{t('explore.panel.noFocus')}</p>
+      </div>
+    );
+  }
 
   const description = node
-    ? (i18n.language?.startsWith('cs') && node.descriptionCs) || node.description
+    ? (i18n.language?.startsWith('cs') && curatedRow?.descriptionCs) || curatedRow?.description
     : target.description;
+  const prose = (node && brief) || description;
   const zone = node?.zone;
+  const insideCount = (target.children?.length ?? 0) + children.length;
+  const hasRelated = anchored.length > 0 || linked.length > 0 || relGroups.length > 0;
 
   return (
-    <div className="absolute bottom-3 left-3 top-3 z-20 flex w-[min(330px,calc(100vw-1.5rem))] flex-col rounded-lg border border-white/10 bg-background/85 shadow-xl backdrop-blur">
+    <div className="flex h-full w-full flex-col bg-background/80 backdrop-blur">
       <div className="flex items-start gap-2 border-b border-white/10 p-3">
         <div className="min-w-0 flex-1">
           {node && crumb.length > 0 && (
@@ -292,9 +300,6 @@ export default function DetailPanel({ target, nodeById, objects, objectLinks, on
             )}
             {node?.ext && <Badge variant="outline" className="text-[10px]">{t('explore.detail.grown')}</Badge>}
             {target.dataType && <Badge variant="secondary" className="text-[10px]">{target.dataType}</Badge>}
-            {target.distance !== undefined && (
-              <span className="text-[11px] tabular-nums text-muted-foreground">d = {target.distance.toFixed(3)}</span>
-            )}
           </div>
         </div>
         <Button variant="ghost" size="icon" className="h-6 w-6 shrink-0" onClick={onClose} aria-label={t('common.close')}>
@@ -302,29 +307,9 @@ export default function DetailPanel({ target, nodeById, objects, objectLinks, on
         </Button>
       </div>
 
-      <ScrollArea className="min-h-0 flex-1">
+      <div className="min-h-0 flex-1 overflow-y-auto">
         <div className="space-y-4 p-3">
-          {description ? (
-            <p className="text-xs leading-relaxed text-muted-foreground">{description}</p>
-          ) : (
-            !target.isStar &&
-            target.kind !== 'folder' && (
-              <p className="text-xs italic text-muted-foreground/70">{t('explore.detail.noDescription')}</p>
-            )
-          )}
-
-          {target.terms && target.terms.length > 0 && (
-            <div>
-              <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                {t('explore.detail.topicTerms')}
-              </p>
-              <div className="flex flex-wrap gap-1">
-                {target.terms.map((term) => (
-                  <Badge key={term} variant="secondary" className="text-[10px]">{term}</Badge>
-                ))}
-              </div>
-            </div>
-          )}
+          {prose && <BriefBody md={prose} nodeById={nodeById} onSelect={onSelect} />}
 
           {target.repo && target.langs && target.langs.length > 0 && (
             <div>
@@ -342,157 +327,34 @@ export default function DetailPanel({ target, nodeById, objects, objectLinks, on
             </div>
           )}
 
-          {target.kind === 'folder' &&
-            (target.children && target.children.length > 0 ? (
-              <div>
-                <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                  {t('explore.detail.folderContents', { count: target.children.length })}
-                </p>
-                <ul className="space-y-0.5">
-                  {target.children.map((c) => (
-                    <li key={c.id}>
-                      <button
-                        className="flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-left text-xs hover:bg-muted/60"
-                        onClick={() => onSelect(c.id)}
-                      >
-                        {c.folder ? (
-                          <Folder className="h-3 w-3 shrink-0 text-muted-foreground" />
-                        ) : (
-                          <FileText className="h-3 w-3 shrink-0 text-muted-foreground" />
-                        )}
-                        <span className="truncate">{c.name}</span>
-                        {c.folder && (c.count ?? 0) > 0 && (
-                          <span className="ml-auto shrink-0 tabular-nums text-[10px] text-muted-foreground">{c.count}</span>
-                        )}
-                        {!c.folder && c.dataType && (
-                          <Badge variant="outline" className="ml-auto shrink-0 px-1 text-[9px]">{c.dataType}</Badge>
-                        )}
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ) : (
-              <p className="text-xs italic text-muted-foreground/70">{t('explore.detail.folderEmpty')}</p>
-            ))}
-
-          {node && brief && (
+          {/* Uvnitř — folder contents + taxonomy sub-nodes under ONE heading. */}
+          {insideCount > 0 ? (
             <div>
               <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                {t('explore.detail.brief')}
-              </p>
-              <BriefBody md={brief} nodeById={nodeById} onSelect={onSelect} />
-            </div>
-          )}
-
-          <div className="flex flex-wrap gap-2">
-            {/* Same law as BriefBody above: capture URLs arrive from the
-                least-trusted intake surfaces and React does not neutralize
-                javascript: hrefs — only http(s) earns an anchor. */}
-            {/^https?:\/\//i.test(target.url ?? node?.url ?? '') && (
-              <Button asChild size="sm" className="h-7 text-xs">
-                <a href={target.url ?? node?.url} target="_blank" rel="noreferrer">
-                  <ExternalLink className="mr-1 h-3 w-3" />
-                  {t('explore.drawer.open')}
-                </a>
-              </Button>
-            )}
-            {target.isStar && target.nodeId && (
-              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => onFocus(target.nodeId!)}>
-                <Crosshair className="mr-1 h-3 w-3" />
-                {t('explore.drawer.focus')}
-              </Button>
-            )}
-            {node && (
-              <>
-                <Button
-                  size="sm"
-                  variant={descOpen ? 'secondary' : 'outline'}
-                  className="h-7 text-xs"
-                  onClick={() => { setDescOpen((v) => !v); setGrowOpen(false); setNotice(null); }}
-                >
-                  <Sparkles className="mr-1 h-3 w-3" />
-                  {t('explore.detail.describe')}
-                </Button>
-                <Button
-                  size="sm"
-                  variant={growOpen ? 'secondary' : 'outline'}
-                  className="h-7 text-xs"
-                  disabled={zone === 'anchor'}
-                  title={zone === 'anchor' ? t('explore.detail.anchorLocked') : undefined}
-                  onClick={() => { setGrowOpen((v) => !v); setDescOpen(false); setNotice(null); }}
-                >
-                  <GitBranchPlus className="mr-1 h-3 w-3" />
-                  {t('explore.detail.grow')}
-                </Button>
-              </>
-            )}
-          </div>
-
-          {notice && <p className="rounded bg-muted/60 p-2 text-[11px] text-muted-foreground">{notice}</p>}
-
-          {node && growOpen && (
-            <div className="space-y-2 rounded-md border border-white/10 p-2">
-              <p className="text-[11px] text-muted-foreground">
-                {zone === 'free' ? t('explore.detail.growHintFree') : t('explore.detail.growHintVotable')}
-              </p>
-              <Input
-                value={childName}
-                onChange={(e) => setChildName(e.target.value)}
-                placeholder={t('explore.detail.childName')}
-                className="h-7 text-xs"
-              />
-              <Textarea
-                value={childDesc}
-                onChange={(e) => setChildDesc(e.target.value)}
-                placeholder={t('explore.detail.childDesc')}
-                className="min-h-16 text-xs"
-              />
-              <Button
-                size="sm"
-                className="h-7 text-xs"
-                disabled={growMut.isPending || !childName.trim() || childDesc.trim().length < 20}
-                onClick={() => growMut.mutate()}
-              >
-                {growMut.isPending && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
-                {t('explore.detail.submitGrow')}
-              </Button>
-            </div>
-          )}
-
-          {node && descOpen && (
-            <div className="space-y-2 rounded-md border border-white/10 p-2">
-              <p className="text-[11px] text-muted-foreground">{t('explore.detail.descHint')}</p>
-              <Textarea
-                value={descEn}
-                onChange={(e) => setDescEn(e.target.value)}
-                placeholder={t('explore.detail.descEn')}
-                className="min-h-16 text-xs"
-              />
-              <Textarea
-                value={descCs}
-                onChange={(e) => setDescCs(e.target.value)}
-                placeholder={t('explore.detail.descCs')}
-                className="min-h-16 text-xs"
-              />
-              <Button
-                size="sm"
-                className="h-7 text-xs"
-                disabled={descMut.isPending || descEn.trim().length < 20}
-                onClick={() => descMut.mutate()}
-              >
-                {descMut.isPending && <Loader2 className="mr-1 h-3 w-3 animate-spin" />}
-                {t('explore.detail.submitDesc')}
-              </Button>
-            </div>
-          )}
-
-          {children.length > 0 && (
-            <div>
-              <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                {t('explore.detail.children', { count: children.length })}
+                {t('explore.detail.inside', { count: insideCount })}
               </p>
               <ul className="space-y-0.5">
+                {(target.children ?? []).map((c) => (
+                  <li key={c.id}>
+                    <button
+                      className="flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-left text-xs hover:bg-muted/60"
+                      onClick={() => onSelect(c.id)}
+                    >
+                      {c.folder ? (
+                        <Folder className="h-3 w-3 shrink-0 text-muted-foreground" />
+                      ) : (
+                        <FileText className="h-3 w-3 shrink-0 text-muted-foreground" />
+                      )}
+                      <span className="truncate">{c.name}</span>
+                      {c.folder && (c.count ?? 0) > 0 && (
+                        <span className="ml-auto shrink-0 tabular-nums text-[10px] text-muted-foreground">{c.count}</span>
+                      )}
+                      {!c.folder && c.dataType && (
+                        <Badge variant="outline" className="ml-auto shrink-0 px-1 text-[9px]">{c.dataType}</Badge>
+                      )}
+                    </button>
+                  </li>
+                ))}
                 {children.map((c) => (
                   <li key={c.id}>
                     <button
@@ -508,60 +370,94 @@ export default function DetailPanel({ target, nodeById, objects, objectLinks, on
                 ))}
               </ul>
             </div>
+          ) : (
+            target.kind === 'folder' && (
+              <p className="text-xs italic text-muted-foreground/70">{t('explore.detail.folderEmpty')}</p>
+            )
           )}
 
-          {anchored.length > 0 && (
-            <div>
+          {/* Souvisí — anchored cards, [[object:…]] links (→/←), typed verbs. */}
+          {hasRelated && (
+            <div data-testid="panel-relations">
               <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                {t('explore.detail.anchored', { count: anchored.length })}
+                {t('explore.detail.related')}
               </p>
-              <ul className="space-y-0.5">
-                {anchored.map((o) => (
-                  <li key={o.id}>
-                    <button
-                      className="flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-left text-xs hover:bg-muted/60"
-                      onClick={() => onSelect(`obj:${o.id}`)}
-                    >
-                      <Badge variant="outline" className="shrink-0 px-1 text-[9px]">{o.type}</Badge>
-                      <span className="truncate">{o.title}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
+              {(anchored.length > 0 || linked.length > 0) && (
+                <ul className="space-y-0.5">
+                  {anchored.map((o) => <CardRow key={o.id} o={o} onSelect={onSelect} />)}
+                  {linked.map(({ o, dir }) => (
+                    <CardRow key={`${dir}:${o.id}`} o={o} onSelect={onSelect} prefix={dir === 'out' ? '→' : '←'} />
+                  ))}
+                </ul>
+              )}
+              {relGroups.length > 0 && (
+                <ol className="mt-2 space-y-2">
+                  {relGroups.map(([type, g]) => (
+                    <li key={type} data-testid={`relgroup-${type}`}>
+                      <p className="flex items-center gap-1.5 text-[11px] font-medium">
+                        <span
+                          className="inline-block h-2 w-2 shrink-0 rounded-full"
+                          style={{ background: g.color ?? 'hsl(var(--primary))' }}
+                        />
+                        <span className="truncate">{g.label}</span>
+                        <span className="shrink-0 text-muted-foreground">({g.rows.length})</span>
+                      </p>
+                      <ul className="mt-0.5 space-y-0.5 pl-3.5">
+                        {g.rows.map((r) => (
+                          <li key={`${r.direction}:${r.otherKind}:${r.otherRef}`}>
+                            <button
+                              onClick={() => onRelationClick?.(r)}
+                              className="flex w-full items-center gap-1 rounded px-1 py-0.5 text-left text-[11px] hover:bg-muted"
+                              title={r.direction === 'out' ? t('explore.panel.relOut') : t('explore.panel.relIn')}
+                            >
+                              <span className="shrink-0 text-muted-foreground">
+                                {r.direction === 'out' ? '→' : '←'}
+                              </span>
+                              <span className="truncate">{r.otherName}</span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </li>
+                  ))}
+                </ol>
+              )}
             </div>
           )}
 
-          {/* Object drawer: cards this one references / is referenced by
-              ([[object:<id>]] ref edges) — same list style as anchored. */}
-          {bareObjId &&
-            ([
-              [t('explore.detail.linkedOut', { count: linkedOut.length }), linkedOut],
-              [t('explore.detail.linkedIn', { count: linkedIn.length }), linkedIn],
-            ] as const).map(
-              ([label, list]) =>
-                list.length > 0 && (
-                  <div key={label}>
-                    <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                      {label}
-                    </p>
-                    <ul className="space-y-0.5">
-                      {list.map((o) => (
-                        <li key={o.id}>
-                          <button
-                            className="flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-left text-xs hover:bg-muted/60"
-                            onClick={() => onSelect(`obj:${o.id}`)}
-                          >
-                            <Badge variant="outline" className="shrink-0 px-1 text-[9px]">{o.type}</Badge>
-                            <span className="truncate">{o.title}</span>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ),
+          {/* Otevřít kde žije + focus/slice actions. */}
+          <div className="flex flex-wrap gap-2">
+            {/* Same law as BriefBody above: capture URLs arrive from the
+                least-trusted intake surfaces and React does not neutralize
+                javascript: hrefs — only http(s) earns an anchor. */}
+            {/^https?:\/\//i.test(target.url ?? node?.url ?? '') && (
+              <Button asChild size="sm" className="h-7 text-xs">
+                <a href={target.url ?? node?.url} target="_blank" rel="noreferrer">
+                  <ExternalLink className="mr-1 h-3 w-3" />
+                  {t('explore.detail.openWhere')}
+                </a>
+              </Button>
             )}
+            {target.isStar && target.nodeId && (
+              <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => onFocus(target.nodeId!)}>
+                <Crosshair className="mr-1 h-3 w-3" />
+                {t('explore.drawer.focus')}
+              </Button>
+            )}
+            {node && node.childCount > 0 && onSliceRoot && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-7 text-xs"
+                data-testid="detail-slice-root"
+                onClick={() => onSliceRoot(node.id)}
+              >
+                {t('explore.detail.sliceRoot')}
+              </Button>
+            )}
+          </div>
         </div>
-      </ScrollArea>
+      </div>
     </div>
   );
 }

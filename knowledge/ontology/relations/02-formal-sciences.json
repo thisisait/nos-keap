@@ -605,18 +605,6 @@
   {
    "from": "02.02.11.09",
    "fromKind": "node",
-   "to": "04.11.02.01",
-   "toKind": "node",
-   "type": "analogous-to",
-   "source": "manual",
-   "status": "confirmed",
-   "confidence": 0.82,
-   "justification": "An estate and an organisation face the same coordination problem — coupled units, a shared upgrade path, and a cost to every boundary drawn.",
-   "createdAt": 1785000000
-  },
-  {
-   "from": "02.02.11.09",
-   "fromKind": "node",
    "to": "04.06.15.02",
    "toKind": "node",
    "type": "requires",
@@ -624,6 +612,18 @@
    "status": "confirmed",
    "confidence": 0.85,
    "justification": "Self-hosting takes on the controller obligations a managed provider would otherwise carry, including the machinery for data-subject requests.",
+   "createdAt": 1785000000
+  },
+  {
+   "from": "02.02.11.09",
+   "fromKind": "node",
+   "to": "04.11.02.01",
+   "toKind": "node",
+   "type": "analogous-to",
+   "source": "manual",
+   "status": "confirmed",
+   "confidence": 0.82,
+   "justification": "An estate and an organisation face the same coordination problem — coupled units, a shared upgrade path, and a cost to every boundary drawn.",
    "createdAt": 1785000000
   },
   {

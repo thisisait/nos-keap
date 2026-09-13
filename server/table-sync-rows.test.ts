@@ -153,6 +153,31 @@ describe('syncRows', () => {
     expect(rowObjects('t-id')[0].id).toBe('table-t-id:row-uuid-aaa');
   });
 
+  it("falls back to the table CARD's node anchor when the row has none", () => {
+    // Without this, projected rows are anchorless — invisible in orbital
+    // view, "unfiled" in the files core (explore-decomplexity Phase A).
+    const t = makeTable('t-anchor');
+    tables.syncCard(t, ['04.11']); // card carries the node anchor
+    insertRow('t-anchor', 'r1', { title: 'Faktura', note: 'n' });
+    tables.syncRows({ ...t, rowCount: 1 }, {
+      mode: 'rows',
+      node: { labelColumn: 'title', kind: 'record', anchorColumn: 'missing-col' },
+      edges: [],
+    } as never);
+    const obj = rowObjects('t-anchor')[0];
+    expect(obj.links).toContainEqual(expect.objectContaining({ kind: 'node', ref: '04.11' }));
+    // A row that DOES carry an anchor value keeps its own.
+    insertRow('t-anchor', 'r2', { title: 'Jiná', note: '05.01' });
+    tables.syncRows({ ...t, rowCount: 2 }, {
+      mode: 'rows',
+      node: { labelColumn: 'title', kind: 'record', anchorColumn: 'note' },
+      edges: [],
+    } as never);
+    const own = rowObjects('t-anchor').find((o) => o.title === 'Jiná')!;
+    expect(own.links).toContainEqual(expect.objectContaining({ kind: 'node', ref: '05.01' }));
+    expect(own.links).not.toContainEqual(expect.objectContaining({ ref: '04.11' }));
+  });
+
   it('still projects a row whose label cell is empty', () => {
     // Dropping it would make the corpus disagree with the table, and the
     // nightly diff would be right to complain about the difference.

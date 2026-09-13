@@ -378,41 +378,16 @@
   },
   "explore": {
     "title": "Explorer — mapa znalostí",
-    "stats": "{{nodes}} uzlů · {{embedded}} embeddingů",
-    "mode": {
-      "related": "Příbuzné",
-      "unrelated": "Nejvzdálenější"
-    },
-    "kind": {
-      "taxonomy": "Taxonomie",
-      "capture": "Zachycené stránky",
-      "note": "Kurátorské poznámky",
-      "object": "Znalostní objekty"
-    },
-    "camera": {
-      "observer": "Pozorovatel",
-      "ship": "Loď",
-      "shipHint": "Myš: rozhled · WASD: let · R/F: výška · Mezerník: boost"
-    },
     "jump": {
       "placeholder": "Hyperprostorový skok…"
     },
     "panel": {
       "title": "Souhvězdí",
-      "focusOn": "Fokus: {{name}}",
       "noFocus": "Klikni na uzel — objeví se jeho sémantické okolí.",
-      "noVectors": "Vektory zatím nejsou synchronizované — spusť keap-embed-sync na hostu. Strom funguje i bez nich.",
-      "kinds": "Zdroje",
-      "dataTypes": "Typy dat",
-      "results": "{{count}} bodů",
-      "notSemantic": "bez vektorů",
-      "relations": "Ontologické vazby",
-      "relationsEmpty": "Žádné potvrzené vazby pro tento uzel.",
       "relOut": "odchozí",
       "relIn": "příchozí"
     },
     "drawer": {
-      "open": "Otevřít obsah",
       "focus": "Zaměřit v grafu"
     },
     "detail": {
@@ -422,33 +397,14 @@
         "free": "volná zóna"
       },
       "grown": "dorostlý",
-      "noDescription": "Zatím bez popisu — doplní ho skill taxonomy-describe (nebo ty přes Popsat).",
-      "describe": "Popsat",
-      "grow": "Nový poduzel",
-      "anchorLocked": "Kotevní jádro — konstanty oblohy se mění jen releasem.",
-      "growHintFree": "Volná zóna: schválený návrh se materializuje okamžitě (auditovaně).",
-      "growHintVotable": "Hlasovatelné jádro: návrh jde k moderátorovi.",
-      "childName": "Název uzlu",
-      "childDesc": "Popis (min 20 znaků) — stane se vyhledávacím textem uzlu (nosný).",
-      "submitGrow": "Navrhnout uzel",
-      "descHint": "Popisy jsou nosné: angličtina je kanonický text pro vyhledávání/embeddingy, čeština je lokalizace UI.",
-      "descEn": "Description (anglicky, kanonický, min 20 znaků)",
-      "descCs": "Popis (česky, volitelný)",
-      "submitDesc": "Navrhnout popis",
-      "growApproved": "Uzel {{id}} materializován — hvězda je ve vesmíru.",
-      "growProposed": "Návrh odeslán — čeká na moderátora.",
-      "descProposed": "Popis navržen — čeká na moderátora.",
-      "children": "Poduzly ({{count}})",
-      "anchored": "Ukotvené znalosti ({{count}})",
-      "linkedOut": "Odkazuje na ({{count}})",
-      "linkedIn": "Odkazováno z ({{count}})",
-      "brief": "Článek",
       "folderBadge": "Složka",
-      "folderContents": "Obsah ({{count}})",
       "folderEmpty": "Zatím žádné synchronizované soubory — mapované složky a uživatelský strom se sem doplní, jakmile fs-sync poběží.",
       "repoBadge": "Repo",
       "repoLangs": "Jazyky",
-      "topicTerms": "Klíčové pojmy"
+      "sliceRoot": "Zobrazit jen tento podstrom",
+      "inside": "Uvnitř ({{count}})",
+      "related": "Souvisí",
+      "openWhere": "Otevřít kde žije"
     },
     "lens": {
       "recent": "Nedávné",
@@ -457,25 +413,18 @@
       "recentCold": "staré"
     },
     "core": {
-      "toggle": "Jádro",
-      "tooltip": "Přesunout soubory do středu prstence jako 3D jádro",
       "root": "Soubory",
-      "unfiled": "karty",
-      "untopiced": "nezařazené",
-      "topicUnavailable": "Zatím žádné tematické shluky — čeká se na vektory objektů (keap-embed-sync)",
-      "topicCoverage": "{{assigned}}/{{total}} seskupeno",
-      "order": {
-        "fs": "Složky",
-        "taxonomy": "Taxonomie",
-        "topic": "Témata",
-        "type": "Podle typu"
-      }
+      "unfiled": "karty"
     },
     "toggle": {
-      "ontology": "Ontologie",
-      "ontologyHint": "Zobrazit typované ontologické vazby (slovesa R3 + koncepční síť)",
-      "olinks": "Odkazy",
-      "olinksHint": "Zobrazit [[object:…]] odkazy mezi kartami"
+      "links": "Vazby",
+      "linksHint": "Zobrazit vazby: typovaná slovesa, koncepční síť i [[object:…]] odkazy"
+    },
+    "view": {
+      "constellation": "Konstelace",
+      "fs": "Složky",
+      "taxonomy": "Taxonomie",
+      "type": "Typy"
     }
   },
   "tables": {

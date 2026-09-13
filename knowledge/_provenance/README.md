@@ -12,7 +12,7 @@ Do not ingest from here. `knowledge/ingest.mjs` reads `canonical/` only.
 _provenance/<domain>/
   <domain>-scaffold.json   # the ontology scaffold (skeleton)
   <domain>-blocks.json     # agent-consolidated thematic blocks
-  <domain>-import.json     # the materialisable bundle import-domain.mjs consumed
+  <domain>-import.json     # bundle consumed by the retired per-domain importer
 ```
 
 - **math / chem / bio** carry the full `scaffold → blocks → import` derivation triple.
