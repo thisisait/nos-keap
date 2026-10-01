@@ -32,6 +32,7 @@ import { allNodes, getNode, type FlatNode } from './taxonomy';
 import { resolveContentRef } from './content-links';
 import { anchorNodeIds, type ObjectRef } from './objects';
 import { pendingEmbeddings } from './embeddings';
+import { getTable } from './tables';
 
 export type LintSeverity = 'critical' | 'high' | 'medium' | 'low' | 'info';
 
@@ -77,6 +78,14 @@ function label(kind: string, refId: string): string {
   return refId;
 }
 
+// `keaptable:<id>[#row]` is KEAP's own table, not a content service: resolve it
+// against data_tables. Measured 2026-10-01: all 111 open broken-content-ref
+// findings were keaptable refs to tables that existed — none were broken.
+function refResolves(ref: string): boolean {
+  if (ref.startsWith('keaptable:')) return getTable(ref.slice(10).split('#')[0]) !== null;
+  return resolveContentRef(ref) !== null;
+}
+
 // ── Checks ────────────────────────────────────────────────────────────────────
 
 function checkNoteAnchors(out: LintFinding[]): void {
@@ -120,14 +129,14 @@ function checkObjectAnchors(out: LintFinding[]): void {
         message: `Object "${o.title}" has no [[taxonomy]] anchor — invisible in the universe (panel/search only)`,
       });
     }
-    if (o.resource && !resolveContentRef(o.resource)) {
+    if (o.resource && !refResolves(o.resource)) {
       out.push({
         id: fid('broken-content-ref', 'object', o.id),
         checkId: 'broken-content-ref',
         severity: 'medium',
         refKind: 'object',
         refId: o.id,
-        message: `Object "${o.title}" resource ref "${o.resource}" does not resolve (unknown/disabled service)`,
+        message: `Object "${o.title}" resource ref "${o.resource}" does not resolve (${o.resource.startsWith('keaptable:') ? 'no such table' : 'unknown/disabled service'})`,
         data: { ref: o.resource },
       });
     }
@@ -138,7 +147,7 @@ function checkCuratedContentRefs(out: LintFinding[]): void {
   const notes = db.getTaxonomyMetadata();
   for (const note of Array.isArray(notes) ? notes : []) {
     const ref = note.data?.requiredData;
-    if (ref && !resolveContentRef(ref)) {
+    if (ref && !refResolves(ref)) {
       out.push({
         id: fid('broken-content-ref', 'note', note.id),
         checkId: 'broken-content-ref',
