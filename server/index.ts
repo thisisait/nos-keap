@@ -23,6 +23,7 @@ import { registerTopicRoutes } from './topics-routes';
 import { registerRelationRoutes } from './relations-routes';
 import { registerIngestRoutes } from './intake';
 import { registerExtensionRoutes } from './extension/routes';
+import { registerHippocampusRoutes } from './hippocampus';
 import { identityMiddleware } from './identity';
 import { initDb, rebuildTaxonomyFts } from './db';
 import * as dbmod from './db';
@@ -107,6 +108,11 @@ async function main() {
   // Traefik route works without SSO. See server/intake.ts.
   registerIngestRoutes(app);
   registerExtensionRoutes(app);
+
+  // Hippocampus (/hippocampus/v1) — the CortexDB Direct wire for OpenHuman's
+  // memory engine: per-agent keys from KEAP_HIPPOCAMPUS_KEYS, memories as rows
+  // of the `engram` DataTable. A loopback caller, so before identity as well.
+  registerHippocampusRoutes(app);
 
   // Resolve X-Authentik-Uid / -Username / -Email into req.user
   // (401 without headers when KEAP_TRUSTED_PROXY=1 — see identity.ts).
