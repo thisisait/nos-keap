@@ -86,6 +86,14 @@ function eventOf(r: TableRow) {
   };
 }
 
+// Time-ordered ids (ms + a per-process counter + random): the store sorts by a per-second
+// updated_at, so within one second only the id can say which turn came first.
+let seq = 0;
+function eventId(now = Date.now()): string {
+  seq = (seq + 1) % 0x10000;
+  return `evt_${now.toString(16).padStart(12, '0')}${seq.toString(16).padStart(4, '0')}${crypto.randomBytes(4).toString('hex')}`;
+}
+
 /** Every row of `agent` matching `filter`, newest first, paging through the store. */
 async function rowsOf(t: TableInfo, agent: string, filter: RowFilter[], max = Infinity): Promise<TableRow[]> {
   const store = storeFor(t.driver);
@@ -101,7 +109,7 @@ async function rowsOf(t: TableInfo, agent: string, filter: RowFilter[], max = In
     out.push(...page.rows);
     cursor = page.nextCursor;
   } while (cursor && out.length < max);
-  return out;
+  return out.sort((a, b) => b.createdAt - a.createdAt || (a.id < b.id ? 1 : a.id > b.id ? -1 : 0));
 }
 
 const labelled = (r: TableRow, wanted: string[]) =>
@@ -127,7 +135,7 @@ async function append(t: TableInfo, agent: string, body: Body): Promise<[number,
     if (held.values.text !== text) return [409, { error_code: 'IDEMPOTENCY_CONFLICT', message: 'key reused with another body' }];
     return [202, { event_id: held.id, status: 'captured', replayed_from_idempotency: true }];
   }
-  const id = `evt_${crypto.randomBytes(12).toString('hex')}`;
+  const id = eventId();
   const principal = `agent:${agent}` as Principal;
   const row = await storeFor(t.driver).upsertRow(
     t.id,
