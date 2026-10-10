@@ -342,3 +342,17 @@ describe('forget, and the routes the engine never needs', () => {
     expect((await call('/hippocampus/v1/nothing')).status).toBe(404);
   });
 });
+
+describe('order', () => {
+  it('events written in one second come back newest first, in exactly the order they were written', async () => {
+    // updated_at has second resolution and row ids were random: a chat's turns came back shuffled.
+    const scope = 'agent:alice/order';
+    const texts = Array.from({ length: 20 }, (_, i) => `ordered turn ${i}`);
+    for (const t of texts) {
+      const r = await call('/hippocampus/v1/experience', { json: experience(t, { scope }) });
+      expect(r.status).toBe(202);
+    }
+    const r = await call(`/hippocampus/v1/events?scope=${encodeURIComponent(scope)}&limit=200`);
+    expect(r.body.items.map((e: { content: { text: string } }) => e.content.text)).toEqual([...texts].reverse());
+  });
+});
