@@ -459,7 +459,7 @@ connection strings, or anything that would let `validate` answer *"does
   "binding": {
     "ontologyVersion": "onto1:9f2a4c1b7d3e5a60",
     "databaseId": "b1f0…-uuid",
-    "opcodeRegistryHash": "cx1:41c8b2ee9a730d55",
+    "opcodeRegistryHash": "cx1:8250d05e5e32afb7",
     "validatedAt": "2026-07-24T10:15:00.000Z",
     "expiresAt":   "2026-07-24T10:30:00.000Z",
     "ttlSeconds": 900
